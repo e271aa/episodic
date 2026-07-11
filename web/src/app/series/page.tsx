@@ -15,6 +15,7 @@ import { enrichShow, type MetaEpisode } from "@/lib/metadata";
 import { findNextUnwatched } from "@/lib/watchnext";
 import PosterCard from "@/components/PosterCard";
 import WatchNextCard from "@/components/WatchNextCard";
+import { CheckIcon } from "@/components/icons";
 
 interface ShowWithProgress extends StoredShow {
   watchedCount: number;
@@ -124,25 +125,60 @@ export default function SeriesPage() {
   }
 
   if (shows.length === 0) {
+    // Primeira utilização — o ecrã vazio é o onboarding.
+    const steps = [
+      {
+        n: "01",
+        title: "Traz o teu histórico",
+        text: "Importa o ZIP do TV Time — ou salta este passo e começa do zero.",
+      },
+      {
+        n: "02",
+        title: "Segue as tuas séries",
+        text: "Pesquisa no Explorar e segue o que andas a ver.",
+      },
+      {
+        n: "03",
+        title: "Marca à medida que vês",
+        text: "A fila “A seguir” diz-te sempre qual é o próximo episódio.",
+      },
+    ];
     return (
-      <main className="mx-auto flex max-w-xl flex-1 flex-col items-center justify-center px-4 py-16 text-center">
-        <p className="ep-code text-sm tracking-[0.3em] text-signal">EPISODIC</p>
-        <h1 className="mt-3 font-display text-3xl font-bold">
-          Tudo o que vês, num só sítio
-        </h1>
-        <p className="mt-3 text-dim">
-          Traz o teu histórico do TV Time, ou começa a seguir séries do zero.
-        </p>
-        <div className="mt-8 flex flex-col items-center gap-3 sm:flex-row">
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-16">
+        <div className="text-center">
+          <p className="ep-code text-sm tracking-[0.3em] text-signal">EPISODIC</p>
+          <h1 className="mt-3 font-display text-3xl font-bold">
+            Tudo o que vês, num só sítio
+          </h1>
+          <p className="mt-3 text-dim">
+            O teu registo de séries: o que viste, o que falta, o que vem a seguir.
+          </p>
+        </div>
+
+        <ol className="mt-10 space-y-4">
+          {steps.map((step) => (
+            <li key={step.n} className="flex items-start gap-4">
+              <span className="ep-code mt-0.5 shrink-0 text-lg font-bold text-signal">
+                {step.n}
+              </span>
+              <div>
+                <p className="font-display font-semibold">{step.title}</p>
+                <p className="mt-0.5 text-sm text-dim">{step.text}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+
+        <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/import"
-            className="cursor-pointer rounded-full bg-signal px-6 py-3 font-semibold text-on-signal transition hover:brightness-110"
+            className="cursor-pointer rounded-full bg-signal px-6 py-3 font-semibold text-on-signal transition hover:brightness-110 active:scale-95"
           >
             Importar do TV Time
           </Link>
           <Link
             href="/explore"
-            className="cursor-pointer rounded-full border border-line px-6 py-3 font-semibold text-ink transition hover:bg-raised"
+            className="cursor-pointer rounded-full border border-line px-6 py-3 font-semibold text-ink transition hover:bg-raised active:scale-95"
           >
             Explorar séries
           </Link>
@@ -186,9 +222,23 @@ export default function SeriesPage() {
             ))}
           </div>
         ) : queue.length === 0 ? (
-          <p className="mt-3 rounded-2xl border border-line bg-panel p-4 text-sm text-dim">
-            Estás em dia com todas as séries que segues. 🎉
-          </p>
+          <div className="mt-3 flex items-center gap-3 rounded-2xl border border-line bg-panel p-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-signal-soft text-signal">
+              <CheckIcon className="h-5 w-5" />
+            </span>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium">Estás em dia</p>
+              <p className="text-xs text-dim">
+                Nenhum episódio por ver nas séries que segues.
+              </p>
+            </div>
+            <Link
+              href="/explore"
+              className="shrink-0 cursor-pointer text-sm font-semibold text-signal hover:underline"
+            >
+              Explorar
+            </Link>
+          </div>
         ) : (
           <div className="mt-3 space-y-3">
             {queue.map((show) => (

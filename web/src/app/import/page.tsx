@@ -6,6 +6,7 @@ import JSZip from "jszip";
 import { parseEmotions, parseTrackingV2 } from "@/lib/tvtime/parser";
 import type { TvTimeExport } from "@/lib/tvtime/types";
 import { importExport } from "@/lib/db";
+import { TvIcon } from "@/components/icons";
 
 // Aceita o ZIP do export GDPR tal como vem do TV Time, ou os CSVs soltos.
 async function extractCsvs(
@@ -104,7 +105,7 @@ export default function ImportPage() {
           void handleFiles(Array.from(e.dataTransfer.files));
         }}
       >
-        <span className="text-4xl">📺</span>
+        <TvIcon className="h-10 w-10 text-faint" />
         <span className="mt-3 font-medium">
           Arrasta o ZIP para aqui, ou clica para escolher
         </span>

@@ -7,6 +7,9 @@ import { TvIcon, CheckIcon } from "@/components/icons";
 
 type FollowState = "idle" | "following" | "done";
 
+// Sugestões para o estado vazio — populares e variadas (anime, drama, sitcom)
+const SUGGESTIONS = ["One Piece", "Breaking Bad", "Friends", "Demon Slayer", "The Boys"];
+
 function ResultCard({ result }: { result: MetaSearchResult }) {
   const [state, setState] = useState<FollowState>("idle");
   const uuid = `${result.provider}-${result.providerId}`;
@@ -99,20 +102,24 @@ export default function ExplorePage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const search = useCallback(async () => {
-    const q = query.trim();
-    if (!q) return;
-    setBusy(true);
-    setError(null);
-    try {
-      setResults(await searchShows(q));
-    } catch {
-      setResults([]);
-      setError("Não foi possível pesquisar — verifica a ligação à internet.");
-    } finally {
-      setBusy(false);
-    }
-  }, [query]);
+  const search = useCallback(
+    async (term?: string) => {
+      const q = (term ?? query).trim();
+      if (!q) return;
+      if (term) setQuery(term);
+      setBusy(true);
+      setError(null);
+      try {
+        setResults(await searchShows(q));
+      } catch {
+        setResults([]);
+        setError("Não foi possível pesquisar — verifica a ligação à internet.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [query],
+  );
 
   return (
     <main className="mx-auto max-w-2xl px-4 py-8">
@@ -149,6 +156,29 @@ export default function ExplorePage() {
         <p className="page-enter mt-6 text-center text-sm text-danger">{error}</p>
       )}
 
+      {/* Antes da primeira pesquisa: convite com sugestões clicáveis */}
+      {!results && !busy && (
+        <div className="mt-12 text-center">
+          <p className="ep-code text-xs tracking-[0.2em] text-faint">
+            PRÓXIMA MARATONA
+          </p>
+          <p className="mt-2 text-dim">
+            Procura qualquer série — ou começa por uma destas:
+          </p>
+          <div className="mt-4 flex flex-wrap justify-center gap-2">
+            {SUGGESTIONS.map((s) => (
+              <button
+                key={s}
+                onClick={() => void search(s)}
+                className="cursor-pointer rounded-full border border-line bg-panel px-4 py-1.5 text-sm text-dim transition hover:border-signal hover:text-signal active:scale-95"
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {busy && !results && (
         <div className="mt-6 flex flex-col gap-3">
           {[0, 1, 2].map((i) => (
@@ -160,7 +190,9 @@ export default function ExplorePage() {
       {results && !busy && (
         <div className="mt-6 flex flex-col gap-3" data-testid="search-results">
           {results.length === 0 && !error && (
-            <p className="text-center text-dim">Sem resultados.</p>
+            <p className="text-center text-dim">
+              Sem resultados para “{query.trim()}”. Tenta o nome original da série.
+            </p>
           )}
           {results.map((result) => (
             <ResultCard key={`${result.provider}-${result.providerId}`} result={result} />
