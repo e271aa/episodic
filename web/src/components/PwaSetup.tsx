@@ -72,7 +72,7 @@ export default function PwaSetup() {
             setShowIosHint(false);
           }}
           aria-label="Dispensar"
-          className="shrink-0 cursor-pointer rounded-full p-1 text-faint hover:text-ink"
+          className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-faint hover:text-ink"
         >
           <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
             <path

@@ -11,7 +11,8 @@
   --color-raised: #1b2233; /* superfícies elevadas / hover */
   --color-ink: #f2f4f8; /* texto principal */
   --color-dim: #97a0b5; /* texto secundário */
-  --color-faint: #5b6474; /* texto terciário / desativado */
+  /* texto terciário — calibrado para ≥4.5:1 (WCAG AA) contra panel/raised/night */
+  --color-faint: #838996;
   --color-line: rgba(255, 255, 255, 0.08); /* contornos */
 
   /* Um único acento: âmbar tungsténio — o brilho do ecrã no escuro */
@@ -30,6 +31,17 @@ body {
   background: var(--color-night);
   color: var(--color-ink);
   font-family: var(--font-body), system-ui, sans-serif;
+}
+
+/* Foco visível e consistente, só para navegação por teclado (:focus-visible
+   não dispara em clique de rato/toque) — substitui o azul genérico do browser
+   pelo âmbar da marca em todos os elementos interativos. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+[role="tab"]:focus-visible {
+  outline: 2px solid var(--color-signal);
+  outline-offset: 2px;
 }
 
 /* Códigos de episódio (S04·E01), contagens e timecodes usam sempre mono */

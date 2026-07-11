@@ -124,7 +124,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
             <button
               onClick={() => void handleSync()}
               disabled={status === "syncing"}
-              className="flex cursor-pointer items-center gap-2 rounded-full bg-signal px-5 py-2 text-sm font-semibold text-on-signal transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-signal px-5 py-2 text-sm font-semibold text-on-signal transition hover:brightness-110 active:scale-95 disabled:opacity-50"
             >
               {status === "syncing" && (
                 <span className="spinner h-4 w-4 rounded-full border-2 border-on-signal/30 border-t-on-signal" />
@@ -133,7 +133,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
             </button>
             <button
               onClick={() => void handleSignOut()}
-              className="cursor-pointer rounded-full border border-line px-5 py-2 text-sm font-medium text-dim transition hover:bg-raised"
+              className="min-h-11 cursor-pointer rounded-full border border-line px-5 py-2 text-sm font-medium text-dim transition hover:bg-raised"
             >
               Terminar sessão
             </button>
@@ -158,12 +158,12 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="o-teu@email.com"
               autoComplete="email"
-              className="flex-1 rounded-full border border-line bg-night px-5 py-2 text-sm outline-none transition-colors focus:border-signal"
+              className="min-h-11 flex-1 rounded-full border border-line bg-night px-5 py-2 text-sm outline-none transition-colors focus:border-signal"
             />
             <button
               type="submit"
               disabled={status === "sending"}
-              className="flex cursor-pointer items-center gap-2 rounded-full bg-signal px-5 py-2 text-sm font-semibold text-on-signal transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-signal px-5 py-2 text-sm font-semibold text-on-signal transition hover:brightness-110 active:scale-95 disabled:opacity-50"
             >
               {status === "sending" && (
                 <span className="spinner h-4 w-4 rounded-full border-2 border-on-signal/30 border-t-on-signal" />

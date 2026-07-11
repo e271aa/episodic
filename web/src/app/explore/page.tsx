@@ -66,7 +66,7 @@ function ResultCard({ result }: { result: MetaSearchResult }) {
         <button
           onClick={() => void follow()}
           disabled={state !== "idle"}
-          className={`mt-2 flex min-h-8 cursor-pointer items-center gap-1.5 rounded-full px-4 py-1 text-sm font-semibold transition active:scale-95 ${
+          className={`mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition active:scale-95 ${
             state === "done"
               ? "bg-raised text-dim"
               : "bg-signal text-on-signal hover:brightness-110"

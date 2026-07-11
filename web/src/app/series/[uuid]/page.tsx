@@ -328,7 +328,7 @@ export default function ShowPage() {
               aria-selected={tab === id}
               onClick={() => setTab(id)}
               data-testid={`tab-${id}`}
-              className={`-mb-px cursor-pointer border-b-2 px-3 py-2 text-sm transition-colors ${
+              className={`-mb-px flex min-h-11 cursor-pointer items-center border-b-2 px-3 text-sm transition-colors ${
                 tab === id
                   ? "border-signal font-semibold text-ink"
                   : "border-transparent text-dim hover:text-ink"
