@@ -1,0 +1,112 @@
+@import "tailwindcss";
+
+/* Episodic é dark-first: a app vive no escuro, como quem vê séries.
+   O tema aplica-se via classe .dark no <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme inline {
+  /* A sala escura onde a televisão brilha */
+  --color-night: #0b0e14; /* fundo — azul-noite, não preto genérico */
+  --color-panel: #131826; /* superfícies (cartões, nav) */
+  --color-raised: #1b2233; /* superfícies elevadas / hover */
+  --color-ink: #f2f4f8; /* texto principal */
+  --color-dim: #97a0b5; /* texto secundário */
+  --color-faint: #5b6474; /* texto terciário / desativado */
+  --color-line: rgba(255, 255, 255, 0.08); /* contornos */
+
+  /* Um único acento: âmbar tungsténio — o brilho do ecrã no escuro */
+  --color-signal: #ffaa33;
+  --color-signal-soft: rgba(255, 170, 51, 0.14);
+  --color-on-signal: #171006;
+
+  --color-danger: #e5484d;
+
+  --font-display: var(--font-bricolage);
+  --font-body: var(--font-instrument);
+  --font-code: var(--font-spline-mono);
+}
+
+body {
+  background: var(--color-night);
+  color: var(--color-ink);
+  font-family: var(--font-body), system-ui, sans-serif;
+}
+
+/* Códigos de episódio (S04·E01), contagens e timecodes usam sempre mono */
+.ep-code {
+  font-family: var(--font-code), monospace;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+/* Transição entre páginas: cada rota entra com um leve fade + subida.
+   A chave é o pathname (ver PageTransition.tsx), por isso a animação
+   corre uma vez por navegação, nunca em re-renders normais. */
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.page-enter {
+  animation: page-enter 220ms ease-out both;
+}
+
+/* O "ritual" de marcar um episódio: o círculo salta e um anel de luz
+   âmbar expande e desvanece à volta dele — o momento de satisfação. */
+@keyframes check-pop {
+  0% {
+    transform: scale(0.7);
+  }
+  55% {
+    transform: scale(1.18);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+@keyframes check-ring {
+  from {
+    opacity: 0.55;
+    transform: scale(0.6);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.9);
+  }
+}
+.check-pop {
+  animation: check-pop 320ms cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+.check-ring::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  background: var(--color-signal);
+  animation: check-ring 420ms ease-out both;
+  pointer-events: none;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.spinner {
+  animation: spin 700ms linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

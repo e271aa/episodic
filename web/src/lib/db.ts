@@ -1,0 +1,276 @@
+// Persistência local no browser (IndexedDB). Serve o MVP offline;
+// quando ligarmos o Supabase, isto passa a ser a cache local do sync.
+import { openDB, type DBSchema, type IDBPDatabase } from "idb";
+import type { TvTimeExport } from "./tvtime/types";
+
+export interface StoredShow {
+  uuid: string; // uuid do TV Time, ou "tmdb-<id>" para séries adicionadas na app
+  name: string;
+  tvdbId: number | null;
+  tmdbId: number | null;
+  tvmazeId?: number | null;
+  posterPath: string | null; // caminho TMDB ("/abc.jpg") ou URL absoluto (TVmaze)
+  backdropPath: string | null;
+  overview: string | null;
+  totalEpisodes: number | null; // do fornecedor, para a barra de progresso
+  firstAired?: string | null; // data de estreia (YYYY-MM-DD)
+  status?: string | null; // "Running", "Ended", …
+  genres?: string[] | null;
+  imdbId?: string | null; // ex. "tt1234567" — para link externo
+  followed: boolean;
+  inWatchlist: boolean;
+  archived: boolean;
+  addedAt: string;
+}
+
+export interface WatchedEpisode {
+  id: string; // `${showUuid}:${season}:${episode}`
+  showUuid: string;
+  season: number;
+  episode: number;
+  watchedAt: string;
+  dateIsExact: boolean;
+}
+
+export interface StoredMovie {
+  key: string;
+  name: string;
+  watchedAt: string;
+  dateIsExact: boolean;
+}
+
+export interface ImportMeta {
+  importedAt: string;
+  totalSeriesRuntimeSec: number | null;
+  totalMoviesRuntimeSec: number | null;
+}
+
+interface TvlogDB extends DBSchema {
+  kv: { key: string; value: unknown };
+  shows: { key: string; value: StoredShow };
+  watched: {
+    key: string;
+    value: WatchedEpisode;
+    indexes: { "by-show": string };
+  };
+  movies: { key: string; value: StoredMovie };
+}
+
+let dbPromise: Promise<IDBPDatabase<TvlogDB>> | null = null;
+
+function db(): Promise<IDBPDatabase<TvlogDB>> {
+  dbPromise ??= openDB<TvlogDB>("tvlog", 2, {
+    // Criação defensiva: garante cada store/índice esteja em falta o motivo
+    // que for (upgrade de versão parcial, base criada por outra via, etc.).
+    upgrade(database) {
+      if (!database.objectStoreNames.contains("kv")) {
+        database.createObjectStore("kv");
+      }
+      if (!database.objectStoreNames.contains("shows")) {
+        database.createObjectStore("shows", { keyPath: "uuid" });
+      }
+      if (!database.objectStoreNames.contains("watched")) {
+        const watched = database.createObjectStore("watched", { keyPath: "id" });
+        watched.createIndex("by-show", "showUuid");
+      }
+      if (!database.objectStoreNames.contains("movies")) {
+        database.createObjectStore("movies", { keyPath: "key" });
+      }
+    },
+  });
+  return dbPromise;
+}
+
+export function episodeKey(showUuid: string, season: number, episode: number): string {
+  return `${showUuid}:${season}:${episode}`;
+}
+
+/** Substitui a biblioteca local pelo conteúdo de um export do TV Time. */
+export async function importExport(data: TvTimeExport): Promise<void> {
+  const database = await db();
+  const tx = database.transaction(["shows", "watched", "movies", "kv"], "readwrite");
+
+  // Todos os pedidos são emitidos sincronamente na mesma transação (os clears
+  // executam primeiro, por ordem de fila) — um await a meio pode fechá-la.
+  void tx.objectStore("shows").clear();
+  void tx.objectStore("watched").clear();
+  void tx.objectStore("movies").clear();
+
+  const showUuids = new Set(data.shows.map((s) => s.uuid));
+  // Quando a TheTVDB reestrutura uma série, o TV Time por vezes regista o
+  // histórico sob um UUID novo mas mantém a série seguida no UUID antigo (ou
+  // vice-versa). Isso deixa episódios "órfãos" — cujo UUID não tem série — que
+  // duplicam episódios já contados. Reatribuímos esses órfãos à série seguida
+  // com o mesmo nome; o `put` por chave (uuid:temporada:episódio) colapsa então
+  // os duplicados. Sem isto, ex.: Prison Break apareceria contado a dobrar.
+  const followedByName = new Map<string, string>();
+  for (const show of data.shows) {
+    if (!followedByName.has(show.name)) followedByName.set(show.name, show.uuid);
+  }
+
+  for (const show of data.shows) {
+    void tx.objectStore("shows").put({
+      uuid: show.uuid,
+      name: show.name,
+      tvdbId: show.tvdbId,
+      tmdbId: null,
+      tvmazeId: null,
+      posterPath: null,
+      backdropPath: null,
+      overview: null,
+      totalEpisodes: null,
+      followed: show.followed,
+      inWatchlist: show.inWatchlist,
+      archived: show.archived,
+      addedAt: show.createdAt,
+    });
+  }
+  for (const ep of data.episodes) {
+    // órfão → reatribui à série homónima; se não houver, mantém o UUID original
+    const showUuid = showUuids.has(ep.seriesUuid)
+      ? ep.seriesUuid
+      : (followedByName.get(ep.seriesName) ?? ep.seriesUuid);
+    void tx.objectStore("watched").put({
+      id: episodeKey(showUuid, ep.season, ep.episode),
+      showUuid,
+      season: ep.season,
+      episode: ep.episode,
+      watchedAt: ep.watchedAt,
+      dateIsExact: ep.dateIsExact,
+    });
+  }
+  for (const movie of data.movies) {
+    void tx.objectStore("movies").put({
+      key: movie.key,
+      name: movie.name,
+      watchedAt: movie.watchedAt,
+      dateIsExact: movie.dateIsExact,
+    });
+  }
+  const meta: ImportMeta = {
+    importedAt: new Date().toISOString(),
+    totalSeriesRuntimeSec: data.stats.totalSeriesRuntimeSec,
+    totalMoviesRuntimeSec: data.stats.totalMoviesRuntimeSec,
+  };
+  void tx.objectStore("kv").put(meta, "import-meta");
+  await tx.done;
+}
+
+// Importações feitas na versão anterior da app guardavam um blob único em kv.
+// Se existir e os stores novos estiverem vazios, converte-o uma única vez.
+export async function migrateLegacyImport(): Promise<boolean> {
+  const database = await db();
+  const hasShows = (await database.count("shows")) > 0;
+  if (hasShows) return false;
+  const legacy = (await database.get("kv", "tvtime-export")) as
+    | { data: TvTimeExport }
+    | undefined;
+  if (!legacy?.data) return false;
+  await importExport(legacy.data);
+  await database.delete("kv", "tvtime-export");
+  return true;
+}
+
+export async function getShows(): Promise<StoredShow[]> {
+  const database = await db();
+  return database.getAll("shows");
+}
+
+/**
+ * Funde dados vindos da cloud no armazém local (upsert, sem apagar nada).
+ * Semântica de união: um episódio presente na cloud OU no local fica visto.
+ */
+export async function mergeFromCloud(
+  shows: StoredShow[],
+  watched: WatchedEpisode[],
+  movies: StoredMovie[],
+): Promise<void> {
+  const database = await db();
+  const tx = database.transaction(["shows", "watched", "movies"], "readwrite");
+  for (const show of shows) void tx.objectStore("shows").put(show);
+  for (const ep of watched) void tx.objectStore("watched").put(ep);
+  for (const movie of movies) void tx.objectStore("movies").put(movie);
+  await tx.done;
+}
+
+export async function getShow(uuid: string): Promise<StoredShow | null> {
+  const database = await db();
+  return (await database.get("shows", uuid)) ?? null;
+}
+
+export async function putShow(show: StoredShow): Promise<void> {
+  const database = await db();
+  await database.put("shows", show);
+}
+
+export async function updateShow(
+  uuid: string,
+  patch: Partial<StoredShow>,
+): Promise<StoredShow | null> {
+  const database = await db();
+  const current = await database.get("shows", uuid);
+  if (!current) return null;
+  const next = { ...current, ...patch, uuid };
+  await database.put("shows", next);
+  return next;
+}
+
+export async function getWatchedForShow(showUuid: string): Promise<WatchedEpisode[]> {
+  const database = await db();
+  return database.getAllFromIndex("watched", "by-show", showUuid);
+}
+
+export async function getAllWatched(): Promise<WatchedEpisode[]> {
+  const database = await db();
+  return database.getAll("watched");
+}
+
+export async function countWatched(): Promise<number> {
+  const database = await db();
+  return database.count("watched");
+}
+
+export async function markWatched(
+  showUuid: string,
+  season: number,
+  episode: number,
+): Promise<void> {
+  const database = await db();
+  await database.put("watched", {
+    id: episodeKey(showUuid, season, episode),
+    showUuid,
+    season,
+    episode,
+    watchedAt: new Date().toISOString(),
+    dateIsExact: true,
+  });
+}
+
+export async function unmarkWatched(
+  showUuid: string,
+  season: number,
+  episode: number,
+): Promise<void> {
+  const database = await db();
+  await database.delete("watched", episodeKey(showUuid, season, episode));
+}
+
+export async function getMovies(): Promise<StoredMovie[]> {
+  const database = await db();
+  return database.getAll("movies");
+}
+
+export async function getImportMeta(): Promise<ImportMeta | null> {
+  const database = await db();
+  return ((await database.get("kv", "import-meta")) as ImportMeta | undefined) ?? null;
+}
+
+export async function clearAllData(): Promise<void> {
+  const database = await db();
+  const tx = database.transaction(["shows", "watched", "movies", "kv"], "readwrite");
+  void tx.objectStore("shows").clear();
+  void tx.objectStore("watched").clear();
+  void tx.objectStore("movies").clear();
+  void tx.objectStore("kv").clear();
+  await tx.done;
+}

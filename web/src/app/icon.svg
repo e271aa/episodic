@@ -1,0 +1,20 @@
+<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="46%" r="52%">
+      <stop offset="0%" stop-color="#ffaa33" stop-opacity="0.32"/>
+      <stop offset="55%" stop-color="#ffaa33" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#ffaa33" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <!-- A sala escura (fundo a preencher toda a área — seguro para máscara adaptativa) -->
+  <rect width="512" height="512" fill="#0b0e14"/>
+  <rect width="512" height="512" fill="url(#glow)"/>
+  <!-- O brilho da televisão: triângulo de "play" âmbar, cantos arredondados,
+       dentro da zona segura (centro) para máscaras adaptativas -->
+  <path d="M206 168 L206 344 L358 256 Z"
+        fill="#ffaa33"
+        stroke="#ffaa33"
+        stroke-width="34"
+        stroke-linejoin="round"
+        stroke-linecap="round"/>
+</svg>
