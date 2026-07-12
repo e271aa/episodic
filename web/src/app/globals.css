@@ -28,9 +28,36 @@
 }
 
 body {
-  background: var(--color-night);
+  /* Vinheta radial subtil — dá profundidade ao fundo sem deixar de ser escuro */
+  background:
+    radial-gradient(ellipse 900px 500px at 50% -10%, rgba(255, 170, 51, 0.08), transparent),
+    radial-gradient(ellipse 700px 500px at 100% 0%, rgba(255, 170, 51, 0.04), transparent),
+    var(--color-night);
+  background-attachment: fixed;
   color: var(--color-ink);
   font-family: var(--font-body), system-ui, sans-serif;
+}
+
+/* Cartão base reutilizável — profundidade consistente em toda a app */
+.ep-card {
+  border-radius: 1.25rem;
+  border: 1px solid var(--color-line);
+  background: var(--color-panel);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px -12px rgba(0, 0, 0, 0.45);
+  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+.ep-card-hover:hover {
+  border-color: rgba(255, 170, 51, 0.35);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 28px -10px rgba(0, 0, 0, 0.55),
+    0 0 0 1px rgba(255, 170, 51, 0.08);
+}
+
+/* Texto de marca com leve brilho gradiente — reforça o acento âmbar */
+.ep-wordmark {
+  background: linear-gradient(120deg, var(--color-signal), #ffd28a 60%, var(--color-signal));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Foco visível e consistente, só para navegação por teclado (:focus-visible

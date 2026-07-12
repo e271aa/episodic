@@ -27,7 +27,7 @@ export default function PosterCard({
 
   return (
     <Link href={href} className="group block cursor-pointer active:scale-[0.97]">
-      <div className="relative aspect-2/3 overflow-hidden rounded-xl bg-panel transition duration-150 group-hover:ring-2 group-hover:ring-signal/60">
+      <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30 transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:shadow-signal/10 group-hover:ring-2 group-hover:ring-signal/60">
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element -- posters já vêm dimensionados do fornecedor
           <img
@@ -42,9 +42,15 @@ export default function PosterCard({
           </div>
         )}
         {progress !== null && (
-          <div className="absolute inset-x-0 bottom-0 h-1 bg-black/50">
-            <div className="h-full bg-signal" style={{ width: `${progress}%` }} />
-          </div>
+          <>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/60 to-transparent" />
+            <div className="absolute inset-x-0 bottom-0 h-1 bg-black/50">
+              <div
+                className="h-full bg-signal shadow-[0_0_6px_rgba(255,170,51,0.7)]"
+                style={{ width: `${progress}%` }}
+              />
+            </div>
+          </>
         )}
       </div>
       <p className="mt-1.5 truncate text-sm font-medium">{name}</p>

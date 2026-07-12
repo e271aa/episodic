@@ -146,7 +146,7 @@ export default function SeriesPage() {
     return (
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-16">
         <div className="text-center">
-          <p className="ep-code text-sm tracking-[0.3em] text-signal">EPISODIC</p>
+          <p className="ep-code ep-wordmark text-sm tracking-[0.3em]">EPISODIC</p>
           <h1 className="mt-3 font-display text-3xl font-bold">
             Tudo o que vês, num só sítio
           </h1>
@@ -210,7 +210,7 @@ export default function SeriesPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
-      <p className="ep-code text-xs tracking-[0.3em] text-signal">EPISODIC</p>
+      <p className="ep-code ep-wordmark text-xs tracking-[0.3em]">EPISODIC</p>
       <h1 className="mt-1 font-display text-3xl font-bold">Séries</h1>
 
       <section className="mt-6">
@@ -222,7 +222,7 @@ export default function SeriesPage() {
             ))}
           </div>
         ) : queue.length === 0 ? (
-          <div className="mt-3 flex items-center gap-3 rounded-2xl border border-line bg-panel p-4">
+          <div className="ep-card mt-3 flex items-center gap-3 p-4">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-signal-soft text-signal">
               <CheckIcon className="h-5 w-5" />
             </span>

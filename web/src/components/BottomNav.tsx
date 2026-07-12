@@ -15,7 +15,7 @@ export default function BottomNav() {
   const pathname = usePathname();
 
   return (
-    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-panel/90 pb-[env(safe-area-inset-bottom)] backdrop-blur">
+    <nav className="fixed inset-x-0 bottom-0 z-50 border-t border-line bg-panel/85 pb-[env(safe-area-inset-bottom)] shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.5)] backdrop-blur-lg">
       <div className="mx-auto flex max-w-2xl">
         {TABS.map(({ href, label, Icon }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
@@ -24,12 +24,18 @@ export default function BottomNav() {
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-14 flex-1 cursor-pointer flex-col items-center justify-center gap-1 text-[11px] transition-colors active:scale-90 ${
+              className={`group relative flex min-h-14 flex-1 cursor-pointer flex-col items-center justify-center gap-1 text-[11px] transition-colors active:scale-90 ${
                 active ? "text-signal" : "text-faint hover:text-dim"
               }`}
             >
-              <Icon className="h-5 w-5" />
-              <span className={active ? "font-semibold" : ""}>{label}</span>
+              <span
+                className={`absolute top-1.5 h-8 w-12 rounded-full bg-signal-soft transition-all duration-200 ${
+                  active ? "opacity-100 scale-100" : "opacity-0 scale-75"
+                }`}
+                aria-hidden
+              />
+              <Icon className="relative h-5 w-5" />
+              <span className={`relative ${active ? "font-semibold" : ""}`}>{label}</span>
             </Link>
           );
         })}
