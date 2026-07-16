@@ -75,6 +75,11 @@ export async function enrichShow(show: StoredShow): Promise<Partial<StoredShow> 
     if (!mazeShow && show.tvdbId) {
       mazeShow = await tvmaze.lookupByTvdb(show.tvdbId);
     }
+    // A TVmaze nem sempre indexa a série pelo ID do TheTVDB — tenta por nome
+    // antes de desistir (só aceita correspondência exata para não trocar posters)
+    if (!mazeShow) {
+      mazeShow = await tvmaze.findBestByName(show.name);
+    }
     if (!mazeShow) return null;
 
     const episodes = await tvmaze.getEpisodes(mazeShow.id);

@@ -65,6 +65,30 @@ export async function searchShows(query: string): Promise<TvmazeShow[]> {
   return (hits ?? []).map((hit) => hit.show);
 }
 
+function normalizeName(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "") // acentos
+    .replace(/^(the|a|an)\s+/, "")
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/**
+ * Segunda tentativa quando não há correspondência pelo ID do TheTVDB — procura
+ * por nome e só aceita se o título normalizado coincidir exatamente, para não
+ * arriscar atribuir o poster de uma série errada.
+ */
+export async function findBestByName(name: string): Promise<TvmazeShow | null> {
+  const hits = await get<TvmazeSearchHit[]>(
+    `/search/shows?q=${encodeURIComponent(name)}`,
+  );
+  const target = normalizeName(name);
+  const exact = (hits ?? []).find((hit) => normalizeName(hit.show.name) === target);
+  return exact?.show ?? null;
+}
+
 // A lista completa de episódios de uma série muda raramente — cache por sessão.
 const episodesCache = new Map<number, TvmazeEpisode[]>();
 
