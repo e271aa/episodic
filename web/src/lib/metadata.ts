@@ -68,6 +68,12 @@ async function rememberEnrichFailure(uuid: string): Promise<void> {
 export async function enrichShow(show: StoredShow): Promise<Partial<StoredShow> | null> {
   if (await enrichFailedRecently(show.uuid)) return null;
   try {
+    // 1º TMDB (posters HD, pt-PT); a TVmaze entra como fallback total quando
+    // a TMDB não tem a série, e como complemento quando lhe faltam campos
+    // (sinopse sem tradução, poster em falta, link IMDb — que só a TVmaze dá).
+    // O nome local mantém-se sempre — a TMDB devolve o nome original (ex.:
+    // japonês) quando falta a tradução, e renomear séries só confunde.
+    let fromTmdb: Partial<StoredShow> | null = null;
     if (await hasTmdb()) {
       let tmdbId = show.tmdbId;
       if (!tmdbId && show.tvdbId) {
@@ -76,10 +82,7 @@ export async function enrichShow(show: StoredShow): Promise<Partial<StoredShow> 
       }
       if (tmdbId) {
         const details = await tmdb.getShowDetails(tmdbId);
-        // Nota: o nome local mantém-se — a TMDB devolve o nome original
-        // (ex.: japonês) quando falta a tradução pt-PT, e renomear séries
-        // que o utilizador conhece só confunde
-        return {
+        fromTmdb = {
           tmdbId,
           posterPath: details.poster_path,
           backdropPath: details.backdrop_path,
@@ -92,32 +95,58 @@ export async function enrichShow(show: StoredShow): Promise<Partial<StoredShow> 
       }
     }
 
-    let mazeShow =
-      show.tvmazeId != null ? await tvmaze.getShowById(show.tvmazeId) : null;
-    if (!mazeShow && show.tvdbId) {
-      mazeShow = await tvmaze.lookupByTvdb(show.tvdbId);
+    // TMDB completa (poster + sinopse + imdb já não é possível aqui)? Só vale
+    // a pena consultar a TVmaze se faltar algo que ela possa preencher.
+    const needsMaze =
+      !fromTmdb || !fromTmdb.posterPath || !fromTmdb.overview || !show.imdbId;
+
+    let fromMaze: Partial<StoredShow> | null = null;
+    if (needsMaze) {
+      let mazeShow =
+        show.tvmazeId != null ? await tvmaze.getShowById(show.tvmazeId) : null;
+      if (!mazeShow && show.tvdbId) {
+        mazeShow = await tvmaze.lookupByTvdb(show.tvdbId);
+      }
+      // A TVmaze nem sempre indexa pelo ID do TheTVDB — tenta por nome antes
+      // de desistir (só correspondência exata, para não trocar posters)
+      if (!mazeShow) {
+        mazeShow = await tvmaze.findBestByName(show.name);
+      }
+      if (mazeShow) {
+        const episodes = await tvmaze.getEpisodes(mazeShow.id);
+        fromMaze = {
+          tvmazeId: mazeShow.id,
+          posterPath: mazeShow.image?.original ?? mazeShow.image?.medium ?? null,
+          backdropPath: mazeShow.image?.original ?? null,
+          overview: tvmaze.stripHtml(mazeShow.summary),
+          totalEpisodes: episodes.length || null,
+          firstAired: mazeShow.premiered ?? null,
+          status: mazeShow.status ?? null,
+          genres: mazeShow.genres.length > 0 ? mazeShow.genres : null,
+          imdbId: mazeShow.externals?.imdb ?? null,
+        };
+      }
     }
-    // A TVmaze nem sempre indexa a série pelo ID do TheTVDB — tenta por nome
-    // antes de desistir (só aceita correspondência exata para não trocar posters)
-    if (!mazeShow) {
-      mazeShow = await tvmaze.findBestByName(show.name);
-    }
-    if (!mazeShow) {
+
+    if (!fromTmdb && !fromMaze) {
       await rememberEnrichFailure(show.uuid);
       return null;
     }
+    if (!fromTmdb) return fromMaze;
+    if (!fromMaze) return fromTmdb;
 
-    const episodes = await tvmaze.getEpisodes(mazeShow.id);
+    // Fusão: TMDB manda; TVmaze preenche o que faltar
     return {
-      tvmazeId: mazeShow.id,
-      posterPath: mazeShow.image?.original ?? mazeShow.image?.medium ?? null,
-      backdropPath: mazeShow.image?.original ?? null,
-      overview: tvmaze.stripHtml(mazeShow.summary),
-      totalEpisodes: episodes.length || null,
-      firstAired: mazeShow.premiered ?? null,
-      status: mazeShow.status ?? null,
-      genres: mazeShow.genres.length > 0 ? mazeShow.genres : null,
-      imdbId: mazeShow.externals?.imdb ?? null,
+      ...fromTmdb,
+      posterPath: fromTmdb.posterPath ?? fromMaze.posterPath,
+      backdropPath: fromTmdb.backdropPath ?? fromMaze.backdropPath,
+      overview: fromTmdb.overview ?? fromMaze.overview,
+      totalEpisodes: fromTmdb.totalEpisodes ?? fromMaze.totalEpisodes,
+      firstAired: fromTmdb.firstAired ?? fromMaze.firstAired,
+      status: fromTmdb.status ?? fromMaze.status,
+      genres: fromTmdb.genres ?? fromMaze.genres,
+      tvmazeId: fromMaze.tvmazeId,
+      imdbId: fromMaze.imdbId,
     };
   } catch {
     return null; // rede em baixo ou série não encontrada — fica para a próxima
@@ -189,19 +218,22 @@ export async function getEpisodesOfSeason(
   }
 }
 
-/** Pesquisa de séries para o Explorar. */
+/** Pesquisa de séries para o Explorar — TMDB primeiro, TVmaze quando não há resultados. */
 export async function searchShows(query: string): Promise<MetaSearchResult[]> {
   if (await hasTmdb()) {
     const results = await tmdb.searchTv(query);
-    return results.map((show) => ({
-      provider: "tmdb" as const,
-      providerId: show.id,
-      name: show.name,
-      year: show.first_air_date?.slice(0, 4) ?? null,
-      posterUrl: tmdb.imageUrl(show.poster_path, "w185"),
-      backdropUrl: tmdb.imageUrl(show.backdrop_path, "w780"),
-      overview: show.overview || null,
-    }));
+    if (results.length > 0) {
+      return results.map((show) => ({
+        provider: "tmdb" as const,
+        providerId: show.id,
+        name: show.name,
+        year: show.first_air_date?.slice(0, 4) ?? null,
+        posterUrl: tmdb.imageUrl(show.poster_path, "w185"),
+        backdropUrl: tmdb.imageUrl(show.backdrop_path, "w780"),
+        overview: show.overview || null,
+      }));
+    }
+    // sem resultados na TMDB — cai para a TVmaze em vez de mostrar vazio
   }
   const results = await tvmaze.searchShows(query);
   return results.map((show) => ({
