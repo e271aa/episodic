@@ -41,15 +41,23 @@ export default function SeriesPage() {
   const enriching = useRef(false);
 
   // Passo 2 do arranque: com os metadados no lugar, calcula o próximo
-  // episódio por ver de cada série seguida (a fila "A seguir")
+  // episódio por ver de cada série seguida (a fila "A seguir").
+  // 4 séries em paralelo: sequencial era demasiado lento com dezenas de
+  // séries; mais que isto esbarra no rate limit da TVmaze (20 req/10s).
   const computeNextUp = useCallback(async (list: ShowWithProgress[]) => {
     const map: NextUpMap = new Map();
-    for (const show of list) {
-      if (!show.followed || show.archived) continue;
-      const watched = await getWatchedForShow(show.uuid);
-      const next = await findNextUnwatched(show, watched);
-      if (next) map.set(show.uuid, next.episode);
-    }
+    const queue = list.filter((s) => s.followed && !s.archived);
+    let cursor = 0;
+    await Promise.all(
+      Array.from({ length: 4 }, async () => {
+        for (let i = cursor++; i < queue.length; i = cursor++) {
+          const show = queue[i];
+          const watched = await getWatchedForShow(show.uuid);
+          const next = await findNextUnwatched(show, watched);
+          if (next) map.set(show.uuid, next.episode);
+        }
+      }),
+    );
     setNextUp(map);
   }, []);
 

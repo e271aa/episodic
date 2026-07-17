@@ -42,11 +42,31 @@ export async function hasTmdb(): Promise<boolean> {
   return tmdbAvailable;
 }
 
+// Séries que os fornecedores não têm (ex.: TVmaze sem "Road to 2002") não
+// devem ser tentadas de novo a cada visita — no browser, guarda a última
+// tentativa falhada e só repete passadas 24h.
+const ENRICH_RETRY_MS = 24 * 60 * 60 * 1000;
+const canRemember = typeof indexedDB !== "undefined";
+
+async function enrichFailedRecently(uuid: string): Promise<boolean> {
+  if (!canRemember) return false;
+  const { kvGet } = await import("./db");
+  const at = await kvGet<number>(`enrich-fail:${uuid}`);
+  return at !== null && Date.now() - at < ENRICH_RETRY_MS;
+}
+
+async function rememberEnrichFailure(uuid: string): Promise<void> {
+  if (!canRemember) return;
+  const { kvSet } = await import("./db");
+  await kvSet(`enrich-fail:${uuid}`, Date.now());
+}
+
 /**
  * Completa uma série da biblioteca com poster, sinopse e nº de episódios.
  * Devolve o patch a aplicar ao registo, ou null se não houver dados novos.
  */
 export async function enrichShow(show: StoredShow): Promise<Partial<StoredShow> | null> {
+  if (await enrichFailedRecently(show.uuid)) return null;
   try {
     if (await hasTmdb()) {
       let tmdbId = show.tmdbId;
@@ -80,7 +100,10 @@ export async function enrichShow(show: StoredShow): Promise<Partial<StoredShow> 
     if (!mazeShow) {
       mazeShow = await tvmaze.findBestByName(show.name);
     }
-    if (!mazeShow) return null;
+    if (!mazeShow) {
+      await rememberEnrichFailure(show.uuid);
+      return null;
+    }
 
     const episodes = await tvmaze.getEpisodes(mazeShow.id);
     return {

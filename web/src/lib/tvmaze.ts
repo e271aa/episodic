@@ -3,6 +3,14 @@
 
 const BASE = "https://api.tvmaze.com";
 
+// O TheTVDB tem entradas duplicadas para algumas séries: o TV Time exportou
+// um ID e a TVmaze indexou outro. Equivalências confirmadas manualmente
+// (nome + nº de episódios batem certo).
+const TVDB_TO_TVMAZE: Record<number, number> = {
+  437487: 77573, // Formula 1 Academy → F1: The Academy
+  337623: 33934, // A Place Further Than the Universe → Sora yori mo Tooi Basho
+};
+
 export interface TvmazeShow {
   id: number;
   name: string;
@@ -51,6 +59,8 @@ export function stripHtml(html: string | null): string | null {
 
 /** Encontra a série TVmaze a partir do ID TheTVDB (o que o TV Time usa). */
 export async function lookupByTvdb(tvdbId: number): Promise<TvmazeShow | null> {
+  const alias = TVDB_TO_TVMAZE[tvdbId];
+  if (alias) return getShowById(alias);
   return get<TvmazeShow>(`/lookup/shows?thetvdb=${tvdbId}`);
 }
 
@@ -89,15 +99,40 @@ export async function findBestByName(name: string): Promise<TvmazeShow | null> {
   return exact?.show ?? null;
 }
 
-// A lista completa de episódios de uma série muda raramente — cache por sessão.
+// A lista completa de episódios de uma série muda raramente. Dois níveis de
+// cache: memória (sessão) e IndexedDB (24h) — sem isto, cada visita à página
+// Séries refazia um pedido por série seguida, com esperas de rate limit.
 const episodesCache = new Map<number, TvmazeEpisode[]>();
+const EPISODES_TTL_MS = 24 * 60 * 60 * 1000;
+
+interface EpisodesCacheEntry {
+  at: number;
+  eps: TvmazeEpisode[];
+}
+
+// O IndexedDB só existe no browser; nos scripts Node fica só a cache de memória.
+const hasIdb = typeof indexedDB !== "undefined";
 
 export async function getEpisodes(tvmazeId: number): Promise<TvmazeEpisode[]> {
   const cached = episodesCache.get(tvmazeId);
   if (cached) return cached;
+
+  if (hasIdb) {
+    const { kvGet } = await import("./db");
+    const stored = await kvGet<EpisodesCacheEntry>(`tvmaze-eps:${tvmazeId}`);
+    if (stored && Date.now() - stored.at < EPISODES_TTL_MS) {
+      episodesCache.set(tvmazeId, stored.eps);
+      return stored.eps;
+    }
+  }
+
   const episodes =
     (await get<TvmazeEpisode[]>(`/shows/${tvmazeId}/episodes`)) ?? [];
   const regular = episodes.filter((ep) => ep.number !== null);
   episodesCache.set(tvmazeId, regular);
+  if (hasIdb) {
+    const { kvSet } = await import("./db");
+    void kvSet(`tvmaze-eps:${tvmazeId}`, { at: Date.now(), eps: regular });
+  }
   return regular;
 }

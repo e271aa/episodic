@@ -265,6 +265,17 @@ export async function getImportMeta(): Promise<ImportMeta | null> {
   return ((await database.get("kv", "import-meta")) as ImportMeta | undefined) ?? null;
 }
 
+// Acesso genérico ao kv — usado para caches (ex.: listas de episódios TVmaze)
+export async function kvGet<T>(key: string): Promise<T | null> {
+  const database = await db();
+  return ((await database.get("kv", key)) as T | undefined) ?? null;
+}
+
+export async function kvSet(key: string, value: unknown): Promise<void> {
+  const database = await db();
+  await database.put("kv", value, key);
+}
+
 export async function clearAllData(): Promise<void> {
   const database = await db();
   const tx = database.transaction(["shows", "watched", "movies", "kv"], "readwrite");
