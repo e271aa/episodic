@@ -76,13 +76,15 @@ export async function enrichShow(show: StoredShow): Promise<Partial<StoredShow> 
       }
       if (tmdbId) {
         const details = await tmdb.getShowDetails(tmdbId);
+        // Nota: o nome local mantém-se — a TMDB devolve o nome original
+        // (ex.: japonês) quando falta a tradução pt-PT, e renomear séries
+        // que o utilizador conhece só confunde
         return {
           tmdbId,
           posterPath: details.poster_path,
           backdropPath: details.backdrop_path,
           overview: details.overview || null,
           totalEpisodes: details.number_of_episodes || null,
-          name: details.name || show.name,
           firstAired: details.first_air_date || null,
           status: details.status || null,
           genres: details.genres?.map((g) => g.name) ?? null,
@@ -112,7 +114,6 @@ export async function enrichShow(show: StoredShow): Promise<Partial<StoredShow> 
       backdropPath: mazeShow.image?.original ?? null,
       overview: tvmaze.stripHtml(mazeShow.summary),
       totalEpisodes: episodes.length || null,
-      name: mazeShow.name || show.name,
       firstAired: mazeShow.premiered ?? null,
       status: mazeShow.status ?? null,
       genres: mazeShow.genres.length > 0 ? mazeShow.genres : null,
