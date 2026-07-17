@@ -9,10 +9,18 @@ import {
   signInWithEmail,
   signOut,
   syncNow,
+  verifyEmailCode,
 } from "@/lib/cloud";
 import type { User } from "@supabase/supabase-js";
 
-type Status = "idle" | "sending" | "sent" | "syncing" | "synced" | "error";
+type Status =
+  | "idle"
+  | "sending"
+  | "sent"
+  | "verifying"
+  | "syncing"
+  | "synced"
+  | "error";
 
 // Conta na cloud + sincronização entre dispositivos. Só aparece se o Supabase
 // estiver configurado (NEXT_PUBLIC_SUPABASE_*). Chamada onSynced recarrega as
@@ -22,6 +30,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
   // Sem cloud configurada, não há nada a esperar → pronto de imediato.
   const [ready, setReady] = useState(() => !isCloudConfigured());
   const [email, setEmail] = useState("");
+  const [code, setCode] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
   const autoPulled = useRef(false);
@@ -62,12 +71,40 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
     const { error } = await signInWithEmail(email.trim());
     if (error) {
       setStatus("error");
-      setMessage(error);
+      setMessage(
+        /rate limit/i.test(error)
+          ? "Limite de emails atingido — tenta de novo dentro de uma hora."
+          : error,
+      );
     } else {
       setStatus("sent");
-      setMessage("Verifica o teu email e clica no link para entrar.");
+      setMessage(
+        "Enviámos-te um email: introduz aqui o código de 6 dígitos (ou clica no link).",
+      );
     }
   }, [email]);
+
+  // Entrada por código — essencial na PWA instalada, onde clicar no link do
+  // email abriria o Safari em vez da app (a sessão ficaria no sítio errado).
+  const handleVerifyCode = useCallback(async () => {
+    if (code.trim().length < 6) return;
+    setStatus("verifying");
+    setMessage("");
+    const { error } = await verifyEmailCode(email.trim(), code);
+    if (error) {
+      setStatus("error");
+      setMessage(
+        /expired|invalid/i.test(error)
+          ? "Código inválido ou expirado — pede um novo email."
+          : error,
+      );
+    } else {
+      // onAuthChange trata do resto (define o utilizador e faz o pull)
+      setCode("");
+      setStatus("idle");
+      setMessage("");
+    }
+  }, [email, code]);
 
   const handleSync = useCallback(async () => {
     if (!user) return;
@@ -171,6 +208,38 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
               Entrar
             </button>
           </form>
+
+          {(status === "sent" || status === "verifying") && (
+            <form
+              className="page-enter mt-3 flex gap-2"
+              onSubmit={(e) => {
+                e.preventDefault();
+                void handleVerifyCode();
+              }}
+            >
+              <input
+                type="text"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]*"
+                maxLength={6}
+                value={code}
+                onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
+                placeholder="Código de 6 dígitos"
+                className="ep-code min-h-11 flex-1 rounded-full border border-line bg-night px-5 py-2 text-sm tracking-[0.3em] outline-none transition-colors focus:border-signal"
+              />
+              <button
+                type="submit"
+                disabled={status === "verifying" || code.length < 6}
+                className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-signal px-5 py-2 text-sm font-semibold text-on-signal transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+              >
+                {status === "verifying" && (
+                  <span className="spinner h-4 w-4 rounded-full border-2 border-on-signal/30 border-t-on-signal" />
+                )}
+                Validar
+              </button>
+            </form>
+          )}
         </div>
       )}
 

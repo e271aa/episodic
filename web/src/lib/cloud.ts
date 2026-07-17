@@ -25,6 +25,23 @@ export async function signInWithEmail(email: string): Promise<{ error?: string }
   return error ? { error: error.message } : {};
 }
 
+/**
+ * Valida o código de 6 dígitos recebido por email — o caminho certo numa PWA
+ * instalada, onde clicar no link abriria o browser em vez da app.
+ */
+export async function verifyEmailCode(
+  email: string,
+  code: string,
+): Promise<{ error?: string }> {
+  if (!supabase) return { error: "Cloud não configurada." };
+  const { error } = await supabase.auth.verifyOtp({
+    email,
+    token: code.trim(),
+    type: "email",
+  });
+  return error ? { error: error.message } : {};
+}
+
 export async function signOut(): Promise<void> {
   await supabase?.auth.signOut();
 }
