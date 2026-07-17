@@ -153,6 +153,36 @@ export async function enrichShow(show: StoredShow): Promise<Partial<StoredShow> 
   }
 }
 
+/**
+ * Poster e id TMDB de um filme (a TVmaze não tem filmes — sem chave TMDB não
+ * há enriquecimento). Pesquisa por nome + ano de estreia; sem ano, só aceita
+ * o primeiro resultado. Falhas lembradas por 24h como nas séries.
+ */
+export async function enrichMovie(movie: {
+  key: string;
+  name: string;
+  releaseDate?: string | null;
+}): Promise<{ tmdbId: number; posterPath: string | null } | null> {
+  if (!(await hasTmdb())) return null;
+  if (await enrichFailedRecently(`movie:${movie.key}`)) return null;
+  try {
+    const year = movie.releaseDate?.slice(0, 4);
+    let results = await tmdb.searchMovie(movie.name, year);
+    // ano de estreia TV Time por vezes difere um ano do TMDB — repete sem ano
+    if (results.length === 0 && year) {
+      results = await tmdb.searchMovie(movie.name);
+    }
+    const hit = results[0];
+    if (!hit) {
+      await rememberEnrichFailure(`movie:${movie.key}`);
+      return null;
+    }
+    return { tmdbId: hit.id, posterPath: hit.poster_path };
+  } catch {
+    return null;
+  }
+}
+
 /** Lista de temporadas de uma série (null quando não há fornecedor mapeado). */
 export async function getSeasons(show: StoredShow): Promise<MetaSeason[] | null> {
   try {

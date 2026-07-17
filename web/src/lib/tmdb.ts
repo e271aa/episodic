@@ -71,6 +71,25 @@ export async function getShowDetails(tmdbId: number): Promise<TmdbShowDetails> {
   return tmdbGet<TmdbShowDetails>(`tv/${tmdbId}`);
 }
 
+export interface TmdbMovieLite {
+  id: number;
+  title: string;
+  poster_path: string | null;
+  release_date?: string;
+  overview: string;
+}
+
+/** Pesquisa de filmes; `year` (da estreia) desambigua remakes e homónimos. */
+export async function searchMovie(
+  query: string,
+  year?: string,
+): Promise<TmdbMovieLite[]> {
+  const params: Record<string, string> = { query, include_adult: "false" };
+  if (year) params.year = year;
+  const result = await tmdbGet<{ results: TmdbMovieLite[] }>("search/movie", params);
+  return result.results ?? [];
+}
+
 export async function getSeasonEpisodes(
   tmdbId: number,
   seasonNumber: number,

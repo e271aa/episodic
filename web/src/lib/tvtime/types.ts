@@ -38,6 +38,8 @@ export interface TvTimeMovieWatch {
   name: string;
   watchedAt: string;
   dateIsExact: boolean;
+  /** data de estreia (YYYY-MM-DD) — ajuda a casar com a TMDB sem ambiguidade */
+  releaseDate?: string | null;
 }
 
 export interface TvTimeEmotion {

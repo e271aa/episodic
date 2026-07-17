@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { getImportMeta, getMovies, type StoredMovie } from "@/lib/db";
+import { getImportMeta, getMovies, updateMovie, type StoredMovie } from "@/lib/db";
+import { enrichMovie } from "@/lib/metadata";
+import { imageUrl } from "@/lib/tmdb";
 import { ClapperboardIcon } from "@/components/icons";
 
 interface MoviesState {
@@ -10,16 +12,71 @@ interface MoviesState {
   hasImported: boolean;
 }
 
+function byWatchedDesc(a: StoredMovie, b: StoredMovie): number {
+  return b.watchedAt.localeCompare(a.watchedAt);
+}
+
+function MovieCard({ movie }: { movie: StoredMovie }) {
+  const src = imageUrl(movie.posterPath, "w342");
+  const year = movie.releaseDate?.slice(0, 4);
+  return (
+    <div>
+      <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30">
+        {src ? (
+          // eslint-disable-next-line @next/next/no-img-element -- posters já vêm dimensionados
+          <img
+            src={src}
+            alt={movie.name}
+            loading="lazy"
+            className="h-full w-full object-cover"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-raised p-2 text-center font-display text-sm font-bold text-dim">
+            {movie.name}
+          </div>
+        )}
+      </div>
+      <p className="mt-1.5 truncate text-sm font-medium">{movie.name}</p>
+      <p className="ep-code truncate text-xs text-dim">
+        {year ? `${year} · ` : ""}visto {movie.watchedAt.slice(0, 10)}
+      </p>
+    </div>
+  );
+}
+
 export default function MoviesPage() {
   const [state, setState] = useState<MoviesState | null>(null);
+  const enriching = useRef(false);
 
   useEffect(() => {
-    void Promise.all([getMovies(), getImportMeta()]).then(([list, meta]) =>
-      setState({
-        movies: list.sort((a, b) => b.watchedAt.localeCompare(a.watchedAt)),
-        hasImported: meta !== null,
-      }),
-    );
+    void (async () => {
+      const [list, meta] = await Promise.all([getMovies(), getImportMeta()]);
+      setState({ movies: list.sort(byWatchedDesc), hasImported: meta !== null });
+
+      // Completa posters em falta via TMDB (quando há chave), persistindo —
+      // nas visitas seguintes já está tudo em cache local
+      if (enriching.current) return;
+      enriching.current = true;
+      try {
+        let changed = false;
+        for (const movie of list) {
+          if (movie.posterPath) continue;
+          const patch = await enrichMovie(movie);
+          if (patch) {
+            await updateMovie(movie.key, patch);
+            changed = true;
+          }
+        }
+        if (changed) {
+          const fresh = await getMovies();
+          setState((current) =>
+            current ? { ...current, movies: fresh.sort(byWatchedDesc) } : current,
+          );
+        }
+      } finally {
+        enriching.current = false;
+      }
+    })();
   }, []);
 
   if (state === null) {
@@ -35,22 +92,30 @@ export default function MoviesPage() {
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
       <h1 className="font-display text-2xl font-bold">Filmes</h1>
+      {movies.length > 0 && (
+        <p className="ep-code mt-1 text-xs text-dim">{movies.length} vistos</p>
+      )}
 
       {movies.length === 0 ? (
         <div className="mt-16 flex flex-col items-center text-center">
           <ClapperboardIcon className="h-12 w-12 text-faint" />
           {hasImported ? (
-            // Já importou: honestidade — os filmes do TV Time estão guardados
-            // no export, mas precisam de um fornecedor de metadados de filmes
+            // Biblioteca importada antes do suporte a filmes — basta reimportar
             <>
               <p className="mt-4 max-w-sm font-display font-semibold">
-                Os teus filmes estão a caminho
+                Falta só reimportar o export
               </p>
               <p className="mt-2 max-w-sm text-sm text-dim">
-                O TV Time guardou-os no teu export e nada se perdeu — mas o
-                fornecedor de metadados que usamos só cobre séries. Assim que
-                ligarmos um fornecedor de filmes, aparecem aqui com posters e tudo.
+                Os teus filmes estão no ficheiro antigo do export do TV Time, que
+                agora já sabemos ler. Reimporta o ZIP completo e aparecem aqui
+                com posters e tudo.
               </p>
+              <Link
+                href="/import"
+                className="mt-6 inline-block cursor-pointer rounded-full bg-signal px-6 py-3 font-semibold text-on-signal transition hover:brightness-110 active:scale-95"
+              >
+                Reimportar do TV Time
+              </Link>
             </>
           ) : (
             <>
@@ -67,17 +132,9 @@ export default function MoviesPage() {
           )}
         </div>
       ) : (
-        <div className="mt-6 flex flex-col gap-2">
+        <div className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
           {movies.map((movie) => (
-            <div
-              key={movie.key}
-              className="flex items-center justify-between rounded-2xl border border-line bg-panel px-4 py-3"
-            >
-              <p className="font-medium">{movie.name}</p>
-              <p className="ep-code text-sm text-dim">
-                {movie.watchedAt.slice(0, 10)}
-              </p>
-            </div>
+            <MovieCard key={movie.key} movie={movie} />
           ))}
         </div>
       )}

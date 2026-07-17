@@ -37,6 +37,10 @@ export interface StoredMovie {
   name: string;
   watchedAt: string;
   dateIsExact: boolean;
+  releaseDate?: string | null; // YYYY-MM-DD — desambigua a pesquisa TMDB
+  // enriquecimento local (a cloud só guarda nome+datas; posters recalculam-se)
+  tmdbId?: number | null;
+  posterPath?: string | null;
 }
 
 export interface ImportMeta {
@@ -145,6 +149,7 @@ export async function importExport(data: TvTimeExport): Promise<void> {
       name: movie.name,
       watchedAt: movie.watchedAt,
       dateIsExact: movie.dateIsExact,
+      releaseDate: movie.releaseDate ?? null,
     });
   }
   const meta: ImportMeta = {
@@ -186,10 +191,17 @@ export async function mergeFromCloud(
   movies: StoredMovie[],
 ): Promise<void> {
   const database = await db();
+  // Filmes: a cloud não guarda enriquecimento (poster/tmdbId) — preserva o
+  // que já existe localmente para não refazer pesquisas TMDB a cada pull
+  const existingMovies = new Map(
+    (await database.getAll("movies")).map((m) => [m.key, m]),
+  );
   const tx = database.transaction(["shows", "watched", "movies"], "readwrite");
   for (const show of shows) void tx.objectStore("shows").put(show);
   for (const ep of watched) void tx.objectStore("watched").put(ep);
-  for (const movie of movies) void tx.objectStore("movies").put(movie);
+  for (const movie of movies) {
+    void tx.objectStore("movies").put({ ...existingMovies.get(movie.key), ...movie });
+  }
   await tx.done;
 }
 
@@ -258,6 +270,16 @@ export async function unmarkWatched(
 export async function getMovies(): Promise<StoredMovie[]> {
   const database = await db();
   return database.getAll("movies");
+}
+
+export async function updateMovie(
+  key: string,
+  patch: Partial<StoredMovie>,
+): Promise<void> {
+  const database = await db();
+  const current = await database.get("movies", key);
+  if (!current) return;
+  await database.put("movies", { ...current, ...patch, key });
 }
 
 export async function getImportMeta(): Promise<ImportMeta | null> {

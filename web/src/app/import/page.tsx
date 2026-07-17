@@ -3,20 +3,34 @@
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import JSZip from "jszip";
-import { parseEmotions, parseTrackingV2 } from "@/lib/tvtime/parser";
+import {
+  mergeMovieLists,
+  parseEmotions,
+  parseTrackingV1Movies,
+  parseTrackingV2,
+} from "@/lib/tvtime/parser";
 import type { TvTimeExport } from "@/lib/tvtime/types";
 import { importExport } from "@/lib/db";
 import { TvIcon } from "@/components/icons";
 
+// Ficheiros que sabemos ler: v2 (séries+episódios), v1 (filmes), reações.
+const WANTED = [
+  "tracking-prod-records-v2.csv",
+  "tracking-prod-records.csv",
+  "episode_emotion.csv",
+] as const;
+
 // Aceita o ZIP do export GDPR tal como vem do TV Time, ou os CSVs soltos.
 async function extractCsvs(
   files: File[],
-): Promise<{ tracking: string | null; emotions: string | null }> {
+): Promise<{ tracking: string | null; trackingV1: string | null; emotions: string | null }> {
   let tracking: string | null = null;
+  let trackingV1: string | null = null;
   let emotions: string | null = null;
 
   const take = (baseName: string, content: string) => {
     if (baseName === "tracking-prod-records-v2.csv") tracking = content;
+    if (baseName === "tracking-prod-records.csv") trackingV1 = content;
     if (baseName === "episode_emotion.csv") emotions = content;
   };
 
@@ -26,10 +40,7 @@ async function extractCsvs(
       for (const entry of Object.values(zip.files)) {
         if (entry.dir) continue;
         const base = entry.name.split("/").pop() ?? "";
-        if (
-          base === "tracking-prod-records-v2.csv" ||
-          base === "episode_emotion.csv"
-        ) {
+        if ((WANTED as readonly string[]).includes(base)) {
           take(base, await entry.async("string"));
         }
       }
@@ -37,7 +48,7 @@ async function extractCsvs(
       take(file.name, await file.text());
     }
   }
-  return { tracking, emotions };
+  return { tracking, trackingV1, emotions };
 }
 
 export default function ImportPage() {
@@ -51,7 +62,7 @@ export default function ImportPage() {
     setPreview(null);
     setBusy(true);
     try {
-      const { tracking, emotions } = await extractCsvs(files);
+      const { tracking, trackingV1, emotions } = await extractCsvs(files);
       if (!tracking) {
         setError(
           "Não encontrei o ficheiro tracking-prod-records-v2.csv. Envia o ZIP completo do export GDPR do TV Time, ou esse CSV diretamente.",
@@ -59,6 +70,10 @@ export default function ImportPage() {
         return;
       }
       const data = parseTrackingV2(tracking);
+      // Os filmes vivem no ficheiro v1 (o v2 não os traz)
+      if (trackingV1) {
+        data.movies = mergeMovieLists(data.movies, parseTrackingV1Movies(trackingV1));
+      }
       if (emotions) data.emotions = parseEmotions(emotions);
       setPreview(data);
     } catch (e) {

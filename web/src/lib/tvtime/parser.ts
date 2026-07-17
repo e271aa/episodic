@@ -150,6 +150,41 @@ export function parseTrackingV2(csvText: string): TvTimeExport {
   return { stats, shows, episodes, movies, emotions: [], unknownKeys };
 }
 
+/**
+ * Interpreta o ficheiro v1 (tracking-prod-records.csv) — só para FILMES.
+ * As séries/episódios vivem no v2; os filmes só existem aqui, como linhas
+ * `type=watch` + `entity_type=movie`, com nome, data e estreia.
+ */
+export function parseTrackingV1Movies(csvText: string): TvTimeMovieWatch[] {
+  const movies: TvTimeMovieWatch[] = [];
+  for (const row of parseCsv(csvText)) {
+    if (row.type !== "watch" || row.entity_type !== "movie") continue;
+    if (!row.movie_name || !row.uuid) continue;
+    const when = row.watch_date || row.created_at || "";
+    movies.push({
+      key: row.uuid,
+      name: row.movie_name,
+      watchedAt: sqlDateToIso(when),
+      dateIsExact: Boolean(when),
+      releaseDate: row.release_date ? row.release_date.slice(0, 10) : null,
+    });
+  }
+  return movies;
+}
+
+/** Funde listas de filmes sem duplicar (a chave é o uuid do TV Time). */
+export function mergeMovieLists(
+  ...lists: TvTimeMovieWatch[][]
+): TvTimeMovieWatch[] {
+  const byKey = new Map<string, TvTimeMovieWatch>();
+  for (const list of lists) {
+    for (const movie of list) {
+      if (!byKey.has(movie.key)) byKey.set(movie.key, movie);
+    }
+  }
+  return [...byKey.values()];
+}
+
 /** Interpreta episode_emotion.csv (reações por episódio; emotion_id 1 = gostei). */
 export function parseEmotions(csvText: string): TvTimeEmotion[] {
   return parseCsv(csvText).map((row) => ({
