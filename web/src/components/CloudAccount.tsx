@@ -6,7 +6,9 @@ import {
   getUser,
   onAuthChange,
   pullAndMerge,
+  setPassword,
   signInWithEmail,
+  signInWithPassword,
   signOut,
   syncNow,
   verifyEmailCode,
@@ -30,6 +32,8 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
   // Sem cloud configurada, não há nada a esperar → pronto de imediato.
   const [ready, setReady] = useState(() => !isCloudConfigured());
   const [email, setEmail] = useState("");
+  const [password, setPasswordInput] = useState("");
+  const [newPassword, setNewPassword] = useState("");
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
@@ -63,6 +67,46 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
       if (u) void autoPull();
     });
   }, [autoPull]);
+
+  // Entrada principal: com password se estiver preenchida; caso contrário
+  // envia o email com código/link (fallback passwordless).
+  const handlePasswordSignIn = useCallback(async () => {
+    if (!email.trim() || !password) return;
+    setStatus("verifying");
+    setMessage("");
+    const { error } = await signInWithPassword(email.trim(), password);
+    if (error) {
+      setStatus("error");
+      setMessage(
+        /invalid login credentials/i.test(error)
+          ? "Email ou password errados."
+          : error,
+      );
+    } else {
+      setPasswordInput("");
+      setStatus("idle");
+      setMessage("");
+    }
+  }, [email, password]);
+
+  const handleSetPassword = useCallback(async () => {
+    if (newPassword.length < 8) {
+      setStatus("error");
+      setMessage("A password precisa de pelo menos 8 caracteres.");
+      return;
+    }
+    setStatus("verifying");
+    setMessage("");
+    const { error } = await setPassword(newPassword);
+    if (error) {
+      setStatus("error");
+      setMessage(error);
+    } else {
+      setNewPassword("");
+      setStatus("idle");
+      setMessage("Password guardada — já podes entrar com ela em qualquer dispositivo.");
+    }
+  }, [newPassword]);
 
   const handleSignIn = useCallback(async () => {
     if (!email.trim()) return;
@@ -175,18 +219,51 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
               Terminar sessão
             </button>
           </div>
+
+          {/* Password opcional: entra noutros dispositivos sem depender de
+              emails (o link/código continua disponível como alternativa). */}
+          <form
+            className="mt-4 border-t border-line pt-4"
+            onSubmit={(e) => {
+              e.preventDefault();
+              void handleSetPassword();
+            }}
+          >
+            <p className="text-xs text-dim">
+              Define uma password para entrares noutros dispositivos sem esperar
+              por emails (ideal no telemóvel).
+            </p>
+            <div className="mt-2 flex gap-2">
+              <input
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="nova password (mín. 8)"
+                autoComplete="new-password"
+                minLength={8}
+                className="min-h-11 flex-1 rounded-full border border-line bg-night px-5 py-2 text-sm outline-none transition-colors focus:border-signal"
+              />
+              <button
+                type="submit"
+                disabled={status === "verifying" || newPassword.length < 8}
+                className="min-h-11 cursor-pointer rounded-full border border-line px-5 py-2 text-sm font-medium text-dim transition hover:bg-raised disabled:opacity-50"
+              >
+                Guardar
+              </button>
+            </div>
+          </form>
         </div>
       ) : (
         <div className="mt-3 rounded-2xl border border-line bg-panel p-4">
           <p className="text-sm text-dim">
             Entra com o teu email para guardar a biblioteca na cloud e tê-la em
-            todos os dispositivos. Sem passwords — recebes um link mágico.
+            todos os dispositivos.
           </p>
           <form
-            className="mt-3 flex gap-2"
+            className="mt-3 flex flex-col gap-2"
             onSubmit={(e) => {
               e.preventDefault();
-              void handleSignIn();
+              void handlePasswordSignIn();
             }}
           >
             <input
@@ -195,17 +272,37 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="o-teu@email.com"
               autoComplete="email"
-              className="min-h-11 flex-1 rounded-full border border-line bg-night px-5 py-2 text-sm outline-none transition-colors focus:border-signal"
+              className="min-h-11 rounded-full border border-line bg-night px-5 py-2 text-sm outline-none transition-colors focus:border-signal"
             />
+            <div className="flex gap-2">
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPasswordInput(e.target.value)}
+                placeholder="password"
+                autoComplete="current-password"
+                className="min-h-11 flex-1 rounded-full border border-line bg-night px-5 py-2 text-sm outline-none transition-colors focus:border-signal"
+              />
+              <button
+                type="submit"
+                disabled={status === "verifying" || !email.trim() || !password}
+                className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-signal px-5 py-2 text-sm font-semibold text-on-signal transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+              >
+                {status === "verifying" && (
+                  <span className="spinner h-4 w-4 rounded-full border-2 border-on-signal/30 border-t-on-signal" />
+                )}
+                Entrar
+              </button>
+            </div>
             <button
-              type="submit"
-              disabled={status === "sending"}
-              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-signal px-5 py-2 text-sm font-semibold text-on-signal transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+              type="button"
+              onClick={() => void handleSignIn()}
+              disabled={status === "sending" || !email.trim()}
+              className="cursor-pointer self-start px-2 py-1 text-xs font-medium text-signal hover:underline disabled:opacity-50"
             >
-              {status === "sending" && (
-                <span className="spinner h-4 w-4 rounded-full border-2 border-on-signal/30 border-t-on-signal" />
-              )}
-              Entrar
+              {status === "sending"
+                ? "A enviar…"
+                : "Sem password? Recebe um código por email"}
             </button>
           </form>
 

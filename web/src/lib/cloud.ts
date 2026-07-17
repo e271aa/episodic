@@ -42,6 +42,23 @@ export async function verifyEmailCode(
   return error ? { error: error.message } : {};
 }
 
+/** Entrada clássica com email+password — o caminho sem fricção na PWA. */
+export async function signInWithPassword(
+  email: string,
+  password: string,
+): Promise<{ error?: string }> {
+  if (!supabase) return { error: "Cloud não configurada." };
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  return error ? { error: error.message } : {};
+}
+
+/** Define (ou muda) a password da conta com sessão iniciada. */
+export async function setPassword(password: string): Promise<{ error?: string }> {
+  if (!supabase) return { error: "Cloud não configurada." };
+  const { error } = await supabase.auth.updateUser({ password });
+  return error ? { error: error.message } : {};
+}
+
 export async function signOut(): Promise<void> {
   await supabase?.auth.signOut();
 }
