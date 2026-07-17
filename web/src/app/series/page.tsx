@@ -6,6 +6,8 @@ import {
   getAllWatched,
   getShows,
   getWatchedForShow,
+  kvGet,
+  kvSet,
   markWatched,
   migrateLegacyImport,
   updateShow,
@@ -35,10 +37,19 @@ async function loadShows(): Promise<ShowWithProgress[]> {
 
 type NextUpMap = Map<string, MetaEpisode>;
 
+// A fila calculada persiste entre visitas: mostra-se logo a última versão
+// conhecida e recalcula-se em segundo plano (stale-while-revalidate).
+const NEXTUP_CACHE_KEY = "nextup-cache";
+
+function persistNextUp(map: NextUpMap): void {
+  void kvSet(NEXTUP_CACHE_KEY, Object.fromEntries(map));
+}
+
 export default function SeriesPage() {
   const [shows, setShows] = useState<ShowWithProgress[] | null>(null);
   const [nextUp, setNextUp] = useState<NextUpMap | null>(null);
   const enriching = useRef(false);
+  const hadCache = useRef(false);
 
   // Passo 2 do arranque: com os metadados no lugar, calcula o próximo
   // episódio por ver de cada série seguida (a fila "A seguir").
@@ -54,11 +65,17 @@ export default function SeriesPage() {
           const show = queue[i];
           const watched = await getWatchedForShow(show.uuid);
           const next = await findNextUnwatched(show, watched);
-          if (next) map.set(show.uuid, next.episode);
+          if (next) {
+            map.set(show.uuid, next.episode);
+            // Sem cache prévia, cada cartão aparece assim que fica pronto —
+            // melhor ver a fila a crescer do que um spinner parado
+            if (!hadCache.current) setNextUp(new Map(map));
+          }
         }
       }),
     );
     setNextUp(map);
+    persistNextUp(map);
   }, []);
 
   // Completa séries com poster/sinopse/nº de episódios (TVmaze por defeito,
@@ -88,10 +105,18 @@ export default function SeriesPage() {
   );
 
   useEffect(() => {
-    void loadShows().then((list) => {
+    void (async () => {
+      // Fila da última visita aparece de imediato; a versão fresca substitui-a
+      // quando o recálculo em segundo plano terminar
+      const cached = await kvGet<Record<string, MetaEpisode>>(NEXTUP_CACHE_KEY);
+      if (cached && Object.keys(cached).length > 0) {
+        hadCache.current = true;
+        setNextUp(new Map(Object.entries(cached)));
+      }
+      const list = await loadShows();
       setShows(list);
       void enrich(list);
-    });
+    })();
   }, [enrich]);
 
   // Check no Watch Next: grava, avança o cartão para o episódio seguinte
@@ -113,6 +138,7 @@ export default function SeriesPage() {
         const map = new Map(current);
         if (next) map.set(showUuid, next.episode);
         else map.delete(showUuid);
+        persistNextUp(map);
         return map;
       });
     },
