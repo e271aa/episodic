@@ -35,7 +35,17 @@ async function loadShows(): Promise<ShowWithProgress[]> {
     .sort((a, b) => b.watchedCount - a.watchedCount);
 }
 
-type NextUpMap = Map<string, MetaEpisode>;
+// Cada entrada da fila guarda também quando o utilizador viu o último
+// episódio dessa série — é isso que separa "A seguir" de "Retomar".
+interface QueueEntry {
+  episode: MetaEpisode;
+  lastWatchedAt: string | null;
+}
+
+type NextUpMap = Map<string, QueueEntry>;
+
+// Série sem episódios vistos há mais de 30 dias sai da fila principal
+const STALE_MS = 30 * 24 * 60 * 60 * 1000;
 
 // A fila calculada persiste entre visitas: mostra-se logo a última versão
 // conhecida e recalcula-se em segundo plano (stale-while-revalidate).
@@ -45,9 +55,30 @@ function persistNextUp(map: NextUpMap): void {
   void kvSet(NEXTUP_CACHE_KEY, Object.fromEntries(map));
 }
 
+// A cache antiga guardava só o episódio (MetaEpisode, onde `episode` é um
+// número); no formato novo `episode` é um objeto. Converte sem perder a fila.
+function reviveQueueEntry(value: QueueEntry | MetaEpisode): QueueEntry {
+  return typeof value.episode === "object"
+    ? (value as QueueEntry)
+    : { episode: value as MetaEpisode, lastWatchedAt: null };
+}
+
+function lastWatchDate(watched: { watchedAt: string }[]): string | null {
+  let max: string | null = null;
+  for (const w of watched) {
+    if (max === null || w.watchedAt > max) max = w.watchedAt;
+  }
+  return max;
+}
+
 export default function SeriesPage() {
   const [shows, setShows] = useState<ShowWithProgress[] | null>(null);
   const [nextUp, setNextUp] = useState<NextUpMap | null>(null);
+  // Secções secundárias da fila (como no TV Time): fechadas por omissão
+  const [showStale, setShowStale] = useState(false);
+  const [showNotStarted, setShowNotStarted] = useState(false);
+  // instante de referência para o corte de 30 dias, fixado ao montar
+  const [now] = useState(() => Date.now());
   const enriching = useRef(false);
   const hadCache = useRef(false);
 
@@ -66,7 +97,10 @@ export default function SeriesPage() {
           const watched = await getWatchedForShow(show.uuid);
           const next = await findNextUnwatched(show, watched);
           if (next) {
-            map.set(show.uuid, next.episode);
+            map.set(show.uuid, {
+              episode: next.episode,
+              lastWatchedAt: lastWatchDate(watched),
+            });
             // Sem cache prévia, cada cartão aparece assim que fica pronto —
             // melhor ver a fila a crescer do que um spinner parado
             if (!hadCache.current) setNextUp(new Map(map));
@@ -108,10 +142,18 @@ export default function SeriesPage() {
     void (async () => {
       // Fila da última visita aparece de imediato; a versão fresca substitui-a
       // quando o recálculo em segundo plano terminar
-      const cached = await kvGet<Record<string, MetaEpisode>>(NEXTUP_CACHE_KEY);
+      const cached =
+        await kvGet<Record<string, QueueEntry | MetaEpisode>>(NEXTUP_CACHE_KEY);
       if (cached && Object.keys(cached).length > 0) {
         hadCache.current = true;
-        setNextUp(new Map(Object.entries(cached)));
+        setNextUp(
+          new Map(
+            Object.entries(cached).map(([uuid, value]) => [
+              uuid,
+              reviveQueueEntry(value),
+            ]),
+          ),
+        );
       }
       const list = await loadShows();
       setShows(list);
@@ -136,8 +178,15 @@ export default function SeriesPage() {
       const next = await findNextUnwatched(show, watched);
       setNextUp((current) => {
         const map = new Map(current);
-        if (next) map.set(showUuid, next.episode);
-        else map.delete(showUuid);
+        // acabou de ver um episódio → a série volta (ou mantém-se) ativa
+        if (next) {
+          map.set(showUuid, {
+            episode: next.episode,
+            lastWatchedAt: new Date().toISOString(),
+          });
+        } else {
+          map.delete(showUuid);
+        }
         persistNextUp(map);
         return map;
       });
@@ -227,6 +276,82 @@ export default function SeriesPage() {
   const archived = shows.filter((s) => s.followed && s.archived);
   const queue = watching.filter((s) => nextUp?.has(s.uuid));
 
+  // Divide a fila como o TV Time: ativas no topo; paradas há 30+ dias em
+  // "Retomar"; seguidas mas nunca começadas em "Por começar"
+  const activeQueue: ShowWithProgress[] = [];
+  const staleQueue: ShowWithProgress[] = [];
+  const notStartedQueue: ShowWithProgress[] = [];
+  for (const show of queue) {
+    const entry = nextUp?.get(show.uuid);
+    if (!entry) continue;
+    if (show.watchedCount === 0) {
+      notStartedQueue.push(show);
+    } else if (
+      entry.lastWatchedAt &&
+      now - Date.parse(entry.lastWatchedAt) > STALE_MS
+    ) {
+      staleQueue.push(show);
+    } else {
+      activeQueue.push(show);
+    }
+  }
+  // mais recentemente vistas primeiro — o que anda a ver fica no topo
+  const byLastWatchedDesc = (a: ShowWithProgress, b: ShowWithProgress) =>
+    (nextUp?.get(b.uuid)?.lastWatchedAt ?? "").localeCompare(
+      nextUp?.get(a.uuid)?.lastWatchedAt ?? "",
+    );
+  activeQueue.sort(byLastWatchedDesc);
+  staleQueue.sort(byLastWatchedDesc);
+
+  const queueCards = (list: ShowWithProgress[]) => (
+    <div className="mt-3 space-y-3">
+      {list.map((show) => (
+        <WatchNextCard
+          key={show.uuid}
+          showUuid={show.uuid}
+          showName={show.name}
+          posterPath={show.posterPath}
+          episode={nextUp!.get(show.uuid)!.episode}
+          onCheck={(season, episode) => handleCheck(show.uuid, season, episode)}
+        />
+      ))}
+    </div>
+  );
+
+  const sectionToggle = (
+    title: string,
+    hint: string,
+    count: number,
+    open: boolean,
+    onToggle: () => void,
+  ) => (
+    <button
+      onClick={onToggle}
+      aria-expanded={open}
+      className="flex min-h-11 w-full cursor-pointer items-center gap-2 text-left"
+    >
+      <h2 className="font-display text-lg font-semibold text-dim">{title}</h2>
+      <span className="ep-code rounded-full bg-panel px-2 py-0.5 text-xs text-faint">
+        {count}
+      </span>
+      <span className="flex-1 truncate text-xs text-faint">{hint}</span>
+      <svg
+        viewBox="0 0 24 24"
+        className={`h-4 w-4 shrink-0 text-faint transition-transform ${open ? "rotate-180" : ""}`}
+        aria-hidden
+      >
+        <path
+          d="M6 9l6 6 6-6"
+          stroke="currentColor"
+          strokeWidth="2"
+          fill="none"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+      </svg>
+    </button>
+  );
+
   const grid = (list: ShowWithProgress[]) => (
     <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
       {list.map((s) => (
@@ -273,21 +398,41 @@ export default function SeriesPage() {
               Explorar
             </Link>
           </div>
+        ) : activeQueue.length > 0 ? (
+          queueCards(activeQueue)
         ) : (
-          <div className="mt-3 space-y-3">
-            {queue.map((show) => (
-              <WatchNextCard
-                key={show.uuid}
-                showUuid={show.uuid}
-                showName={show.name}
-                posterPath={show.posterPath}
-                episode={nextUp.get(show.uuid)!}
-                onCheck={(season, episode) => handleCheck(show.uuid, season, episode)}
-              />
-            ))}
-          </div>
+          <p className="mt-3 text-sm text-dim">
+            Nada ativo neste momento — retoma uma série parada ou começa uma
+            nova, aqui em baixo.
+          </p>
         )}
       </section>
+
+      {staleQueue.length > 0 && (
+        <section className="mt-8">
+          {sectionToggle(
+            "Retomar",
+            "paradas há mais de 30 dias",
+            staleQueue.length,
+            showStale,
+            () => setShowStale((v) => !v),
+          )}
+          {showStale && queueCards(staleQueue)}
+        </section>
+      )}
+
+      {notStartedQueue.length > 0 && (
+        <section className="mt-8">
+          {sectionToggle(
+            "Por começar",
+            "segues, mas ainda não viste nenhum episódio",
+            notStartedQueue.length,
+            showNotStarted,
+            () => setShowNotStarted((v) => !v),
+          )}
+          {showNotStarted && queueCards(notStartedQueue)}
+        </section>
+      )}
 
       {watching.length > 0 && (
         <section className="mt-10">
