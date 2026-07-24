@@ -17,6 +17,7 @@ import { enrichShow, type MetaEpisode } from "@/lib/metadata";
 import { findNextUnwatched } from "@/lib/watchnext";
 import PosterCard from "@/components/PosterCard";
 import WatchNextCard from "@/components/WatchNextCard";
+import TonightHero from "@/components/TonightHero";
 import { CheckIcon } from "@/components/icons";
 
 interface ShowWithProgress extends StoredShow {
@@ -367,22 +368,26 @@ export default function SeriesPage() {
     </div>
   );
 
+  const [heroShow, ...restActive] = activeQueue;
+
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
-      <p className="ep-code ep-wordmark text-xs tracking-[0.3em]">EPISODIC</p>
-      <h1 className="mt-1 font-display text-3xl font-bold">Séries</h1>
-
-      <section className="mt-6">
-        <h2 className="font-display text-lg font-semibold">A seguir</h2>
-        {nextUp === null ? (
-          <div className="mt-3 space-y-3">
+      {nextUp === null ? (
+        <>
+          <p className="ep-code ep-wordmark text-xs tracking-[0.3em]">EPISODIC</p>
+          <h1 className="mt-1 font-display text-3xl font-bold">Séries</h1>
+          <div className="mt-6 space-y-3">
             {watching.slice(0, 3).map((s) => (
               <div key={s.uuid} className="h-[104px] animate-pulse rounded-2xl bg-panel" />
             ))}
           </div>
-        ) : queue.length === 0 ? (
-          <div className="ep-card mt-3 flex items-center gap-3 p-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-signal-soft text-signal">
+        </>
+      ) : queue.length === 0 ? (
+        <>
+          <p className="ep-code ep-wordmark text-xs tracking-[0.3em]">EPISODIC</p>
+          <h1 className="mt-1 font-display text-3xl font-bold">Séries</h1>
+          <div className="ep-card mt-6 flex items-center gap-3 p-4">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-raised text-ink">
               <CheckIcon className="h-5 w-5" />
             </span>
             <div className="min-w-0 flex-1">
@@ -393,20 +398,42 @@ export default function SeriesPage() {
             </div>
             <Link
               href="/explore"
-              className="shrink-0 cursor-pointer text-sm font-semibold text-signal hover:underline"
+              className="shrink-0 cursor-pointer text-sm font-semibold text-ink hover:underline"
             >
               Explorar
             </Link>
           </div>
-        ) : activeQueue.length > 0 ? (
-          queueCards(activeQueue)
-        ) : (
-          <p className="mt-3 text-sm text-dim">
+        </>
+      ) : heroShow ? (
+        <>
+          <TonightHero
+            key={heroShow.uuid}
+            showUuid={heroShow.uuid}
+            showName={heroShow.name}
+            backdropPath={heroShow.backdropPath}
+            posterPath={heroShow.posterPath}
+            episode={nextUp.get(heroShow.uuid)!.episode}
+            onCheck={(season, episode) => handleCheck(heroShow.uuid, season, episode)}
+          />
+          {restActive.length > 0 && (
+            <section className="mt-6">
+              <h2 className="font-display text-sm font-semibold uppercase tracking-[0.15em] text-dim [font-stretch:80%]">
+                Continuar
+              </h2>
+              {queueCards(restActive)}
+            </section>
+          )}
+        </>
+      ) : (
+        <>
+          <p className="ep-code ep-wordmark text-xs tracking-[0.3em]">EPISODIC</p>
+          <h1 className="mt-1 font-display text-3xl font-bold">Séries</h1>
+          <p className="mt-6 text-sm text-dim">
             Nada ativo neste momento — retoma uma série parada ou começa uma
             nova, aqui em baixo.
           </p>
-        )}
-      </section>
+        </>
+      )}
 
       {staleQueue.length > 0 && (
         <section className="mt-8">
