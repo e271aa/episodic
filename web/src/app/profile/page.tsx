@@ -188,6 +188,16 @@ export default function ProfilePage() {
         </section>
       )}
 
+      <Link
+        href="/estatisticas"
+        className="mt-3 flex items-center justify-between rounded-2xl border border-line bg-panel px-5 py-4 transition-colors hover:bg-raised"
+      >
+        <span className="font-display font-semibold text-ink">
+          Estatísticas completas
+        </span>
+        <span className="text-faint">→</span>
+      </Link>
+
       <CloudAccount onSynced={() => void loadProfileStats().then(setStats)} />
 
       <section className="mt-8">
