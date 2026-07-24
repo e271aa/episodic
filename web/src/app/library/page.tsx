@@ -135,6 +135,7 @@ export default function LibraryPage() {
           posterPath={s.posterPath}
           watched={s.watchedCount}
           total={s.totalEpisodes}
+          status={s.status}
         />
       ))}
     </div>

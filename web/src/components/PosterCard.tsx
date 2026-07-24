@@ -11,6 +11,28 @@ export interface PosterCardProps {
   watched?: number;
   total?: number | null;
   subtitle?: string;
+  /** estado da série no fornecedor (TMDB/TVmaze) — dita a cor da barra quando em dia */
+  status?: string | null;
+}
+
+// A série acabou de vez — sem isto, "em dia" fica sempre verde (o valor
+// por omissão é assumir que ainda pode vir mais, nunca o contrário)
+const ENDED_STATUSES = new Set(["Ended", "Canceled", "Cancelled"]);
+
+/**
+ * Cor da barra de progresso, com significado (como o TV Time tinha):
+ *  - a meio de ver: branco — neutro, é só progresso
+ *  - em dia e a série ainda pode ter mais temporadas: verde
+ *  - em dia mas a série já terminou, não vem mais nada: roxo
+ * As cores vêm da paleta das barras SMPTE, não são novas.
+ */
+function progressBarColor(
+  watched: number,
+  total: number,
+  status: string | null | undefined,
+): string {
+  if (watched < total) return "var(--color-ink)";
+  return ENDED_STATUSES.has(status ?? "") ? "#d24bd2" : "#37c837";
 }
 
 export default function PosterCard({
@@ -20,10 +42,13 @@ export default function PosterCard({
   watched,
   total,
   subtitle,
+  status,
 }: PosterCardProps) {
   const src = imageUrl(posterPath, "w342");
   const progress =
     watched !== undefined && total ? Math.min(100, (watched / total) * 100) : null;
+  const barColor =
+    watched !== undefined && total ? progressBarColor(watched, total, status) : null;
 
   return (
     <Link href={href} className="group block cursor-pointer active:scale-[0.97]">
@@ -46,8 +71,12 @@ export default function PosterCard({
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 h-1 bg-black/50">
               <div
-                className="h-full bg-signal shadow-[0_0_6px_rgba(255,170,51,0.7)]"
-                style={{ width: `${progress}%` }}
+                className="h-full transition-[width]"
+                style={{
+                  width: `${progress}%`,
+                  background: barColor ?? undefined,
+                  boxShadow: barColor ? `0 0 6px ${barColor}b3` : undefined,
+                }}
               />
             </div>
           </>
