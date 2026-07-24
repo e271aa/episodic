@@ -190,6 +190,7 @@ export async function getSeasons(show: StoredShow): Promise<MetaSeason[] | null>
       const details = await tmdb.getShowDetails(show.tmdbId);
       return details.seasons
         .filter((s) => s.season_number > 0)
+        .sort((a, b) => a.season_number - b.season_number)
         .map((s) => ({
           number: s.season_number,
           episodeCount: s.episode_count,
@@ -202,12 +203,15 @@ export async function getSeasons(show: StoredShow): Promise<MetaSeason[] | null>
       for (const ep of episodes) {
         counts.set(ep.season, (counts.get(ep.season) ?? 0) + 1);
       }
+      // O nome usa a posição (1ª, 2ª…), não o número literal do fornecedor —
+      // alguns animes longos são indexados por ano de emissão (2007, 2008…)
+      // e "Temporada 2007" confundiria mais do que ajudaria
       return [...counts.entries()]
         .sort((a, b) => a[0] - b[0])
-        .map(([number, episodeCount]) => ({
+        .map(([number, episodeCount], i) => ({
           number,
           episodeCount,
-          name: `Temporada ${number}`,
+          name: `Temporada ${i + 1}`,
         }));
     }
     return null;

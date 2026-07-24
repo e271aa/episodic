@@ -20,7 +20,12 @@ import ProgressRing from "@/components/ProgressRing";
 import { CheckIcon } from "@/components/icons";
 
 interface SeasonView {
+  /** posição na lista (1, 2, 3…) — a numeração que o TV Time assume e que
+   * guardamos localmente; nunca o número literal do fornecedor (ver nota em
+   * watchnext.ts sobre animes longos indexados por ano de emissão) */
   number: number;
+  /** número real a pedir ao fornecedor (TMDB/TVmaze) — só para buscar dados */
+  providerNumber: number;
   name: string;
   episodeCount: number;
   fromProvider: boolean;
@@ -94,8 +99,9 @@ export default function ShowPage() {
       const providerSeasons = await getSeasons(stored);
       if (providerSeasons && providerSeasons.length > 0) {
         setSeasons(
-          providerSeasons.map((s) => ({
-            number: s.number,
+          providerSeasons.map((s, i) => ({
+            number: i + 1,
+            providerNumber: s.number,
             name: s.name,
             episodeCount: s.episodeCount,
             fromProvider: true,
@@ -119,6 +125,7 @@ export default function ShowPage() {
           .sort((a, b) => a[0] - b[0])
           .map(([number, count]) => ({
             number,
+            providerNumber: number, // sem fornecedor, é sempre a mesma numeração
             name: `Temporada ${number}`,
             episodeCount: count,
             fromProvider: false,
@@ -128,21 +135,23 @@ export default function ShowPage() {
   }, [uuid, syncWatched]);
 
   // Carrega os nomes/datas dos episódios de uma temporada (uma vez cada).
+  // Pede ao fornecedor pelo número real dele, mas guarda pela posição local
+  // (a mesma numeração usada nas chaves de "visto").
   const loadSeasonEpisodes = useCallback(
-    async (seasonNumber: number) => {
-      if (episodesBySeason.has(seasonNumber) || !show) return;
-      const eps = await getEpisodesOfSeason(show, seasonNumber);
+    async (season: SeasonView) => {
+      if (episodesBySeason.has(season.number) || !show) return;
+      const eps = await getEpisodesOfSeason(show, season.providerNumber);
       if (eps.length > 0) {
-        setEpisodesBySeason((m) => new Map(m).set(seasonNumber, eps));
+        setEpisodesBySeason((m) => new Map(m).set(season.number, eps));
       }
     },
     [episodesBySeason, show],
   );
 
   const toggleSeason = useCallback(
-    async (seasonNumber: number) => {
-      setOpenSeason((cur) => (cur === seasonNumber ? null : seasonNumber));
-      await loadSeasonEpisodes(seasonNumber);
+    async (season: SeasonView) => {
+      setOpenSeason((cur) => (cur === season.number ? null : season.number));
+      await loadSeasonEpisodes(season);
     },
     [loadSeasonEpisodes],
   );
@@ -186,9 +195,10 @@ export default function ShowPage() {
     // abre a temporada do próximo (com os nomes dos episódios) para dar
     // feedback visual do avanço
     setOpenSeason(nextUp.season);
-    await loadSeasonEpisodes(nextUp.season);
+    const seasonView = seasons.find((s) => s.number === nextUp.season);
+    if (seasonView) await loadSeasonEpisodes(seasonView);
     await syncWatched(show);
-  }, [nextUp, show, uuid, syncWatched, loadSeasonEpisodes]);
+  }, [nextUp, show, uuid, syncWatched, loadSeasonEpisodes, seasons]);
 
   const watchedCount = watched.size;
   const backdrop = imageUrl(show?.backdropPath ?? null, "w780");
@@ -362,7 +372,7 @@ export default function ShowPage() {
                     className="overflow-hidden rounded-xl border border-line bg-panel"
                   >
                     <button
-                      onClick={() => void toggleSeason(season.number)}
+                      onClick={() => void toggleSeason(season)}
                       className="flex min-h-12 w-full cursor-pointer items-center justify-between px-4 py-3 text-left"
                       data-testid={`season-${season.number}`}
                     >
