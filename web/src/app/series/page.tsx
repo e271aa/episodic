@@ -2,55 +2,20 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import {
-  getWatchedForShow,
-  kvGet,
-  kvSet,
-  markWatched,
-  updateShow,
-} from "@/lib/db";
+import { getWatchedForShow, markWatched, updateShow } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
-import { enrichShow, type MetaEpisode } from "@/lib/metadata";
+import { enrichShow } from "@/lib/metadata";
 import { findNextUnwatched } from "@/lib/watchnext";
+import {
+  classifyQueue,
+  lastWatchDate,
+  loadCachedNextUp,
+  persistNextUp,
+  type NextUpMap,
+} from "@/lib/queue";
 import WatchNextCard from "@/components/WatchNextCard";
 import TonightHero from "@/components/TonightHero";
 import { CheckIcon } from "@/components/icons";
-
-// Cada entrada da fila guarda também quando o utilizador viu o último
-// episódio dessa série — é isso que separa "A seguir" de "Retomar".
-interface QueueEntry {
-  episode: MetaEpisode;
-  lastWatchedAt: string | null;
-}
-
-type NextUpMap = Map<string, QueueEntry>;
-
-// Série sem episódios vistos há mais de 30 dias sai da fila principal
-const STALE_MS = 30 * 24 * 60 * 60 * 1000;
-
-// A fila calculada persiste entre visitas: mostra-se logo a última versão
-// conhecida e recalcula-se em segundo plano (stale-while-revalidate).
-const NEXTUP_CACHE_KEY = "nextup-cache";
-
-function persistNextUp(map: NextUpMap): void {
-  void kvSet(NEXTUP_CACHE_KEY, Object.fromEntries(map));
-}
-
-// A cache antiga guardava só o episódio (MetaEpisode, onde `episode` é um
-// número); no formato novo `episode` é um objeto. Converte sem perder a fila.
-function reviveQueueEntry(value: QueueEntry | MetaEpisode): QueueEntry {
-  return typeof value.episode === "object"
-    ? (value as QueueEntry)
-    : { episode: value as MetaEpisode, lastWatchedAt: null };
-}
-
-function lastWatchDate(watched: { watchedAt: string }[]): string | null {
-  let max: string | null = null;
-  for (const w of watched) {
-    if (max === null || w.watchedAt > max) max = w.watchedAt;
-  }
-  return max;
-}
 
 export default function SeriesPage() {
   const [shows, setShows] = useState<ShowWithProgress[] | null>(null);
@@ -123,18 +88,10 @@ export default function SeriesPage() {
     void (async () => {
       // Fila da última visita aparece de imediato; a versão fresca substitui-a
       // quando o recálculo em segundo plano terminar
-      const cached =
-        await kvGet<Record<string, QueueEntry | MetaEpisode>>(NEXTUP_CACHE_KEY);
-      if (cached && Object.keys(cached).length > 0) {
+      const cached = await loadCachedNextUp();
+      if (cached) {
         hadCache.current = true;
-        setNextUp(
-          new Map(
-            Object.entries(cached).map(([uuid, value]) => [
-              uuid,
-              reviveQueueEntry(value),
-            ]),
-          ),
-        );
+        setNextUp(cached);
       }
       const list = await loadShows();
       setShows(list);
@@ -254,32 +211,8 @@ export default function SeriesPage() {
   const watching = shows.filter((s) => s.followed && !s.archived);
   const queue = watching.filter((s) => nextUp?.has(s.uuid));
 
-  // Divide a fila como o TV Time: ativas no topo; paradas há 30+ dias em
-  // "Retomar"; seguidas mas nunca começadas em "Por começar"
-  const activeQueue: ShowWithProgress[] = [];
-  const staleQueue: ShowWithProgress[] = [];
-  const notStartedQueue: ShowWithProgress[] = [];
-  for (const show of queue) {
-    const entry = nextUp?.get(show.uuid);
-    if (!entry) continue;
-    if (show.watchedCount === 0) {
-      notStartedQueue.push(show);
-    } else if (
-      entry.lastWatchedAt &&
-      now - Date.parse(entry.lastWatchedAt) > STALE_MS
-    ) {
-      staleQueue.push(show);
-    } else {
-      activeQueue.push(show);
-    }
-  }
-  // mais recentemente vistas primeiro — o que anda a ver fica no topo
-  const byLastWatchedDesc = (a: ShowWithProgress, b: ShowWithProgress) =>
-    (nextUp?.get(b.uuid)?.lastWatchedAt ?? "").localeCompare(
-      nextUp?.get(a.uuid)?.lastWatchedAt ?? "",
-    );
-  activeQueue.sort(byLastWatchedDesc);
-  staleQueue.sort(byLastWatchedDesc);
+  const { active: activeQueue, stale: staleQueue, notStarted: notStartedQueue } =
+    nextUp ? classifyQueue(shows, nextUp, now) : { active: [], stale: [], notStarted: [] };
 
   const queueCards = (list: ShowWithProgress[]) => (
     <div className="mt-3 space-y-3">

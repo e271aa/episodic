@@ -188,6 +188,22 @@ export default function LibraryPage() {
         </Link>
       </div>
 
+      <Link
+        href="/triagem"
+        className="ep-card ep-card-hover mt-3 flex items-center gap-3 p-4"
+      >
+        <span className="bars flex h-10 w-10 shrink-0 items-center justify-center rounded-full" />
+        <span className="min-w-0 flex-1">
+          <span className="block font-display font-semibold text-ink">
+            Triagem por swipe
+          </span>
+          <span className="block text-xs text-dim">
+            Passa em revista os episódios pendentes, um a um
+          </span>
+        </span>
+        <span className="text-faint">→</span>
+      </Link>
+
       {error && (
         <p className="page-enter mt-6 text-center text-sm text-danger">{error}</p>
       )}
