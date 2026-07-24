@@ -43,6 +43,15 @@ const STATUS_PT: Record<string, string> = {
   "Returning Series": "Em emissão",
 };
 
+const ENDED_STATUSES = new Set(["Ended", "Canceled", "Cancelled"]);
+
+// Mesma semântica de cor das capas: verde = em dia e ainda vem mais,
+// roxo = em dia mas terminou, branco = a meio.
+function stateColor(complete: boolean, status: string | null | undefined): string {
+  if (!complete) return "var(--color-ink)";
+  return ENDED_STATUSES.has(status ?? "") ? "#d24bd2" : "#37c837";
+}
+
 export default function ShowPage() {
   const { uuid } = useParams<{ uuid: string }>();
   const [show, setShow] = useState<StoredShow | null | undefined>(undefined);
@@ -236,7 +245,7 @@ export default function ShowPage() {
     return (
       <main className="mx-auto max-w-xl px-4 py-16 text-center">
         <p className="text-dim">Série não encontrada.</p>
-        <Link href="/series" className="mt-4 inline-block cursor-pointer text-signal underline">
+        <Link href="/series" className="mt-4 inline-block cursor-pointer text-ink underline">
           Voltar às séries
         </Link>
       </main>
@@ -245,6 +254,9 @@ export default function ShowPage() {
 
   const year = show.firstAired?.slice(0, 4);
   const metaBits = [year, show.genres?.slice(0, 2).join(" · ")].filter(Boolean);
+  const showComplete =
+    show.totalEpisodes != null && watchedCount >= show.totalEpisodes;
+  const accent = stateColor(showComplete, show.status);
 
   return (
     <main className="mx-auto max-w-2xl pb-8">
@@ -253,11 +265,13 @@ export default function ShowPage() {
           <>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={backdrop} alt="" className="h-44 w-full object-cover sm:h-56" />
-            <div className="absolute inset-0 bg-gradient-to-t from-night via-night/40 to-transparent" />
+            <div className="absolute inset-0 bg-gradient-to-t from-tube via-tube/40 to-transparent" />
           </>
         ) : (
           <div className="h-28 w-full bg-gradient-to-r from-raised to-panel" />
         )}
+        {/* fio de cor — a assinatura, consistente com o "Esta noite" e o perfil */}
+        <div className="bars absolute inset-x-0 top-0 h-[3px]" />
         <Link
           href="/series"
           className="absolute left-3 top-3 cursor-pointer rounded-full bg-black/50 px-3 py-1.5 text-sm text-white backdrop-blur"
@@ -293,7 +307,7 @@ export default function ShowPage() {
                 {show.totalEpisodes ? `/${show.totalEpisodes}` : ""} episódios vistos
               </p>
             </div>
-            {percent !== null && <ProgressRing percent={percent} />}
+            {percent !== null && <ProgressRing percent={percent} color={accent} />}
           </div>
         </div>
 
@@ -305,7 +319,7 @@ export default function ShowPage() {
             <button
               onClick={() => void markNext()}
               data-testid="mark-next"
-              className="flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-signal px-4 py-3 text-left text-on-signal transition hover:brightness-110 active:scale-[0.99]"
+              className="flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-left text-tube transition hover:brightness-110 active:scale-[0.99]"
             >
               <CheckIcon className={`h-6 w-6 shrink-0 ${pulseNext ? "check-pop" : ""}`} />
               <span className="min-w-0 flex-1">
@@ -317,7 +331,7 @@ export default function ShowPage() {
             </button>
           ) : (
             <div className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-panel px-4 py-3 text-sm text-dim">
-              <CheckIcon className="h-5 w-5 text-signal" />
+              <CheckIcon className="h-5 w-5" style={{ color: accent }} />
               Estás em dia com esta série
             </div>
           )}
@@ -340,7 +354,7 @@ export default function ShowPage() {
               data-testid={`tab-${id}`}
               className={`-mb-px flex min-h-11 cursor-pointer items-center border-b-2 px-3 text-sm transition-colors ${
                 tab === id
-                  ? "border-signal font-semibold text-ink"
+                  ? "border-ink font-semibold text-ink"
                   : "border-transparent text-dim hover:text-ink"
               }`}
             >
@@ -352,7 +366,7 @@ export default function ShowPage() {
         {tab === "episodios" && (
           <section className="mt-4">
             {providerMissing && (
-              <p className="mb-3 rounded-lg bg-signal-soft p-3 text-xs text-signal">
+              <p className="mb-3 rounded-lg border border-line bg-raised p-3 text-xs text-dim">
                 Não foi possível obter a lista completa de episódios (série não mapeada
                 ou sem ligação) — mostramos só as temporadas com episódios vistos.
               </p>
@@ -378,7 +392,7 @@ export default function ShowPage() {
                     >
                       <span className="font-medium">{season.name}</span>
                       <span
-                        className={`ep-code text-sm ${complete ? "font-semibold text-signal" : "text-dim"}`}
+                        className={`ep-code text-sm ${complete ? "font-semibold text-ink" : "text-dim"}`}
                       >
                         {seen}/{season.episodeCount} {open ? "▴" : "▾"}
                       </span>
@@ -389,7 +403,7 @@ export default function ShowPage() {
                         {!complete && season.episodeCount > 0 && (
                           <button
                             onClick={() => void markSeasonAll(season)}
-                            className="mb-2 ml-2 cursor-pointer text-xs font-semibold text-signal hover:underline"
+                            className="mb-2 ml-2 cursor-pointer text-xs font-semibold text-ink hover:underline"
                           >
                             Marcar temporada como vista
                           </button>
@@ -413,7 +427,7 @@ export default function ShowPage() {
                                   aria-hidden
                                   className={`relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors ${
                                     isSeen
-                                      ? "border-signal bg-signal text-on-signal"
+                                      ? "border-ink bg-ink text-tube"
                                       : "border-line text-transparent"
                                   } ${isPulsing ? "check-pop check-ring" : ""}`}
                                 >
@@ -494,7 +508,7 @@ export default function ShowPage() {
                 href={`https://www.imdb.com/title/${show.imdbId}/`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-block cursor-pointer text-sm text-signal hover:underline"
+                className="inline-block cursor-pointer text-sm text-ink hover:underline"
               >
                 Ver no IMDb ↗
               </a>
@@ -506,14 +520,14 @@ export default function ShowPage() {
           <section className="mt-4">
             <div className="flex items-center gap-4 rounded-2xl border border-line bg-panel p-4">
               {percent !== null ? (
-                <ProgressRing percent={percent} size={72} stroke={6} />
+                <ProgressRing percent={percent} size={72} stroke={6} color={accent} />
               ) : (
                 <div className="flex h-[72px] w-[72px] items-center justify-center rounded-full border-2 border-line">
                   <span className="ep-code text-lg font-bold">{watchedCount}</span>
                 </div>
               )}
               <div>
-                <p className="ep-code text-2xl font-bold text-signal">
+                <p className="ep-code text-2xl font-bold text-ink">
                   {watchedCount}
                   {show.totalEpisodes ? ` / ${show.totalEpisodes}` : ""}
                 </p>
@@ -546,8 +560,11 @@ export default function ShowPage() {
                     </div>
                     <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-raised">
                       <div
-                        className="h-full rounded-full bg-signal transition-[width] duration-500"
-                        style={{ width: `${pct}%` }}
+                        className="h-full rounded-full transition-[width] duration-500"
+                        style={{
+                          width: `${pct}%`,
+                          background: pct >= 100 ? accent : "var(--color-ink)",
+                        }}
                       />
                     </div>
                   </div>

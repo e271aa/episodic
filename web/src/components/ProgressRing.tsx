@@ -5,14 +5,17 @@ interface ProgressRingProps {
   stroke?: number;
   /** texto central (ex.: "70%"); se omitido, mostra o número inteiro do percent */
   label?: string;
+  /** cor do arco (CSS) — por omissão o branco-projetor da v2 */
+  color?: string;
 }
 
-// Anel de progresso em SVG — o brilho âmbar a fechar-se à volta da série.
+// Anel de progresso em SVG — o arco a fechar-se à volta da série.
 export default function ProgressRing({
   percent,
   size = 56,
   stroke = 5,
   label,
+  color = "var(--color-ink)",
 }: ProgressRingProps) {
   const clamped = Math.max(0, Math.min(100, percent));
   const radius = (size - stroke) / 2;
@@ -34,7 +37,7 @@ export default function ProgressRing({
         cy={size / 2}
         r={radius}
         fill="none"
-        stroke="var(--color-signal)"
+        stroke={color}
         strokeWidth={stroke}
         strokeLinecap="round"
         strokeDasharray={circumference}

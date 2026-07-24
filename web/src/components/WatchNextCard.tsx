@@ -59,7 +59,7 @@ export default function WatchNextCard({
           <div className="h-20 w-14 shrink-0 rounded-lg bg-raised" />
         )}
         <div className="min-w-0">
-          <p className="ep-code text-xs text-signal">
+          <p className="ep-code text-xs text-dim">
             {formatEpCode(episode.season, episode.episode)}
           </p>
           <p className="mt-0.5 truncate font-semibold">{showName}</p>
@@ -73,8 +73,8 @@ export default function WatchNextCard({
         aria-label={`Marcar ${showName} ${formatEpCode(episode.season, episode.episode)} como visto`}
         className={`relative flex h-12 w-12 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 transition-all duration-200 active:scale-90 ${
           checking
-            ? "border-signal bg-signal text-on-signal"
-            : "border-line text-faint hover:border-signal hover:bg-signal-soft hover:text-signal"
+            ? "border-ink bg-ink text-tube"
+            : "border-line text-faint hover:border-ink hover:bg-raised hover:text-ink"
         } ${pulse ? "check-ring" : ""}`}
       >
         <CheckIcon className={`h-6 w-6 ${pulse ? "check-pop" : ""}`} />
