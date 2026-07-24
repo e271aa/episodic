@@ -188,21 +188,30 @@ export default function LibraryPage() {
         </Link>
       </div>
 
-      <Link
-        href="/triagem"
-        className="ep-card ep-card-hover mt-3 flex items-center gap-3 p-4"
-      >
-        <span className="bars flex h-10 w-10 shrink-0 items-center justify-center rounded-full" />
-        <span className="min-w-0 flex-1">
-          <span className="block font-display font-semibold text-ink">
-            Triagem por swipe
+      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
+        <Link href="/triagem" className="ep-card ep-card-hover flex items-center gap-3 p-4">
+          <span className="bars flex h-10 w-10 shrink-0 items-center justify-center rounded-full" />
+          <span className="min-w-0 flex-1">
+            <span className="block font-display font-semibold text-ink">
+              Triagem por swipe
+            </span>
+            <span className="block text-xs text-dim">
+              Passa em revista os episódios pendentes
+            </span>
           </span>
-          <span className="block text-xs text-dim">
-            Passa em revista os episódios pendentes, um a um
+          <span className="text-faint">→</span>
+        </Link>
+        <Link href="/estrear" className="ep-card ep-card-hover flex items-center gap-3 p-4">
+          <span className="bars flex h-10 w-10 shrink-0 items-center justify-center rounded-full" />
+          <span className="min-w-0 flex-1">
+            <span className="block font-display font-semibold text-ink">A estrear</span>
+            <span className="block text-xs text-dim">
+              Calendário dos próximos episódios
+            </span>
           </span>
-        </span>
-        <span className="text-faint">→</span>
-      </Link>
+          <span className="text-faint">→</span>
+        </Link>
+      </div>
 
       {error && (
         <p className="page-enter mt-6 text-center text-sm text-danger">{error}</p>
