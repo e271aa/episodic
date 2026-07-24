@@ -112,7 +112,7 @@ export default function MoviesPage() {
               </p>
               <Link
                 href="/import"
-                className="mt-6 inline-block cursor-pointer rounded-full bg-signal px-6 py-3 font-semibold text-on-signal transition hover:brightness-110 active:scale-95"
+                className="mt-6 inline-block cursor-pointer rounded-full bg-ink px-6 py-3 font-semibold text-tube transition hover:brightness-110 active:scale-95"
               >
                 Reimportar do TV Time
               </Link>
@@ -124,7 +124,7 @@ export default function MoviesPage() {
               </p>
               <Link
                 href="/import"
-                className="mt-6 inline-block cursor-pointer rounded-full bg-signal px-6 py-3 font-semibold text-on-signal transition hover:brightness-110 active:scale-95"
+                className="mt-6 inline-block cursor-pointer rounded-full bg-ink px-6 py-3 font-semibold text-tube transition hover:brightness-110 active:scale-95"
               >
                 Importar do TV Time
               </Link>

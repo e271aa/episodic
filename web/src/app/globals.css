@@ -16,13 +16,6 @@
 
   --color-danger: #e5484d;
 
-  /* Compat v1 (ainda em uso nos ecrãs por migrar) — mapeados para os
-     tokens novos para que a transição não deixe nada preto-sobre-preto */
-  --color-night: var(--color-tube);
-  --color-signal: #ffaa33;
-  --color-signal-soft: rgba(255, 170, 51, 0.14);
-  --color-on-signal: #171006;
-
   --font-display: var(--font-archivo);
   --font-body: var(--font-schibsted);
   --font-code: var(--font-spline-mono);
@@ -64,14 +57,6 @@ body {
   border-color: rgba(255, 170, 51, 0.35);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 28px -10px rgba(0, 0, 0, 0.55),
     0 0 0 1px rgba(255, 170, 51, 0.08);
-}
-
-/* Texto de marca com leve brilho gradiente — reforça o acento âmbar */
-.ep-wordmark {
-  background: linear-gradient(120deg, var(--color-signal), #ffd28a 60%, var(--color-signal));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
 }
 
 /* Foco visível e consistente, só para navegação por teclado (:focus-visible

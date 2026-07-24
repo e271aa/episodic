@@ -210,7 +210,7 @@ export default function SeriesPage() {
     return (
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-16">
         <div className="text-center">
-          <p className="ep-code ep-wordmark text-sm tracking-[0.3em]">EPISODIC</p>
+          <p className="ep-code text-sm tracking-[0.3em] text-dim">EPISODIC</p>
           <h1 className="mt-3 font-display text-3xl font-bold">
             Tudo o que vês, num só sítio
           </h1>
@@ -222,7 +222,7 @@ export default function SeriesPage() {
         <ol className="mt-10 space-y-4">
           {steps.map((step) => (
             <li key={step.n} className="flex items-start gap-4">
-              <span className="ep-code mt-0.5 shrink-0 text-lg font-bold text-signal">
+              <span className="ep-code mt-0.5 shrink-0 text-lg font-bold text-ink">
                 {step.n}
               </span>
               <div>
@@ -236,7 +236,7 @@ export default function SeriesPage() {
         <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
           <Link
             href="/import"
-            className="cursor-pointer rounded-full bg-signal px-6 py-3 font-semibold text-on-signal transition hover:brightness-110 active:scale-95"
+            className="cursor-pointer rounded-full bg-ink px-6 py-3 font-semibold text-tube transition hover:brightness-110 active:scale-95"
           >
             Importar do TV Time
           </Link>
@@ -336,7 +336,7 @@ export default function SeriesPage() {
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
       {nextUp === null ? (
         <>
-          <p className="ep-code ep-wordmark text-xs tracking-[0.3em]">EPISODIC</p>
+          <p className="ep-code text-xs tracking-[0.3em] text-dim">EPISODIC</p>
           <h1 className="mt-1 font-display text-3xl font-bold">Séries</h1>
           <div className="mt-6 space-y-3">
             {watching.slice(0, 3).map((s) => (
@@ -346,7 +346,7 @@ export default function SeriesPage() {
         </>
       ) : queue.length === 0 ? (
         <>
-          <p className="ep-code ep-wordmark text-xs tracking-[0.3em]">EPISODIC</p>
+          <p className="ep-code text-xs tracking-[0.3em] text-dim">EPISODIC</p>
           <h1 className="mt-1 font-display text-3xl font-bold">Séries</h1>
           <div className="ep-card mt-6 flex items-center gap-3 p-4">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-raised text-ink">
@@ -388,7 +388,7 @@ export default function SeriesPage() {
         </>
       ) : (
         <>
-          <p className="ep-code ep-wordmark text-xs tracking-[0.3em]">EPISODIC</p>
+          <p className="ep-code text-xs tracking-[0.3em] text-dim">EPISODIC</p>
           <h1 className="mt-1 font-display text-3xl font-bold">Séries</h1>
           <p className="mt-6 text-sm text-dim">
             Nada ativo neste momento — retoma uma série parada ou começa uma

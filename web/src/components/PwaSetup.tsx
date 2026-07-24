@@ -40,7 +40,7 @@ export default function PwaSetup() {
   return (
     <div className="fixed inset-x-0 bottom-16 z-40 mx-auto max-w-2xl px-4 pb-[env(safe-area-inset-bottom)]">
       <div className="page-enter flex items-start gap-3 rounded-2xl border border-line bg-raised p-3 shadow-lg">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-signal-soft text-signal">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink text-tube">
           {/* ícone de partilha do iOS */}
           <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
             <path

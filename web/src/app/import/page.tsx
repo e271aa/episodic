@@ -113,7 +113,7 @@ export default function ImportPage() {
       </p>
 
       <label
-        className="mt-6 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-line p-10 text-center transition hover:border-signal hover:bg-signal-soft"
+        className="mt-6 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-line p-10 text-center transition hover:border-ink hover:bg-raised"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
@@ -139,7 +139,7 @@ export default function ImportPage() {
 
       {busy && !preview && (
         <div className="mt-4 flex items-center gap-2 text-sm text-dim">
-          <span className="spinner h-4 w-4 shrink-0 rounded-full border-2 border-line border-t-signal" />
+          <span className="spinner h-4 w-4 shrink-0 rounded-full border-2 border-line border-t-ink" />
           A processar…
         </div>
       )}
@@ -171,7 +171,7 @@ export default function ImportPage() {
           </dl>
 
           {unknownEntries.length > 0 && (
-            <p className="mt-3 rounded-lg bg-signal-soft p-3 text-xs text-signal">
+            <p className="mt-3 rounded-lg border border-line bg-raised p-3 text-xs text-dim">
               Atenção: {unknownEntries.map(([k, n]) => `${n}× ${k}`).join(", ")} —
               tipos de registo que ainda não interpretamos. Nada se perde: podes
               reimportar o mesmo ficheiro quando a app for atualizada.
@@ -182,10 +182,10 @@ export default function ImportPage() {
             onClick={() => void confirm()}
             disabled={busy}
             data-testid="confirm-import"
-            className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-signal px-6 py-3 font-semibold text-on-signal transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
+            className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-6 py-3 font-semibold text-tube transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
           >
             {busy && (
-              <span className="spinner h-4 w-4 rounded-full border-2 border-on-signal/30 border-t-on-signal" />
+              <span className="spinner h-4 w-4 rounded-full border-2 border-tube/30 border-t-tube" />
             )}
             {busy ? "A guardar…" : "Confirmar importação"}
           </button>

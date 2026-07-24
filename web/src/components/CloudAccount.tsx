@@ -205,10 +205,10 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
             <button
               onClick={() => void handleSync()}
               disabled={status === "syncing"}
-              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-signal px-5 py-2 text-sm font-semibold text-on-signal transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-ink px-5 py-2 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
             >
               {status === "syncing" && (
-                <span className="spinner h-4 w-4 rounded-full border-2 border-on-signal/30 border-t-on-signal" />
+                <span className="spinner h-4 w-4 rounded-full border-2 border-tube/30 border-t-tube" />
               )}
               {status === "syncing" ? "A sincronizar…" : "Sincronizar agora"}
             </button>
@@ -241,7 +241,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
                 placeholder="nova password (mín. 8)"
                 autoComplete="new-password"
                 minLength={8}
-                className="min-h-11 flex-1 rounded-full border border-line bg-night px-5 py-2 text-sm outline-none transition-colors focus:border-signal"
+                className="min-h-11 flex-1 rounded-full border border-line bg-tube px-5 py-2 text-sm outline-none transition-colors focus:border-ink"
               />
               <button
                 type="submit"
@@ -272,7 +272,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
               onChange={(e) => setEmail(e.target.value)}
               placeholder="o-teu@email.com"
               autoComplete="email"
-              className="min-h-11 rounded-full border border-line bg-night px-5 py-2 text-sm outline-none transition-colors focus:border-signal"
+              className="min-h-11 rounded-full border border-line bg-tube px-5 py-2 text-sm outline-none transition-colors focus:border-ink"
             />
             <div className="flex gap-2">
               <input
@@ -281,15 +281,15 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
                 onChange={(e) => setPasswordInput(e.target.value)}
                 placeholder="password"
                 autoComplete="current-password"
-                className="min-h-11 flex-1 rounded-full border border-line bg-night px-5 py-2 text-sm outline-none transition-colors focus:border-signal"
+                className="min-h-11 flex-1 rounded-full border border-line bg-tube px-5 py-2 text-sm outline-none transition-colors focus:border-ink"
               />
               <button
                 type="submit"
                 disabled={status === "verifying" || !email.trim() || !password}
-                className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-signal px-5 py-2 text-sm font-semibold text-on-signal transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+                className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-ink px-5 py-2 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
               >
                 {status === "verifying" && (
-                  <span className="spinner h-4 w-4 rounded-full border-2 border-on-signal/30 border-t-on-signal" />
+                  <span className="spinner h-4 w-4 rounded-full border-2 border-tube/30 border-t-tube" />
                 )}
                 Entrar
               </button>
@@ -298,7 +298,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
               type="button"
               onClick={() => void handleSignIn()}
               disabled={status === "sending" || !email.trim()}
-              className="cursor-pointer self-start px-2 py-1 text-xs font-medium text-signal hover:underline disabled:opacity-50"
+              className="cursor-pointer self-start px-2 py-1 text-xs font-medium text-ink hover:underline disabled:opacity-50"
             >
               {status === "sending"
                 ? "A enviar…"
@@ -323,15 +323,15 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
                 value={code}
                 onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
                 placeholder="Código de 6 dígitos"
-                className="ep-code min-h-11 flex-1 rounded-full border border-line bg-night px-5 py-2 text-sm tracking-[0.3em] outline-none transition-colors focus:border-signal"
+                className="ep-code min-h-11 flex-1 rounded-full border border-line bg-tube px-5 py-2 text-sm tracking-[0.3em] outline-none transition-colors focus:border-ink"
               />
               <button
                 type="submit"
                 disabled={status === "verifying" || code.length < 6}
-                className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-signal px-5 py-2 text-sm font-semibold text-on-signal transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+                className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-ink px-5 py-2 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
               >
                 {status === "verifying" && (
-                  <span className="spinner h-4 w-4 rounded-full border-2 border-on-signal/30 border-t-on-signal" />
+                  <span className="spinner h-4 w-4 rounded-full border-2 border-tube/30 border-t-tube" />
                 )}
                 Validar
               </button>
