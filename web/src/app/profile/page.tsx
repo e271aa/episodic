@@ -2,57 +2,26 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import {
-  clearAllData,
-  countWatched,
-  getImportMeta,
-  getMovies,
-  getShows,
-} from "@/lib/db";
+import { clearAllData } from "@/lib/db";
+import { imageUrl } from "@/lib/tmdb";
+import { loadProfileStats, type ProfileStats } from "@/lib/stats";
 import CloudAccount from "@/components/CloudAccount";
 
-interface Stats {
-  shows: number;
-  following: number;
-  episodes: number;
-  movies: number;
-  hours: number | null;
-  importedAt: string | null;
-}
-
-// Mesmo formato do TV Time: "2 MESES 25 DIAS 7 HORAS"
+// Mesmo formato do TV Time: "2 meses · 25 dias · 7 horas"
 function splitHours(totalHours: number) {
-  const months = Math.floor(totalHours / 720);
-  const days = Math.floor((totalHours % 720) / 24);
-  const hours = Math.floor(totalHours % 24);
-  return { months, days, hours };
-}
-
-async function loadStats(): Promise<Stats> {
-  const [shows, episodes, movies, meta] = await Promise.all([
-    getShows(),
-    countWatched(),
-    getMovies(),
-    getImportMeta(),
-  ]);
   return {
-    shows: shows.length,
-    following: shows.filter((s) => s.followed).length,
-    episodes,
-    movies: movies.length,
-    hours: meta?.totalSeriesRuntimeSec
-      ? Math.round(meta.totalSeriesRuntimeSec / 3600)
-      : null,
-    importedAt: meta?.importedAt ?? null,
+    months: Math.floor(totalHours / 720),
+    days: Math.floor((totalHours % 720) / 24),
+    hours: Math.floor(totalHours % 24),
   };
 }
 
 export default function ProfilePage() {
-  const [stats, setStats] = useState<Stats | null>(null);
+  const [stats, setStats] = useState<ProfileStats | null>(null);
   const [confirmClear, setConfirmClear] = useState(false);
 
   useEffect(() => {
-    void loadStats().then(setStats);
+    void loadProfileStats().then(setStats);
   }, []);
 
   const handleClear = useCallback(async () => {
@@ -62,74 +31,164 @@ export default function ProfilePage() {
     }
     await clearAllData();
     setConfirmClear(false);
-    setStats(await loadStats());
+    setStats(await loadProfileStats());
   }, [confirmClear]);
 
   if (stats === null) {
     return (
       <main className="mx-auto w-full max-w-2xl px-4 py-8">
-        <div className="h-8 w-32 animate-pulse rounded-lg bg-panel" />
+        <div className="h-40 animate-pulse rounded-3xl bg-panel" />
+        <div className="mt-3 h-24 animate-pulse rounded-3xl bg-panel" />
       </main>
     );
   }
 
   const time = stats.hours !== null ? splitHours(stats.hours) : null;
+  const topShowPoster = imageUrl(stats.topShow?.posterPath ?? null, "w185");
+  const maxYear = Math.max(1, ...stats.perYear.map((y) => y.count));
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
-      <h1 className="font-display text-2xl font-bold">Perfil</h1>
-
-      <section className="mt-6">
-        <h2 className="font-display text-lg font-semibold">Estatísticas</h2>
-        <div className="mt-3 grid grid-cols-2 gap-3">
-          <div className="rounded-2xl border border-line bg-panel p-4">
-            <p className="text-xs uppercase tracking-wide text-faint">
-              Horas a ver TV
-            </p>
-            {time ? (
-              <div className="mt-2 flex gap-4">
-                {time.months > 0 && (
-                  <div>
-                    <p className="ep-code text-2xl font-bold">{time.months}</p>
-                    <p className="text-xs uppercase text-faint">meses</p>
-                  </div>
-                )}
-                <div>
-                  <p className="ep-code text-2xl font-bold">{time.days}</p>
-                  <p className="text-xs uppercase text-faint">dias</p>
-                </div>
-                <div>
-                  <p className="ep-code text-2xl font-bold">{time.hours}</p>
-                  <p className="text-xs uppercase text-faint">horas</p>
-                </div>
-              </div>
-            ) : (
-              <p className="mt-2 text-sm text-dim">
-                disponível após importares o TV Time
-              </p>
+      {/* Herói — tempo de antena, o "cartão de estação" do utilizador */}
+      <section className="relative overflow-hidden rounded-3xl border border-line bg-gradient-to-b from-panel to-tube p-6">
+        <div className="bars absolute inset-x-0 top-0 h-[3px]" />
+        <p className="font-display text-xs font-semibold uppercase tracking-[0.3em] text-dim [font-stretch:75%]">
+          Tempo de antena
+        </p>
+        {time ? (
+          <div className="mt-3 flex flex-wrap items-baseline gap-x-5 gap-y-1">
+            {time.months > 0 && (
+              <span className="flex items-baseline gap-1.5">
+                <span className="ep-code text-4xl font-bold text-ink">{time.months}</span>
+                <span className="text-sm text-dim">meses</span>
+              </span>
             )}
+            <span className="flex items-baseline gap-1.5">
+              <span className="ep-code text-4xl font-bold text-ink">{time.days}</span>
+              <span className="text-sm text-dim">dias</span>
+            </span>
+            <span className="flex items-baseline gap-1.5">
+              <span className="ep-code text-4xl font-bold text-ink">{time.hours}</span>
+              <span className="text-sm text-dim">horas</span>
+            </span>
           </div>
-          <div className="rounded-2xl border border-line bg-panel p-4">
-            <p className="text-xs uppercase tracking-wide text-faint">
-              Episódios vistos
-            </p>
-            <p className="ep-code mt-2 text-3xl font-bold text-signal" data-testid="stat-episodes">
-              {stats.episodes.toLocaleString("pt-PT")}
-            </p>
-          </div>
-          <div className="rounded-2xl border border-line bg-panel p-4">
-            <p className="text-xs uppercase tracking-wide text-faint">Séries</p>
-            <p className="ep-code mt-2 text-3xl font-bold">{stats.shows}</p>
-            <p className="text-xs text-dim">{stats.following} a seguir</p>
-          </div>
-          <div className="rounded-2xl border border-line bg-panel p-4">
-            <p className="text-xs uppercase tracking-wide text-faint">Filmes</p>
-            <p className="ep-code mt-2 text-3xl font-bold">{stats.movies}</p>
-          </div>
-        </div>
+        ) : (
+          <p className="mt-3 text-sm text-dim">
+            Disponível depois de importares o TV Time.
+          </p>
+        )}
+        <p className="ep-code mt-3 text-xs text-faint">
+          {stats.episodes.toLocaleString("pt-PT")} episódios
+          {stats.firstYear ? ` · no ar desde ${stats.firstYear}` : ""}
+        </p>
       </section>
 
-      <CloudAccount onSynced={() => void loadStats().then(setStats)} />
+      {/* Espetro de géneros — a assinatura: o test card, mas o teu */}
+      {stats.genres.length > 0 && (
+        <section className="mt-3 rounded-3xl border border-line bg-panel p-5">
+          <h2 className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-dim [font-stretch:80%]">
+            O teu espetro
+          </h2>
+          <div className="mt-3 flex h-3 overflow-hidden rounded-full">
+            {stats.genres.map((g) => (
+              <div
+                key={g.name}
+                style={{ width: `${g.pct}%`, background: g.color }}
+                title={`${g.name} · ${Math.round(g.pct)}%`}
+              />
+            ))}
+          </div>
+          <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
+            {stats.genres.map((g) => (
+              <li key={g.name} className="flex items-center gap-1.5 text-sm">
+                <span
+                  className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                  style={{ background: g.color }}
+                  aria-hidden
+                />
+                <span className="text-dim">{g.name}</span>
+                <span className="ep-code text-xs text-faint">{Math.round(g.pct)}%</span>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
+
+      {/* Contadores secundários */}
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <div className="rounded-2xl border border-line bg-panel p-4">
+          <p className="ep-code text-3xl font-bold text-ink">{stats.shows}</p>
+          <p className="text-xs text-dim">séries</p>
+          <p className="text-xs text-faint">{stats.following} a seguir</p>
+        </div>
+        <div className="rounded-2xl border border-line bg-panel p-4">
+          <p className="ep-code text-3xl font-bold text-ink">{stats.movies}</p>
+          <p className="text-xs text-dim">filmes</p>
+        </div>
+        <Link
+          href="/library"
+          className="flex flex-col justify-center rounded-2xl border border-line bg-panel p-4 transition-colors hover:bg-raised"
+        >
+          <p className="font-display text-sm font-semibold text-ink">Biblioteca</p>
+          <p className="text-xs text-faint">ver tudo →</p>
+        </Link>
+      </div>
+
+      {/* Série-farol */}
+      {stats.topShow && (
+        <Link
+          href={`/series/${stats.topShow.uuid}`}
+          className="mt-3 flex items-center gap-4 rounded-2xl border border-line bg-panel p-4 transition-colors hover:bg-raised"
+        >
+          {topShowPoster ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={topShowPoster}
+              alt=""
+              className="h-20 w-14 shrink-0 rounded-lg object-cover shadow-md shadow-black/40"
+            />
+          ) : (
+            <div className="h-20 w-14 shrink-0 rounded-lg bg-raised" />
+          )}
+          <div className="min-w-0">
+            <p className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-dim [font-stretch:80%]">
+              A tua série
+            </p>
+            <p className="mt-1 truncate font-display text-lg font-bold text-ink">
+              {stats.topShow.name}
+            </p>
+            <p className="ep-code text-sm text-faint">
+              {stats.topShow.count} episódios vistos
+            </p>
+          </div>
+        </Link>
+      )}
+
+      {/* Atividade por ano */}
+      {stats.perYear.length > 1 && (
+        <section className="mt-3 rounded-3xl border border-line bg-panel p-5">
+          <h2 className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-dim [font-stretch:80%]">
+            Por ano
+          </h2>
+          <div className="mt-4 flex items-end justify-between gap-1.5">
+            {stats.perYear.map((y) => (
+              <div key={y.year} className="flex flex-1 flex-col items-center gap-1.5">
+                <span className="ep-code text-[10px] text-faint">{y.count}</span>
+                <div
+                  className="w-full rounded-t-sm bg-ink/80"
+                  style={{ height: `${Math.max(4, (y.count / maxYear) * 72)}px` }}
+                  title={`${y.year}: ${y.count} episódios`}
+                />
+                <span className="ep-code text-[10px] text-faint">
+                  {String(y.year).slice(2)}
+                </span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <CloudAccount onSynced={() => void loadProfileStats().then(setStats)} />
 
       <section className="mt-8">
         <h2 className="font-display text-lg font-semibold">Dados</h2>
@@ -159,9 +218,7 @@ export default function ProfilePage() {
       <p className="mt-8 text-center text-xs text-faint">
         Episodic · os teus dados vivem neste dispositivo e (se iniciares sessão) na cloud
         <br />
-        Metadados por TVmaze (grátis, sem chave). Opcional: chave TMDB em{" "}
-        <code className="ep-code">web/.env.local</code> para posters HD e sinopses em
-        português.
+        Metadados por TVmaze e TMDB.
       </p>
     </main>
   );
