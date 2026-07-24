@@ -17,6 +17,7 @@ import { imageUrl } from "@/lib/tmdb";
 import { enrichShow, getEpisodesOfSeason, getSeasons, type MetaEpisode } from "@/lib/metadata";
 import { findNextUnwatched, formatEpCode } from "@/lib/watchnext";
 import ProgressRing from "@/components/ProgressRing";
+import AddToListButton from "@/components/AddToListButton";
 import { CheckIcon } from "@/components/icons";
 
 interface SeasonView {
@@ -335,6 +336,10 @@ export default function ShowPage() {
               Estás em dia com esta série
             </div>
           )}
+        </div>
+
+        <div className="mt-3">
+          <AddToListButton kind="show" refId={uuid} />
         </div>
 
         {/* Separadores */}

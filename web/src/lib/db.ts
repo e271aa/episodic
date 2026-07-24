@@ -49,6 +49,19 @@ export interface ImportMeta {
   totalMoviesRuntimeSec: number | null;
 }
 
+export interface ListItem {
+  kind: "show" | "movie";
+  refId: string; // uuid da série ou key do filme
+  addedAt: string;
+}
+
+export interface CustomList {
+  id: string;
+  name: string;
+  createdAt: string;
+  items: ListItem[];
+}
+
 interface TvlogDB extends DBSchema {
   kv: { key: string; value: unknown };
   shows: { key: string; value: StoredShow };
@@ -58,12 +71,13 @@ interface TvlogDB extends DBSchema {
     indexes: { "by-show": string };
   };
   movies: { key: string; value: StoredMovie };
+  lists: { key: string; value: CustomList };
 }
 
 let dbPromise: Promise<IDBPDatabase<TvlogDB>> | null = null;
 
 function db(): Promise<IDBPDatabase<TvlogDB>> {
-  dbPromise ??= openDB<TvlogDB>("tvlog", 2, {
+  dbPromise ??= openDB<TvlogDB>("tvlog", 3, {
     // Criação defensiva: garante cada store/índice esteja em falta o motivo
     // que for (upgrade de versão parcial, base criada por outra via, etc.).
     upgrade(database) {
@@ -79,6 +93,9 @@ function db(): Promise<IDBPDatabase<TvlogDB>> {
       }
       if (!database.objectStoreNames.contains("movies")) {
         database.createObjectStore("movies", { keyPath: "key" });
+      }
+      if (!database.objectStoreNames.contains("lists")) {
+        database.createObjectStore("lists", { keyPath: "id" });
       }
     },
   });
@@ -305,10 +322,75 @@ export async function kvSet(key: string, value: unknown): Promise<void> {
 
 export async function clearAllData(): Promise<void> {
   const database = await db();
-  const tx = database.transaction(["shows", "watched", "movies", "kv"], "readwrite");
+  const tx = database.transaction(
+    ["shows", "watched", "movies", "kv", "lists"],
+    "readwrite",
+  );
   void tx.objectStore("shows").clear();
   void tx.objectStore("watched").clear();
   void tx.objectStore("movies").clear();
   void tx.objectStore("kv").clear();
+  void tx.objectStore("lists").clear();
   await tx.done;
+}
+
+// ── Listas personalizadas ──────────────────────────────────────
+
+export async function getLists(): Promise<CustomList[]> {
+  const database = await db();
+  const lists = await database.getAll("lists");
+  return lists.sort((a, b) => a.createdAt.localeCompare(b.createdAt));
+}
+
+export async function getList(id: string): Promise<CustomList | null> {
+  const database = await db();
+  return (await database.get("lists", id)) ?? null;
+}
+
+export async function createList(name: string): Promise<CustomList> {
+  const database = await db();
+  const list: CustomList = {
+    id: crypto.randomUUID(),
+    name,
+    createdAt: new Date().toISOString(),
+    items: [],
+  };
+  await database.put("lists", list);
+  return list;
+}
+
+export async function renameList(id: string, name: string): Promise<void> {
+  const database = await db();
+  const list = await database.get("lists", id);
+  if (!list) return;
+  await database.put("lists", { ...list, name });
+}
+
+export async function deleteList(id: string): Promise<void> {
+  const database = await db();
+  await database.delete("lists", id);
+}
+
+export async function addToList(
+  listId: string,
+  kind: "show" | "movie",
+  refId: string,
+): Promise<void> {
+  const database = await db();
+  const list = await database.get("lists", listId);
+  if (!list || list.items.some((i) => i.kind === kind && i.refId === refId)) return;
+  list.items.push({ kind, refId, addedAt: new Date().toISOString() });
+  await database.put("lists", list);
+}
+
+export async function removeFromList(
+  listId: string,
+  kind: "show" | "movie",
+  refId: string,
+): Promise<void> {
+  const database = await db();
+  const list = await database.get("lists", listId);
+  if (!list) return;
+  list.items = list.items.filter((i) => !(i.kind === kind && i.refId === refId));
+  await database.put("lists", list);
 }

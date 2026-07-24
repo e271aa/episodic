@@ -211,6 +211,16 @@ export default function LibraryPage() {
           </span>
           <span className="text-faint">→</span>
         </Link>
+        <Link href="/listas" className="ep-card ep-card-hover flex items-center gap-3 p-4">
+          <span className="bars flex h-10 w-10 shrink-0 items-center justify-center rounded-full" />
+          <span className="min-w-0 flex-1">
+            <span className="block font-display font-semibold text-ink">Listas</span>
+            <span className="block text-xs text-dim">
+              As tuas coleções personalizadas
+            </span>
+          </span>
+          <span className="text-faint">→</span>
+        </Link>
       </div>
 
       {error && (

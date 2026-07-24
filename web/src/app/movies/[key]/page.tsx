@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getMovie, updateMovie, type StoredMovie } from "@/lib/db";
 import { getMovieDetails, imageUrl, type TmdbMovieDetails } from "@/lib/tmdb";
+import AddToListButton from "@/components/AddToListButton";
 
 function formatRuntime(minutes: number | null): string | null {
   if (!minutes) return null;
@@ -113,6 +114,10 @@ export default function MoviePage() {
               Visto em {movie.watchedAt.slice(0, 10)}
             </p>
           </div>
+        </div>
+
+        <div className="mt-3">
+          <AddToListButton kind="movie" refId={key} />
         </div>
 
         {details?.tagline && (
