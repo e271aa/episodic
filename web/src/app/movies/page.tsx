@@ -20,15 +20,15 @@ function MovieCard({ movie }: { movie: StoredMovie }) {
   const src = imageUrl(movie.posterPath, "w342");
   const year = movie.releaseDate?.slice(0, 4);
   return (
-    <div>
-      <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30">
+    <Link href={`/movies/${movie.key}`} className="group block cursor-pointer active:scale-[0.97]">
+      <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30 transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-ink/60">
         {src ? (
           // eslint-disable-next-line @next/next/no-img-element -- posters já vêm dimensionados
           <img
             src={src}
             alt={movie.name}
             loading="lazy"
-            className="h-full w-full object-cover"
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
         ) : (
           <div className="flex h-full w-full items-center justify-center bg-raised p-2 text-center font-display text-sm font-bold text-dim">
@@ -40,7 +40,7 @@ function MovieCard({ movie }: { movie: StoredMovie }) {
       <p className="ep-code truncate text-xs text-dim">
         {year ? `${year} · ` : ""}visto {movie.watchedAt.slice(0, 10)}
       </p>
-    </div>
+    </Link>
   );
 }
 

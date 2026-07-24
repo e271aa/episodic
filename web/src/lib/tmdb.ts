@@ -90,6 +90,18 @@ export async function searchMovie(
   return result.results ?? [];
 }
 
+export interface TmdbMovieDetails extends TmdbMovieLite {
+  backdrop_path: string | null;
+  runtime: number | null;
+  genres: { id: number; name: string }[];
+  tagline: string;
+}
+
+/** Detalhe completo — pedido só quando se abre a página do filme (não em massa). */
+export async function getMovieDetails(tmdbId: number): Promise<TmdbMovieDetails> {
+  return tmdbGet<TmdbMovieDetails>(`movie/${tmdbId}`);
+}
+
 export async function getSeasonEpisodes(
   tmdbId: number,
   seasonNumber: number,

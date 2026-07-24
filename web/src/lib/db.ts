@@ -272,6 +272,11 @@ export async function getMovies(): Promise<StoredMovie[]> {
   return database.getAll("movies");
 }
 
+export async function getMovie(key: string): Promise<StoredMovie | null> {
+  const database = await db();
+  return (await database.get("movies", key)) ?? null;
+}
+
 export async function updateMovie(
   key: string,
   patch: Partial<StoredMovie>,
