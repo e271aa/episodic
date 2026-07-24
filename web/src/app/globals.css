@@ -5,37 +5,51 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme inline {
-  /* A sala escura onde a televisão brilha */
-  --color-night: #0b0e14; /* fundo — azul-noite, não preto genérico */
-  --color-panel: #131826; /* superfícies (cartões, nav) */
-  --color-raised: #1b2233; /* superfícies elevadas / hover */
-  --color-ink: #f2f4f8; /* texto principal */
-  --color-dim: #97a0b5; /* texto secundário */
-  /* texto terciário — calibrado para ≥4.5:1 (WCAG AA) contra panel/raised/night */
-  --color-faint: #838996;
-  --color-line: rgba(255, 255, 255, 0.08); /* contornos */
+  /* v2 "Esta noite" — o tubo desligado, não a sala escura da v1 */
+  --color-tube: #101014; /* fundo — preto quente, sem tinta azul */
+  --color-panel: #17171d; /* superfícies (cartões, nav) */
+  --color-raised: #1f1f27; /* superfícies elevadas / hover */
+  --color-ink: #f5f3ee; /* texto principal — branco-projetor */
+  --color-dim: #a5a29a; /* texto secundário */
+  --color-faint: #8a8880; /* texto terciário — ≥4.5:1 AA contra panel/raised/tube */
+  --color-line: rgba(245, 243, 238, 0.08); /* contornos */
 
-  /* Um único acento: âmbar tungsténio — o brilho do ecrã no escuro */
+  --color-danger: #e5484d;
+
+  /* Compat v1 (ainda em uso nos ecrãs por migrar) — mapeados para os
+     tokens novos para que a transição não deixe nada preto-sobre-preto */
+  --color-night: var(--color-tube);
   --color-signal: #ffaa33;
   --color-signal-soft: rgba(255, 170, 51, 0.14);
   --color-on-signal: #171006;
 
-  --color-danger: #e5484d;
-
-  --font-display: var(--font-bricolage);
-  --font-body: var(--font-instrument);
+  --font-display: var(--font-archivo);
+  --font-body: var(--font-schibsted);
   --font-code: var(--font-spline-mono);
 }
 
 body {
-  /* Vinheta radial subtil — dá profundidade ao fundo sem deixar de ser escuro */
-  background:
-    radial-gradient(ellipse 900px 500px at 50% -10%, rgba(255, 170, 51, 0.08), transparent),
-    radial-gradient(ellipse 700px 500px at 100% 0%, rgba(255, 170, 51, 0.04), transparent),
-    var(--color-night);
-  background-attachment: fixed;
+  background: var(--color-tube);
   color: var(--color-ink);
   font-family: var(--font-body), system-ui, sans-serif;
+}
+
+/* Barras de cor SMPTE — a assinatura visual da v2. A cor da app existe SÓ
+   aqui: onde há progresso ou atividade, nunca como decoração ambiente. */
+:root {
+  --bars: linear-gradient(
+    90deg,
+    #c8c8c8 0 14.28%,
+    #e6c832 0 28.57%,
+    #3fd2c8 0 42.85%,
+    #37c837 0 57.14%,
+    #d24bd2 0 71.42%,
+    #e6483c 0 85.71%,
+    #3c46e6 0 100%
+  );
+}
+.bars {
+  background: var(--bars);
 }
 
 /* Cartão base reutilizável — profundidade consistente em toda a app */

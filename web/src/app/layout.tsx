@@ -1,17 +1,21 @@
 import type { Metadata, Viewport } from "next";
-import { Bricolage_Grotesque, Instrument_Sans, Spline_Sans_Mono } from "next/font/google";
+import { Archivo, Schibsted_Grotesk, Spline_Sans_Mono } from "next/font/google";
 import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
 import PwaSetup from "@/components/PwaSetup";
 import "./globals.css";
 
-const display = Bricolage_Grotesque({
-  variable: "--font-bricolage",
+// Tipografia de "sinal de televisão": Archivo é variável no eixo de largura
+// (wdth) — usado expandido nos títulos-herói do "Esta noite" e condensado
+// em rótulos/eyebrows, como um logotipo de canal.
+const display = Archivo({
+  variable: "--font-archivo",
   subsets: ["latin"],
+  axes: ["wdth"],
 });
 
-const body = Instrument_Sans({
-  variable: "--font-instrument",
+const body = Schibsted_Grotesk({
+  variable: "--font-schibsted",
   subsets: ["latin"],
 });
 
@@ -32,7 +36,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0b0e14",
+  themeColor: "#101014",
   // permite que o conteúdo respeite as safe areas do iPhone (env(safe-area-inset-*))
   viewportFit: "cover",
 };
