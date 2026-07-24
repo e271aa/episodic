@@ -3,38 +3,18 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import {
-  getAllWatched,
-  getShows,
   getWatchedForShow,
   kvGet,
   kvSet,
   markWatched,
-  migrateLegacyImport,
   updateShow,
-  type StoredShow,
 } from "@/lib/db";
+import { loadShows, type ShowWithProgress } from "@/lib/shows";
 import { enrichShow, type MetaEpisode } from "@/lib/metadata";
 import { findNextUnwatched } from "@/lib/watchnext";
-import PosterCard from "@/components/PosterCard";
 import WatchNextCard from "@/components/WatchNextCard";
 import TonightHero from "@/components/TonightHero";
 import { CheckIcon } from "@/components/icons";
-
-interface ShowWithProgress extends StoredShow {
-  watchedCount: number;
-}
-
-async function loadShows(): Promise<ShowWithProgress[]> {
-  await migrateLegacyImport();
-  const [stored, watched] = await Promise.all([getShows(), getAllWatched()]);
-  const counts = new Map<string, number>();
-  for (const ep of watched) {
-    counts.set(ep.showUuid, (counts.get(ep.showUuid) ?? 0) + 1);
-  }
-  return stored
-    .map((s) => ({ ...s, watchedCount: counts.get(s.uuid) ?? 0 }))
-    .sort((a, b) => b.watchedCount - a.watchedCount);
-}
 
 // Cada entrada da fila guarda também quando o utilizador viu o último
 // episódio dessa série — é isso que separa "A seguir" de "Retomar".
@@ -261,7 +241,7 @@ export default function SeriesPage() {
             Importar do TV Time
           </Link>
           <Link
-            href="/explore"
+            href="/library"
             className="cursor-pointer rounded-full border border-line px-6 py-3 font-semibold text-ink transition hover:bg-raised active:scale-95"
           >
             Explorar séries
@@ -272,9 +252,6 @@ export default function SeriesPage() {
   }
 
   const watching = shows.filter((s) => s.followed && !s.archived);
-  const watchlist = shows.filter((s) => s.inWatchlist && !s.followed);
-  const stopped = shows.filter((s) => !s.followed && !s.inWatchlist);
-  const archived = shows.filter((s) => s.followed && s.archived);
   const queue = watching.filter((s) => nextUp?.has(s.uuid));
 
   // Divide a fila como o TV Time: ativas no topo; paradas há 30+ dias em
@@ -353,21 +330,6 @@ export default function SeriesPage() {
     </button>
   );
 
-  const grid = (list: ShowWithProgress[]) => (
-    <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-      {list.map((s) => (
-        <PosterCard
-          key={s.uuid}
-          href={`/series/${s.uuid}`}
-          name={s.name}
-          posterPath={s.posterPath}
-          watched={s.watchedCount}
-          total={s.totalEpisodes}
-        />
-      ))}
-    </div>
-  );
-
   const [heroShow, ...restActive] = activeQueue;
 
   return (
@@ -397,10 +359,10 @@ export default function SeriesPage() {
               </p>
             </div>
             <Link
-              href="/explore"
+              href="/library"
               className="shrink-0 cursor-pointer text-sm font-semibold text-ink hover:underline"
             >
-              Explorar
+              Biblioteca
             </Link>
           </div>
         </>
@@ -461,30 +423,14 @@ export default function SeriesPage() {
         </section>
       )}
 
-      {watching.length > 0 && (
-        <section className="mt-10">
-          <h2 className="font-display text-lg font-semibold">As minhas séries</h2>
-          <div className="mt-3">{grid(watching)}</div>
-        </section>
-      )}
-      {watchlist.length > 0 && (
-        <section className="mt-10">
-          <h2 className="font-display text-lg font-semibold">Para ver</h2>
-          <div className="mt-3">{grid(watchlist)}</div>
-        </section>
-      )}
-      {stopped.length > 0 && (
-        <section className="mt-10">
-          <h2 className="font-display text-lg font-semibold text-dim">Já não sigo</h2>
-          <div className="mt-3">{grid(stopped)}</div>
-        </section>
-      )}
-      {archived.length > 0 && (
-        <section className="mt-10">
-          <h2 className="font-display text-lg font-semibold text-dim">Arquivadas</h2>
-          <div className="mt-3">{grid(archived)}</div>
-        </section>
-      )}
+      <p className="mt-10 text-center">
+        <Link
+          href="/library"
+          className="cursor-pointer text-sm font-semibold text-dim hover:text-ink hover:underline"
+        >
+          Ver toda a biblioteca ({shows.length}) →
+        </Link>
+      </p>
     </main>
   );
 }
