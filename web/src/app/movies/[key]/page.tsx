@@ -95,7 +95,8 @@ export default function MoviePage() {
         </Link>
       </div>
 
-      <div className="px-4">
+      {/* relative: sem isto, o gradiente absoluto da subcapa pinta por cima do poster */}
+      <div className="relative px-4">
         <div className="-mt-10 flex items-end gap-4">
           {poster ? (
             // eslint-disable-next-line @next/next/no-img-element

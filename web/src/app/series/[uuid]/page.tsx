@@ -271,7 +271,7 @@ export default function ShowPage() {
         ) : (
           <div className="h-28 w-full bg-gradient-to-r from-raised to-panel" />
         )}
-        {/* fio de cor — a assinatura, consistente com o "Esta noite" e o perfil */}
+        {/* fio de cor — a assinatura, consistente com o "A seguir" e o perfil */}
         <div className="bars absolute inset-x-0 top-0 h-[3px]" />
         <Link
           href="/series"
@@ -281,7 +281,8 @@ export default function ShowPage() {
         </Link>
       </div>
 
-      <div className="px-4">
+      {/* relative: sem isto, o gradiente absoluto da subcapa pinta por cima do poster */}
+      <div className="relative px-4">
         <div className="-mt-10 flex items-end gap-4">
           {poster ? (
             // eslint-disable-next-line @next/next/no-img-element
