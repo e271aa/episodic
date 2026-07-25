@@ -24,6 +24,7 @@ import {
 } from "@/lib/metadata";
 import { imageUrl } from "@/lib/tmdb";
 import { pushUndo } from "@/lib/undo";
+import { decadeLabel, groupSorted, letterLabel, periodLabel } from "@/lib/grouping";
 import PosterCard from "@/components/PosterCard";
 import {
   TvIcon,
@@ -306,6 +307,84 @@ function SortMenu<T extends string>({
   );
 }
 
+/**
+ * Banda de secção. Fica colada ao topo enquanto a secção passa, para nunca
+ * se perder o sítio a meio de 227 cartazes.
+ */
+function SectionHeader({ label, count }: { label: string; count: number }) {
+  return (
+    <div className="sticky top-0 z-10 -mx-4 mb-2 mt-5 bg-tube/90 px-4 py-2 backdrop-blur">
+      <h2 className="flex items-baseline gap-2 font-display text-sm font-semibold uppercase tracking-[0.15em] text-dim [font-stretch:80%]">
+        {label}
+        <span className="ep-code text-xs normal-case tracking-normal text-faint">
+          {count}
+        </span>
+      </h2>
+    </div>
+  );
+}
+
+function ShowPoster({ show, index }: { show: ShowWithProgress; index: number }) {
+  return (
+    <PosterCard
+      href={`/series/${show.uuid}`}
+      name={show.name}
+      posterPath={show.posterPath}
+      index={index}
+      watched={show.watchedCount}
+      total={show.totalEpisodes}
+      status={show.status}
+    />
+  );
+}
+
+/**
+ * Vazio com saída. Um ecrã que só diz "não há nada" deixa o utilizador
+ * encalhado — há sempre um passo seguinte a oferecer.
+ */
+function EmptyState({
+  query,
+  segment,
+  filter,
+  onClearFilter,
+}: {
+  query: string | null;
+  segment: Segment;
+  filter: SeriesFilter;
+  onClearFilter: () => void;
+}) {
+  const filtrado = segment === "series" && filter !== "tudo";
+  return (
+    <div className="mt-12 flex flex-col items-center px-6 text-center">
+      <span className="bars mb-4 h-11 w-11 rounded-full opacity-40" aria-hidden />
+      <p className="font-display font-semibold">
+        {query
+          ? `Nada na tua biblioteca para “${query}”`
+          : filtrado
+            ? "Nada neste filtro"
+            : segment === "series"
+              ? "Ainda não há séries"
+              : "Ainda não há filmes"}
+      </p>
+      <p className="mt-1 max-w-xs text-sm text-dim">
+        {query
+          ? "Procura no catálogo em baixo para o adicionares."
+          : filtrado
+            ? "Este filtro está vazio — vê tudo o que tens."
+            : "Procura pelo nome para adicionares o primeiro."}
+      </p>
+      {filtrado && !query && (
+        <button
+          onClick={onClearFilter}
+          className="mt-5 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-sm font-semibold text-tube transition hover:brightness-110"
+        >
+          Ver tudo
+        </button>
+      )}
+    </div>
+  );
+}
+
 const SERIES_SORT_IDS = new Set(SERIES_SORTS.map((s) => s.id));
 const MOVIE_SORT_IDS = new Set(MOVIE_SORTS.map((s) => s.id));
 
@@ -519,6 +598,35 @@ function LibraryContent() {
 
   const loading = shows === null || movies === null;
   const showing = segment === "series" ? filteredShows.length : filteredMovies.length;
+
+  // Secções derivadas da ordem ativa: por tempo dá períodos, A–Z dá letras,
+  // estreia dá décadas. A pesquisar não se agrupa — são poucos resultados e
+  // as bandas só atrapalhavam.
+  const showGroups = useMemo(
+    () =>
+      q
+        ? null
+        : groupSorted(filteredShows, {
+            vistos: (s: ShowWithProgress) => periodLabel(s.lastWatchedAt || null),
+            adicionadas: (s: ShowWithProgress) => periodLabel(s.addedAt),
+            az: (s: ShowWithProgress) => letterLabel(s.name),
+            progresso: null,
+          }[seriesSort]),
+    [filteredShows, seriesSort, q],
+  );
+
+  const movieGroups = useMemo(
+    () =>
+      q
+        ? null
+        : groupSorted(filteredMovies, {
+            vistos: (m: StoredMovie) => periodLabel(m.watchedAt),
+            recentes: (m: StoredMovie) => decadeLabel(movieYear(m)),
+            antigos: (m: StoredMovie) => decadeLabel(movieYear(m)),
+            az: (m: StoredMovie) => letterLabel(m.name),
+          }[movieSort]),
+    [filteredMovies, movieSort, q],
+  );
   /** resultados remotos do segmento atual — null enquanto ninguém pesquisou */
   const searched = segment === "series" ? remote : remoteMovies;
 
@@ -641,7 +749,7 @@ function LibraryContent() {
                   : "border-line text-dim hover:border-ink hover:text-ink"
               }`}
             >
-              {d}s
+              {decadeLabel(d)}
             </button>
           ))}
         </div>
@@ -675,33 +783,60 @@ function LibraryContent() {
           ))}
         </div>
       ) : showing > 0 ? (
-        <div
-          className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5"
-          data-testid="library-grid"
-        >
-          {segment === "series"
-            ? filteredShows.map((s, i) => (
-                <PosterCard
-                  key={s.uuid}
-                  href={`/series/${s.uuid}`}
-                  name={s.name}
-                  posterPath={s.posterPath}
-                  index={i}
-                  watched={s.watchedCount}
-                  total={s.totalEpisodes}
-                  status={s.status}
-                />
-              ))
-            : filteredMovies.map((m, i) => (
-                <MovieCard key={m.key} movie={m} index={i} />
+        segment === "series" ? (
+          showGroups ? (
+            <div data-testid="library-grid">
+              {showGroups.map((g) => (
+                <section key={g.label}>
+                  <SectionHeader label={g.label} count={g.items.length} />
+                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+                    {g.items.map((s, i) => (
+                      <ShowPoster key={s.uuid} show={s} index={i} />
+                    ))}
+                  </div>
+                </section>
               ))}
-        </div>
+            </div>
+          ) : (
+            <div
+              className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5"
+              data-testid="library-grid"
+            >
+              {filteredShows.map((s, i) => (
+                <ShowPoster key={s.uuid} show={s} index={i} />
+              ))}
+            </div>
+          )
+        ) : movieGroups ? (
+          <div data-testid="library-grid">
+            {movieGroups.map((g) => (
+              <section key={g.label}>
+                <SectionHeader label={g.label} count={g.items.length} />
+                <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+                  {g.items.map((m, i) => (
+                    <MovieCard key={m.key} movie={m} index={i} />
+                  ))}
+                </div>
+              </section>
+            ))}
+          </div>
+        ) : (
+          <div
+            className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5"
+            data-testid="library-grid"
+          >
+            {filteredMovies.map((m, i) => (
+              <MovieCard key={m.key} movie={m} index={i} />
+            ))}
+          </div>
+        )
       ) : (
-        <p className="mt-10 text-center text-sm text-dim">
-          {q
-            ? `Nada na tua biblioteca para “${query.trim()}”.`
-            : "Nada nesta categoria."}
-        </p>
+        <EmptyState
+          query={q ? query.trim() : null}
+          segment={segment}
+          filter={filter}
+          onClearFilter={() => setParams({ filtro: null, decada: null })}
+        />
       )}
 
       {/* Adicionar o que ainda não tens — o catálogo do segmento onde estás */}
