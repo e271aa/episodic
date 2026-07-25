@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Schibsted_Grotesk, Spline_Sans_Mono } from "next/font/google";
 import AutoSync from "@/components/AutoSync";
+import BackGesture from "@/components/BackGesture";
 import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
 import PwaSetup from "@/components/PwaSetup";
@@ -54,7 +55,9 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <div className="flex flex-1 flex-col pb-16">
-          <PageTransition>{children}</PageTransition>
+          <BackGesture>
+            <PageTransition>{children}</PageTransition>
+          </BackGesture>
         </div>
         <BottomNav />
         <PwaSetup />

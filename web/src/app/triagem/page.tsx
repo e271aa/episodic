@@ -177,7 +177,7 @@ export default function TriagemPage() {
           <p className="ep-code mt-4 text-center text-xs text-faint">
             {cursor + 1} de {total}
           </p>
-          <div className="relative mt-3 aspect-3/4 flex-1">
+          <div className="relative mt-3 aspect-3/4 flex-1" data-swipe-stack>
             {remaining.map((item, i) => (
               <SwipeCard
                 key={item.showUuid}
