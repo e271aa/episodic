@@ -1,4 +1,4 @@
-// Fila partilhada entre o ecrã "A seguir" e a Triagem por swipe.
+// Fila partilhada entre o ecrã "A seguir" e o "Pôr em dia" por swipe.
 // Guarda o próximo episódio por ver de cada série seguida + quando foi visto
 // o último, para separar Continuar (ativo) / Retomar (parado) / Por começar.
 import { kvGet, kvSet, type StoredShow } from "./db";

@@ -4,10 +4,10 @@ import { useEffect, useState } from "react";
 import { kvGet, kvSet } from "@/lib/db";
 
 /** Guardado em kv: uma vez percebido, nunca mais aparece. */
-export const COACH_KEY = "triagem:coach-visto";
+export const COACH_KEY = "em-dia:coach-visto";
 
 /**
- * Instruções da primeira utilização: quem chega à triagem não tem como
+ * Instruções da primeira utilização: quem chega ao "Pôr em dia" não tem como
  * adivinhar que o cartão se arrasta, nem para que lado. Aparecem por cima da
  * pilha, explicam os dois lados e desaparecem para sempre ao primeiro toque.
  *

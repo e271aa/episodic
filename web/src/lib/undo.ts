@@ -3,7 +3,7 @@
 // pelo engano de uma vez, anular não castiga ninguém.
 //
 // É uma pilha e não um aviso único de propósito: marcar cinco episódios
-// seguidos na triagem tem de poder recuar cinco vezes, pela ordem inversa.
+// seguidos no "Pôr em dia" tem de poder recuar cinco vezes, pela ordem inversa.
 
 export interface UndoEntry {
   id: number;

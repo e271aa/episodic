@@ -638,11 +638,11 @@ function LibraryContent() {
           paragens são uma linha, não 400px de cartões antes do conteúdo */}
       <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
         <Link
-          href="/triagem"
+          href="/em-dia"
           className="flex shrink-0 cursor-pointer items-center gap-2 rounded-full border border-line px-3.5 py-1.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
         >
           <span className="bars h-4 w-4 shrink-0 rounded-full" />
-          Triagem
+          Pôr em dia
         </Link>
         <Link
           href="/estrear"

@@ -41,8 +41,8 @@ function insideScroller(target: EventTarget | null, horizontal: boolean): boolea
  * Recuar por gesto, porque a app instalada no telemóvel não tem barra do
  * browser: arrastar do bordo esquerdo para a direita volta atrás.
  *
- * Na triagem o eixo horizontal é dos cartões, por isso aí recua-se de cima
- * para baixo — e nunca a partir da própria pilha, que tem o gesto dela.
+ * No "Pôr em dia" o eixo horizontal é dos cartões, por isso aí recua-se de
+ * cima para baixo — e nunca a partir da própria pilha, que tem o gesto dela.
  */
 export default function BackGesture({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -50,7 +50,7 @@ export default function BackGesture({ children }: { children: React.ReactNode })
   const [offset, setOffset] = useState(0);
   const drag = useRef<{ id: number; x: number; y: number; live: boolean } | null>(null);
 
-  const vertical = pathname === "/triagem";
+  const vertical = pathname === "/em-dia";
   const enabled = !ROOTS.has(pathname);
 
   const onPointerDown = useCallback(

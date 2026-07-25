@@ -370,16 +370,16 @@ export default function SeriesPage() {
       )}
 
       {/* O swipe pertence aqui: é onde a fila vive. Só aparece quando há
-          mesmo fila para triar, senão seria um botão morto. */}
+          mesmo fila para pôr em dia, senão seria um botão morto. */}
       {queue.length > 1 && (
         <Link
-          href="/triagem"
+          href="/em-dia"
           className="ep-card ep-card-hover mt-6 flex items-center gap-3 p-4"
         >
           <span className="bars flex h-11 w-11 shrink-0 items-center justify-center rounded-full" />
           <span className="min-w-0 flex-1">
             <span className="block font-display font-semibold text-ink">
-              Triar {queue.length} episódios à vez
+              Pôr {queue.length} episódios em dia
             </span>
             <span className="block text-xs text-dim">
               Arrasta para a direita o que já viste, para a esquerda o resto

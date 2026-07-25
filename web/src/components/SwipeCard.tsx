@@ -28,7 +28,7 @@ const STAMP_FULL = 70;
 const YES = "#37c837";
 const NO = "#e8564a";
 
-// Cartão de triagem: arrasta-se com o rato/dedo, ou usa os botões por baixo
+// Cartão do "Pôr em dia": arrasta-se com o rato/dedo, ou usa os botões por baixo
 // (mesma ação, sempre disponível — o gesto nunca é a única forma de decidir).
 export default function SwipeCard({
   showName,
