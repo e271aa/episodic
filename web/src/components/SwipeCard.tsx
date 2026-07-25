@@ -10,12 +10,21 @@ export interface SwipeCardProps {
   posterPath: string | null;
   backdropPath: string | null;
   episode: MetaEpisode;
+  /** quantos episódios da série já estão marcados — situa o que vais decidir */
+  watchedCount: number;
+  totalEpisodes: number | null;
   /** true = topo da pilha (só este responde ao gesto) */
   active: boolean;
   onDecide: (watched: boolean) => void;
 }
 
+/** distância a partir da qual largar o cartão decide */
 const THRESHOLD = 100;
+/** a partir daqui o selo já está a 100% — decidir "sente-se" antes do limiar */
+const STAMP_FULL = 70;
+
+const YES = "#37c837";
+const NO = "#e8564a";
 
 // Cartão de triagem: arrasta-se com o rato/dedo, ou usa os botões por baixo
 // (mesma ação, sempre disponível — o gesto nunca é a única forma de decidir).
@@ -24,6 +33,8 @@ export default function SwipeCard({
   posterPath,
   backdropPath,
   episode,
+  watchedCount,
+  totalEpisodes,
   active,
   onDecide,
 }: SwipeCardProps) {
@@ -67,7 +78,12 @@ export default function SwipeCard({
   };
 
   const rotate = drag.x / 18;
-  const liftOpacity = Math.min(1, Math.abs(drag.x) / THRESHOLD);
+  // O selo cresce depressa: aos 70px já está cheio, para a intenção ser
+  // legível muito antes de o gesto ficar comprometido.
+  const intent = Math.min(1, Math.abs(drag.x) / STAMP_FULL);
+  const yes = drag.x > 0 ? intent : 0;
+  const no = drag.x < 0 ? intent : 0;
+  const committed = Math.abs(drag.x) > THRESHOLD;
   const transform = leaving
     ? `translateX(${leaving === "right" ? 600 : -600}px) rotate(${leaving === "right" ? 24 : -24}deg)`
     : `translateX(${drag.x}px) rotate(${rotate}deg)`;
@@ -85,49 +101,102 @@ export default function SwipeCard({
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
     >
-      <div className="ep-card relative h-full overflow-hidden">
+      <div
+        className="ep-card relative h-full overflow-hidden"
+        style={{
+          // a moldura acende com a decisão — o cartão inteiro responde,
+          // não só um autocolante no canto
+          boxShadow: committed
+            ? `0 0 0 3px ${drag.x > 0 ? YES : NO}, 0 18px 40px -12px rgba(0,0,0,.7)`
+            : undefined,
+          transition: drag.dragging ? "none" : "box-shadow 200ms ease-out",
+        }}
+      >
+        {/* a imagem é fundo (absoluta): se ficar em fluxo, empurra o bloco de
+            texto para fora do cartão e não se vê que episódio se está a decidir */}
         {image ? (
           // eslint-disable-next-line @next/next/no-img-element -- imagem já dimensionada
-          <img src={image} alt="" className="h-full w-full object-cover" draggable={false} />
+          <img
+            src={image}
+            alt=""
+            className="absolute inset-0 h-full w-full object-cover"
+            draggable={false}
+          />
         ) : (
-          <div className="flex h-full w-full items-center justify-center bg-raised p-4 text-center font-display text-lg font-bold text-dim">
+          <div className="absolute inset-0 flex items-center justify-center bg-raised p-4 text-center font-display text-lg font-bold text-dim">
             {showName}
           </div>
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-tube via-tube/50 to-transparent" />
 
-        {/* rótulos de intenção — só aparecem enquanto se arrasta */}
+        {/* banho de cor: a decisão tinge o cartão todo, como nas dating apps */}
         <div
-          className="pointer-events-none absolute right-5 top-5 rounded-lg border-2 px-3 py-1 font-display text-lg font-bold uppercase [font-stretch:75%]"
+          className="pointer-events-none absolute inset-0"
+          style={{ backgroundColor: YES, opacity: yes * 0.28 }}
+        />
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{ backgroundColor: NO, opacity: no * 0.28 }}
+        />
+
+        {/* Selos de intenção — grandes, inclinados, impossíveis de não ver.
+            Ficam do lado contrário ao movimento: o cartão foge para a direita,
+            por isso o selo "Visto" tem de estar à esquerda para continuar à
+            vista (é o que as dating apps fazem). */}
+        <div
+          className="pointer-events-none absolute left-4 top-6 rounded-xl border-[5px] px-4 py-1.5 font-display text-3xl font-bold uppercase leading-none tracking-wide [font-stretch:75%]"
           style={{
-            borderColor: "#37c837",
-            color: "#37c837",
-            opacity: drag.x > 0 ? liftOpacity : 0,
-            transform: "rotate(-8deg)",
+            borderColor: YES,
+            color: YES,
+            backgroundColor: "rgba(0,0,0,.35)",
+            opacity: yes,
+            transform: `rotate(-12deg) scale(${0.7 + yes * 0.3})`,
           }}
+          data-testid="stamp-visto"
         >
           Visto
         </div>
         <div
-          className="pointer-events-none absolute left-5 top-5 rounded-lg border-2 px-3 py-1 font-display text-lg font-bold uppercase [font-stretch:75%]"
+          className="pointer-events-none absolute right-4 top-6 rounded-xl border-[5px] px-4 py-1.5 text-center font-display text-3xl font-bold uppercase leading-none tracking-wide [font-stretch:75%]"
           style={{
-            borderColor: "var(--color-faint)",
-            color: "var(--color-faint)",
-            opacity: drag.x < 0 ? liftOpacity : 0,
-            transform: "rotate(8deg)",
+            borderColor: NO,
+            color: NO,
+            backgroundColor: "rgba(0,0,0,.35)",
+            opacity: no,
+            transform: `rotate(12deg) scale(${0.7 + no * 0.3})`,
           }}
+          data-testid="stamp-ainda-nao"
         >
-          Saltar
+          Ainda
+          <br />
+          não
         </div>
 
+        {/* Qual episódio estou a decidir: o código é o protagonista, porque é
+            isso que fica marcado; a série é só o contexto por cima. */}
         <div className="relative flex h-full flex-col justify-end p-5">
-          <p className="ep-code text-sm text-dim">
-            {formatEpCode(episode.season, episode.episode)}
-          </p>
-          <h2 className="mt-1 font-display text-2xl font-bold text-ink [font-stretch:110%]">
+          <p className="truncate font-display text-xs font-semibold uppercase tracking-[0.18em] text-dim [font-stretch:80%]">
             {showName}
+          </p>
+          <div className="mt-2 flex items-center gap-2.5">
+            <span className="ep-code rounded-lg bg-ink px-2.5 py-1 text-sm font-bold text-tube">
+              {formatEpCode(episode.season, episode.episode)}
+            </span>
+            {episode.airDate && (
+              <span className="ep-code text-xs text-faint">
+                {episode.airDate.slice(0, 4)}
+              </span>
+            )}
+          </div>
+          <h2 className="mt-2 font-display text-2xl font-bold leading-tight text-ink [font-stretch:105%]">
+            {episode.name}
           </h2>
-          <p className="mt-1 truncate text-sm text-dim">{episode.name}</p>
+          {/* onde é que este episódio cai na série — sem isto, "visto" decide-se
+              às cegas: é o próximo por ver, mas não se sabe de quantos */}
+          <p className="ep-code mt-2 text-xs text-dim">
+            {watchedCount}
+            {totalEpisodes ? `/${totalEpisodes}` : ""} vistos até agora
+          </p>
         </div>
       </div>
     </div>
