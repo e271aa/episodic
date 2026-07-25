@@ -5,6 +5,7 @@ import BackGesture from "@/components/BackGesture";
 import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
 import PwaSetup from "@/components/PwaSetup";
+import UndoToast from "@/components/UndoToast";
 import "./globals.css";
 
 // Tipografia de "sinal de televisão": Archivo é variável no eixo de largura
@@ -60,6 +61,7 @@ export default function RootLayout({
           </BackGesture>
         </div>
         <BottomNav />
+        <UndoToast />
         <PwaSetup />
         <AutoSync />
       </body>

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  deleteMovie,
   getMovie,
   getMovies,
   getShow,
@@ -19,6 +20,7 @@ import {
   type MetaSearchResult,
 } from "@/lib/metadata";
 import { imageUrl } from "@/lib/tmdb";
+import { pushUndo } from "@/lib/undo";
 import PosterCard from "@/components/PosterCard";
 import {
   TvIcon,
@@ -158,6 +160,18 @@ function MovieResultCard({
     }
     setState("done");
     onAdded();
+    // só se anula o que esta ação criou — um filme que já lá estava fica
+    if (!existing) {
+      pushUndo({
+        label: "Filme marcado como visto",
+        detail: result.name,
+        undo: async () => {
+          await deleteMovie(key);
+          setState("idle");
+          onAdded();
+        },
+      });
+    }
   }, [key, result, onAdded]);
 
   return (

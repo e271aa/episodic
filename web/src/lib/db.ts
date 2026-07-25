@@ -402,6 +402,11 @@ export async function putMovie(movie: StoredMovie): Promise<void> {
   await database.put("movies", movie);
 }
 
+export async function deleteMovie(key: string): Promise<void> {
+  const database = await db();
+  await database.delete("movies", key);
+}
+
 export async function updateMovie(
   key: string,
   patch: Partial<StoredMovie>,

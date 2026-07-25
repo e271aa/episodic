@@ -2,9 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { markWatched } from "@/lib/db";
+import { markWatched, unmarkWatched } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
 import { classifyQueue, loadCachedNextUp, type NextUpMap } from "@/lib/queue";
+import { formatEpCode } from "@/lib/watchnext";
+import { pushUndo } from "@/lib/undo";
 import type { MetaEpisode } from "@/lib/metadata";
 import SwipeCard from "@/components/SwipeCard";
 import SwipeCoach from "@/components/SwipeCoach";
@@ -79,11 +81,23 @@ export default function TriagemPage() {
   };
 
   const handleDecide = (item: StackItem, watched: boolean) => {
+    const { season, episode } = item.episode;
     if (watched) {
-      void markWatched(item.showUuid, item.episode.season, item.episode.episode);
+      void markWatched(item.showUuid, season, episode);
     }
     setDecided((n) => n + 1);
     setCursor((c) => c + 1);
+    // Um swipe é rápido de mais para não ter volta: anular desfaz a marcação
+    // e devolve o cartão ao topo da pilha.
+    pushUndo({
+      label: watched ? "Marcado como visto" : "Deixado para depois",
+      detail: `${item.showName} · ${formatEpCode(season, episode)}`,
+      undo: async () => {
+        if (watched) await unmarkWatched(item.showUuid, season, episode);
+        setDecided((n) => Math.max(0, n - 1));
+        setCursor((c) => Math.max(0, c - 1));
+      },
+    });
   };
 
   // Alternativa por teclado — o gesto de arrastar nunca é a única forma de decidir

@@ -139,6 +139,36 @@ input:focus-visible,
   animation: spin 700ms linear infinite;
 }
 
+/* Janela de anulação a esgotar-se. O tempo tem de estar à vista: a demora
+   é a funcionalidade, não um atraso escondido. */
+@keyframes undo-drain {
+  from {
+    transform: scaleX(1);
+  }
+  to {
+    transform: scaleX(0);
+  }
+}
+.undo-drain {
+  transform-origin: left;
+  animation: undo-drain linear forwards;
+}
+
+/* O aviso sobe do fundo, por cima da dock */
+@keyframes undo-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.undo-in {
+  animation: undo-in 200ms cubic-bezier(0.34, 1.36, 0.64, 1) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

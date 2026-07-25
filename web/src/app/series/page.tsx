@@ -2,17 +2,19 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { getWatchedForShow, markWatched, updateShow } from "@/lib/db";
+import { getWatchedForShow, markWatched, unmarkWatched, updateShow } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
 import { enrichShow } from "@/lib/metadata";
-import { findNextUnwatched } from "@/lib/watchnext";
+import { findNextUnwatched, formatEpCode } from "@/lib/watchnext";
 import {
   classifyQueue,
   lastWatchDate,
   loadCachedNextUp,
   persistNextUp,
   type NextUpMap,
+  type QueueEntry,
 } from "@/lib/queue";
+import { pushUndo } from "@/lib/undo";
 import WatchNextCard from "@/components/WatchNextCard";
 import TonightHero from "@/components/TonightHero";
 import { CheckIcon } from "@/components/icons";
@@ -114,8 +116,11 @@ export default function SeriesPage() {
       if (!show) return;
       const watched = await getWatchedForShow(showUuid);
       const next = await findNextUnwatched(show, watched);
+      // guarda a entrada anterior da fila para a poder repor tal e qual
+      let previous: QueueEntry | undefined;
       setNextUp((current) => {
         const map = new Map(current);
+        previous = map.get(showUuid);
         // acabou de ver um episódio → a série volta (ou mantém-se) ativa
         if (next) {
           map.set(showUuid, {
@@ -127,6 +132,29 @@ export default function SeriesPage() {
         }
         persistNextUp(map);
         return map;
+      });
+
+      pushUndo({
+        label: "Marcado como visto",
+        detail: `${show.name} · ${formatEpCode(season, episode)}`,
+        undo: async () => {
+          await unmarkWatched(showUuid, season, episode);
+          setShows(
+            (current) =>
+              current?.map((s) =>
+                s.uuid === showUuid
+                  ? { ...s, watchedCount: Math.max(0, s.watchedCount - 1) }
+                  : s,
+              ) ?? null,
+          );
+          setNextUp((current) => {
+            const map = new Map(current);
+            if (previous) map.set(showUuid, previous);
+            else map.delete(showUuid);
+            persistNextUp(map);
+            return map;
+          });
+        },
       });
     },
     [shows],

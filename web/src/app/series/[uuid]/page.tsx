@@ -16,6 +16,7 @@ import {
 import { imageUrl } from "@/lib/tmdb";
 import { enrichShow, getEpisodesOfSeason, getSeasons, type MetaEpisode } from "@/lib/metadata";
 import { findNextUnwatched, formatEpCode } from "@/lib/watchnext";
+import { pushUndo } from "@/lib/undo";
 import ProgressRing from "@/components/ProgressRing";
 import AddToListButton from "@/components/AddToListButton";
 import { CheckIcon } from "@/components/icons";
@@ -170,7 +171,8 @@ export default function ShowPage() {
     async (season: number, episode: number) => {
       if (!show) return;
       const key = episodeKey(uuid, season, episode);
-      if (watched.has(key)) {
+      const wasWatched = watched.has(key);
+      if (wasWatched) {
         await unmarkWatched(uuid, season, episode);
       } else {
         await markWatched(uuid, season, episode);
@@ -179,6 +181,15 @@ export default function ShowPage() {
         pulseTimeout.current = setTimeout(() => setPulseEp(null), 450);
       }
       await syncWatched(show);
+      pushUndo({
+        label: wasWatched ? "Desmarcado" : "Marcado como visto",
+        detail: `${show.name} · ${formatEpCode(season, episode)}`,
+        undo: async () => {
+          if (wasWatched) await markWatched(uuid, season, episode);
+          else await unmarkWatched(uuid, season, episode);
+          await syncWatched(show);
+        },
+      });
     },
     [uuid, watched, show, syncWatched],
   );
@@ -186,12 +197,25 @@ export default function ShowPage() {
   const markSeasonAll = useCallback(
     async (season: SeasonView) => {
       if (!show) return;
+      // guarda só os que esta ação marcou — anular não pode apagar episódios
+      // que já estavam vistos antes
+      const marked: number[] = [];
       for (let ep = 1; ep <= season.episodeCount; ep++) {
         if (!watched.has(episodeKey(uuid, season.number, ep))) {
           await markWatched(uuid, season.number, ep);
+          marked.push(ep);
         }
       }
       await syncWatched(show);
+      if (marked.length === 0) return;
+      pushUndo({
+        label: `Temporada ${season.number} marcada`,
+        detail: `${show.name} · ${marked.length} episódio${marked.length === 1 ? "" : "s"}`,
+        undo: async () => {
+          for (const ep of marked) await unmarkWatched(uuid, season.number, ep);
+          await syncWatched(show);
+        },
+      });
     },
     [uuid, watched, show, syncWatched],
   );
@@ -201,13 +225,22 @@ export default function ShowPage() {
     setPulseNext(true);
     clearTimeout(pulseTimeout.current);
     pulseTimeout.current = setTimeout(() => setPulseNext(false), 450);
-    await markWatched(uuid, nextUp.season, nextUp.episode);
+    const { season, episode } = nextUp;
+    await markWatched(uuid, season, episode);
     // abre a temporada do próximo (com os nomes dos episódios) para dar
     // feedback visual do avanço
-    setOpenSeason(nextUp.season);
-    const seasonView = seasons.find((s) => s.number === nextUp.season);
+    setOpenSeason(season);
+    const seasonView = seasons.find((s) => s.number === season);
     if (seasonView) await loadSeasonEpisodes(seasonView);
     await syncWatched(show);
+    pushUndo({
+      label: "Marcado como visto",
+      detail: `${show.name} · ${formatEpCode(season, episode)}`,
+      undo: async () => {
+        await unmarkWatched(uuid, season, episode);
+        await syncWatched(show);
+      },
+    });
   }, [nextUp, show, uuid, syncWatched, loadSeasonEpisodes, seasons]);
 
   const watchedCount = watched.size;
