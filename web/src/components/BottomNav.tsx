@@ -15,6 +15,9 @@ const TABS = [
 export default function BottomNav() {
   const pathname = usePathname();
 
+  // No login não há para onde navegar — a dock só confundiria.
+  if (pathname === "/login") return null;
+
   return (
     <nav className="fixed inset-x-0 bottom-0 z-50 flex justify-center px-4 pb-[max(1rem,env(safe-area-inset-bottom))]">
       <div className="flex items-center gap-1 rounded-full border border-line bg-panel/90 p-1.5 shadow-[0_8px_28px_-8px_rgba(0,0,0,0.6)] backdrop-blur-lg">

@@ -3,6 +3,7 @@ import { Archivo, Schibsted_Grotesk, Spline_Sans_Mono } from "next/font/google";
 import AutoSync from "@/components/AutoSync";
 import BackGesture from "@/components/BackGesture";
 import BottomNav from "@/components/BottomNav";
+import FirstSync from "@/components/FirstSync";
 import PageTransition from "@/components/PageTransition";
 import PwaSetup from "@/components/PwaSetup";
 import UndoToast from "@/components/UndoToast";
@@ -64,6 +65,7 @@ export default function RootLayout({
         <UndoToast />
         <PwaSetup />
         <AutoSync />
+        <FirstSync />
       </body>
     </html>
   );

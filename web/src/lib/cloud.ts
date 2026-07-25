@@ -43,13 +43,26 @@ export async function verifyEmailCode(
 }
 
 /** Entrada clássica com email+password — o caminho sem fricção na PWA. */
+/** Traduz os erros do Supabase, que vêm sempre em inglês e algo crus. */
+function authErrorPt(message: string, status?: number): string {
+  const m = message.toLowerCase();
+  if (m.includes("invalid login credentials")) return "Email ou palavra-passe errados.";
+  if (m.includes("email not confirmed")) return "Este email ainda não foi confirmado.";
+  if (m.includes("too many requests") || status === 429)
+    return "Demasiadas tentativas. Espera um bocado e tenta outra vez.";
+  if (m.includes("network") || m.includes("fetch"))
+    return "Sem ligação. Verifica a internet e tenta outra vez.";
+  if (m.includes("password should be")) return "A palavra-passe é demasiado curta.";
+  return "Não foi possível entrar. Tenta outra vez.";
+}
+
 export async function signInWithPassword(
   email: string,
   password: string,
 ): Promise<{ error?: string }> {
   if (!supabase) return { error: "Cloud não configurada." };
   const { error } = await supabase.auth.signInWithPassword({ email, password });
-  return error ? { error: error.message } : {};
+  return error ? { error: authErrorPt(error.message, error.status) } : {};
 }
 
 /** Define (ou muda) a password da conta com sessão iniciada. */
@@ -246,7 +259,10 @@ export async function pushAll(userId: string): Promise<Pick<SyncResult, "pushedS
 }
 
 // Lê todas as linhas de uma tabela do utilizador, paginando
-async function fetchAll<T>(table: string): Promise<T[]> {
+async function fetchAll<T>(
+  table: string,
+  onPage?: (total: number) => void,
+): Promise<T[]> {
   if (!supabase) return [];
   const out: T[] = [];
   const size = 1000;
@@ -257,18 +273,45 @@ async function fetchAll<T>(table: string): Promise<T[]> {
       .range(from, from + size - 1);
     if (error) throw new Error(`${table}: ${error.message}`);
     out.push(...((data as T[]) ?? []));
+    onPage?.(out.length);
     if (!data || data.length < size) break;
   }
   return out;
 }
 
+/** O que está a acontecer durante o pull — para dar sinal de vida a quem espera. */
+export interface PullProgress {
+  shows: number;
+  episodes: number;
+  movies: number;
+  /** true quando já foi tudo buscado e falta só gravar no IndexedDB */
+  merging: boolean;
+}
+
 /** Traz tudo da cloud e funde no local (união). */
-export async function pullAndMerge(): Promise<Pick<SyncResult, "pulledShows" | "pulledEpisodes" | "pulledMovies">> {
+export async function pullAndMerge(
+  onProgress?: (p: PullProgress) => void,
+): Promise<Pick<SyncResult, "pulledShows" | "pulledEpisodes" | "pulledMovies">> {
+  const progress: PullProgress = { shows: 0, episodes: 0, movies: 0, merging: false };
+  const report = () => onProgress?.({ ...progress });
+
   const [showRows, watchedRows, movieRows] = await Promise.all([
-    fetchAll<ShowRow>("shows"),
-    fetchAll<WatchedRow>("watched_episodes"),
-    fetchAll<MovieRow>("watched_movies"),
+    fetchAll<ShowRow>("shows", (n) => {
+      progress.shows = n;
+      report();
+    }),
+    fetchAll<WatchedRow>("watched_episodes", (n) => {
+      progress.episodes = n;
+      report();
+    }),
+    fetchAll<MovieRow>("watched_movies", (n) => {
+      progress.movies = n;
+      report();
+    }),
   ]);
+
+  progress.merging = true;
+  report();
   await mergeFromCloud(
     showRows.map(rowToShow),
     watchedRows.map(rowToWatched),
