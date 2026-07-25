@@ -53,18 +53,20 @@ export default function PosterCard({
   return (
     <Link href={href} className="group block cursor-pointer active:scale-[0.97]">
       <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30 transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-ink/60">
-        {src ? (
+        {/* O nome fica sempre por baixo: enquanto a capa não chega (ou se
+            faltar de todo), a caixa lê-se como um cartaz sem arte em vez de
+            um buraco preto que parece avariado. */}
+        <div className="absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display text-sm font-bold text-dim">
+          {name}
+        </div>
+        {src && (
           // eslint-disable-next-line @next/next/no-img-element -- posters já vêm dimensionados do fornecedor
           <img
             src={src}
             alt={name}
             loading="lazy"
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+            className="relative h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-raised p-2 text-center font-display text-sm font-bold text-dim">
-            {name}
-          </div>
         )}
         {progress !== null && (
           <>

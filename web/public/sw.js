@@ -42,7 +42,13 @@ self.addEventListener("fetch", (event) => {
         if (hit) return hit;
         try {
           const res = await fetch(request);
-          if (res.ok) cache.put(request, res.clone());
+          // Uma <img> para outro domínio sem CORS devolve uma resposta OPACA:
+          // status 0 e, portanto, `ok` false. Testar só por `ok` fazia com que
+          // nenhuma capa fosse alguma vez guardada — e todas voltassem a ser
+          // descarregadas em cada visita.
+          if (res.ok || res.type === "opaque") {
+            void cache.put(request, res.clone());
+          }
           return res;
         } catch {
           return hit ?? Response.error();

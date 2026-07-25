@@ -223,18 +223,18 @@ function MovieCard({ movie }: { movie: StoredMovie }) {
       className="group block cursor-pointer active:scale-[0.97]"
     >
       <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30 transition duration-200 group-hover:-translate-y-0.5 group-hover:ring-2 group-hover:ring-ink/60">
-        {src ? (
+        {/* nome por baixo da capa — ver nota em PosterCard */}
+        <div className="absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display text-sm font-bold text-dim">
+          {movie.name}
+        </div>
+        {src && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
             src={src}
             alt={movie.name}
             loading="lazy"
-            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+            className="relative h-full w-full object-cover transition duration-300 group-hover:scale-105"
           />
-        ) : (
-          <div className="flex h-full w-full items-center justify-center bg-raised p-2 text-center font-display text-sm font-bold text-dim">
-            {movie.name}
-          </div>
         )}
       </div>
       <p className="mt-1.5 truncate text-sm font-medium">{movie.name}</p>
