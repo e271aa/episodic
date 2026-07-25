@@ -74,3 +74,12 @@ export function CheckIcon(props: SVGProps<SVGSVGElement>) {
     </Icon>
   );
 }
+
+export function SortIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M4 7h11M4 12h7M4 17h3" />
+      <path d="M18 9v10M15 16l3 3 3-3" />
+    </Icon>
+  );
+}

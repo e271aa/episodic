@@ -13,12 +13,27 @@ import { loadShows, type ShowWithProgress } from "@/lib/shows";
 import { searchShows, type MetaSearchResult } from "@/lib/metadata";
 import { imageUrl } from "@/lib/tmdb";
 import PosterCard from "@/components/PosterCard";
-import { TvIcon, CheckIcon, SearchIcon } from "@/components/icons";
+import { TvIcon, CheckIcon, SearchIcon, SortIcon } from "@/components/icons";
 
 type Segment = "series" | "filmes";
 type SeriesFilter = "tudo" | "a-ver" | "completas" | "para-ver" | "arquivadas" | "parei";
 /** Filmes não têm "estado" como as séries — o eixo útil é quando saíram */
 type MovieSort = "vistos" | "recentes" | "antigos" | "az";
+type SeriesSort = "vistos" | "progresso" | "az" | "adicionadas";
+
+const SERIES_SORTS: { id: SeriesSort; label: string }[] = [
+  { id: "vistos", label: "Vistos há pouco" },
+  { id: "progresso", label: "Mais episódios vistos" },
+  { id: "az", label: "A–Z" },
+  { id: "adicionadas", label: "Adicionadas há pouco" },
+];
+
+const MOVIE_SORTS: { id: MovieSort; label: string }[] = [
+  { id: "vistos", label: "Vistos há pouco" },
+  { id: "recentes", label: "Estreia mais recente" },
+  { id: "antigos", label: "Estreia mais antiga" },
+  { id: "az", label: "A–Z" },
+];
 
 type FollowState = "idle" | "following" | "done";
 
@@ -130,12 +145,70 @@ function MovieCard({ movie }: { movie: StoredMovie }) {
   );
 }
 
+/**
+ * A ordem tem de estar sempre à vista — dizer "A–Z" ou "Vistos há pouco" em
+ * texto resolve a dúvida sem ser preciso abrir nada; o ícone só muda.
+ */
+function SortMenu<T extends string>({
+  options,
+  value,
+  onChange,
+}: {
+  options: { id: T; label: string }[];
+  value: T;
+  onChange: (id: T) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const current = options.find((o) => o.id === value);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-expanded={open}
+        className="flex cursor-pointer items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs text-dim transition hover:border-ink hover:text-ink active:scale-95"
+        data-testid="sort-button"
+      >
+        <SortIcon className="h-3.5 w-3.5" />
+        {current?.label}
+      </button>
+      {open && (
+        <>
+          <button
+            aria-label="Fechar"
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-10 cursor-default"
+          />
+          <div className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-2xl border border-line bg-panel shadow-lg shadow-black/40">
+            {options.map((o) => (
+              <button
+                key={o.id}
+                onClick={() => {
+                  onChange(o.id);
+                  setOpen(false);
+                }}
+                className={`flex w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-2.5 text-left text-sm transition hover:bg-raised ${
+                  o.id === value ? "text-ink" : "text-dim"
+                }`}
+              >
+                {o.label}
+                {o.id === value && <CheckIcon className="h-4 w-4 shrink-0" />}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export default function LibraryPage() {
   const [shows, setShows] = useState<ShowWithProgress[] | null>(null);
   const [movies, setMovies] = useState<StoredMovie[] | null>(null);
   const [segment, setSegment] = useState<Segment>("series");
   const [filter, setFilter] = useState<SeriesFilter>("tudo");
   const [movieSort, setMovieSort] = useState<MovieSort>("vistos");
+  const [seriesSort, setSeriesSort] = useState<SeriesSort>("vistos");
   const [decade, setDecade] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   // Pesquisa remota é secundária: só corre quando o utilizador a pede
@@ -170,8 +243,18 @@ export default function LibraryPage() {
       list = list.filter((s) => !s.followed && !s.inWatchlist);
     }
     if (q) list = list.filter((s) => norm(s.name).includes(q));
-    return list;
-  }, [shows, filter, q]);
+    const sorted = [...list];
+    if (seriesSort === "vistos") {
+      sorted.sort((a, b) => b.lastWatchedAt.localeCompare(a.lastWatchedAt));
+    } else if (seriesSort === "progresso") {
+      sorted.sort((a, b) => b.watchedCount - a.watchedCount);
+    } else if (seriesSort === "az") {
+      sorted.sort((a, b) => a.name.localeCompare(b.name, "pt"));
+    } else {
+      sorted.sort((a, b) => b.addedAt.localeCompare(a.addedAt));
+    }
+    return sorted;
+  }, [shows, filter, q, seriesSort]);
 
   // Ano do filme: preferimos a estreia; sem ela, o ano em que o viste
   const movieYear = (m: StoredMovie): number =>
@@ -357,58 +440,49 @@ export default function LibraryPage() {
         </div>
       )}
 
-      {segment === "filmes" && (
-        <>
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-            {(
-              [
-                ["vistos", "Vistos há pouco"],
-                ["recentes", "Mais recentes"],
-                ["antigos", "Mais antigos"],
-                ["az", "A–Z"],
-              ] as const
-            ).map(([id, label]) => (
-              <button
-                key={id}
-                onClick={() => setMovieSort(id)}
-                className={`shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ${
-                  movieSort === id
-                    ? "border-ink bg-ink text-tube"
-                    : "border-line text-dim hover:border-ink hover:text-ink"
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-          {decades.length > 1 && (
-            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
-              <button
-                onClick={() => setDecade(null)}
-                className={`shrink-0 cursor-pointer rounded-full border px-3 py-1 text-xs transition active:scale-95 ${
-                  decade === null
-                    ? "border-ink bg-ink text-tube"
-                    : "border-line text-dim hover:border-ink hover:text-ink"
-                }`}
-              >
-                Todas as décadas
-              </button>
-              {decades.map((d) => (
-                <button
-                  key={d}
-                  onClick={() => setDecade(d === decade ? null : d)}
-                  className={`ep-code shrink-0 cursor-pointer rounded-full border px-3 py-1 text-xs transition active:scale-95 ${
-                    decade === d
-                      ? "border-ink bg-ink text-tube"
-                      : "border-line text-dim hover:border-ink hover:text-ink"
-                  }`}
-                >
-                  {d}s
-                </button>
-              ))}
-            </div>
+      {segment === "filmes" && decades.length > 1 && (
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          <button
+            onClick={() => setDecade(null)}
+            className={`shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ${
+              decade === null
+                ? "border-ink bg-ink text-tube"
+                : "border-line text-dim hover:border-ink hover:text-ink"
+            }`}
+          >
+            Todas as décadas
+          </button>
+          {decades.map((d) => (
+            <button
+              key={d}
+              onClick={() => setDecade(d === decade ? null : d)}
+              className={`ep-code shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ${
+                decade === d
+                  ? "border-ink bg-ink text-tube"
+                  : "border-line text-dim hover:border-ink hover:text-ink"
+              }`}
+            >
+              {d}s
+            </button>
+          ))}
+        </div>
+      )}
+
+      {!loading && (
+        <div className="mt-4 flex items-center justify-between gap-3">
+          <p className="ep-code text-xs text-faint">
+            {showing} {segment === "series" ? "séries" : "filmes"}
+          </p>
+          {segment === "series" ? (
+            <SortMenu
+              options={SERIES_SORTS}
+              value={seriesSort}
+              onChange={setSeriesSort}
+            />
+          ) : (
+            <SortMenu options={MOVIE_SORTS} value={movieSort} onChange={setMovieSort} />
           )}
-        </>
+        </div>
       )}
 
       {loading ? (
@@ -419,7 +493,7 @@ export default function LibraryPage() {
         </div>
       ) : showing > 0 ? (
         <div
-          className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5"
+          className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5"
           data-testid="library-grid"
         >
           {segment === "series"
