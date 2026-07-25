@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import {
   deleteMovie,
   getMovie,
@@ -9,11 +10,13 @@ import {
   getShow,
   putMovie,
   putShow,
+  updateMovie,
   updateShow,
   type StoredMovie,
 } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
 import {
+  enrichMovie,
   searchMovies,
   searchShows,
   type MetaMovieResult,
@@ -302,20 +305,55 @@ function SortMenu<T extends string>({
   );
 }
 
-export default function LibraryPage() {
+const SERIES_SORT_IDS = new Set(SERIES_SORTS.map((s) => s.id));
+const MOVIE_SORT_IDS = new Set(MOVIE_SORTS.map((s) => s.id));
+
+function LibraryContent() {
+  const router = useRouter();
+  const params = useSearchParams();
+
+  // O estado de navegação vive no URL: partilhável, sobrevive a recargas e
+  // faz o gesto de recuar funcionar dentro da própria Biblioteca.
+  const segment: Segment = params.get("tipo") === "filmes" ? "filmes" : "series";
+  const rawFiltro = params.get("filtro") as SeriesFilter | null;
+  const filter: SeriesFilter =
+    rawFiltro && ["a-ver", "completas", "para-ver", "arquivadas", "parei"].includes(rawFiltro)
+      ? rawFiltro
+      : "tudo";
+  const rawOrdem = params.get("ordem");
+  const seriesSort: SeriesSort =
+    rawOrdem && SERIES_SORT_IDS.has(rawOrdem as SeriesSort)
+      ? (rawOrdem as SeriesSort)
+      : "vistos";
+  const movieSort: MovieSort =
+    rawOrdem && MOVIE_SORT_IDS.has(rawOrdem as MovieSort)
+      ? (rawOrdem as MovieSort)
+      : "vistos";
+  const decade = Number(params.get("decada")) || null;
+
+  const setParams = useCallback(
+    (patch: Record<string, string | null>, push = false) => {
+      const next = new URLSearchParams(params);
+      for (const [key, value] of Object.entries(patch)) {
+        if (value === null) next.delete(key);
+        else next.set(key, value);
+      }
+      const url = next.size > 0 ? `/library?${next}` : "/library";
+      if (push) router.push(url, { scroll: false });
+      else router.replace(url, { scroll: false });
+    },
+    [params, router],
+  );
+
   const [shows, setShows] = useState<ShowWithProgress[] | null>(null);
   const [movies, setMovies] = useState<StoredMovie[] | null>(null);
-  const [segment, setSegment] = useState<Segment>("series");
-  const [filter, setFilter] = useState<SeriesFilter>("tudo");
-  const [movieSort, setMovieSort] = useState<MovieSort>("vistos");
-  const [seriesSort, setSeriesSort] = useState<SeriesSort>("vistos");
-  const [decade, setDecade] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   // Pesquisa remota é secundária: só corre quando o utilizador a pede
   const [remote, setRemote] = useState<MetaSearchResult[] | null>(null);
   const [remoteMovies, setRemoteMovies] = useState<MetaMovieResult[] | null>(null);
   const [remoteBusy, setRemoteBusy] = useState(false);
   const [remoteError, setRemoteError] = useState<string | null>(null);
+  const enriching = useRef(false);
 
   const reloadMovies = useCallback(() => {
     void getMovies().then((list) =>
@@ -325,9 +363,30 @@ export default function LibraryPage() {
 
   useEffect(() => {
     void loadShows().then(setShows);
-    void getMovies().then((list) =>
-      setMovies(list.sort((a, b) => b.watchedAt.localeCompare(a.watchedAt))),
-    );
+    void getMovies().then(async (list) => {
+      setMovies(list.sort((a, b) => b.watchedAt.localeCompare(a.watchedAt)));
+      // Completa capas em falta via TMDB. Vivia na antiga página /movies, que
+      // quase não tinha entradas — filmes sem capa nunca eram enriquecidos.
+      if (enriching.current) return;
+      enriching.current = true;
+      try {
+        let changed = false;
+        for (const movie of list) {
+          if (movie.posterPath) continue;
+          const patch = await enrichMovie(movie);
+          if (patch) {
+            await updateMovie(movie.key, patch);
+            changed = true;
+          }
+        }
+        if (changed) {
+          const fresh = await getMovies();
+          setMovies(fresh.sort((a, b) => b.watchedAt.localeCompare(a.watchedAt)));
+        }
+      } finally {
+        enriching.current = false;
+      }
+    });
   }, []);
 
   // Filtrar o que já tens é instantâneo (é tudo local) — sem botão, sem espera
@@ -442,13 +501,20 @@ export default function LibraryPage() {
     setRemoteError(null);
   }, []);
 
-  // Trocar de segmento também invalida: os resultados eram do outro catálogo
-  const changeSegment = useCallback((id: Segment) => {
-    setSegment(id);
-    setRemote(null);
-    setRemoteMovies(null);
-    setRemoteError(null);
-  }, []);
+  // Trocar de segmento também invalida: os resultados eram do outro catálogo.
+  // push (e não replace) para o gesto de recuar voltar ao segmento anterior.
+  const changeSegment = useCallback(
+    (id: Segment) => {
+      setRemote(null);
+      setRemoteMovies(null);
+      setRemoteError(null);
+      setParams(
+        { tipo: id === "series" ? null : id, filtro: null, ordem: null, decada: null },
+        true,
+      );
+    },
+    [setParams],
+  );
 
   const loading = shows === null || movies === null;
   const showing = segment === "series" ? filteredShows.length : filteredMovies.length;
@@ -468,42 +534,32 @@ export default function LibraryPage() {
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
       <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Biblioteca</h1>
 
-      {/* Triagem em destaque — é a interação-assinatura, não mais um cartão a meio */}
-      <Link
-        href="/triagem"
-        className="ep-card ep-card-hover mt-4 flex items-center gap-3 p-4"
-      >
-        <span className="bars flex h-11 w-11 shrink-0 items-center justify-center rounded-full" />
-        <span className="min-w-0 flex-1">
-          <span className="block font-display font-semibold text-ink">
-            Triagem por swipe
-          </span>
-          <span className="block text-xs text-dim">
-            Arrasta para marcares o que já viste, um episódio de cada vez
-          </span>
-        </span>
-        <span className="text-faint">→</span>
-      </Link>
-
-      <div className="mt-3 grid grid-cols-2 gap-2">
-        <Link href="/estrear" className="ep-card ep-card-hover flex items-center gap-2 p-3">
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-ink">A estrear</span>
-            <span className="block text-xs text-dim">Próximos episódios</span>
-          </span>
-          <span className="text-faint">→</span>
+      {/* Atalhos compactos: a biblioteca é dos teus títulos — as outras
+          paragens são uma linha, não 400px de cartões antes do conteúdo */}
+      <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+        <Link
+          href="/triagem"
+          className="flex shrink-0 cursor-pointer items-center gap-2 rounded-full border border-line px-3.5 py-1.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
+        >
+          <span className="bars h-4 w-4 shrink-0 rounded-full" />
+          Triagem
         </Link>
-        <Link href="/listas" className="ep-card ep-card-hover flex items-center gap-2 p-3">
-          <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold text-ink">Listas</span>
-            <span className="block text-xs text-dim">As tuas coleções</span>
-          </span>
-          <span className="text-faint">→</span>
+        <Link
+          href="/estrear"
+          className="shrink-0 cursor-pointer rounded-full border border-line px-3.5 py-1.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
+        >
+          A estrear
+        </Link>
+        <Link
+          href="/listas"
+          className="shrink-0 cursor-pointer rounded-full border border-line px-3.5 py-1.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
+        >
+          Listas
         </Link>
       </div>
 
       {/* Pesquisa: filtra ao vivo o que já tens; procurar novas é um segundo passo */}
-      <div className="relative mt-5">
+      <div className="relative mt-4">
         <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
         <input
           type="search"
@@ -544,7 +600,7 @@ export default function LibraryPage() {
           {FILTERS.map((f) => (
             <button
               key={f.id}
-              onClick={() => setFilter(f.id)}
+              onClick={() => setParams({ filtro: f.id === "tudo" ? null : f.id })}
               className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ${
                 filter === f.id
                   ? "border-ink bg-ink text-tube"
@@ -565,7 +621,7 @@ export default function LibraryPage() {
       {segment === "filmes" && decades.length > 1 && (
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
           <button
-            onClick={() => setDecade(null)}
+            onClick={() => setParams({ decada: null })}
             className={`shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ${
               decade === null
                 ? "border-ink bg-ink text-tube"
@@ -577,7 +633,7 @@ export default function LibraryPage() {
           {decades.map((d) => (
             <button
               key={d}
-              onClick={() => setDecade(d === decade ? null : d)}
+              onClick={() => setParams({ decada: d === decade ? null : String(d) })}
               className={`ep-code shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ${
                 decade === d
                   ? "border-ink bg-ink text-tube"
@@ -599,10 +655,14 @@ export default function LibraryPage() {
             <SortMenu
               options={SERIES_SORTS}
               value={seriesSort}
-              onChange={setSeriesSort}
+              onChange={(id) => setParams({ ordem: id === "vistos" ? null : id })}
             />
           ) : (
-            <SortMenu options={MOVIE_SORTS} value={movieSort} onChange={setMovieSort} />
+            <SortMenu
+              options={MOVIE_SORTS}
+              value={movieSort}
+              onChange={(id) => setParams({ ordem: id === "vistos" ? null : id })}
+            />
           )}
         </div>
       )}
@@ -700,5 +760,21 @@ export default function LibraryPage() {
         </div>
       )}
     </main>
+  );
+}
+
+// useSearchParams exige uma fronteira de Suspense para a rota poder ser
+// pré-renderizada; sem ela o build falha.
+export default function LibraryPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto w-full max-w-2xl px-4 py-8">
+          <div className="h-8 w-40 animate-pulse rounded-lg bg-panel" />
+        </main>
+      }
+    >
+      <LibraryContent />
+    </Suspense>
   );
 }

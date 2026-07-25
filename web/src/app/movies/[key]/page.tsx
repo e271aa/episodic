@@ -59,7 +59,10 @@ export default function MoviePage() {
     return (
       <main className="mx-auto max-w-xl px-4 py-16 text-center">
         <p className="text-dim">Filme não encontrado.</p>
-        <Link href="/movies" className="mt-4 inline-block cursor-pointer text-ink underline">
+        <Link
+          href="/library?tipo=filmes"
+          className="mt-4 inline-block cursor-pointer text-ink underline"
+        >
           Voltar aos filmes
         </Link>
       </main>
@@ -88,7 +91,7 @@ export default function MoviePage() {
         )}
         <div className="bars absolute inset-x-0 top-0 h-[3px]" />
         <Link
-          href="/movies"
+          href="/library?tipo=filmes"
           className="absolute left-3 top-3 cursor-pointer rounded-full bg-black/50 px-3 py-1.5 text-sm text-white backdrop-blur"
         >
           ← Filmes
