@@ -7,6 +7,7 @@ import { loadShows, type ShowWithProgress } from "@/lib/shows";
 import { classifyQueue, loadCachedNextUp, type NextUpMap } from "@/lib/queue";
 import type { MetaEpisode } from "@/lib/metadata";
 import SwipeCard from "@/components/SwipeCard";
+import SwipeCoach from "@/components/SwipeCoach";
 import { CheckIcon } from "@/components/icons";
 
 type Filter = "continuar" | "retomar" | "comecar" | "todas";
@@ -24,6 +25,8 @@ interface StackItem {
   posterPath: string | null;
   backdropPath: string | null;
   episode: MetaEpisode;
+  watchedCount: number;
+  totalEpisodes: number | null;
 }
 
 export default function TriagemPage() {
@@ -63,6 +66,8 @@ export default function TriagemPage() {
       posterPath: s.posterPath,
       backdropPath: s.backdropPath,
       episode: nextUp.get(s.uuid)!.episode,
+      watchedCount: s.watchedCount,
+      totalEpisodes: s.totalEpisodes,
     }));
   }, [buckets, nextUp, filter]);
 
@@ -180,10 +185,13 @@ export default function TriagemPage() {
                 posterPath={item.posterPath}
                 backdropPath={item.backdropPath}
                 episode={item.episode}
+                watchedCount={item.watchedCount}
+                totalEpisodes={item.totalEpisodes}
                 active={i === 0}
                 onDecide={(watched) => handleDecide(item, watched)}
               />
             ))}
+            <SwipeCoach />
           </div>
 
           <div className="mt-5 flex items-center justify-center gap-6">
