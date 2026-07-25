@@ -15,6 +15,8 @@ export interface SwipeCardProps {
   totalEpisodes: number | null;
   /** true = topo da pilha (só este responde ao gesto) */
   active: boolean;
+  /** posição na pilha: 0 = topo, 1 = o próximo a subir, … */
+  depth: number;
   onDecide: (watched: boolean) => void;
 }
 
@@ -36,6 +38,7 @@ export default function SwipeCard({
   watchedCount,
   totalEpisodes,
   active,
+  depth,
   onDecide,
 }: SwipeCardProps) {
   const [drag, setDrag] = useState({ x: 0, dragging: false });
@@ -84,9 +87,12 @@ export default function SwipeCard({
   const yes = drag.x > 0 ? intent : 0;
   const no = drag.x < 0 ? intent : 0;
   const committed = Math.abs(drag.x) > THRESHOLD;
+  // Os cartões de trás encolhem um pouco, para se perceber que há uma pilha
+  // e qual é o que sobe a seguir.
+  const rest = `scale(${1 - depth * 0.04}) translateY(${depth * -8}px)`;
   const transform = leaving
     ? `translateX(${leaving === "right" ? 600 : -600}px) rotate(${leaving === "right" ? 24 : -24}deg)`
-    : `translateX(${drag.x}px) rotate(${rotate}deg)`;
+    : `translateX(${drag.x}px) rotate(${rotate}deg) ${depth > 0 ? rest : ""}`;
 
   return (
     <div
@@ -94,7 +100,9 @@ export default function SwipeCard({
       style={{
         transform,
         transition: drag.dragging ? "none" : "transform 220ms ease-out",
-        zIndex: active ? 10 : 1,
+        // sem isto, os cartões de trás partilham o mesmo z-index e é o último
+        // do DOM (o 3.º) que se vê atrás — não o que sobe a seguir
+        zIndex: 10 - depth,
       }}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}

@@ -188,6 +188,7 @@ export default function TriagemPage() {
                 watchedCount={item.watchedCount}
                 totalEpisodes={item.totalEpisodes}
                 active={i === 0}
+                depth={i}
                 onDecide={(watched) => handleDecide(item, watched)}
               />
             ))}
