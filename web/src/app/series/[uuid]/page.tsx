@@ -13,12 +13,12 @@ import {
   type StoredShow,
   type WatchedEpisode,
 } from "@/lib/db";
-import { imageUrl } from "@/lib/tmdb";
 import { enrichShow, getEpisodesOfSeason, getSeasons, type MetaEpisode } from "@/lib/metadata";
 import { findNextUnwatched, formatEpCode } from "@/lib/watchnext";
 import { pushUndo } from "@/lib/undo";
 import ProgressRing from "@/components/ProgressRing";
 import AddToListButton from "@/components/AddToListButton";
+import Poster from "@/components/Poster";
 import { CheckIcon } from "@/components/icons";
 
 interface SeasonView {
@@ -244,8 +244,8 @@ export default function ShowPage() {
   }, [nextUp, show, uuid, syncWatched, loadSeasonEpisodes, seasons]);
 
   const watchedCount = watched.size;
-  const backdrop = imageUrl(show?.backdropPath ?? null, "w780");
-  const poster = imageUrl(show?.posterPath ?? null, "w342");
+  const backdropPath = show?.backdropPath ?? null;
+  const posterPath = show?.posterPath ?? null;
   const percent = show?.totalEpisodes
     ? (watchedCount / show.totalEpisodes) * 100
     : null;
@@ -294,15 +294,22 @@ export default function ShowPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl pb-8">
-      <div className="relative">
-        {backdrop ? (
+      <div className="relative h-44 sm:h-56">
+        {backdropPath ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={backdrop} alt="" className="h-44 w-full object-cover sm:h-56" />
+            <Poster
+              path={backdropPath}
+              alt=""
+              size="w780"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-tube via-tube/40 to-transparent" />
           </>
         ) : (
-          <div className="h-28 w-full bg-gradient-to-r from-raised to-panel" />
+          <div className="h-full w-full bg-gradient-to-r from-raised to-panel" />
         )}
         {/* fio de cor — a assinatura, consistente com o "A seguir" e o perfil */}
         <div className="bars absolute inset-x-0 top-0 h-[3px]" />
@@ -317,13 +324,10 @@ export default function ShowPage() {
       {/* relative: sem isto, o gradiente absoluto da subcapa pinta por cima do poster */}
       <div className="relative px-4">
         <div className="-mt-10 flex items-end gap-4">
-          {poster ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={poster}
-              alt={show.name}
-              className="w-24 shrink-0 rounded-xl shadow-lg"
-            />
+          {posterPath ? (
+            <div className="relative aspect-2/3 w-24 shrink-0 overflow-hidden rounded-xl shadow-lg">
+              <Poster path={posterPath} alt={show.name} fill sizes="96px" priority className="object-cover" />
+            </div>
           ) : (
             <div className="flex h-36 w-24 shrink-0 items-center justify-center rounded-xl bg-raised p-2 text-center font-display text-sm font-bold text-dim shadow-lg">
               {show.name}

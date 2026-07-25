@@ -3,9 +3,9 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { clearAllData } from "@/lib/db";
-import { imageUrl } from "@/lib/tmdb";
 import { loadProfileStats, type ProfileStats } from "@/lib/stats";
 import CloudAccount from "@/components/CloudAccount";
+import Poster from "@/components/Poster";
 
 // Mesmo formato do TV Time: "2 meses · 25 dias · 7 horas"
 function splitHours(totalHours: number) {
@@ -44,7 +44,7 @@ export default function ProfilePage() {
   }
 
   const time = stats.hours !== null ? splitHours(stats.hours) : null;
-  const topShowPoster = imageUrl(stats.topShow?.posterPath ?? null, "w185");
+  const topShowPosterPath = stats.topShow?.posterPath ?? null;
   const maxYear = Math.max(1, ...stats.perYear.map((y) => y.count));
 
   return (
@@ -140,13 +140,10 @@ export default function ProfilePage() {
           href={`/series/${stats.topShow.uuid}`}
           className="mt-3 flex items-center gap-4 rounded-2xl border border-line bg-panel p-4 transition-colors hover:bg-raised"
         >
-          {topShowPoster ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={topShowPoster}
-              alt=""
-              className="h-20 w-14 shrink-0 rounded-lg object-cover shadow-md shadow-black/40"
-            />
+          {topShowPosterPath ? (
+            <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/40">
+              <Poster path={topShowPosterPath} alt="" size="w185" fill className="object-cover" />
+            </div>
           ) : (
             <div className="h-20 w-14 shrink-0 rounded-lg bg-raised" />
           )}

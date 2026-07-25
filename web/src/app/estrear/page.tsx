@@ -2,11 +2,11 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { imageUrl } from "@/lib/tmdb";
 import { formatEpCode } from "@/lib/watchnext";
 import { buildUpcomingCalendar, type UpcomingEntry } from "@/lib/upcoming";
 import { loadShows } from "@/lib/shows";
 import { ClapperboardIcon } from "@/components/icons";
+import Poster from "@/components/Poster";
 
 function relativeDay(airDate: string): string {
   const today = new Date().toISOString().slice(0, 10);
@@ -63,20 +63,16 @@ export default function EstrearPage() {
       ) : (
         <div className="mt-6 flex flex-col gap-2">
           {entries.map(({ show, episode }) => {
-            const poster = imageUrl(show.posterPath, "w185");
             return (
               <Link
                 key={show.uuid}
                 href={`/series/${show.uuid}`}
                 className="ep-card ep-card-hover flex items-center gap-3 p-3"
               >
-                {poster ? (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={poster}
-                    alt=""
-                    className="h-16 w-11 shrink-0 rounded-lg object-cover"
-                  />
+                {show.posterPath ? (
+                  <div className="relative h-16 w-11 shrink-0 overflow-hidden rounded-lg">
+                    <Poster path={show.posterPath} alt="" size="w185" fill className="object-cover" />
+                  </div>
                 ) : (
                   <div className="h-16 w-11 shrink-0 rounded-lg bg-raised" />
                 )}

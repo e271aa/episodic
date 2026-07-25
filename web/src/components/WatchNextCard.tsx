@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { CheckIcon } from "@/components/icons";
-import { imageUrl } from "@/lib/tmdb";
+import Poster from "@/components/Poster";
 import { formatEpCode } from "@/lib/watchnext";
 import type { MetaEpisode } from "@/lib/metadata";
 
@@ -25,8 +25,6 @@ export default function WatchNextCard({
   const [checking, setChecking] = useState(false);
   const [pulse, setPulse] = useState(false);
   const pulseTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
-  const poster = imageUrl(posterPath, "w185");
-
   useEffect(() => () => clearTimeout(pulseTimeout.current), []);
 
   const handleCheck = async () => {
@@ -48,13 +46,10 @@ export default function WatchNextCard({
   return (
     <div className="ep-card ep-card-hover flex items-center gap-3 p-3">
       <Link href={`/series/${showUuid}`} className="flex min-w-0 flex-1 items-center gap-3">
-        {poster ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={poster}
-            alt=""
-            className="h-20 w-14 shrink-0 rounded-lg object-cover shadow-sm shadow-black/40"
-          />
+        {posterPath ? (
+          <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg shadow-sm shadow-black/40">
+            <Poster path={posterPath} alt="" size="w185" fill className="object-cover" />
+          </div>
         ) : (
           <div className="h-20 w-14 shrink-0 rounded-lg bg-raised" />
         )}

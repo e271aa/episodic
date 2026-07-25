@@ -1,7 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { imageUrl } from "@/lib/tmdb";
+import Poster from "@/components/Poster";
 import { formatEpCode } from "@/lib/watchnext";
 import type { MetaEpisode } from "@/lib/metadata";
 
@@ -45,7 +45,7 @@ export default function SwipeCard({
   const [leaving, setLeaving] = useState<"left" | "right" | null>(null);
   const startX = useRef(0);
   const pointerId = useRef<number | null>(null);
-  const image = imageUrl(backdropPath ?? posterPath, "w780");
+  const backdropOrPoster = backdropPath ?? posterPath;
 
   const decide = (watched: boolean) => {
     setLeaving(watched ? "right" : "left");
@@ -122,12 +122,17 @@ export default function SwipeCard({
       >
         {/* a imagem é fundo (absoluta): se ficar em fluxo, empurra o bloco de
             texto para fora do cartão e não se vê que episódio se está a decidir */}
-        {image ? (
-          // eslint-disable-next-line @next/next/no-img-element -- imagem já dimensionada
-          <img
-            src={image}
+        {backdropOrPoster ? (
+          <Poster
+            path={backdropOrPoster}
             alt=""
-            className="absolute inset-0 h-full w-full object-cover"
+            size="w780"
+            fill
+            // as duas ou três cartas do topo da pilha estão sempre à vista —
+            // não faz sentido nenhuma delas ser lazy
+            priority={active}
+            sizes="(max-width: 640px) 100vw, 480px"
+            className="object-cover"
             draggable={false}
           />
         ) : (

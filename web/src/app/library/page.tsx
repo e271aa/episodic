@@ -3,6 +3,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import Poster from "@/components/Poster";
 import {
   deleteMovie,
   getMovie,
@@ -22,7 +23,6 @@ import {
   type MetaMovieResult,
   type MetaSearchResult,
 } from "@/lib/metadata";
-import { imageUrl } from "@/lib/tmdb";
 import { pushUndo } from "@/lib/undo";
 import { decadeLabel, groupSorted, letterLabel, periodLabel } from "@/lib/grouping";
 import PosterCard from "@/components/PosterCard";
@@ -96,12 +96,9 @@ function ResultCard({ result }: { result: MetaSearchResult }) {
   return (
     <div className="page-enter flex gap-3 rounded-2xl border border-line bg-panel p-3">
       {result.posterUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={result.posterUrl}
-          alt=""
-          className="h-24 w-16 shrink-0 rounded-lg object-cover"
-        />
+        <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-lg">
+          <Poster path={result.posterUrl} alt="" fill className="object-cover" />
+        </div>
       ) : (
         <div className="flex h-24 w-16 shrink-0 items-center justify-center rounded-lg bg-raised text-faint">
           <TvIcon className="h-6 w-6" />
@@ -181,12 +178,9 @@ function MovieResultCard({
   return (
     <div className="page-enter flex gap-3 rounded-2xl border border-line bg-panel p-3">
       {result.posterUrl ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={result.posterUrl}
-          alt=""
-          className="h-24 w-16 shrink-0 rounded-lg object-cover"
-        />
+        <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-lg">
+          <Poster path={result.posterUrl} alt="" fill className="object-cover" />
+        </div>
       ) : (
         <div className="flex h-24 w-16 shrink-0 items-center justify-center rounded-lg bg-raised text-faint">
           <ClapperboardIcon className="h-6 w-6" />
@@ -219,7 +213,6 @@ function MovieResultCard({
 }
 
 function MovieCard({ movie, index }: { movie: StoredMovie; index: number }) {
-  const src = imageUrl(movie.posterPath, "w342");
   const year = movie.releaseDate?.slice(0, 4);
   return (
     <Link
@@ -232,15 +225,13 @@ function MovieCard({ movie, index }: { movie: StoredMovie; index: number }) {
         <div className="absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display text-sm font-bold text-dim">
           {movie.name}
         </div>
-        {src && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={src}
-            alt={movie.name}
-            loading="lazy"
-            className="relative h-full w-full object-cover transition duration-300 group-hover:scale-105"
-          />
-        )}
+        <Poster
+          path={movie.posterPath}
+          alt={movie.name}
+          fill
+          sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
+          className="object-cover transition duration-300 group-hover:scale-105"
+        />
       </div>
       <p className="mt-1.5 truncate text-sm font-medium">{movie.name}</p>
       <p className="ep-code truncate text-xs text-dim">

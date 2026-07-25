@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { imageUrl } from "@/lib/tmdb";
+import Poster from "@/components/Poster";
 
 export interface PosterCardProps {
   href: string;
@@ -47,7 +47,6 @@ export default function PosterCard({
   subtitle,
   status,
 }: PosterCardProps) {
-  const src = imageUrl(posterPath, "w342");
   const progress =
     watched !== undefined && total ? Math.min(100, (watched / total) * 100) : null;
   const barColor =
@@ -67,15 +66,13 @@ export default function PosterCard({
         <div className="absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display text-sm font-bold text-dim">
           {name}
         </div>
-        {src && (
-          // eslint-disable-next-line @next/next/no-img-element -- posters já vêm dimensionados do fornecedor
-          <img
-            src={src}
-            alt={name}
-            loading="lazy"
-            className="relative h-full w-full object-cover transition duration-300 group-hover:scale-105"
-          />
-        )}
+        <Poster
+          path={posterPath}
+          alt={name}
+          fill
+          sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
+          className="object-cover transition duration-300 group-hover:scale-105"
+        />
         {progress !== null && (
           <>
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/60 to-transparent" />

@@ -14,7 +14,7 @@ import {
   type StoredShow,
   type StoredMovie,
 } from "@/lib/db";
-import { imageUrl } from "@/lib/tmdb";
+import Poster from "@/components/Poster";
 
 interface ResolvedItem {
   kind: "show" | "movie";
@@ -165,14 +165,18 @@ export default function ListaPage() {
       ) : (
         <div className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
           {items.map((item) => {
-            const poster = imageUrl(item.posterPath, "w342");
             return (
               <div key={`${item.kind}-${item.refId}`} className="group relative">
                 <Link href={item.href} className="block cursor-pointer active:scale-[0.97]">
                   <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30">
-                    {poster ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={poster} alt={item.name} className="h-full w-full object-cover" />
+                    {item.posterPath ? (
+                      <Poster
+                        path={item.posterPath}
+                        alt={item.name}
+                        fill
+                        sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
+                        className="object-cover"
+                      />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center bg-raised p-2 text-center font-display text-sm font-bold text-dim">
                         {item.name}

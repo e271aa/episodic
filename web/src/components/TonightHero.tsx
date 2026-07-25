@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { imageUrl } from "@/lib/tmdb";
 import { formatEpCode } from "@/lib/watchnext";
 import type { MetaEpisode } from "@/lib/metadata";
@@ -57,12 +58,14 @@ export default function TonightHero({
   return (
     <div className="relative -mx-4 aspect-4/5 overflow-hidden bg-panel sm:aspect-video">
       {backdrop && (
-        // eslint-disable-next-line @next/next/no-img-element -- imagem já dimensionada pelo fornecedor
-        <img
+        <Image
           key={showUuid}
           src={backdrop}
           alt=""
-          className="absolute inset-0 h-full w-full object-cover transition-[transform,opacity] duration-[900ms] ease-out"
+          fill
+          priority
+          sizes="100vw"
+          className="object-cover transition-[transform,opacity] duration-[900ms] ease-out"
           style={{
             transform: lit ? "scale(1)" : "scale(1.05)",
             opacity: lit ? 1 : 0,

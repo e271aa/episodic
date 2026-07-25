@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getMovie, updateMovie, type StoredMovie } from "@/lib/db";
-import { getMovieDetails, imageUrl, type TmdbMovieDetails } from "@/lib/tmdb";
+import { getMovieDetails, type TmdbMovieDetails } from "@/lib/tmdb";
 import AddToListButton from "@/components/AddToListButton";
+import Poster from "@/components/Poster";
 
 function formatWatchedDate(iso: string): string {
   return new Date(iso).toLocaleDateString("pt-PT", {
@@ -77,8 +78,8 @@ export default function MoviePage() {
     );
   }
 
-  const backdrop = imageUrl(details?.backdrop_path ?? null, "w780");
-  const poster = imageUrl(movie.posterPath, "w342");
+  const backdropPath = details?.backdrop_path ?? null;
+  const posterPath = movie.posterPath ?? null;
   const year = (details?.release_date ?? movie.releaseDate)?.slice(0, 4);
   const runtime = formatRuntime(details?.runtime ?? null);
   const metaBits = [year, runtime, details?.genres.map((g) => g.name).join(" · ")].filter(
@@ -87,15 +88,22 @@ export default function MoviePage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl pb-8">
-      <div className="relative">
-        {backdrop ? (
+      <div className="relative h-44 sm:h-56">
+        {backdropPath ? (
           <>
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src={backdrop} alt="" className="h-44 w-full object-cover sm:h-56" />
+            <Poster
+              path={backdropPath}
+              alt=""
+              size="w780"
+              fill
+              priority
+              sizes="100vw"
+              className="object-cover"
+            />
             <div className="absolute inset-0 bg-gradient-to-t from-tube via-tube/40 to-transparent" />
           </>
         ) : (
-          <div className="h-28 w-full bg-gradient-to-r from-raised to-panel" />
+          <div className="h-full w-full bg-gradient-to-r from-raised to-panel" />
         )}
         <div className="bars absolute inset-x-0 top-0 h-[3px]" />
         <Link
@@ -109,9 +117,10 @@ export default function MoviePage() {
       {/* relative: sem isto, o gradiente absoluto da subcapa pinta por cima do poster */}
       <div className="relative px-4">
         <div className="-mt-10 flex items-end gap-4">
-          {poster ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={poster} alt={movie.name} className="w-24 shrink-0 rounded-xl shadow-lg" />
+          {posterPath ? (
+            <div className="relative aspect-2/3 w-24 shrink-0 overflow-hidden rounded-xl shadow-lg">
+              <Poster path={posterPath} alt={movie.name} fill sizes="96px" priority className="object-cover" />
+            </div>
           ) : (
             <div className="flex h-36 w-24 shrink-0 items-center justify-center rounded-xl bg-raised p-2 text-center font-display text-sm font-bold text-dim shadow-lg">
               {movie.name}

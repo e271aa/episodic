@@ -2,9 +2,13 @@
 // Estratégias:
 //  - Navegações e recursos da app: "network-first" com fallback à cache (a app
 //    abre offline com a última versão vista).
-//  - Posters (image.tmdb.org / TVmaze): "cache-first" (não mudam; poupa dados).
+//  - Posters: "cache-first" (não mudam; poupa dados). Desde que as capas
+//    passaram pelo otimizador de imagens da Vercel (next/image), já não vêm
+//    diretas de image.tmdb.org/static.tvmaze.com — vêm de /_next/image, que é
+//    same-origin. É esse caminho que tem de ser tratado como cache-first
+//    agora; os hosts externos ficam só por segurança (páginas antigas em cache).
 const APP_CACHE = "episodic-app-v1";
-const IMG_CACHE = "episodic-img-v1";
+const IMG_CACHE = "episodic-img-v2";
 const IMG_HOSTS = ["image.tmdb.org", "static.tvmaze.com"];
 
 self.addEventListener("install", (event) => {
@@ -34,8 +38,10 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  // Posters de fornecedores externos: cache-first
-  if (IMG_HOSTS.includes(url.hostname)) {
+  // Posters: cache-first. `/_next/image` é o caminho normal agora (a Vercel
+  // já tratou do resize/formato); os hosts externos ficam para o caso de
+  // ainda haver pedidos diretos numa página em cache de antes desta mudança.
+  if (url.pathname.startsWith("/_next/image") || IMG_HOSTS.includes(url.hostname)) {
     event.respondWith(
       caches.open(IMG_CACHE).then(async (cache) => {
         const hit = await cache.match(request);

@@ -139,6 +139,32 @@ input:focus-visible,
   animation: spin 700ms linear infinite;
 }
 
+/* Brilho a percorrer os cartazes enquanto a capa carrega — em vez de um
+   retângulo cinzento parado, que no telemóvel lê-se como "não está a fazer
+   nada". Fica em @layer base seria cedo de mais; isto é intencionalmente
+   opt-in via .poster-shimmer. */
+@keyframes shimmer-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+.poster-shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    transparent 30%,
+    var(--color-faint) 50%,
+    transparent 70%
+  );
+  opacity: 0.15;
+  animation: shimmer-sweep 1.6s ease-in-out infinite;
+}
+
 /* Resposta ao toque, por omissão e em todo o lado. Metade dos botões e links
    tinha `active:scale-*` e a outra metade não respondia a nada — no telemóvel
    isso lê-se como "não carregou". Fica em @layer base de propósito: qualquer
