@@ -139,6 +139,48 @@ input:focus-visible,
   animation: spin 700ms linear infinite;
 }
 
+/* Resposta ao toque, por omissão e em todo o lado. Metade dos botões e links
+   tinha `active:scale-*` e a outra metade não respondia a nada — no telemóvel
+   isso lê-se como "não carregou". Fica em @layer base de propósito: qualquer
+   utilitário `active:` continua a mandar por cima disto.
+   O tap-highlight cinzento do iOS sai — temos estado próprio. */
+@layer base {
+  a,
+  button,
+  [role="button"] {
+    -webkit-tap-highlight-color: transparent;
+  }
+  a.cursor-pointer:active,
+  button.cursor-pointer:active {
+    transform: scale(0.97);
+  }
+  a.cursor-pointer,
+  button.cursor-pointer {
+    transition: transform 120ms ease-out;
+  }
+  /* desativados não fingem que responderam */
+  button:disabled:active {
+    transform: none;
+  }
+}
+
+/* Entrada escalonada da grelha: os cartazes assentam em cascata em vez de
+   aparecerem todos ao mesmo tempo. O atraso vem do índice, limitado à
+   primeira dúzia — quem está fora do ecrã não precisa de espera. */
+@keyframes poster-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+.poster-in {
+  animation: poster-in 260ms ease-out both;
+}
+
 /* Janela de anulação a esgotar-se. O tempo tem de estar à vista: a demora
    é a funcionalidade, não um atraso escondido. */
 @keyframes undo-drain {

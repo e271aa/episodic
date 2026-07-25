@@ -7,6 +7,8 @@ export interface PosterCardProps {
   href: string;
   name: string;
   posterPath: string | null;
+  /** posição na grelha, para a entrada escalonada */
+  index?: number;
   /** episódios vistos / total (total pode ser desconhecido antes dos metadados) */
   watched?: number;
   total?: number | null;
@@ -39,6 +41,7 @@ export default function PosterCard({
   href,
   name,
   posterPath,
+  index,
   watched,
   total,
   subtitle,
@@ -51,7 +54,12 @@ export default function PosterCard({
     watched !== undefined && total ? progressBarColor(watched, total, status) : null;
 
   return (
-    <Link href={href} className="group block cursor-pointer active:scale-[0.97]">
+    <Link
+      href={href}
+      className="poster-in group block cursor-pointer transition active:scale-[0.97]"
+      // entrada escalonada: a grelha monta-se em cascata, não toda de uma vez
+      style={index !== undefined ? { animationDelay: `${Math.min(index, 11) * 35}ms` } : undefined}
+    >
       <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30 transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-ink/60">
         {/* O nome fica sempre por baixo: enquanto a capa não chega (ou se
             faltar de todo), a caixa lê-se como um cartaz sem arte em vez de

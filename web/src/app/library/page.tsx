@@ -217,13 +217,14 @@ function MovieResultCard({
   );
 }
 
-function MovieCard({ movie }: { movie: StoredMovie }) {
+function MovieCard({ movie, index }: { movie: StoredMovie; index: number }) {
   const src = imageUrl(movie.posterPath, "w342");
   const year = movie.releaseDate?.slice(0, 4);
   return (
     <Link
       href={`/movies/${movie.key}`}
-      className="group block cursor-pointer active:scale-[0.97]"
+      className="poster-in group block cursor-pointer transition active:scale-[0.97]"
+      style={{ animationDelay: `${Math.min(index, 11) * 35}ms` }}
     >
       <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30 transition duration-200 group-hover:-translate-y-0.5 group-hover:ring-2 group-hover:ring-ink/60">
         {/* nome por baixo da capa — ver nota em PosterCard */}
@@ -679,18 +680,21 @@ function LibraryContent() {
           data-testid="library-grid"
         >
           {segment === "series"
-            ? filteredShows.map((s) => (
+            ? filteredShows.map((s, i) => (
                 <PosterCard
                   key={s.uuid}
                   href={`/series/${s.uuid}`}
                   name={s.name}
                   posterPath={s.posterPath}
+                  index={i}
                   watched={s.watchedCount}
                   total={s.totalEpisodes}
                   status={s.status}
                 />
               ))
-            : filteredMovies.map((m) => <MovieCard key={m.key} movie={m} />)}
+            : filteredMovies.map((m, i) => (
+                <MovieCard key={m.key} movie={m} index={i} />
+              ))}
         </div>
       ) : (
         <p className="mt-10 text-center text-sm text-dim">
