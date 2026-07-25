@@ -17,6 +17,8 @@ import { TvIcon, CheckIcon, SearchIcon } from "@/components/icons";
 
 type Segment = "series" | "filmes";
 type SeriesFilter = "tudo" | "a-ver" | "completas" | "para-ver" | "arquivadas" | "parei";
+/** Filmes não têm "estado" como as séries — o eixo útil é quando saíram */
+type MovieSort = "vistos" | "recentes" | "antigos" | "az";
 
 type FollowState = "idle" | "following" | "done";
 
@@ -133,6 +135,8 @@ export default function LibraryPage() {
   const [movies, setMovies] = useState<StoredMovie[] | null>(null);
   const [segment, setSegment] = useState<Segment>("series");
   const [filter, setFilter] = useState<SeriesFilter>("tudo");
+  const [movieSort, setMovieSort] = useState<MovieSort>("vistos");
+  const [decade, setDecade] = useState<number | null>(null);
   const [query, setQuery] = useState("");
   // Pesquisa remota é secundária: só corre quando o utilizador a pede
   const [remote, setRemote] = useState<MetaSearchResult[] | null>(null);
@@ -169,10 +173,43 @@ export default function LibraryPage() {
     return list;
   }, [shows, filter, q]);
 
+  // Ano do filme: preferimos a estreia; sem ela, o ano em que o viste
+  const movieYear = (m: StoredMovie): number =>
+    Number((m.releaseDate ?? m.watchedAt).slice(0, 4));
+
+  /** Décadas presentes na coleção, da mais recente para a mais antiga */
+  const decades = useMemo(() => {
+    if (!movies) return [];
+    const set = new Set<number>();
+    for (const m of movies) {
+      const year = movieYear(m);
+      if (Number.isFinite(year)) set.add(Math.floor(year / 10) * 10);
+    }
+    return [...set].sort((a, b) => b - a);
+  }, [movies]);
+
   const filteredMovies = useMemo(() => {
     if (!movies) return [];
-    return q ? movies.filter((m) => norm(m.name).includes(q)) : movies;
-  }, [movies, q]);
+    let list = movies;
+    if (decade !== null) {
+      list = list.filter((m) => {
+        const year = movieYear(m);
+        return year >= decade && year < decade + 10;
+      });
+    }
+    if (q) list = list.filter((m) => norm(m.name).includes(q));
+    const sorted = [...list];
+    if (movieSort === "vistos") {
+      sorted.sort((a, b) => b.watchedAt.localeCompare(a.watchedAt));
+    } else if (movieSort === "recentes") {
+      sorted.sort((a, b) => movieYear(b) - movieYear(a));
+    } else if (movieSort === "antigos") {
+      sorted.sort((a, b) => movieYear(a) - movieYear(b));
+    } else {
+      sorted.sort((a, b) => a.name.localeCompare(b.name, "pt"));
+    }
+    return sorted;
+  }, [movies, q, decade, movieSort]);
 
   const counts = useMemo(() => {
     const complete = (s: ShowWithProgress) =>
@@ -318,6 +355,60 @@ export default function LibraryPage() {
             </button>
           ))}
         </div>
+      )}
+
+      {segment === "filmes" && (
+        <>
+          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+            {(
+              [
+                ["vistos", "Vistos há pouco"],
+                ["recentes", "Mais recentes"],
+                ["antigos", "Mais antigos"],
+                ["az", "A–Z"],
+              ] as const
+            ).map(([id, label]) => (
+              <button
+                key={id}
+                onClick={() => setMovieSort(id)}
+                className={`shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ${
+                  movieSort === id
+                    ? "border-ink bg-ink text-tube"
+                    : "border-line text-dim hover:border-ink hover:text-ink"
+                }`}
+              >
+                {label}
+              </button>
+            ))}
+          </div>
+          {decades.length > 1 && (
+            <div className="mt-2 flex gap-2 overflow-x-auto pb-1">
+              <button
+                onClick={() => setDecade(null)}
+                className={`shrink-0 cursor-pointer rounded-full border px-3 py-1 text-xs transition active:scale-95 ${
+                  decade === null
+                    ? "border-ink bg-ink text-tube"
+                    : "border-line text-dim hover:border-ink hover:text-ink"
+                }`}
+              >
+                Todas as décadas
+              </button>
+              {decades.map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setDecade(d === decade ? null : d)}
+                  className={`ep-code shrink-0 cursor-pointer rounded-full border px-3 py-1 text-xs transition active:scale-95 ${
+                    decade === d
+                      ? "border-ink bg-ink text-tube"
+                      : "border-line text-dim hover:border-ink hover:text-ink"
+                  }`}
+                >
+                  {d}s
+                </button>
+              ))}
+            </div>
+          )}
+        </>
       )}
 
       {loading ? (
