@@ -265,11 +265,11 @@ export default function SeriesPage() {
 
   // O herói nunca deve estar vazio se há episódios por ver: quando não há nada
   // "ativo" (nada marcado há 30 dias), promove a série parada mais recente —
-  // a pergunta continua a ser "o que vejo esta noite?", só muda o enquadramento.
+  // a pergunta continua a ser "o que vejo a seguir?", só muda o enquadramento.
   const [activeHero, ...restActive] = activeQueue;
   const heroShow = activeHero ?? staleQueue[0] ?? notStartedQueue[0];
-  const heroKind: "esta-noite" | "retomar" | "comecar" = activeHero
-    ? "esta-noite"
+  const heroKind: "a-seguir" | "retomar" | "comecar" = activeHero
+    ? "a-seguir"
     : staleQueue[0]
       ? "retomar"
       : "comecar";
@@ -322,8 +322,8 @@ export default function SeriesPage() {
             posterPath={heroShow.posterPath}
             episode={nextUp.get(heroShow.uuid)!.episode}
             eyebrow={
-              heroKind === "esta-noite"
-                ? "Esta noite"
+              heroKind === "a-seguir"
+                ? "A seguir"
                 : heroKind === "retomar"
                   ? "Retomar onde ficaste"
                   : "Começar do início"

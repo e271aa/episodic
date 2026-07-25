@@ -4,10 +4,10 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LibraryIcon, TvIcon, UserIcon } from "@/components/icons";
 
-// 3 paragens: o "Esta noite" decide, a Biblioteca guarda tudo, o Perfil é
+// 3 paragens: o "A seguir" decide, a Biblioteca guarda tudo, o Perfil é
 // só teu. O Explorar fundiu-se na Biblioteca (campo de pesquisa no topo).
 const TABS = [
-  { href: "/series", label: "Esta noite", Icon: TvIcon },
+  { href: "/series", label: "A seguir", Icon: TvIcon },
   { href: "/library", label: "Biblioteca", Icon: LibraryIcon },
   { href: "/profile", label: "Perfil", Icon: UserIcon },
 ] as const;

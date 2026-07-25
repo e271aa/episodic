@@ -7,7 +7,7 @@ import PwaSetup from "@/components/PwaSetup";
 import "./globals.css";
 
 // Tipografia de "sinal de televisão": Archivo é variável no eixo de largura
-// (wdth) — usado expandido nos títulos-herói do "Esta noite" e condensado
+// (wdth) — usado expandido nos títulos-herói do "A seguir" e condensado
 // em rótulos/eyebrows, como um logotipo de canal.
 const display = Archivo({
   variable: "--font-archivo",

@@ -19,7 +19,7 @@ export interface TonightHeroProps {
 }
 
 /**
- * O ecrã responde a uma pergunta só: o que vejo esta noite? Um cartão
+ * O ecrã responde a uma pergunta só: o que vejo a seguir? Um cartão
  * cinematográfico único — não mais uma grelha — com o momento "ligar a
  * televisão" na entrada (a chave é showUuid: troca de série reinicia o efeito).
  */
@@ -29,7 +29,7 @@ export default function TonightHero({
   backdropPath,
   posterPath,
   episode,
-  eyebrow = "Esta noite",
+  eyebrow = "A seguir",
   onCheck,
 }: TonightHeroProps) {
   const [checking, setChecking] = useState(false);

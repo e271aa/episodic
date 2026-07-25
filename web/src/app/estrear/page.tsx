@@ -38,7 +38,7 @@ export default function EstrearPage() {
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">A estrear</h1>
         <Link href="/series" className="text-sm text-dim hover:text-ink hover:underline">
-          Esta noite
+          A seguir
         </Link>
       </div>
       <p className="mt-1 text-sm text-dim">
