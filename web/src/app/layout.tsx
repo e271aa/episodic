@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Archivo, Schibsted_Grotesk, Spline_Sans_Mono } from "next/font/google";
+import AutoSync from "@/components/AutoSync";
 import BottomNav from "@/components/BottomNav";
 import PageTransition from "@/components/PageTransition";
 import PwaSetup from "@/components/PwaSetup";
@@ -57,6 +58,7 @@ export default function RootLayout({
         </div>
         <BottomNav />
         <PwaSetup />
+        <AutoSync />
       </body>
     </html>
   );

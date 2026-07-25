@@ -62,6 +62,22 @@ export interface CustomList {
   items: ListItem[];
 }
 
+/**
+ * Operação pendente de envio para a cloud. Fica em IndexedDB (não em memória)
+ * para sobreviver a recargas e a fechar a app offline — o registo local nunca
+ * se perde só porque a rede falhou.
+ */
+export interface OutboxOp {
+  /** chave da entidade, ex. "ep:<uuid>:1:2" — colapsa marcar/desmarcar repetidos */
+  key: string;
+  kind: "episode-watched" | "episode-unwatched";
+  showUuid: string;
+  season: number;
+  episode: number;
+  watchedAt: string;
+  at: string;
+}
+
 interface TvlogDB extends DBSchema {
   kv: { key: string; value: unknown };
   shows: { key: string; value: StoredShow };
@@ -72,12 +88,13 @@ interface TvlogDB extends DBSchema {
   };
   movies: { key: string; value: StoredMovie };
   lists: { key: string; value: CustomList };
+  outbox: { key: string; value: OutboxOp };
 }
 
 let dbPromise: Promise<IDBPDatabase<TvlogDB>> | null = null;
 
 function db(): Promise<IDBPDatabase<TvlogDB>> {
-  dbPromise ??= openDB<TvlogDB>("tvlog", 3, {
+  dbPromise ??= openDB<TvlogDB>("tvlog", 4, {
     // Criação defensiva: garante cada store/índice esteja em falta o motivo
     // que for (upgrade de versão parcial, base criada por outra via, etc.).
     upgrade(database) {
@@ -96,6 +113,9 @@ function db(): Promise<IDBPDatabase<TvlogDB>> {
       }
       if (!database.objectStoreNames.contains("lists")) {
         database.createObjectStore("lists", { keyPath: "id" });
+      }
+      if (!database.objectStoreNames.contains("outbox")) {
+        database.createObjectStore("outbox", { keyPath: "key" });
       }
     },
   });
@@ -265,13 +285,25 @@ export async function markWatched(
   episode: number,
 ): Promise<void> {
   const database = await db();
+  const watchedAt = new Date().toISOString();
   await database.put("watched", {
     id: episodeKey(showUuid, season, episode),
     showUuid,
     season,
     episode,
-    watchedAt: new Date().toISOString(),
+    watchedAt,
     dateIsExact: true,
+  });
+  // A chave é a do episódio: marcar e desmarcar o mesmo episódio várias vezes
+  // deixa só a última intenção na fila, que é a correta.
+  await enqueueOp({
+    key: `ep:${episodeKey(showUuid, season, episode)}`,
+    kind: "episode-watched",
+    showUuid,
+    season,
+    episode,
+    watchedAt,
+    at: watchedAt,
   });
 }
 
@@ -282,6 +314,46 @@ export async function unmarkWatched(
 ): Promise<void> {
   const database = await db();
   await database.delete("watched", episodeKey(showUuid, season, episode));
+  await enqueueOp({
+    key: `ep:${episodeKey(showUuid, season, episode)}`,
+    kind: "episode-unwatched",
+    showUuid,
+    season,
+    episode,
+    watchedAt: new Date().toISOString(),
+    at: new Date().toISOString(),
+  });
+}
+
+// ── Outbox (envio diferido para a cloud) ───────────────────────
+
+async function enqueueOp(op: OutboxOp): Promise<void> {
+  const database = await db();
+  await database.put("outbox", op);
+  // import dinâmico: o autosync depende deste módulo, um import estático
+  // aqui fecharia o ciclo. Só corre no browser.
+  if (typeof window !== "undefined") {
+    void import("./autosync").then((m) => m.scheduleFlush());
+  }
+}
+
+export async function getOutbox(): Promise<OutboxOp[]> {
+  const database = await db();
+  return database.getAll("outbox");
+}
+
+export async function countOutbox(): Promise<number> {
+  const database = await db();
+  return database.count("outbox");
+}
+
+/** Remove da fila só o que foi mesmo enviado (o resto fica para nova tentativa). */
+export async function clearOutboxKeys(keys: string[]): Promise<void> {
+  if (keys.length === 0) return;
+  const database = await db();
+  const tx = database.transaction("outbox", "readwrite");
+  for (const key of keys) void tx.objectStore("outbox").delete(key);
+  await tx.done;
 }
 
 export async function getMovies(): Promise<StoredMovie[]> {
@@ -323,7 +395,7 @@ export async function kvSet(key: string, value: unknown): Promise<void> {
 export async function clearAllData(): Promise<void> {
   const database = await db();
   const tx = database.transaction(
-    ["shows", "watched", "movies", "kv", "lists"],
+    ["shows", "watched", "movies", "kv", "lists", "outbox"],
     "readwrite",
   );
   void tx.objectStore("shows").clear();
@@ -331,6 +403,7 @@ export async function clearAllData(): Promise<void> {
   void tx.objectStore("movies").clear();
   void tx.objectStore("kv").clear();
   void tx.objectStore("lists").clear();
+  void tx.objectStore("outbox").clear();
   await tx.done;
 }
 

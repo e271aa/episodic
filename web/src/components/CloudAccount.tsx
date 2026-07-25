@@ -13,6 +13,7 @@ import {
   syncNow,
   verifyEmailCode,
 } from "@/lib/cloud";
+import { onSyncStateChange, type SyncState } from "@/lib/autosync";
 import type { User } from "@supabase/supabase-js";
 
 type Status =
@@ -37,7 +38,28 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
   const [code, setCode] = useState("");
   const [status, setStatus] = useState<Status>("idle");
   const [message, setMessage] = useState("");
+  const [autoSync, setAutoSync] = useState<{ state: SyncState; pending: number }>({
+    state: "idle",
+    pending: 0,
+  });
   const autoPulled = useRef(false);
+
+  // Estado do envio automático — as marcações sobem sozinhas, isto só informa
+  useEffect(
+    () => onSyncStateChange((state, pending) => setAutoSync({ state, pending })),
+    [],
+  );
+
+  const autoSyncLabel =
+    autoSync.state === "syncing"
+      ? "A enviar alterações…"
+      : autoSync.state === "offline"
+        ? `Sem ligação — ${autoSync.pending} por enviar`
+        : autoSync.state === "error"
+          ? `${autoSync.pending} por enviar — nova tentativa em breve`
+          : autoSync.pending > 0
+            ? `${autoSync.pending} alteração(ões) por enviar`
+            : "Alterações sobem automaticamente";
 
   // Ao entrar (magic link ou sessão existente), traz os dados da cloud uma vez.
   const autoPull = useCallback(async () => {
@@ -201,6 +223,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
             Sessão iniciada como{" "}
             <span className="font-medium text-ink">{user.email}</span>
           </p>
+          <p className="ep-code mt-1 text-xs text-faint">{autoSyncLabel}</p>
           <div className="mt-3 flex flex-wrap gap-2">
             <button
               onClick={() => void handleSync()}
