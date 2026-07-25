@@ -293,7 +293,7 @@ export default function ShowPage() {
   const accent = stateColor(showComplete, show.status);
 
   return (
-    <main className="mx-auto max-w-2xl pb-8">
+    <main className="mx-auto w-full max-w-2xl pb-8">
       <div className="relative">
         {backdrop ? (
           <>

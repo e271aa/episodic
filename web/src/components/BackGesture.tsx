@@ -109,7 +109,7 @@ export default function BackGesture({ children }: { children: React.ReactNode })
 
   return (
     <div
-      className="flex flex-1 flex-col"
+      className="flex min-w-0 flex-1 flex-col"
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
@@ -136,7 +136,7 @@ export default function BackGesture({ children }: { children: React.ReactNode })
       {/* o transform vive aqui dentro e só durante o gesto: permanente, tornaria
           este elemento o bloco de contenção de tudo o que é `fixed` lá dentro */}
       <div
-        className="flex flex-1 flex-col"
+        className="flex min-w-0 flex-1 flex-col"
         style={{
           transform: dragging
             ? `translate${vertical ? "Y" : "X"}(${offset}px)`

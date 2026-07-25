@@ -55,7 +55,7 @@ export default function RootLayout({
       className={`dark ${display.variable} ${body.variable} ${mono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <div className="flex flex-1 flex-col pb-16">
+        <div className="flex min-w-0 flex-1 flex-col pb-16">
           <BackGesture>
             <PageTransition>{children}</PageTransition>
           </BackGesture>

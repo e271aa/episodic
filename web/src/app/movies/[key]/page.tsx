@@ -7,6 +7,14 @@ import { getMovie, updateMovie, type StoredMovie } from "@/lib/db";
 import { getMovieDetails, imageUrl, type TmdbMovieDetails } from "@/lib/tmdb";
 import AddToListButton from "@/components/AddToListButton";
 
+function formatWatchedDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("pt-PT", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
+
 function formatRuntime(minutes: number | null): string | null {
   if (!minutes) return null;
   const h = Math.floor(minutes / 60);
@@ -78,7 +86,7 @@ export default function MoviePage() {
   );
 
   return (
-    <main className="mx-auto max-w-2xl pb-8">
+    <main className="mx-auto w-full max-w-2xl pb-8">
       <div className="relative">
         {backdrop ? (
           <>
@@ -109,13 +117,13 @@ export default function MoviePage() {
               {movie.name}
             </div>
           )}
-          <div className="min-w-0 pb-1">
+          <div className="min-w-0 flex-1 pb-1">
             <h1 className="font-display text-xl font-bold leading-tight">{movie.name}</h1>
             {metaBits.length > 0 && (
               <p className="ep-code mt-1 truncate text-xs text-dim">{metaBits.join("  ·  ")}</p>
             )}
             <p className="ep-code mt-1 text-sm text-dim">
-              Visto em {movie.watchedAt.slice(0, 10)}
+              Visto a {formatWatchedDate(movie.watchedAt)}
             </p>
           </div>
         </div>
