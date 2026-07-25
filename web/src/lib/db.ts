@@ -92,6 +92,9 @@ interface TvlogDB extends DBSchema {
 }
 
 let dbPromise: Promise<IDBPDatabase<TvlogDB>> | null = null;
+// referência à ligação aberta — precisamos dela para a poder fechar quando
+// outra aba estiver a tentar subir de versão
+let openConnection: IDBPDatabase<TvlogDB> | null = null;
 
 function db(): Promise<IDBPDatabase<TvlogDB>> {
   dbPromise ??= openDB<TvlogDB>("tvlog", 4, {
@@ -118,6 +121,30 @@ function db(): Promise<IDBPDatabase<TvlogDB>> {
         database.createObjectStore("outbox", { keyPath: "key" });
       }
     },
+    /**
+     * Outra aba (ou a PWA instalada) quer subir de versão e esta ligação está
+     * a impedir. Sem fechar aqui, a outra aba fica à espera para sempre e a
+     * app parece congelada a carregar — foi exatamente o que aconteceu ao
+     * subir para v4 com outras abas abertas na versão anterior.
+     */
+    blocking() {
+      openConnection?.close();
+      openConnection = null;
+      dbPromise = null;
+    },
+    /** Somos nós a esperar que uma aba antiga liberte a base de dados. */
+    blocked() {
+      console.warn(
+        "Episodic: atualização da base de dados em espera — fecha outras abas da app.",
+      );
+    },
+    terminated() {
+      openConnection = null;
+      dbPromise = null;
+    },
+  }).then((connection) => {
+    openConnection = connection;
+    return connection;
   });
   return dbPromise;
 }
