@@ -12,7 +12,9 @@ import {
   clearOutboxKeys,
   countOutbox,
   getOutbox,
-  type OutboxOp,
+  isMovieOp,
+  type EpisodeOp,
+  type MovieOp,
 } from "./db";
 import { getUser } from "./cloud";
 
@@ -72,18 +74,26 @@ export async function flushOutbox(): Promise<void> {
   flushing = true;
   await setState("syncing");
   try {
-    const toUpsert: OutboxOp[] = [];
-    const toDelete: OutboxOp[] = [];
+    const epUpsert: EpisodeOp[] = [];
+    const epDelete: EpisodeOp[] = [];
+    const movieUpsert: MovieOp[] = [];
+    const movieDelete: MovieOp[] = [];
     for (const op of ops) {
-      if (op.kind === "episode-watched") toUpsert.push(op);
-      else toDelete.push(op);
+      if (isMovieOp(op)) {
+        if (op.kind === "movie-watched") movieUpsert.push(op);
+        else movieDelete.push(op);
+      } else if (op.kind === "episode-watched") {
+        epUpsert.push(op);
+      } else {
+        epDelete.push(op);
+      }
     }
 
     const done: string[] = [];
 
-    if (toUpsert.length > 0) {
+    if (epUpsert.length > 0) {
       const { error } = await supabase.from("watched_episodes").upsert(
-        toUpsert.map((op) => ({
+        epUpsert.map((op) => ({
           user_id: user.id,
           show_uuid: op.showUuid,
           season: op.season,
@@ -93,12 +103,26 @@ export async function flushOutbox(): Promise<void> {
           updated_at: new Date().toISOString(),
         })),
       );
-      if (!error) done.push(...toUpsert.map((op) => op.key));
+      if (!error) done.push(...epUpsert.map((op) => op.key));
+    }
+
+    if (movieUpsert.length > 0) {
+      const { error } = await supabase.from("watched_movies").upsert(
+        movieUpsert.map((op) => ({
+          user_id: user.id,
+          key: op.movieKey,
+          name: op.name,
+          watched_at: op.watchedAt,
+          date_is_exact: op.dateIsExact,
+          updated_at: new Date().toISOString(),
+        })),
+      );
+      if (!error) done.push(...movieUpsert.map((op) => op.key));
     }
 
     // Apagar é feito um a um: o Supabase não tem "delete where (a,b,c) in (…)"
     // com chave composta, e desmarcar em massa é raro (ao contrário de marcar).
-    for (const op of toDelete) {
+    for (const op of epDelete) {
       const { error } = await supabase
         .from("watched_episodes")
         .delete()
@@ -108,6 +132,14 @@ export async function flushOutbox(): Promise<void> {
           season: op.season,
           episode: op.episode,
         });
+      if (!error) done.push(op.key);
+    }
+
+    for (const op of movieDelete) {
+      const { error } = await supabase
+        .from("watched_movies")
+        .delete()
+        .match({ user_id: user.id, key: op.movieKey });
       if (!error) done.push(op.key);
     }
 

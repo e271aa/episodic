@@ -67,15 +67,31 @@ export interface CustomList {
  * para sobreviver a recargas e a fechar a app offline — o registo local nunca
  * se perde só porque a rede falhou.
  */
-export interface OutboxOp {
+interface OutboxCommon {
   /** chave da entidade, ex. "ep:<uuid>:1:2" — colapsa marcar/desmarcar repetidos */
   key: string;
+  watchedAt: string;
+  at: string;
+}
+
+export interface EpisodeOp extends OutboxCommon {
   kind: "episode-watched" | "episode-unwatched";
   showUuid: string;
   season: number;
   episode: number;
-  watchedAt: string;
-  at: string;
+}
+
+export interface MovieOp extends OutboxCommon {
+  kind: "movie-watched" | "movie-unwatched";
+  movieKey: string;
+  name: string;
+  dateIsExact: boolean;
+}
+
+export type OutboxOp = EpisodeOp | MovieOp;
+
+export function isMovieOp(op: OutboxOp): op is MovieOp {
+  return op.kind === "movie-watched" || op.kind === "movie-unwatched";
 }
 
 interface TvlogDB extends DBSchema {
@@ -400,11 +416,30 @@ export async function getMovie(key: string): Promise<StoredMovie | null> {
 export async function putMovie(movie: StoredMovie): Promise<void> {
   const database = await db();
   await database.put("movies", movie);
+  await enqueueOp({
+    key: `movie:${movie.key}`,
+    kind: "movie-watched",
+    movieKey: movie.key,
+    name: movie.name,
+    dateIsExact: movie.dateIsExact,
+    watchedAt: movie.watchedAt,
+    at: new Date().toISOString(),
+  });
 }
 
 export async function deleteMovie(key: string): Promise<void> {
   const database = await db();
+  const current = await database.get("movies", key);
   await database.delete("movies", key);
+  await enqueueOp({
+    key: `movie:${key}`,
+    kind: "movie-unwatched",
+    movieKey: key,
+    name: current?.name ?? "",
+    dateIsExact: current?.dateIsExact ?? true,
+    watchedAt: current?.watchedAt ?? new Date().toISOString(),
+    at: new Date().toISOString(),
+  });
 }
 
 export async function updateMovie(
