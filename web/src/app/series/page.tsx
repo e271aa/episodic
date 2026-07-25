@@ -263,7 +263,20 @@ export default function SeriesPage() {
     </button>
   );
 
-  const [heroShow, ...restActive] = activeQueue;
+  // O herói nunca deve estar vazio se há episódios por ver: quando não há nada
+  // "ativo" (nada marcado há 30 dias), promove a série parada mais recente —
+  // a pergunta continua a ser "o que vejo esta noite?", só muda o enquadramento.
+  const [activeHero, ...restActive] = activeQueue;
+  const heroShow = activeHero ?? staleQueue[0] ?? notStartedQueue[0];
+  const heroKind: "esta-noite" | "retomar" | "comecar" = activeHero
+    ? "esta-noite"
+    : staleQueue[0]
+      ? "retomar"
+      : "comecar";
+  // a série promovida sai da secção de baixo, para não aparecer duas vezes
+  const staleRest = activeHero ? staleQueue : staleQueue.slice(1);
+  const notStartedRest =
+    activeHero || staleQueue[0] ? notStartedQueue : notStartedQueue.slice(1);
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
@@ -299,7 +312,7 @@ export default function SeriesPage() {
             </Link>
           </div>
         </>
-      ) : heroShow ? (
+      ) : (
         <>
           <TonightHero
             key={heroShow.uuid}
@@ -308,6 +321,13 @@ export default function SeriesPage() {
             backdropPath={heroShow.backdropPath}
             posterPath={heroShow.posterPath}
             episode={nextUp.get(heroShow.uuid)!.episode}
+            eyebrow={
+              heroKind === "esta-noite"
+                ? "Esta noite"
+                : heroKind === "retomar"
+                  ? "Retomar onde ficaste"
+                  : "Começar do início"
+            }
             onCheck={(season, episode) => handleCheck(heroShow.uuid, season, episode)}
           />
           {restActive.length > 0 && (
@@ -319,40 +339,31 @@ export default function SeriesPage() {
             </section>
           )}
         </>
-      ) : (
-        <>
-          <p className="ep-code text-xs tracking-[0.3em] text-dim">EPISODIC</p>
-          <h1 className="mt-1 font-display text-3xl font-bold">Séries</h1>
-          <p className="mt-6 text-sm text-dim">
-            Nada ativo neste momento — retoma uma série parada ou começa uma
-            nova, aqui em baixo.
-          </p>
-        </>
       )}
 
-      {staleQueue.length > 0 && (
+      {staleRest.length > 0 && (
         <section className="mt-8">
           {sectionToggle(
             "Retomar",
             "paradas há mais de 30 dias",
-            staleQueue.length,
+            staleRest.length,
             showStale,
             () => setShowStale((v) => !v),
           )}
-          {showStale && queueCards(staleQueue)}
+          {showStale && queueCards(staleRest)}
         </section>
       )}
 
-      {notStartedQueue.length > 0 && (
+      {notStartedRest.length > 0 && (
         <section className="mt-8">
           {sectionToggle(
             "Por começar",
             "segues, mas ainda não viste nenhum episódio",
-            notStartedQueue.length,
+            notStartedRest.length,
             showNotStarted,
             () => setShowNotStarted((v) => !v),
           )}
-          {showNotStarted && queueCards(notStartedQueue)}
+          {showNotStarted && queueCards(notStartedRest)}
         </section>
       )}
 

@@ -13,6 +13,8 @@ export interface TonightHeroProps {
   backdropPath: string | null;
   posterPath: string | null;
   episode: MetaEpisode;
+  /** rótulo por cima do título — muda consoante a série seja ativa, parada ou nova */
+  eyebrow?: string;
   onCheck: (season: number, episode: number) => Promise<void>;
 }
 
@@ -27,6 +29,7 @@ export default function TonightHero({
   backdropPath,
   posterPath,
   episode,
+  eyebrow = "Esta noite",
   onCheck,
 }: TonightHeroProps) {
   const [checking, setChecking] = useState(false);
@@ -71,7 +74,7 @@ export default function TonightHero({
 
       <div className="relative flex h-full flex-col justify-end p-5 pb-6">
         <p className="font-display text-xs font-semibold uppercase tracking-[0.3em] text-dim [font-stretch:75%]">
-          Esta noite
+          {eyebrow}
         </p>
         <Link href={`/series/${showUuid}`} className="mt-2 block">
           <h1 className="font-display text-3xl font-bold text-ink [font-stretch:120%] sm:text-4xl">
