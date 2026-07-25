@@ -1,17 +1,32 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { getShow, putShow, updateShow } from "@/lib/db";
+import {
+  getMovies,
+  getShow,
+  putShow,
+  updateShow,
+  type StoredMovie,
+} from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
 import { searchShows, type MetaSearchResult } from "@/lib/metadata";
+import { imageUrl } from "@/lib/tmdb";
 import PosterCard from "@/components/PosterCard";
 import { TvIcon, CheckIcon, SearchIcon } from "@/components/icons";
 
+type Segment = "series" | "filmes";
+type SeriesFilter = "tudo" | "a-ver" | "completas" | "para-ver" | "arquivadas" | "parei";
+
 type FollowState = "idle" | "following" | "done";
 
-// Sugestões para o estado vazio da pesquisa — populares e variadas
-const SUGGESTIONS = ["One Piece", "Breaking Bad", "Friends", "Demon Slayer", "The Boys"];
+// Normaliza para pesquisar sem acentos nem maiúsculas — "pokemon" encontra "Pokémon"
+function norm(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "");
+}
 
 function ResultCard({ result }: { result: MetaSearchResult }) {
   const [state, setState] = useState<FollowState>("idle");
@@ -82,236 +97,302 @@ function ResultCard({ result }: { result: MetaSearchResult }) {
   );
 }
 
-function ResultSkeleton() {
+function MovieCard({ movie }: { movie: StoredMovie }) {
+  const src = imageUrl(movie.posterPath, "w342");
+  const year = movie.releaseDate?.slice(0, 4);
   return (
-    <div className="flex gap-3 rounded-2xl border border-line bg-panel p-3">
-      <div className="h-24 w-16 shrink-0 animate-pulse rounded-lg bg-raised" />
-      <div className="flex-1 space-y-2 py-1">
-        <div className="h-4 w-2/3 animate-pulse rounded bg-raised" />
-        <div className="h-3 w-full animate-pulse rounded bg-raised" />
-        <div className="h-3 w-4/5 animate-pulse rounded bg-raised" />
+    <Link
+      href={`/movies/${movie.key}`}
+      className="group block cursor-pointer active:scale-[0.97]"
+    >
+      <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30 transition duration-200 group-hover:-translate-y-0.5 group-hover:ring-2 group-hover:ring-ink/60">
+        {src ? (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={src}
+            alt={movie.name}
+            loading="lazy"
+            className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+          />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center bg-raised p-2 text-center font-display text-sm font-bold text-dim">
+            {movie.name}
+          </div>
+        )}
       </div>
-    </div>
+      <p className="mt-1.5 truncate text-sm font-medium">{movie.name}</p>
+      <p className="ep-code truncate text-xs text-dim">
+        {year ?? movie.watchedAt.slice(0, 4)}
+      </p>
+    </Link>
   );
 }
 
 export default function LibraryPage() {
   const [shows, setShows] = useState<ShowWithProgress[] | null>(null);
+  const [movies, setMovies] = useState<StoredMovie[] | null>(null);
+  const [segment, setSegment] = useState<Segment>("series");
+  const [filter, setFilter] = useState<SeriesFilter>("tudo");
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState<MetaSearchResult[] | null>(null);
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  // Pesquisa remota é secundária: só corre quando o utilizador a pede
+  const [remote, setRemote] = useState<MetaSearchResult[] | null>(null);
+  const [remoteBusy, setRemoteBusy] = useState(false);
+  const [remoteError, setRemoteError] = useState<string | null>(null);
 
   useEffect(() => {
     void loadShows().then(setShows);
+    void getMovies().then((list) =>
+      setMovies(list.sort((a, b) => b.watchedAt.localeCompare(a.watchedAt))),
+    );
   }, []);
 
-  const search = useCallback(
-    async (term?: string) => {
-      const q = (term ?? query).trim();
-      if (!q) return;
-      if (term) setQuery(term);
-      setBusy(true);
-      setError(null);
-      try {
-        setResults(await searchShows(q));
-      } catch {
-        setResults([]);
-        setError("Não foi possível pesquisar — verifica a ligação à internet.");
-      } finally {
-        setBusy(false);
-      }
-    },
-    [query],
-  );
+  // Filtrar o que já tens é instantâneo (é tudo local) — sem botão, sem espera
+  const q = norm(query.trim());
 
-  const grid = (list: ShowWithProgress[]) => (
-    <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-      {list.map((s) => (
-        <PosterCard
-          key={s.uuid}
-          href={`/series/${s.uuid}`}
-          name={s.name}
-          posterPath={s.posterPath}
-          watched={s.watchedCount}
-          total={s.totalEpisodes}
-          status={s.status}
-        />
-      ))}
-    </div>
-  );
+  const filteredShows = useMemo(() => {
+    if (!shows) return [];
+    const complete = (s: ShowWithProgress) =>
+      s.totalEpisodes != null && s.watchedCount >= s.totalEpisodes;
+    let list = shows;
+    if (filter === "a-ver") {
+      list = list.filter((s) => s.followed && !s.archived && !complete(s));
+    } else if (filter === "completas") {
+      list = list.filter((s) => complete(s));
+    } else if (filter === "para-ver") {
+      list = list.filter((s) => s.inWatchlist && !s.followed);
+    } else if (filter === "arquivadas") {
+      list = list.filter((s) => s.archived);
+    } else if (filter === "parei") {
+      list = list.filter((s) => !s.followed && !s.inWatchlist);
+    }
+    if (q) list = list.filter((s) => norm(s.name).includes(q));
+    return list;
+  }, [shows, filter, q]);
 
-  const watching = shows?.filter((s) => s.followed && !s.archived) ?? [];
-  const watchlist = shows?.filter((s) => s.inWatchlist && !s.followed) ?? [];
-  const stopped = shows?.filter((s) => !s.followed && !s.inWatchlist) ?? [];
-  const archived = shows?.filter((s) => s.followed && s.archived) ?? [];
+  const filteredMovies = useMemo(() => {
+    if (!movies) return [];
+    return q ? movies.filter((m) => norm(m.name).includes(q)) : movies;
+  }, [movies, q]);
+
+  const counts = useMemo(() => {
+    const complete = (s: ShowWithProgress) =>
+      s.totalEpisodes != null && s.watchedCount >= s.totalEpisodes;
+    return {
+      tudo: shows?.length ?? 0,
+      "a-ver": shows?.filter((s) => s.followed && !s.archived && !complete(s)).length ?? 0,
+      completas: shows?.filter(complete).length ?? 0,
+      "para-ver": shows?.filter((s) => s.inWatchlist && !s.followed).length ?? 0,
+      arquivadas: shows?.filter((s) => s.archived).length ?? 0,
+      parei: shows?.filter((s) => !s.followed && !s.inWatchlist).length ?? 0,
+    } as Record<SeriesFilter, number>;
+  }, [shows]);
+
+  const searchRemote = useCallback(async () => {
+    const term = query.trim();
+    if (!term) return;
+    setRemoteBusy(true);
+    setRemoteError(null);
+    try {
+      setRemote(await searchShows(term));
+    } catch {
+      setRemote([]);
+      setRemoteError("Não foi possível pesquisar — verifica a ligação à internet.");
+    } finally {
+      setRemoteBusy(false);
+    }
+  }, [query]);
+
+  // Mudar o texto invalida os resultados remotos anteriores (é um evento,
+  // não um efeito — o estado deriva diretamente da ação do utilizador)
+  const handleQueryChange = useCallback((value: string) => {
+    setQuery(value);
+    setRemote(null);
+    setRemoteError(null);
+  }, []);
+
+  const loading = shows === null || movies === null;
+  const showing = segment === "series" ? filteredShows.length : filteredMovies.length;
+
+  const FILTERS: { id: SeriesFilter; label: string }[] = [
+    { id: "tudo", label: "Tudo" },
+    { id: "a-ver", label: "A ver" },
+    { id: "completas", label: "Completas" },
+    { id: "para-ver", label: "Para ver" },
+    { id: "arquivadas", label: "Arquivadas" },
+    { id: "parei", label: "Já não sigo" },
+  ];
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
       <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Biblioteca</h1>
 
-      <div className="mt-4 flex items-center gap-2">
-        <form
-          className="flex flex-1 gap-2"
-          onSubmit={(e) => {
-            e.preventDefault();
-            void search();
-          }}
-        >
-          <div className="relative flex-1">
-            <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
-            <input
-              type="search"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Procurar séries…"
-              className="w-full rounded-full border border-line bg-panel py-2.5 pl-10 pr-4 outline-none transition-colors focus:border-ink"
-              data-testid="search-input"
-            />
-          </div>
+      {/* Triagem em destaque — é a interação-assinatura, não mais um cartão a meio */}
+      <Link
+        href="/triagem"
+        className="ep-card ep-card-hover mt-4 flex items-center gap-3 p-4"
+      >
+        <span className="bars flex h-11 w-11 shrink-0 items-center justify-center rounded-full" />
+        <span className="min-w-0 flex-1">
+          <span className="block font-display font-semibold text-ink">
+            Triagem por swipe
+          </span>
+          <span className="block text-xs text-dim">
+            Arrasta para marcares o que já viste, um episódio de cada vez
+          </span>
+        </span>
+        <span className="text-faint">→</span>
+      </Link>
+
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        <Link href="/estrear" className="ep-card ep-card-hover flex items-center gap-2 p-3">
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-ink">A estrear</span>
+            <span className="block text-xs text-dim">Próximos episódios</span>
+          </span>
+          <span className="text-faint">→</span>
+        </Link>
+        <Link href="/listas" className="ep-card ep-card-hover flex items-center gap-2 p-3">
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold text-ink">Listas</span>
+            <span className="block text-xs text-dim">As tuas coleções</span>
+          </span>
+          <span className="text-faint">→</span>
+        </Link>
+      </div>
+
+      {/* Pesquisa: filtra ao vivo o que já tens; procurar novas é um segundo passo */}
+      <div className="relative mt-5">
+        <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
+        <input
+          type="search"
+          value={query}
+          onChange={(e) => handleQueryChange(e.target.value)}
+          placeholder="Procurar na biblioteca…"
+          className="min-h-11 w-full rounded-full border border-line bg-panel py-2.5 pl-10 pr-4 outline-none transition-colors focus:border-ink"
+          data-testid="search-input"
+        />
+      </div>
+
+      {/* Segmentos: séries e filmes lado a lado, não em páginas separadas */}
+      <div className="mt-4 flex gap-1 rounded-full border border-line bg-panel p-1">
+        {(
+          [
+            ["series", "Séries", shows?.length ?? 0],
+            ["filmes", "Filmes", movies?.length ?? 0],
+          ] as const
+        ).map(([id, label, total]) => (
           <button
-            type="submit"
-            disabled={busy}
-            className="flex min-h-11 cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-5 font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+            key={id}
+            onClick={() => setSegment(id)}
+            aria-pressed={segment === id}
+            className={`flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition ${
+              segment === id ? "bg-ink text-tube" : "text-dim hover:text-ink"
+            }`}
           >
-            {busy && (
-              <span className="spinner h-4 w-4 rounded-full border-2 border-tube/30 border-t-tube" />
-            )}
-            Procurar
+            {label}
+            <span className={`ep-code text-xs ${segment === id ? "opacity-70" : "text-faint"}`}>
+              {total}
+            </span>
           </button>
-        </form>
-        <Link
-          href="/movies"
-          className="flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border border-line px-4 text-sm font-medium text-dim transition hover:bg-raised hover:text-ink"
-        >
-          Filmes
-        </Link>
+        ))}
       </div>
 
-      <div className="mt-3 grid grid-cols-1 gap-2 sm:grid-cols-2">
-        <Link href="/triagem" className="ep-card ep-card-hover flex items-center gap-3 p-4">
-          <span className="bars flex h-10 w-10 shrink-0 items-center justify-center rounded-full" />
-          <span className="min-w-0 flex-1">
-            <span className="block font-display font-semibold text-ink">
-              Triagem por swipe
-            </span>
-            <span className="block text-xs text-dim">
-              Passa em revista os episódios pendentes
-            </span>
-          </span>
-          <span className="text-faint">→</span>
-        </Link>
-        <Link href="/estrear" className="ep-card ep-card-hover flex items-center gap-3 p-4">
-          <span className="bars flex h-10 w-10 shrink-0 items-center justify-center rounded-full" />
-          <span className="min-w-0 flex-1">
-            <span className="block font-display font-semibold text-ink">A estrear</span>
-            <span className="block text-xs text-dim">
-              Calendário dos próximos episódios
-            </span>
-          </span>
-          <span className="text-faint">→</span>
-        </Link>
-        <Link href="/listas" className="ep-card ep-card-hover flex items-center gap-3 p-4">
-          <span className="bars flex h-10 w-10 shrink-0 items-center justify-center rounded-full" />
-          <span className="min-w-0 flex-1">
-            <span className="block font-display font-semibold text-ink">Listas</span>
-            <span className="block text-xs text-dim">
-              As tuas coleções personalizadas
-            </span>
-          </span>
-          <span className="text-faint">→</span>
-        </Link>
-      </div>
-
-      {error && (
-        <p className="page-enter mt-6 text-center text-sm text-danger">{error}</p>
-      )}
-
-      {!results && !busy && (
-        <div className="mt-6 flex flex-wrap gap-2">
-          {SUGGESTIONS.map((s) => (
+      {segment === "series" && (
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {FILTERS.map((f) => (
             <button
-              key={s}
-              onClick={() => void search(s)}
-              className="cursor-pointer rounded-full border border-line bg-panel px-4 py-1.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
+              key={f.id}
+              onClick={() => setFilter(f.id)}
+              className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ${
+                filter === f.id
+                  ? "border-ink bg-ink text-tube"
+                  : "border-line text-dim hover:border-ink hover:text-ink"
+              }`}
             >
-              {s}
+              {f.label}
+              <span
+                className={`ep-code text-xs ${filter === f.id ? "opacity-70" : "text-faint"}`}
+              >
+                {counts[f.id]}
+              </span>
             </button>
           ))}
         </div>
       )}
 
-      {busy && !results && (
-        <div className="mt-6 flex flex-col gap-3">
-          {[0, 1, 2].map((i) => (
-            <ResultSkeleton key={i} />
+      {loading ? (
+        <div className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+          {[0, 1, 2, 3, 4].map((i) => (
+            <div key={i} className="aspect-2/3 animate-pulse rounded-2xl bg-panel" />
           ))}
         </div>
-      )}
-
-      {results && !busy && (
-        <div className="mt-6 flex flex-col gap-3" data-testid="search-results">
-          {results.length === 0 && !error && (
-            <p className="text-center text-dim">
-              Sem resultados para &ldquo;{query.trim()}&rdquo;. Tenta o nome original da
-              série.
-            </p>
-          )}
-          {results.map((result) => (
-            <ResultCard key={`${result.provider}-${result.providerId}`} result={result} />
-          ))}
-          <button
-            onClick={() => {
-              setResults(null);
-              setQuery("");
-            }}
-            className="mx-auto mt-2 cursor-pointer text-sm text-dim hover:text-ink hover:underline"
-          >
-            ← Voltar à biblioteca
-          </button>
+      ) : showing > 0 ? (
+        <div
+          className="mt-5 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5"
+          data-testid="library-grid"
+        >
+          {segment === "series"
+            ? filteredShows.map((s) => (
+                <PosterCard
+                  key={s.uuid}
+                  href={`/series/${s.uuid}`}
+                  name={s.name}
+                  posterPath={s.posterPath}
+                  watched={s.watchedCount}
+                  total={s.totalEpisodes}
+                  status={s.status}
+                />
+              ))
+            : filteredMovies.map((m) => <MovieCard key={m.key} movie={m} />)}
         </div>
-      )}
-
-      {!results && shows === null && (
-        <div className="mt-10 space-y-6">
-          <div className="h-6 w-32 animate-pulse rounded-lg bg-panel" />
-          <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-            {[0, 1, 2, 3, 4].map((i) => (
-              <div key={i} className="aspect-2/3 animate-pulse rounded-2xl bg-panel" />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {!results && shows !== null && shows.length === 0 && (
+      ) : (
         <p className="mt-10 text-center text-sm text-dim">
-          Ainda não segues nenhuma série — procura acima para começar.
+          {q
+            ? `Nada na tua biblioteca para “${query.trim()}”.`
+            : "Nada nesta categoria."}
         </p>
       )}
 
-      {!results && watching.length > 0 && (
-        <section className="mt-10">
-          <h2 className="font-display text-lg font-semibold">As minhas séries</h2>
-          <div className="mt-3">{grid(watching)}</div>
-        </section>
-      )}
-      {!results && watchlist.length > 0 && (
-        <section className="mt-10">
-          <h2 className="font-display text-lg font-semibold">Para ver</h2>
-          <div className="mt-3">{grid(watchlist)}</div>
-        </section>
-      )}
-      {!results && stopped.length > 0 && (
-        <section className="mt-10">
-          <h2 className="font-display text-lg font-semibold text-dim">Já não sigo</h2>
-          <div className="mt-3">{grid(stopped)}</div>
-        </section>
-      )}
-      {!results && archived.length > 0 && (
-        <section className="mt-10">
-          <h2 className="font-display text-lg font-semibold text-dim">Arquivadas</h2>
-          <div className="mt-3">{grid(archived)}</div>
-        </section>
+      {/* Descobrir séries novas — só quando o utilizador pede */}
+      {q && segment === "series" && (
+        <div className="mt-6 border-t border-line pt-5">
+          {remote === null ? (
+            <button
+              onClick={() => void searchRemote()}
+              disabled={remoteBusy}
+              className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-line text-sm font-semibold text-dim transition hover:border-ink hover:text-ink disabled:opacity-50"
+            >
+              {remoteBusy && (
+                <span className="spinner h-4 w-4 rounded-full border-2 border-line border-t-ink" />
+              )}
+              {remoteBusy
+                ? "A procurar…"
+                : `Procurar “${query.trim()}” em todas as séries`}
+            </button>
+          ) : (
+            <>
+              <h2 className="font-display text-sm font-semibold uppercase tracking-[0.15em] text-dim [font-stretch:80%]">
+                Resultados da pesquisa
+              </h2>
+              <div className="mt-3 flex flex-col gap-3" data-testid="search-results">
+                {remote.length === 0 && !remoteError && (
+                  <p className="text-center text-sm text-dim">
+                    Sem resultados. Tenta o nome original da série.
+                  </p>
+                )}
+                {remote.map((result) => (
+                  <ResultCard
+                    key={`${result.provider}-${result.providerId}`}
+                    result={result}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+          {remoteError && (
+            <p className="page-enter mt-3 text-center text-sm text-danger">{remoteError}</p>
+          )}
+        </div>
       )}
     </main>
   );
