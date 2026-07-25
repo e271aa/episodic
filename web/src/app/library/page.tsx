@@ -3,17 +3,30 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import {
+  getMovie,
   getMovies,
   getShow,
+  putMovie,
   putShow,
   updateShow,
   type StoredMovie,
 } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
-import { searchShows, type MetaSearchResult } from "@/lib/metadata";
+import {
+  searchMovies,
+  searchShows,
+  type MetaMovieResult,
+  type MetaSearchResult,
+} from "@/lib/metadata";
 import { imageUrl } from "@/lib/tmdb";
 import PosterCard from "@/components/PosterCard";
-import { TvIcon, CheckIcon, SearchIcon, SortIcon } from "@/components/icons";
+import {
+  TvIcon,
+  CheckIcon,
+  ClapperboardIcon,
+  SearchIcon,
+  SortIcon,
+} from "@/components/icons";
 
 type Segment = "series" | "filmes";
 type SeriesFilter = "tudo" | "a-ver" | "completas" | "para-ver" | "arquivadas" | "parei";
@@ -108,6 +121,79 @@ function ResultCard({ result }: { result: MetaSearchResult }) {
           )}
           {state === "done" && <CheckIcon className="check-pop h-3.5 w-3.5" />}
           {state === "done" ? "A seguir" : "Seguir"}
+        </button>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Resultado da pesquisa de filmes. Um filme não se "segue" — ou já o viste ou
+ * não, por isso a ação é marcá-lo como visto hoje (a data edita-se depois na
+ * página do filme).
+ */
+function MovieResultCard({
+  result,
+  onAdded,
+}: {
+  result: MetaMovieResult;
+  onAdded: () => void;
+}) {
+  const [state, setState] = useState<FollowState>("idle");
+  const key = `tmdb-${result.tmdbId}`;
+
+  const add = useCallback(async () => {
+    setState("following");
+    const existing = await getMovie(key);
+    if (!existing) {
+      await putMovie({
+        key,
+        name: result.name,
+        watchedAt: new Date().toISOString(),
+        dateIsExact: true,
+        releaseDate: result.releaseDate,
+        tmdbId: result.tmdbId,
+        posterPath: result.posterPath,
+      });
+    }
+    setState("done");
+    onAdded();
+  }, [key, result, onAdded]);
+
+  return (
+    <div className="page-enter flex gap-3 rounded-2xl border border-line bg-panel p-3">
+      {result.posterUrl ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={result.posterUrl}
+          alt=""
+          className="h-24 w-16 shrink-0 rounded-lg object-cover"
+        />
+      ) : (
+        <div className="flex h-24 w-16 shrink-0 items-center justify-center rounded-lg bg-raised text-faint">
+          <ClapperboardIcon className="h-6 w-6" />
+        </div>
+      )}
+      <div className="min-w-0 flex-1">
+        <p className="font-medium">
+          {result.name}
+          {result.year && (
+            <span className="ep-code ml-2 text-sm text-faint">{result.year}</span>
+          )}
+        </p>
+        <p className="mt-1 line-clamp-2 text-xs text-dim">{result.overview}</p>
+        <button
+          onClick={() => void add()}
+          disabled={state !== "idle"}
+          className={`mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition active:scale-95 ${
+            state === "done" ? "bg-raised text-dim" : "bg-ink text-tube hover:brightness-110"
+          }`}
+        >
+          {state === "following" && (
+            <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-tube/30 border-t-tube" />
+          )}
+          {state === "done" && <CheckIcon className="check-pop h-3.5 w-3.5" />}
+          {state === "done" ? "Na biblioteca" : "Marcar visto"}
         </button>
       </div>
     </div>
@@ -213,8 +299,15 @@ export default function LibraryPage() {
   const [query, setQuery] = useState("");
   // Pesquisa remota é secundária: só corre quando o utilizador a pede
   const [remote, setRemote] = useState<MetaSearchResult[] | null>(null);
+  const [remoteMovies, setRemoteMovies] = useState<MetaMovieResult[] | null>(null);
   const [remoteBusy, setRemoteBusy] = useState(false);
   const [remoteError, setRemoteError] = useState<string | null>(null);
+
+  const reloadMovies = useCallback(() => {
+    void getMovies().then((list) =>
+      setMovies(list.sort((a, b) => b.watchedAt.localeCompare(a.watchedAt))),
+    );
+  }, []);
 
   useEffect(() => {
     void loadShows().then(setShows);
@@ -307,31 +400,46 @@ export default function LibraryPage() {
     } as Record<SeriesFilter, number>;
   }, [shows]);
 
+  // Procura no catálogo do segmento em que estás: séries na aba das séries,
+  // filmes na aba dos filmes.
   const searchRemote = useCallback(async () => {
     const term = query.trim();
     if (!term) return;
     setRemoteBusy(true);
     setRemoteError(null);
     try {
-      setRemote(await searchShows(term));
+      if (segment === "series") setRemote(await searchShows(term));
+      else setRemoteMovies(await searchMovies(term));
     } catch {
-      setRemote([]);
+      if (segment === "series") setRemote([]);
+      else setRemoteMovies([]);
       setRemoteError("Não foi possível pesquisar — verifica a ligação à internet.");
     } finally {
       setRemoteBusy(false);
     }
-  }, [query]);
+  }, [query, segment]);
 
   // Mudar o texto invalida os resultados remotos anteriores (é um evento,
   // não um efeito — o estado deriva diretamente da ação do utilizador)
   const handleQueryChange = useCallback((value: string) => {
     setQuery(value);
     setRemote(null);
+    setRemoteMovies(null);
+    setRemoteError(null);
+  }, []);
+
+  // Trocar de segmento também invalida: os resultados eram do outro catálogo
+  const changeSegment = useCallback((id: Segment) => {
+    setSegment(id);
+    setRemote(null);
+    setRemoteMovies(null);
     setRemoteError(null);
   }, []);
 
   const loading = shows === null || movies === null;
   const showing = segment === "series" ? filteredShows.length : filteredMovies.length;
+  /** resultados remotos do segmento atual — null enquanto ninguém pesquisou */
+  const searched = segment === "series" ? remote : remoteMovies;
 
   const FILTERS: { id: SeriesFilter; label: string }[] = [
     { id: "tudo", label: "Tudo" },
@@ -403,7 +511,7 @@ export default function LibraryPage() {
         ).map(([id, label, total]) => (
           <button
             key={id}
-            onClick={() => setSegment(id)}
+            onClick={() => changeSegment(id)}
             aria-pressed={segment === id}
             className={`flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition ${
               segment === id ? "bg-ink text-tube" : "text-dim hover:text-ink"
@@ -518,39 +626,57 @@ export default function LibraryPage() {
         </p>
       )}
 
-      {/* Descobrir séries novas — só quando o utilizador pede */}
-      {q && segment === "series" && (
+      {/* Adicionar o que ainda não tens — o catálogo do segmento onde estás */}
+      {q && (
         <div className="mt-6 border-t border-line pt-5">
-          {remote === null ? (
+          {searched === null ? (
             <button
               onClick={() => void searchRemote()}
               disabled={remoteBusy}
-              className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full border border-line text-sm font-semibold text-dim transition hover:border-ink hover:text-ink disabled:opacity-50"
+              className={`flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full text-sm font-semibold transition active:scale-95 disabled:opacity-50 ${
+                // sem nada na biblioteca, adicionar é a ação óbvia — deixa de
+                // ser um botão discreto no fundo da página
+                showing === 0
+                  ? "bg-ink text-tube hover:brightness-110"
+                  : "border border-line text-dim hover:border-ink hover:text-ink"
+              }`}
+              data-testid="remote-search-button"
             >
               {remoteBusy && (
                 <span className="spinner h-4 w-4 rounded-full border-2 border-line border-t-ink" />
               )}
               {remoteBusy
                 ? "A procurar…"
-                : `Procurar “${query.trim()}” em todas as séries`}
+                : segment === "series"
+                  ? `Procurar “${query.trim()}” em todas as séries`
+                  : `Procurar “${query.trim()}” em todos os filmes`}
             </button>
           ) : (
             <>
               <h2 className="font-display text-sm font-semibold uppercase tracking-[0.15em] text-dim [font-stretch:80%]">
-                Resultados da pesquisa
+                {segment === "series" ? "Séries encontradas" : "Filmes encontrados"}
               </h2>
               <div className="mt-3 flex flex-col gap-3" data-testid="search-results">
-                {remote.length === 0 && !remoteError && (
+                {searched.length === 0 && !remoteError && (
                   <p className="text-center text-sm text-dim">
-                    Sem resultados. Tenta o nome original da série.
+                    Sem resultados. Tenta o nome original
+                    {segment === "series" ? " da série" : " do filme"}.
                   </p>
                 )}
-                {remote.map((result) => (
-                  <ResultCard
-                    key={`${result.provider}-${result.providerId}`}
-                    result={result}
-                  />
-                ))}
+                {segment === "series"
+                  ? remote?.map((result) => (
+                      <ResultCard
+                        key={`${result.provider}-${result.providerId}`}
+                        result={result}
+                      />
+                    ))
+                  : remoteMovies?.map((result) => (
+                      <MovieResultCard
+                        key={result.tmdbId}
+                        result={result}
+                        onAdded={reloadMovies}
+                      />
+                    ))}
               </div>
             </>
           )}

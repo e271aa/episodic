@@ -393,6 +393,15 @@ export async function getMovie(key: string): Promise<StoredMovie | null> {
   return (await database.get("movies", key)) ?? null;
 }
 
+/**
+ * Grava um filme novo. Até aqui só entravam filmes pela importação do TV Time —
+ * isto é o que permite marcar um filme visto sem ter de importar nada.
+ */
+export async function putMovie(movie: StoredMovie): Promise<void> {
+  const database = await db();
+  await database.put("movies", movie);
+}
+
 export async function updateMovie(
   key: string,
   patch: Partial<StoredMovie>,

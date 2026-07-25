@@ -280,3 +280,31 @@ export async function searchShows(query: string): Promise<MetaSearchResult[]> {
     overview: tvmaze.stripHtml(show.summary),
   }));
 }
+
+export interface MetaMovieResult {
+  tmdbId: number;
+  name: string;
+  year: string | null;
+  posterPath: string | null;
+  posterUrl: string | null;
+  releaseDate: string | null;
+  overview: string | null;
+}
+
+/**
+ * Pesquisa de filmes para adicionar à biblioteca. Só TMDB — a TVmaze é de
+ * televisão, não tem catálogo de cinema.
+ */
+export async function searchMovies(query: string): Promise<MetaMovieResult[]> {
+  if (!(await hasTmdb())) return [];
+  const results = await tmdb.searchMovie(query);
+  return results.map((movie) => ({
+    tmdbId: movie.id,
+    name: movie.title,
+    year: movie.release_date?.slice(0, 4) || null,
+    posterPath: movie.poster_path,
+    posterUrl: tmdb.imageUrl(movie.poster_path, "w185"),
+    releaseDate: movie.release_date || null,
+    overview: movie.overview || null,
+  }));
+}
