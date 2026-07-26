@@ -252,3 +252,49 @@ export async function getGenreMap(kind: "tv" | "movie"): Promise<Map<number, str
   );
   return new Map((data.genres ?? []).map((g) => [g.id, g.name]));
 }
+
+// ── Elenco (personagem favorita do perfil) ─────────────────────
+
+export interface CastMember {
+  /** id da PESSOA na TMDB — o mesmo ator noutra série tem o mesmo id */
+  personId: number;
+  actorName: string;
+  character: string;
+  profilePath: string | null;
+}
+
+interface TmdbAggregateCast {
+  id: number;
+  name: string;
+  profile_path: string | null;
+  roles?: { character: string; episode_count: number }[];
+  total_episode_count?: number;
+}
+
+/**
+ * Elenco de uma série, do papel mais presente para o menos. Usa
+ * `aggregate_credits` e não `credits`: numa série longa, o `credits` normal
+ * devolve só a ficha do primeiro episódio, e ficariam de fora personagens
+ * que entraram depois.
+ */
+export async function getSeriesCast(tmdbId: number): Promise<CastMember[]> {
+  const data = await tmdbGet<{ cast: TmdbAggregateCast[] }>(
+    `tv/${tmdbId}/aggregate_credits`,
+  );
+  return (data.cast ?? [])
+    .map((c) => ({
+      personId: c.id,
+      actorName: c.name,
+      character: c.roles?.[0]?.character ?? "",
+      profilePath: c.profile_path,
+      episodes: c.total_episode_count ?? 0,
+    }))
+    .filter((c) => c.character)
+    .sort((a, b) => b.episodes - a.episodes)
+    .map(({ personId, actorName, character, profilePath }) => ({
+      personId,
+      actorName,
+      character,
+      profilePath,
+    }));
+}

@@ -5,6 +5,7 @@ import Link from "next/link";
 import { clearAllData } from "@/lib/db";
 import { loadProfileStats, type ProfileStats } from "@/lib/stats";
 import CloudAccount from "@/components/CloudAccount";
+import ProfileCard from "@/components/ProfileCard";
 import Poster from "@/components/Poster";
 
 // Mesmo formato do TV Time: "2 meses · 25 dias · 7 horas"
@@ -49,8 +50,11 @@ export default function ProfilePage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
+      {/* Quem és — antes de quanto viste */}
+      <ProfileCard />
+
       {/* Herói — tempo de antena, o "cartão de estação" do utilizador */}
-      <section className="relative overflow-hidden rounded-3xl border border-line bg-gradient-to-b from-panel to-tube p-6">
+      <section className="relative mt-3 overflow-hidden rounded-3xl border border-line bg-gradient-to-b from-panel to-tube p-6">
         <div className="bars absolute inset-x-0 top-0 h-[3px]" />
         <p className="font-display text-xs font-semibold uppercase tracking-[0.3em] text-dim [font-stretch:75%]">
           Tempo de antena
