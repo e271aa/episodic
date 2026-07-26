@@ -27,6 +27,15 @@ body {
   font-family: var(--font-body), system-ui, sans-serif;
 }
 
+:root {
+  /* Espaço que a dock ocupa mesmo: a pílula (44px de alvo + 6px de padding
+     de cada lado + 1px de contorno de cada lado) mais o respiro por baixo,
+     que no iPhone tem de acomodar a barra de gestos. O <main> reserva isto —
+     estava fixo em 64px contra uma dock de 74px, e a última linha de
+     cartazes ficava por baixo dela. */
+  --dock-h: calc(3.5rem + 2px + max(1rem, env(safe-area-inset-bottom)));
+}
+
 /* Barras de cor SMPTE — a assinatura visual da v2. A cor da app existe SÓ
    aqui: onde há progresso ou atividade, nunca como decoração ambiente. */
 :root {
