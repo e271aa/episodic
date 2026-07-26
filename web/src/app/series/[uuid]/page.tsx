@@ -18,6 +18,7 @@ import { findNextUnwatched, formatEpCode } from "@/lib/watchnext";
 import { pushUndo } from "@/lib/undo";
 import ProgressRing from "@/components/ProgressRing";
 import AddToListButton from "@/components/AddToListButton";
+import StreamingBadges from "@/components/StreamingBadges";
 import Poster from "@/components/Poster";
 import { CheckIcon } from "@/components/icons";
 
@@ -379,6 +380,8 @@ export default function ShowPage() {
         <div className="mt-3">
           <AddToListButton kind="show" refId={uuid} />
         </div>
+
+        <StreamingBadges kind="tv" tmdbId={show.tmdbId} />
 
         {/* Separadores */}
         <div className="mt-6 flex gap-1 border-b border-line" role="tablist">

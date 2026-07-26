@@ -7,6 +7,7 @@ import { getMovie, updateMovie, type StoredMovie } from "@/lib/db";
 import { getMovieDetails, type TmdbMovieDetails } from "@/lib/tmdb";
 import AddToListButton from "@/components/AddToListButton";
 import Poster from "@/components/Poster";
+import StreamingBadges from "@/components/StreamingBadges";
 
 function formatWatchedDate(iso: string): string {
   return new Date(iso).toLocaleDateString("pt-PT", {
@@ -140,6 +141,8 @@ export default function MoviePage() {
         <div className="mt-3">
           <AddToListButton kind="movie" refId={key} />
         </div>
+
+        <StreamingBadges kind="movie" tmdbId={movie.tmdbId} />
 
         {details?.tagline && (
           <p className="mt-5 font-display italic text-dim">

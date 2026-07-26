@@ -162,7 +162,7 @@ export async function enrichMovie(movie: {
   key: string;
   name: string;
   releaseDate?: string | null;
-}): Promise<{ tmdbId: number; posterPath: string | null } | null> {
+}): Promise<{ tmdbId: number; posterPath: string | null; releaseDate?: string | null } | null> {
   if (!(await hasTmdb())) return null;
   if (await enrichFailedRecently(`movie:${movie.key}`)) return null;
   try {
@@ -177,7 +177,14 @@ export async function enrichMovie(movie: {
       await rememberEnrichFailure(`movie:${movie.key}`);
       return null;
     }
-    return { tmdbId: hit.id, posterPath: hit.poster_path };
+    return {
+      tmdbId: hit.id,
+      posterPath: hit.poster_path,
+      // O TV Time nem sempre trazia a estreia — sem isto, o ano do filme
+      // ficava preso ao dia em que o marcaste como visto, para sempre
+      // (é o que fazia as décadas do filtro saírem todas erradas).
+      ...(movie.releaseDate ? null : { releaseDate: hit.release_date ?? null }),
+    };
   } catch {
     return null;
   }

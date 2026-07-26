@@ -436,14 +436,17 @@ function LibraryContent() {
     void loadShows().then(setShows);
     void getMovies().then(async (list) => {
       setMovies(list.sort((a, b) => b.watchedAt.localeCompare(a.watchedAt)));
-      // Completa capas em falta via TMDB. Vivia na antiga página /movies, que
-      // quase não tinha entradas — filmes sem capa nunca eram enriquecidos.
+      // Completa capas e datas de estreia em falta via TMDB. A capa vivia na
+      // antiga página /movies, que quase não tinha entradas — filmes sem
+      // capa nunca eram enriquecidos. A data de estreia é a mesma história:
+      // muitos filmes importados do TV Time nunca a trouxeram, e sem ela o
+      // filtro de décadas usava a data em que marcaste como visto (errado).
       if (enriching.current) return;
       enriching.current = true;
       try {
         let changed = false;
         for (const movie of list) {
-          if (movie.posterPath) continue;
+          if (movie.posterPath && movie.releaseDate) continue;
           const patch = await enrichMovie(movie);
           if (patch) {
             await updateMovie(movie.key, patch);

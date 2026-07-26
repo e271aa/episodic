@@ -3,7 +3,8 @@ import { NextResponse, type NextRequest } from "next/server";
 const TMDB_BASE = "https://api.themoviedb.org/3";
 
 // Só expomos os endpoints de leitura de que a app precisa.
-const ALLOWED = /^(find\/\d+|search\/(tv|movie|multi)|tv\/\d+(\/season\/\d+)?|movie\/\d+)$/;
+const ALLOWED =
+  /^(find\/\d+|search\/(tv|movie|multi)|tv\/\d+(\/season\/\d+)?|movie\/\d+|(tv|movie)\/\d+\/watch\/providers)$/;
 
 export async function GET(
   request: NextRequest,

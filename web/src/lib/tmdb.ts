@@ -112,6 +112,52 @@ export async function getSeasonEpisodes(
   return season.episodes ?? [];
 }
 
+export interface StreamingProvider {
+  id: number;
+  name: string;
+  logoPath: string | null;
+}
+
+export interface StreamingAvailability {
+  /** por assinatura — o que interessa no dia a dia */
+  streaming: StreamingProvider[];
+  rent: StreamingProvider[];
+  buy: StreamingProvider[];
+  /** página da JustWatch com todos os detalhes — a TMDB pede para linkar para lá */
+  link: string | null;
+}
+
+interface TmdbProvider {
+  provider_id: number;
+  provider_name: string;
+  logo_path: string | null;
+}
+
+interface TmdbWatchProviders {
+  results?: Record<
+    string,
+    { link?: string; flatrate?: TmdbProvider[]; rent?: TmdbProvider[]; buy?: TmdbProvider[] }
+  >;
+}
+
+const toProviders = (list?: TmdbProvider[]): StreamingProvider[] =>
+  (list ?? []).map((p) => ({ id: p.provider_id, name: p.provider_name, logoPath: p.logo_path }));
+
+/** Onde ver, em Portugal — TMDB agrega isto da JustWatch. */
+export async function getStreamingAvailability(
+  kind: "movie" | "tv",
+  tmdbId: number,
+): Promise<StreamingAvailability> {
+  const data = await tmdbGet<TmdbWatchProviders>(`${kind}/${tmdbId}/watch/providers`);
+  const pt = data.results?.PT;
+  return {
+    streaming: toProviders(pt?.flatrate),
+    rent: toProviders(pt?.rent),
+    buy: toProviders(pt?.buy),
+    link: pt?.link ?? null,
+  };
+}
+
 export function imageUrl(
   path: string | null | undefined,
   size: "w185" | "w342" | "w500" | "w780" | "original" = "w342",
