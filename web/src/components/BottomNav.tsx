@@ -2,12 +2,13 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LibraryIcon, TvIcon, UserIcon } from "@/components/icons";
+import { CompassIcon, LibraryIcon, TvIcon, UserIcon } from "@/components/icons";
 
-// 3 paragens: o "A seguir" decide, a Biblioteca guarda tudo, o Perfil é
-// só teu. O Explorar fundiu-se na Biblioteca (campo de pesquisa no topo).
+// 4 paragens: o "A seguir" decide o que vês agora, o Explorar traz o que
+// ainda não conheces, a Biblioteca guarda tudo, o Perfil é só teu.
 const TABS = [
   { href: "/series", label: "A seguir", Icon: TvIcon },
+  { href: "/explorar", label: "Explorar", Icon: CompassIcon },
   { href: "/library", label: "Biblioteca", Icon: LibraryIcon },
   { href: "/profile", label: "Perfil", Icon: UserIcon },
 ] as const;

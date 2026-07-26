@@ -167,3 +167,88 @@ export function imageUrl(
   if (path.startsWith("http")) return path;
   return `https://image.tmdb.org/t/p/${size}${path}`;
 }
+
+// ── Descoberta (Explorar) ──────────────────────────────────────
+
+/** Um resultado do Explorar, já normalizado — série e filme lado a lado. */
+export interface DiscoverItem {
+  kind: "tv" | "movie";
+  tmdbId: number;
+  name: string;
+  year: string | null;
+  posterPath: string | null;
+  backdropPath: string | null;
+  overview: string | null;
+  genreIds: number[];
+  /** 0–10 da TMDB; serve para desempatar, não para mostrar em destaque */
+  rating: number;
+}
+
+interface TmdbDiscoverRow {
+  id: number;
+  name?: string; // séries
+  title?: string; // filmes
+  first_air_date?: string;
+  release_date?: string;
+  poster_path: string | null;
+  backdrop_path: string | null;
+  overview: string;
+  genre_ids?: number[];
+  vote_average?: number;
+}
+
+function toDiscoverItem(row: TmdbDiscoverRow, kind: "tv" | "movie"): DiscoverItem {
+  const date = kind === "tv" ? row.first_air_date : row.release_date;
+  return {
+    kind,
+    tmdbId: row.id,
+    name: (kind === "tv" ? row.name : row.title) ?? "",
+    year: date ? date.slice(0, 4) : null,
+    posterPath: row.poster_path,
+    backdropPath: row.backdrop_path,
+    overview: row.overview || null,
+    genreIds: row.genre_ids ?? [],
+    rating: row.vote_average ?? 0,
+  };
+}
+
+/** O que está a dar esta semana. */
+export async function getTrending(kind: "tv" | "movie"): Promise<DiscoverItem[]> {
+  const data = await tmdbGet<{ results: TmdbDiscoverRow[] }>(`trending/${kind}/week`);
+  return (data.results ?? []).map((r) => toDiscoverItem(r, kind));
+}
+
+/** "Porque viste X" — a TMDB calcula isto a partir de um título concreto. */
+export async function getRecommendations(
+  kind: "tv" | "movie",
+  tmdbId: number,
+): Promise<DiscoverItem[]> {
+  const data = await tmdbGet<{ results: TmdbDiscoverRow[] }>(
+    `${kind}/${tmdbId}/recommendations`,
+  );
+  return (data.results ?? []).map((r) => toDiscoverItem(r, kind));
+}
+
+/** Catálogo filtrado por género — a base do "mais do que gostas". */
+export async function discoverByGenres(
+  kind: "tv" | "movie",
+  genreIds: number[],
+  page = 1,
+): Promise<DiscoverItem[]> {
+  const data = await tmdbGet<{ results: TmdbDiscoverRow[] }>(`discover/${kind}`, {
+    with_genres: genreIds.join(","),
+    sort_by: "popularity.desc",
+    // corta o ruído: títulos sem votos suficientes são quase sempre lixo
+    "vote_count.gte": "200",
+    page: String(page),
+  });
+  return (data.results ?? []).map((r) => toDiscoverItem(r, kind));
+}
+
+/** Mapa id→nome dos géneros, para traduzir os `genre_ids` dos resultados. */
+export async function getGenreMap(kind: "tv" | "movie"): Promise<Map<number, string>> {
+  const data = await tmdbGet<{ genres: { id: number; name: string }[] }>(
+    `genre/${kind}/list`,
+  );
+  return new Map((data.genres ?? []).map((g) => [g.id, g.name]));
+}

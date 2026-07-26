@@ -4,7 +4,7 @@ const TMDB_BASE = "https://api.themoviedb.org/3";
 
 // Só expomos os endpoints de leitura de que a app precisa.
 const ALLOWED =
-  /^(find\/\d+|search\/(tv|movie|multi)|tv\/\d+(\/season\/\d+)?|movie\/\d+|(tv|movie)\/\d+\/watch\/providers)$/;
+  /^(find\/\d+|search\/(tv|movie|multi)|tv\/\d+(\/season\/\d+)?|movie\/\d+|(tv|movie)\/\d+\/watch\/providers|trending\/(tv|movie)\/(day|week)|(tv|movie)\/\d+\/recommendations|discover\/(tv|movie)|genre\/(tv|movie)\/list)$/;
 
 export async function GET(
   request: NextRequest,
