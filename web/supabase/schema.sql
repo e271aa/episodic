@@ -75,17 +75,24 @@ create index if not exists watched_episodes_by_show
   on public.watched_episodes (user_id, show_uuid);
 
 -- ─────────────────────────────────────────────────────────────
--- watched_movies: 1 linha por filme visto
+-- watched_movies: 1 linha por filme visto OU por ver (watched_at null =
+-- ainda não visto, está só na lista "para ver")
 -- ─────────────────────────────────────────────────────────────
 create table if not exists public.watched_movies (
   user_id       uuid not null references auth.users (id) on delete cascade,
   key           text not null,
   name          text not null,
-  watched_at    timestamptz not null default now(),
+  watched_at    timestamptz,
   date_is_exact boolean not null default true,
   updated_at    timestamptz not null default now(),
   primary key (user_id, key)
 );
+
+-- Migração (pedido 26-07): se já correste este schema antes, a tabela existe
+-- com watched_at NOT NULL — corre isto UMA VEZ no SQL Editor para libertar a
+-- coluna (o "create table if not exists" acima não mexe em tabelas existentes).
+alter table public.watched_movies alter column watched_at drop not null;
+alter table public.watched_movies alter column watched_at drop default;
 
 -- ─────────────────────────────────────────────────────────────
 -- Row Level Security: cada utilizador só acede às suas linhas

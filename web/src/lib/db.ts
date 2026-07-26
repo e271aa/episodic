@@ -35,9 +35,13 @@ export interface WatchedEpisode {
 export interface StoredMovie {
   key: string;
   name: string;
-  watchedAt: string;
+  /** null = ainda não visto, está só na lista "para ver" */
+  watchedAt: string | null;
   dateIsExact: boolean;
   releaseDate?: string | null; // YYYY-MM-DD — desambigua a pesquisa TMDB
+  /** quando entrou na biblioteca (visto ou para ver) — para ordenar a lista
+   *  "para ver" por adição recente, já que não há data de visto para isso */
+  addedAt?: string;
   // enriquecimento local (a cloud só guarda nome+datas; posters recalculam-se)
   tmdbId?: number | null;
   posterPath?: string | null;
@@ -70,7 +74,6 @@ export interface CustomList {
 interface OutboxCommon {
   /** chave da entidade, ex. "ep:<uuid>:1:2" — colapsa marcar/desmarcar repetidos */
   key: string;
-  watchedAt: string;
   at: string;
 }
 
@@ -79,6 +82,7 @@ export interface EpisodeOp extends OutboxCommon {
   showUuid: string;
   season: number;
   episode: number;
+  watchedAt: string;
 }
 
 export interface MovieOp extends OutboxCommon {
@@ -86,6 +90,8 @@ export interface MovieOp extends OutboxCommon {
   movieKey: string;
   name: string;
   dateIsExact: boolean;
+  /** null = filme "para ver" (sem data de visto) */
+  watchedAt: string | null;
 }
 
 export type OutboxOp = EpisodeOp | MovieOp;
@@ -437,7 +443,9 @@ export async function deleteMovie(key: string): Promise<void> {
     movieKey: key,
     name: current?.name ?? "",
     dateIsExact: current?.dateIsExact ?? true,
-    watchedAt: current?.watchedAt ?? new Date().toISOString(),
+    // null é um valor válido aqui (filme "para ver" apagado) — só cai para
+    // agora se o registo já não existisse de todo
+    watchedAt: current ? current.watchedAt : new Date().toISOString(),
     at: new Date().toISOString(),
   });
 }

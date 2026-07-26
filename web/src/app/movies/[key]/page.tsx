@@ -3,11 +3,13 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
-import { getMovie, updateMovie, type StoredMovie } from "@/lib/db";
+import { getMovie, putMovie, updateMovie, type StoredMovie } from "@/lib/db";
 import { getMovieDetails, type TmdbMovieDetails } from "@/lib/tmdb";
+import { pushUndo } from "@/lib/undo";
 import AddToListButton from "@/components/AddToListButton";
 import Poster from "@/components/Poster";
 import StreamingBadges from "@/components/StreamingBadges";
+import { CheckIcon } from "@/components/icons";
 
 function formatWatchedDate(iso: string): string {
   return new Date(iso).toLocaleDateString("pt-PT", {
@@ -87,6 +89,20 @@ export default function MoviePage() {
     Boolean,
   );
 
+  const markWatched = async () => {
+    const watchedAt = new Date().toISOString();
+    await putMovie({ ...movie, watchedAt });
+    setMovie((m) => (m ? { ...m, watchedAt } : m));
+    pushUndo({
+      label: "Filme marcado como visto",
+      detail: movie.name,
+      undo: async () => {
+        await putMovie({ ...movie, watchedAt: null });
+        setMovie((m) => (m ? { ...m, watchedAt: null } : m));
+      },
+    });
+  };
+
   return (
     <main className="mx-auto w-full max-w-2xl pb-8">
       <div className="relative h-44 sm:h-56">
@@ -133,10 +149,20 @@ export default function MoviePage() {
               <p className="ep-code mt-1 truncate text-xs text-dim">{metaBits.join("  ·  ")}</p>
             )}
             <p className="ep-code mt-1 text-sm text-dim">
-              Visto a {formatWatchedDate(movie.watchedAt)}
+              {movie.watchedAt ? `Visto a ${formatWatchedDate(movie.watchedAt)}` : "Na lista para ver"}
             </p>
           </div>
         </div>
+
+        {!movie.watchedAt && (
+          <button
+            onClick={() => void markWatched()}
+            className="mt-4 flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-left text-tube transition hover:brightness-110 active:scale-[0.99]"
+          >
+            <CheckIcon className="h-6 w-6 shrink-0" />
+            <span className="text-sm font-semibold">Marcar como visto</span>
+          </button>
+        )}
 
         <div className="mt-3">
           <AddToListButton kind="movie" refId={key} />

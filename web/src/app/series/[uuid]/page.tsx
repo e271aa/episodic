@@ -244,6 +244,21 @@ export default function ShowPage() {
     });
   }, [nextUp, show, uuid, syncWatched, loadSeasonEpisodes, seasons]);
 
+  const toggleWatchlist = useCallback(async () => {
+    if (!show) return;
+    const inWatchlist = !show.inWatchlist;
+    const updated = await updateShow(uuid, { inWatchlist });
+    if (updated) setShow(updated);
+    pushUndo({
+      label: inWatchlist ? "Adicionado a para ver" : "Removido de para ver",
+      detail: show.name,
+      undo: async () => {
+        const reverted = await updateShow(uuid, { inWatchlist: !inWatchlist });
+        if (reverted) setShow(reverted);
+      },
+    });
+  }, [show, uuid]);
+
   const watchedCount = watched.size;
   const backdropPath = show?.backdropPath ?? null;
   const posterPath = show?.posterPath ?? null;
@@ -377,8 +392,23 @@ export default function ShowPage() {
           )}
         </div>
 
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap gap-2">
           <AddToListButton kind="show" refId={uuid} />
+          {/* só faz sentido para quem não está a seguir ativamente — uma série
+              já em acompanhamento não precisa de "para ver" a redundar */}
+          {!show.followed && (
+            <button
+              onClick={() => void toggleWatchlist()}
+              className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition active:scale-95 ${
+                show.inWatchlist
+                  ? "border-ink bg-ink text-tube"
+                  : "border-line text-dim hover:border-ink hover:text-ink"
+              }`}
+            >
+              {show.inWatchlist && <CheckIcon className="h-3.5 w-3.5" />}
+              {show.inWatchlist ? "Na lista para ver" : "Para ver"}
+            </button>
+          )}
         </div>
 
         <StreamingBadges kind="tv" tmdbId={show.tmdbId} />

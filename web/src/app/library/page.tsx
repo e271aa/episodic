@@ -36,6 +36,7 @@ import {
 
 type Segment = "series" | "filmes";
 type SeriesFilter = "tudo" | "a-ver" | "completas" | "para-ver" | "arquivadas" | "parei";
+type MovieFilter = "vistos" | "para-ver" | "todos";
 /** Filmes não têm "estado" como as séries — o eixo útil é quando saíram */
 type MovieSort = "vistos" | "recentes" | "antigos" | "az";
 type SeriesSort = "vistos" | "progresso" | "az" | "adicionadas";
@@ -66,32 +67,37 @@ function norm(text: string): string {
 
 function ResultCard({ result }: { result: MetaSearchResult }) {
   const [state, setState] = useState<FollowState>("idle");
+  const [inWatchlist, setInWatchlist] = useState(false);
   const uuid = `${result.provider}-${result.providerId}`;
 
-  const follow = useCallback(async () => {
-    setState("following");
-    const existing = await getShow(uuid);
-    if (existing) {
-      await updateShow(uuid, { followed: true });
-    } else {
-      await putShow({
-        uuid,
-        name: result.name,
-        tvdbId: null,
-        tmdbId: result.provider === "tmdb" ? result.providerId : null,
-        tvmazeId: result.provider === "tvmaze" ? result.providerId : null,
-        posterPath: result.posterUrl,
-        backdropPath: result.backdropUrl,
-        overview: result.overview,
-        totalEpisodes: null,
-        followed: true,
-        inWatchlist: false,
-        archived: false,
-        addedAt: new Date().toISOString(),
-      });
-    }
-    setState("done");
-  }, [result, uuid]);
+  const add = useCallback(
+    async (followed: boolean) => {
+      setState("following");
+      const existing = await getShow(uuid);
+      if (existing) {
+        await updateShow(uuid, { followed, inWatchlist: !followed });
+      } else {
+        await putShow({
+          uuid,
+          name: result.name,
+          tvdbId: null,
+          tmdbId: result.provider === "tmdb" ? result.providerId : null,
+          tvmazeId: result.provider === "tvmaze" ? result.providerId : null,
+          posterPath: result.posterUrl,
+          backdropPath: result.backdropUrl,
+          overview: result.overview,
+          totalEpisodes: null,
+          followed,
+          inWatchlist: !followed,
+          archived: false,
+          addedAt: new Date().toISOString(),
+        });
+      }
+      setInWatchlist(!followed);
+      setState("done");
+    },
+    [result, uuid],
+  );
 
   return (
     <div className="page-enter flex gap-3 rounded-2xl border border-line bg-panel p-3">
@@ -112,19 +118,35 @@ function ResultCard({ result }: { result: MetaSearchResult }) {
           )}
         </p>
         <p className="mt-1 line-clamp-2 text-xs text-dim">{result.overview}</p>
-        <button
-          onClick={() => void follow()}
-          disabled={state !== "idle"}
-          className={`mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition active:scale-95 ${
-            state === "done" ? "bg-raised text-dim" : "bg-ink text-tube hover:brightness-110"
-          }`}
-        >
-          {state === "following" && (
-            <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-tube/30 border-t-tube" />
-          )}
-          {state === "done" && <CheckIcon className="check-pop h-3.5 w-3.5" />}
-          {state === "done" ? "A seguir" : "Seguir"}
-        </button>
+        {state === "done" ? (
+          <button
+            disabled
+            className="mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-4 text-sm font-semibold text-dim"
+          >
+            <CheckIcon className="check-pop h-3.5 w-3.5" />
+            {inWatchlist ? "Na lista para ver" : "A seguir"}
+          </button>
+        ) : (
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() => void add(true)}
+              disabled={state !== "idle"}
+              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+            >
+              {state === "following" && (
+                <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-tube/30 border-t-tube" />
+              )}
+              Seguir
+            </button>
+            <button
+              onClick={() => void add(false)}
+              disabled={state !== "idle"}
+              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-sm font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
+            >
+              Para ver
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -145,35 +167,39 @@ function MovieResultCard({
   const [state, setState] = useState<FollowState>("idle");
   const key = `tmdb-${result.tmdbId}`;
 
-  const add = useCallback(async () => {
-    setState("following");
-    const existing = await getMovie(key);
-    if (!existing) {
-      await putMovie({
-        key,
-        name: result.name,
-        watchedAt: new Date().toISOString(),
-        dateIsExact: true,
-        releaseDate: result.releaseDate,
-        tmdbId: result.tmdbId,
-        posterPath: result.posterPath,
-      });
-    }
-    setState("done");
-    onAdded();
-    // só se anula o que esta ação criou — um filme que já lá estava fica
-    if (!existing) {
-      pushUndo({
-        label: "Filme marcado como visto",
-        detail: result.name,
-        undo: async () => {
-          await deleteMovie(key);
-          setState("idle");
-          onAdded();
-        },
-      });
-    }
-  }, [key, result, onAdded]);
+  const add = useCallback(
+    async (watched: boolean) => {
+      setState("following");
+      const existing = await getMovie(key);
+      if (!existing) {
+        await putMovie({
+          key,
+          name: result.name,
+          watchedAt: watched ? new Date().toISOString() : null,
+          dateIsExact: true,
+          releaseDate: result.releaseDate,
+          addedAt: new Date().toISOString(),
+          tmdbId: result.tmdbId,
+          posterPath: result.posterPath,
+        });
+      }
+      setState("done");
+      onAdded();
+      // só se anula o que esta ação criou — um filme que já lá estava fica
+      if (!existing) {
+        pushUndo({
+          label: watched ? "Filme marcado como visto" : "Filme adicionado a para ver",
+          detail: result.name,
+          undo: async () => {
+            await deleteMovie(key);
+            setState("idle");
+            onAdded();
+          },
+        });
+      }
+    },
+    [key, result, onAdded],
+  );
 
   return (
     <div className="page-enter flex gap-3 rounded-2xl border border-line bg-panel p-3">
@@ -194,26 +220,71 @@ function MovieResultCard({
           )}
         </p>
         <p className="mt-1 line-clamp-2 text-xs text-dim">{result.overview}</p>
-        <button
-          onClick={() => void add()}
-          disabled={state !== "idle"}
-          className={`mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full px-4 text-sm font-semibold transition active:scale-95 ${
-            state === "done" ? "bg-raised text-dim" : "bg-ink text-tube hover:brightness-110"
-          }`}
-        >
-          {state === "following" && (
-            <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-tube/30 border-t-tube" />
-          )}
-          {state === "done" && <CheckIcon className="check-pop h-3.5 w-3.5" />}
-          {state === "done" ? "Na biblioteca" : "Marcar visto"}
-        </button>
+        {state === "done" ? (
+          <button
+            disabled
+            className="mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-4 text-sm font-semibold text-dim"
+          >
+            <CheckIcon className="check-pop h-3.5 w-3.5" />
+            Na biblioteca
+          </button>
+        ) : (
+          <div className="mt-2 flex gap-2">
+            <button
+              onClick={() => void add(true)}
+              disabled={state !== "idle"}
+              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+            >
+              {state === "following" && (
+                <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-tube/30 border-t-tube" />
+              )}
+              Marcar visto
+            </button>
+            <button
+              onClick={() => void add(false)}
+              disabled={state !== "idle"}
+              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-sm font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
+            >
+              Para ver
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
 }
 
-function MovieCard({ movie, index }: { movie: StoredMovie; index: number }) {
+function MovieCard({
+  movie,
+  index,
+  onChanged,
+}: {
+  movie: StoredMovie;
+  index: number;
+  onChanged: () => void;
+}) {
   const year = movie.releaseDate?.slice(0, 4);
+  const paraVer = !movie.watchedAt;
+
+  const markWatched = useCallback(
+    async (e: React.MouseEvent) => {
+      // o botão vive dentro do Link — não pode navegar para o detalhe
+      e.preventDefault();
+      e.stopPropagation();
+      await putMovie({ ...movie, watchedAt: new Date().toISOString() });
+      onChanged();
+      pushUndo({
+        label: "Filme marcado como visto",
+        detail: movie.name,
+        undo: async () => {
+          await putMovie({ ...movie, watchedAt: null });
+          onChanged();
+        },
+      });
+    },
+    [movie, onChanged],
+  );
+
   return (
     <Link
       href={`/movies/${movie.key}`}
@@ -232,11 +303,24 @@ function MovieCard({ movie, index }: { movie: StoredMovie; index: number }) {
           sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
           className="object-cover transition duration-300 group-hover:scale-105"
         />
+        {paraVer && (
+          <>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" />
+            <span className="ep-code absolute left-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink backdrop-blur">
+              Para ver
+            </span>
+            <button
+              onClick={(e) => void markWatched(e)}
+              aria-label="Marcar como visto"
+              className="absolute bottom-1.5 right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-ink text-tube shadow-md transition active:scale-90"
+            >
+              <CheckIcon className="h-4 w-4" />
+            </button>
+          </>
+        )}
       </div>
       <p className="mt-1.5 truncate text-sm font-medium">{movie.name}</p>
-      <p className="ep-code truncate text-xs text-dim">
-        {year ?? movie.watchedAt.slice(0, 4)}
-      </p>
+      <p className="ep-code truncate text-xs text-dim">{year ?? movie.watchedAt?.slice(0, 4) ?? ""}</p>
     </Link>
   );
 }
@@ -391,6 +475,10 @@ function LibraryContent() {
     rawFiltro && ["a-ver", "completas", "para-ver", "arquivadas", "parei"].includes(rawFiltro)
       ? rawFiltro
       : "tudo";
+  const movieFilter: MovieFilter =
+    rawFiltro && ["vistos", "para-ver", "todos"].includes(rawFiltro)
+      ? (rawFiltro as MovieFilter)
+      : "vistos";
   const rawOrdem = params.get("ordem");
   const seriesSort: SeriesSort =
     rawOrdem && SERIES_SORT_IDS.has(rawOrdem as SeriesSort)
@@ -426,16 +514,18 @@ function LibraryContent() {
   const [remoteError, setRemoteError] = useState<string | null>(null);
   const enriching = useRef(false);
 
+  // "Para ver" não tem watchedAt — cai para o fim numa ordenação por "vistos"
+  const byWatchedDesc = (a: StoredMovie, b: StoredMovie) =>
+    (b.watchedAt ?? "").localeCompare(a.watchedAt ?? "");
+
   const reloadMovies = useCallback(() => {
-    void getMovies().then((list) =>
-      setMovies(list.sort((a, b) => b.watchedAt.localeCompare(a.watchedAt))),
-    );
+    void getMovies().then((list) => setMovies(list.sort(byWatchedDesc)));
   }, []);
 
   useEffect(() => {
     void loadShows().then(setShows);
     void getMovies().then(async (list) => {
-      setMovies(list.sort((a, b) => b.watchedAt.localeCompare(a.watchedAt)));
+      setMovies(list.sort(byWatchedDesc));
       // Completa capas e datas de estreia em falta via TMDB. A capa vivia na
       // antiga página /movies, que quase não tinha entradas — filmes sem
       // capa nunca eram enriquecidos. A data de estreia é a mesma história:
@@ -455,7 +545,7 @@ function LibraryContent() {
         }
         if (changed) {
           const fresh = await getMovies();
-          setMovies(fresh.sort((a, b) => b.watchedAt.localeCompare(a.watchedAt)));
+          setMovies(fresh.sort(byWatchedDesc));
         }
       } finally {
         enriching.current = false;
@@ -496,9 +586,10 @@ function LibraryContent() {
     return sorted;
   }, [shows, filter, q, seriesSort]);
 
-  // Ano do filme: preferimos a estreia; sem ela, o ano em que o viste
+  // Ano do filme: preferimos a estreia; sem ela, o ano em que o viste (um
+  // filme "para ver" pode não ter nenhuma das duas ainda)
   const movieYear = (m: StoredMovie): number =>
-    Number((m.releaseDate ?? m.watchedAt).slice(0, 4));
+    Number((m.releaseDate ?? m.watchedAt ?? "").slice(0, 4));
 
   /** Décadas presentes na coleção, da mais recente para a mais antiga */
   const decades = useMemo(() => {
@@ -514,6 +605,8 @@ function LibraryContent() {
   const filteredMovies = useMemo(() => {
     if (!movies) return [];
     let list = movies;
+    if (movieFilter === "vistos") list = list.filter((m) => m.watchedAt);
+    else if (movieFilter === "para-ver") list = list.filter((m) => !m.watchedAt);
     if (decade !== null) {
       list = list.filter((m) => {
         const year = movieYear(m);
@@ -523,7 +616,11 @@ function LibraryContent() {
     if (q) list = list.filter((m) => norm(m.name).includes(q));
     const sorted = [...list];
     if (movieSort === "vistos") {
-      sorted.sort((a, b) => b.watchedAt.localeCompare(a.watchedAt));
+      // sem data de visto (para ver), cai para a data em que adicionaste
+      sorted.sort(
+        (a, b) =>
+          (b.watchedAt ?? b.addedAt ?? "").localeCompare(a.watchedAt ?? a.addedAt ?? ""),
+      );
     } else if (movieSort === "recentes") {
       sorted.sort((a, b) => movieYear(b) - movieYear(a));
     } else if (movieSort === "antigos") {
@@ -532,7 +629,7 @@ function LibraryContent() {
       sorted.sort((a, b) => a.name.localeCompare(b.name, "pt"));
     }
     return sorted;
-  }, [movies, q, decade, movieSort]);
+  }, [movies, q, decade, movieSort, movieFilter]);
 
   const counts = useMemo(() => {
     const complete = (s: ShowWithProgress) =>
@@ -546,6 +643,15 @@ function LibraryContent() {
       parei: shows?.filter((s) => !s.followed && !s.inWatchlist).length ?? 0,
     } as Record<SeriesFilter, number>;
   }, [shows]);
+
+  const movieCounts = useMemo(
+    () => ({
+      vistos: movies?.filter((m) => m.watchedAt).length ?? 0,
+      "para-ver": movies?.filter((m) => !m.watchedAt).length ?? 0,
+      todos: movies?.length ?? 0,
+    }),
+    [movies],
+  );
 
   // Procura no catálogo do segmento em que estás: séries na aba das séries,
   // filmes na aba dos filmes.
@@ -633,6 +739,12 @@ function LibraryContent() {
     { id: "parei", label: "Já não sigo" },
   ];
 
+  const MOVIE_FILTERS: { id: MovieFilter; label: string }[] = [
+    { id: "vistos", label: "Vistos" },
+    { id: "para-ver", label: "Para ver" },
+    { id: "todos", label: "Todos" },
+  ];
+
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
       <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Biblioteca</h1>
@@ -715,6 +827,29 @@ function LibraryContent() {
                 className={`ep-code text-xs ${filter === f.id ? "opacity-70" : "text-faint"}`}
               >
                 {counts[f.id]}
+              </span>
+            </button>
+          ))}
+        </div>
+      )}
+
+      {segment === "filmes" && (
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {MOVIE_FILTERS.map((f) => (
+            <button
+              key={f.id}
+              onClick={() => setParams({ filtro: f.id === "vistos" ? null : f.id })}
+              className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ${
+                movieFilter === f.id
+                  ? "border-ink bg-ink text-tube"
+                  : "border-line text-dim hover:border-ink hover:text-ink"
+              }`}
+            >
+              {f.label}
+              <span
+                className={`ep-code text-xs ${movieFilter === f.id ? "opacity-70" : "text-faint"}`}
+              >
+                {movieCounts[f.id]}
               </span>
             </button>
           ))}
@@ -808,7 +943,7 @@ function LibraryContent() {
                 <SectionHeader label={g.label} count={g.items.length} />
                 <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
                   {g.items.map((m, i) => (
-                    <MovieCard key={m.key} movie={m} index={i} />
+                    <MovieCard key={m.key} movie={m} index={i} onChanged={reloadMovies} />
                   ))}
                 </div>
               </section>
@@ -820,7 +955,7 @@ function LibraryContent() {
             data-testid="library-grid"
           >
             {filteredMovies.map((m, i) => (
-              <MovieCard key={m.key} movie={m} index={i} />
+              <MovieCard key={m.key} movie={m} index={i} onChanged={reloadMovies} />
             ))}
           </div>
         )

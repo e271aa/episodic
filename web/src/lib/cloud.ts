@@ -204,7 +204,7 @@ function movieToRow(m: StoredMovie, userId: string) {
 interface MovieRow {
   key: string;
   name: string;
-  watched_at: string;
+  watched_at: string | null;
   date_is_exact: boolean;
 }
 
