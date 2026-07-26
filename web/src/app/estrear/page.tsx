@@ -38,7 +38,7 @@ export default function EstrearPage() {
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">A estrear</h1>
-        <Link href="/series" className="text-sm text-dim hover:text-ink hover:underline">
+        <Link href="/series" className="-mr-2 inline-flex min-h-11 items-center px-2 text-sm text-dim hover:text-ink hover:underline">
           A seguir
         </Link>
       </div>

@@ -85,7 +85,7 @@ export default function AddToListButton({ kind, refId }: AddToListButtonProps) {
                 <li key={list.id}>
                   <button
                     onClick={() => void toggle(list)}
-                    className="flex min-h-9 w-full cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-sm hover:bg-raised"
+                    className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-sm hover:bg-raised"
                   >
                     <span
                       className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
@@ -121,12 +121,12 @@ export default function AddToListButton({ kind, refId }: AddToListButtonProps) {
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Nova lista…"
-              className="min-h-9 flex-1 rounded-full border border-line bg-tube px-3 text-xs outline-none focus:border-ink"
+              className="min-h-11 flex-1 rounded-full border border-line bg-tube px-3 text-xs outline-none focus:border-ink"
             />
             <button
               type="submit"
               disabled={!newName.trim()}
-              className="min-h-9 shrink-0 cursor-pointer rounded-full bg-ink px-3 text-xs font-semibold text-tube disabled:opacity-50"
+              className="min-h-11 shrink-0 cursor-pointer rounded-full bg-ink px-3 text-xs font-semibold text-tube disabled:opacity-50"
             >
               Criar
             </button>

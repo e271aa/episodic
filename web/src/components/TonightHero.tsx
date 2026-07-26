@@ -79,7 +79,7 @@ export default function TonightHero({
         <p className="font-display text-xs font-semibold uppercase tracking-[0.3em] text-dim [font-stretch:75%]">
           {eyebrow}
         </p>
-        <Link href={`/series/${showUuid}`} className="mt-2 block">
+        <Link href={`/series/${showUuid}`} className="mt-2 flex min-h-11 items-center">
           <h1 className="font-display text-3xl font-bold text-ink [font-stretch:120%] sm:text-4xl">
             {showName}
           </h1>

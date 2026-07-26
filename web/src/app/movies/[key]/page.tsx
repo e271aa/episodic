@@ -128,7 +128,7 @@ export default function MoviePage() {
         <div className="bars absolute inset-x-0 top-0 h-[3px]" />
         <Link
           href="/library?tipo=filmes"
-          className="absolute left-3 top-3 cursor-pointer rounded-full bg-black/50 px-3 py-1.5 text-sm text-white backdrop-blur"
+          className="absolute left-3 top-3 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-black/50 px-4 text-sm text-white backdrop-blur"
         >
           ← Filmes
         </Link>
@@ -196,7 +196,7 @@ export default function MoviePage() {
             href={`https://www.themoviedb.org/movie/${movie.tmdbId}`}
             target="_blank"
             rel="noreferrer"
-            className="mt-4 inline-block cursor-pointer text-sm text-ink hover:underline"
+            className="mt-4 inline-flex min-h-11 cursor-pointer items-center text-sm text-ink hover:underline"
           >
             Ver na TMDB ↗
           </a>

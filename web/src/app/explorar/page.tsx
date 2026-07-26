@@ -125,7 +125,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
             key={id}
             onClick={() => setKind(id)}
             aria-pressed={kind === id}
-            className={`flex min-h-10 flex-1 cursor-pointer items-center justify-center rounded-full text-sm font-semibold transition ${
+            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full text-sm font-semibold transition ${
               kind === id ? "bg-ink text-tube" : "text-dim hover:text-ink"
             }`}
           >

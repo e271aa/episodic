@@ -131,7 +131,7 @@ export default function EmDiaPage() {
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Pôr em dia</h1>
-        <Link href="/series" className="text-sm text-dim hover:text-ink hover:underline">
+        <Link href="/series" className="-mr-2 inline-flex min-h-11 items-center px-2 text-sm text-dim hover:text-ink hover:underline">
           Sair
         </Link>
       </div>
@@ -151,7 +151,7 @@ export default function EmDiaPage() {
             <button
               key={f.id}
               onClick={() => changeFilter(f.id)}
-              className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-4 py-1.5 text-sm font-medium transition active:scale-95 ${
+              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition active:scale-95 ${
                 isActive
                   ? "border-ink bg-ink text-tube"
                   : "border-line text-dim hover:border-ink hover:text-ink"

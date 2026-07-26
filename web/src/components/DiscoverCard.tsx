@@ -70,14 +70,14 @@ export default function DiscoverCard({
         <div className="mt-1.5 flex gap-1.5">
           <button
             onClick={() => void guardar()}
-            className="flex min-h-9 flex-1 cursor-pointer items-center justify-center rounded-full bg-ink text-xs font-semibold text-tube transition hover:brightness-110 active:scale-95"
+            className="flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full bg-ink text-xs font-semibold text-tube transition hover:brightness-110 active:scale-95"
           >
             Para ver
           </button>
           <button
             onClick={() => void dispensar()}
             aria-label="Não me interessa"
-            className="flex min-h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line text-faint transition hover:border-ink hover:text-ink active:scale-90"
+            className="flex min-h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line text-faint transition hover:border-ink hover:text-ink active:scale-90"
           >
             <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden>
               <path

@@ -120,7 +120,7 @@ export default function ListaPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
-      <Link href="/listas" className="text-sm text-dim hover:text-ink hover:underline">
+      <Link href="/listas" className="-mr-2 inline-flex min-h-11 items-center px-2 text-sm text-dim hover:text-ink hover:underline">
         ← Listas
       </Link>
 
@@ -190,7 +190,7 @@ export default function ListaPage() {
                 <button
                   onClick={() => void handleRemoveItem(item)}
                   aria-label={`Remover ${item.name} da lista`}
-                  className="absolute right-1.5 top-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white opacity-0 backdrop-blur transition-opacity active:scale-90 group-hover:opacity-100"
+                  className="tap-44 absolute right-1.5 top-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white opacity-0 backdrop-blur transition-opacity active:scale-90 group-hover:opacity-100"
                 >
                   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden>
                     <path

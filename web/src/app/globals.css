@@ -176,6 +176,20 @@ input:focus-visible,
   overflow: hidden;
 }
 
+/* Botões pequenos por cima de cartazes (marcar visto, remover da lista): o
+   círculo tem de ser discreto para não tapar a capa, mas 28–32px é metade
+   de um polegar. Isto estica só a área de toque até aos 44px do iOS — o que
+   se vê não muda. Requer position (os alvos já são `absolute`). */
+.tap-44::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: max(44px, 100%);
+  height: max(44px, 100%);
+  transform: translate(-50%, -50%);
+}
+
 /* Resposta ao toque, por omissão e em todo o lado. Metade dos botões e links
    tinha `active:scale-*` e a outra metade não respondia a nada — no telemóvel
    isso lê-se como "não carregou". Fica em @layer base de propósito: qualquer

@@ -334,7 +334,7 @@ export default function SeriesPage() {
             </div>
             <Link
               href="/library"
-              className="shrink-0 cursor-pointer text-sm font-semibold text-ink hover:underline"
+              className="-mr-2 inline-flex min-h-11 shrink-0 cursor-pointer items-center px-2 text-sm font-semibold text-ink hover:underline"
             >
               Biblioteca
             </Link>
@@ -418,7 +418,7 @@ export default function SeriesPage() {
       <p className="mt-10 text-center">
         <Link
           href="/library"
-          className="cursor-pointer text-sm font-semibold text-dim hover:text-ink hover:underline"
+          className="inline-flex min-h-11 cursor-pointer items-center px-3 text-sm font-semibold text-dim hover:text-ink hover:underline"
         >
           Ver toda a biblioteca ({shows.length}) →
         </Link>

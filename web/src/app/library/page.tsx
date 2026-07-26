@@ -313,7 +313,7 @@ function MovieCard({
             <button
               onClick={(e) => void markWatched(e)}
               aria-label="Marcar como visto"
-              className="absolute bottom-1.5 right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-ink text-tube shadow-md transition active:scale-90"
+              className="tap-44 absolute bottom-1.5 right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-ink text-tube shadow-md transition active:scale-90"
             >
               <CheckIcon className="h-4 w-4" />
             </button>
@@ -347,7 +347,7 @@ function SortMenu<T extends string>({
       <button
         onClick={() => setOpen((o) => !o)}
         aria-expanded={open}
-        className="flex cursor-pointer items-center gap-1.5 rounded-full border border-line px-3 py-1.5 text-xs text-dim transition hover:border-ink hover:text-ink active:scale-95"
+        className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-3 text-xs text-dim transition hover:border-ink hover:text-ink active:scale-95"
         data-testid="sort-button"
       >
         <SortIcon className="h-3.5 w-3.5" />
@@ -755,20 +755,20 @@ function LibraryContent() {
       <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
         <Link
           href="/em-dia"
-          className="flex shrink-0 cursor-pointer items-center gap-2 rounded-full border border-line px-3.5 py-1.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
+          className="flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full border border-line px-3.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
         >
           <span className="bars h-4 w-4 shrink-0 rounded-full" />
           Pôr em dia
         </Link>
         <Link
           href="/estrear"
-          className="shrink-0 cursor-pointer rounded-full border border-line px-3.5 py-1.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
+          className="inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border border-line px-3.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
         >
           A estrear
         </Link>
         <Link
           href="/listas"
-          className="shrink-0 cursor-pointer rounded-full border border-line px-3.5 py-1.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
+          className="inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border border-line px-3.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
         >
           Listas
         </Link>
@@ -799,7 +799,7 @@ function LibraryContent() {
             key={id}
             onClick={() => changeSegment(id)}
             aria-pressed={segment === id}
-            className={`flex min-h-10 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition ${
+            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition ${
               segment === id ? "bg-ink text-tube" : "text-dim hover:text-ink"
             }`}
           >
@@ -817,7 +817,7 @@ function LibraryContent() {
             <button
               key={f.id}
               onClick={() => setParams({ filtro: f.id === "tudo" ? null : f.id })}
-              className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ${
+              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-sm transition active:scale-95 ${
                 filter === f.id
                   ? "border-ink bg-ink text-tube"
                   : "border-line text-dim hover:border-ink hover:text-ink"
@@ -840,7 +840,7 @@ function LibraryContent() {
             <button
               key={f.id}
               onClick={() => setParams({ filtro: f.id === "vistos" ? null : f.id })}
-              className={`flex shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ${
+              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-sm transition active:scale-95 ${
                 movieFilter === f.id
                   ? "border-ink bg-ink text-tube"
                   : "border-line text-dim hover:border-ink hover:text-ink"
@@ -861,7 +861,7 @@ function LibraryContent() {
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
           <button
             onClick={() => setParams({ decada: null })}
-            className={`shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ${
+            className={`inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border px-3.5 text-sm transition active:scale-95 ${
               decade === null
                 ? "border-ink bg-ink text-tube"
                 : "border-line text-dim hover:border-ink hover:text-ink"
@@ -873,7 +873,7 @@ function LibraryContent() {
             <button
               key={d}
               onClick={() => setParams({ decada: d === decade ? null : String(d) })}
-              className={`ep-code shrink-0 cursor-pointer rounded-full border px-3.5 py-1.5 text-sm transition active:scale-95 ${
+              className={`ep-code inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border px-3.5 text-sm transition active:scale-95 ${
                 decade === d
                   ? "border-ink bg-ink text-tube"
                   : "border-line text-dim hover:border-ink hover:text-ink"

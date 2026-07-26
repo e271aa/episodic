@@ -332,7 +332,7 @@ export default function ShowPage() {
         <div className="bars absolute inset-x-0 top-0 h-[3px]" />
         <Link
           href="/series"
-          className="absolute left-3 top-3 cursor-pointer rounded-full bg-black/50 px-3 py-1.5 text-sm text-white backdrop-blur"
+          className="absolute left-3 top-3 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-black/50 px-4 text-sm text-white backdrop-blur"
         >
           ← Séries
         </Link>
@@ -585,7 +585,7 @@ export default function ShowPage() {
                 href={`https://www.imdb.com/title/${show.imdbId}/`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-block cursor-pointer text-sm text-ink hover:underline"
+                className="inline-flex min-h-11 cursor-pointer items-center text-sm text-ink hover:underline"
               >
                 Ver no IMDb ↗
               </a>
