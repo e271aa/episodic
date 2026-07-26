@@ -9,6 +9,8 @@ import {
   getMovie,
   getMovies,
   getShow,
+  kvGet,
+  kvSet,
   putMovie,
   putShow,
   updateMovie,
@@ -57,6 +59,11 @@ const MOVIE_SORTS: { id: MovieSort; label: string }[] = [
 ];
 
 type FollowState = "idle" | "following" | "done";
+
+// Sobe quando a forma de escolher o filme no TMDB muda: obriga a rever os
+// filmes já enriquecidos uma vez, em vez de deixar os erros antigos fossilizados.
+const ENRICH_VERSION = 2;
+const ENRICH_KEY = "movies:enrich-v";
 
 // Normaliza para pesquisar sem acentos nem maiúsculas — "pokemon" encontra "Pokémon"
 function norm(text: string): string {
@@ -535,15 +542,24 @@ function LibraryContent() {
       if (enriching.current) return;
       enriching.current = true;
       try {
+        // Uma revisão em massa quando a regra de escolha do filme muda: os que
+        // já estavam enriquecidos guardaram o filme ERRADO (o "Ciao Alberto"
+        // ficou com o homónimo de 2003 em vez do spin-off do Luca de 2021) e
+        // como têm capa e data nunca mais seriam tocados.
+        const rever = ((await kvGet<number>(ENRICH_KEY)) ?? 0) < ENRICH_VERSION;
         let changed = false;
         for (const movie of list) {
-          if (movie.posterPath && movie.releaseDate) continue;
-          const patch = await enrichMovie(movie);
+          // Filmes vindos do Explorar já trazem o id TMDB certo — pesquisar
+          // outra vez pelo nome só arriscaria trocá-los por um homónimo.
+          if (movie.key.startsWith("tmdb-")) continue;
+          if (!rever && movie.posterPath && movie.releaseDate) continue;
+          const patch = await enrichMovie(movie, rever);
           if (patch) {
             await updateMovie(movie.key, patch);
             changed = true;
           }
         }
+        if (rever) await kvSet(ENRICH_KEY, ENRICH_VERSION);
         if (changed) {
           const fresh = await getMovies();
           setMovies(fresh.sort(byWatchedDesc));

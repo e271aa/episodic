@@ -8,6 +8,7 @@ import CloudAccount from "@/components/CloudAccount";
 import ProfileCard from "@/components/ProfileCard";
 import Poster from "@/components/Poster";
 import { Bone } from "@/components/Skeleton";
+import IntegrityCheck from "@/components/IntegrityCheck";
 
 // Mesmo formato do TV Time: "2 meses · 25 dias · 7 horas"
 function splitHours(totalHours: number) {
@@ -224,6 +225,7 @@ export default function ProfilePage() {
               </span>
             )}
           </Link>
+          <IntegrityCheck />
           <button
             onClick={() => void handleClear()}
             className="cursor-pointer rounded-2xl border border-danger/40 px-4 py-3 text-left font-medium text-danger transition-colors hover:bg-danger/10"

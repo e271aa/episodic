@@ -30,6 +30,17 @@ export interface WatchedEpisode {
   episode: number;
   watchedAt: string;
   dateIsExact: boolean;
+  /**
+   * ID do episódio no TheTVDB, vindo do campo `ep_id` do export do TV Time.
+   *
+   * É a única chave ESTÁVEL entre sistemas: (temporada, episódio) muda quando
+   * o TheTVDB reorganiza uma série — o Naruto do Ruben tem a 1ª temporada com
+   * 57 episódios porque foi assim que a viu, mas o TheTVDB hoje divide-a em
+   * 35 + 48. Estava a ser lido no parser e deitado fora no import.
+   *
+   * Opcional: episódios marcados dentro da app (não importados) não o têm.
+   */
+  episodeTvdbId?: number | null;
 }
 
 export interface StoredMovie {
@@ -227,6 +238,7 @@ export async function importExport(data: TvTimeExport): Promise<void> {
       episode: ep.episode,
       watchedAt: ep.watchedAt,
       dateIsExact: ep.dateIsExact,
+      episodeTvdbId: ep.episodeTvdbId,
     });
   }
   for (const movie of data.movies) {

@@ -153,18 +153,74 @@ export async function enrichShow(show: StoredShow): Promise<Partial<StoredShow> 
   }
 }
 
+/** Minúsculas, sem acentos nem pontuação — "Your Name." e "your name" batem certo. */
+function normTitle(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim();
+}
+
+/**
+ * Abaixo disto o título exato é ruído, não um filme: o TMDB está cheio de
+ * entradas com 0 votos e sem poster que roubariam o lugar ao filme verdadeiro.
+ */
+const MIN_VOTES_EXACT = 10;
+
+const votesOf = (r: tmdb.TmdbMovieLite) => r.vote_count ?? 0;
+
+function isExactTitle(r: tmdb.TmdbMovieLite, wanted: string): boolean {
+  return (
+    normTitle(r.title) === wanted ||
+    (r.original_title ? normTitle(r.original_title) === wanted : false)
+  );
+}
+
+/**
+ * Escolhe o filme certo entre os resultados do TMDB.
+ *
+ * Ficar-se pelo `results[0]` dava filmes errados de duas maneiras diferentes,
+ * ambas medidas contra a API:
+ *
+ *  - "Ciao Alberto" devolve dois filmes com o título EXATO: um obscuro de 2003
+ *    (1 voto) e o spin-off do Luca de 2021 (707 votos). O TMDB devolve o de
+ *    2003 primeiro — a ordem dele não é por notoriedade.
+ *  - "Your Name" devolve "Chama-me Pelo Teu Nome" (Call Me by Your Name) em
+ *    primeiro: só contém o título como pedaço, mas tem 12 840 votos.
+ *
+ * Regra: ganha o título exato mais votado; se nenhum exato passar o piso de
+ * notoriedade, ganha o mais votado de todos.
+ */
+function pickBestMovie(
+  results: tmdb.TmdbMovieLite[],
+  name: string,
+): tmdb.TmdbMovieLite | undefined {
+  if (results.length === 0) return undefined;
+  const wanted = normTitle(name);
+  const exact = results.filter(
+    (r) => isExactTitle(r, wanted) && votesOf(r) >= MIN_VOTES_EXACT,
+  );
+  const pool = exact.length > 0 ? exact : results;
+  return pool.reduce((best, r) => (votesOf(r) > votesOf(best) ? r : best));
+}
+
 /**
  * Poster e id TMDB de um filme (a TVmaze não tem filmes — sem chave TMDB não
- * há enriquecimento). Pesquisa por nome + ano de estreia; sem ano, só aceita
- * o primeiro resultado. Falhas lembradas por 24h como nas séries.
+ * há enriquecimento). Pesquisa por nome + ano de estreia e escolhe o resultado
+ * com `pickBestMovie`. Falhas lembradas por 24h como nas séries.
+ *
+ * `refresh` reescreve a estreia guardada em vez de a preservar — serve para
+ * corrigir filmes que já foram enriquecidos com o filme errado, onde a data
+ * guardada é ela própria o erro.
  */
-export async function enrichMovie(movie: {
-  key: string;
-  name: string;
-  releaseDate?: string | null;
-}): Promise<{ tmdbId: number; posterPath: string | null; releaseDate?: string | null } | null> {
+export async function enrichMovie(
+  movie: { key: string; name: string; releaseDate?: string | null },
+  refresh = false,
+): Promise<{ tmdbId: number; posterPath: string | null; releaseDate?: string | null } | null> {
   if (!(await hasTmdb())) return null;
-  if (await enrichFailedRecently(`movie:${movie.key}`)) return null;
+  if (!refresh && (await enrichFailedRecently(`movie:${movie.key}`))) return null;
   try {
     const year = movie.releaseDate?.slice(0, 4);
     let results = await tmdb.searchMovie(movie.name, year);
@@ -172,7 +228,23 @@ export async function enrichMovie(movie: {
     if (results.length === 0 && year) {
       results = await tmdb.searchMovie(movie.name);
     }
-    const hit = results[0];
+    let hit = pickBestMovie(results, movie.name);
+
+    // O ano guardado pode ser ele próprio o erro: o "Ciao Alberto" tinha 2003
+    // (o homónimo obscuro) e uma pesquisa presa a 2003 nunca encontraria o
+    // spin-off do Luca. Quando o candidato do ano não é um título exato
+    // conhecido, vale a pena ver o que aparece sem o ano — mas só se o que
+    // aparecer for exato E notório, senão o resultado com ano manda. Isto
+    // protege o caso inverso: "Your Name" só encontra o Kimi no Na wa com
+    // year=2016, e sem ano viriam homónimos de 0 votos.
+    const wanted = normTitle(movie.name);
+    if (year && hit && !(isExactTitle(hit, wanted) && votesOf(hit) >= MIN_VOTES_EXACT)) {
+      const semAno = pickBestMovie(await tmdb.searchMovie(movie.name), movie.name);
+      if (semAno && isExactTitle(semAno, wanted) && votesOf(semAno) >= MIN_VOTES_EXACT) {
+        hit = semAno;
+      }
+    }
+
     if (!hit) {
       await rememberEnrichFailure(`movie:${movie.key}`);
       return null;
@@ -183,7 +255,7 @@ export async function enrichMovie(movie: {
       // O TV Time nem sempre trazia a estreia — sem isto, o ano do filme
       // ficava preso ao dia em que o marcaste como visto, para sempre
       // (é o que fazia as décadas do filtro saírem todas erradas).
-      ...(movie.releaseDate ? null : { releaseDate: hit.release_date ?? null }),
+      ...(movie.releaseDate && !refresh ? null : { releaseDate: hit.release_date ?? null }),
     };
   } catch {
     return null;

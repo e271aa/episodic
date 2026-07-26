@@ -74,9 +74,13 @@ export async function getShowDetails(tmdbId: number): Promise<TmdbShowDetails> {
 export interface TmdbMovieLite {
   id: number;
   title: string;
+  /** título na língua original — o pt-PT do TMDB nem sempre bate com o do TV Time */
+  original_title?: string;
   poster_path: string | null;
   release_date?: string;
   overview: string;
+  /** quantos votos tem — o sinal mais fiável de "é este o filme conhecido" */
+  vote_count?: number;
 }
 
 /** Pesquisa de filmes; `year` (da estreia) desambigua remakes e homónimos. */

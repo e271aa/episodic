@@ -12,12 +12,16 @@ import StreamingBadges from "@/components/StreamingBadges";
 import { Bone, DetailHeaderBone } from "@/components/Skeleton";
 import { CheckIcon } from "@/components/icons";
 
-function formatWatchedDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("pt-PT", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
+/**
+ * `dateIsExact` false = só sabemos o ano (registos em massa do TV Time, ou
+ * uma data corrigida à mão porque a pessoa só se lembra do ano). Mostrar
+ * "1 de julho de 2024" nesses casos seria inventar um dia que ninguém disse.
+ */
+function formatWatchedDate(iso: string, exact: boolean): string {
+  const d = new Date(iso);
+  return exact
+    ? d.toLocaleDateString("pt-PT", { day: "numeric", month: "long", year: "numeric" })
+    : `${d.getFullYear()}`;
 }
 
 function formatRuntime(minutes: number | null): string | null {
@@ -152,7 +156,11 @@ export default function MoviePage() {
               <p className="ep-code mt-1 truncate text-xs text-dim">{metaBits.join("  ·  ")}</p>
             )}
             <p className="ep-code mt-1 text-sm text-dim">
-              {movie.watchedAt ? `Visto a ${formatWatchedDate(movie.watchedAt)}` : "Na lista para ver"}
+              {movie.watchedAt
+                ? movie.dateIsExact
+                  ? `Visto a ${formatWatchedDate(movie.watchedAt, true)}`
+                  : `Visto em ${formatWatchedDate(movie.watchedAt, false)}`
+                : "Na lista para ver"}
             </p>
           </div>
         </div>
