@@ -11,6 +11,7 @@ import type { MetaEpisode } from "@/lib/metadata";
 import SwipeCard from "@/components/SwipeCard";
 import SwipeCoach from "@/components/SwipeCoach";
 import { CheckIcon } from "@/components/icons";
+import { Bone, TitleBone } from "@/components/Skeleton";
 
 type Filter = "continuar" | "retomar" | "comecar" | "todas";
 
@@ -115,8 +116,9 @@ export default function EmDiaPage() {
   if (shows === null || nextUp === null || buckets === null) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-8">
-        <div className="h-8 w-40 animate-pulse rounded-lg bg-panel" />
-        <div className="relative mt-6 aspect-3/4 animate-pulse rounded-3xl bg-panel" />
+        <TitleBone />
+        <Bone className="mt-4 h-9 w-full rounded-full" />
+        <Bone className="mt-6 aspect-3/4 w-full rounded-3xl" />
       </main>
     );
   }

@@ -7,6 +7,7 @@ import { loadProfileStats, type ProfileStats } from "@/lib/stats";
 import CloudAccount from "@/components/CloudAccount";
 import ProfileCard from "@/components/ProfileCard";
 import Poster from "@/components/Poster";
+import { Bone } from "@/components/Skeleton";
 
 // Mesmo formato do TV Time: "2 meses · 25 dias · 7 horas"
 function splitHours(totalHours: number) {
@@ -38,8 +39,16 @@ export default function ProfilePage() {
   if (stats === null) {
     return (
       <main className="mx-auto w-full max-w-2xl px-4 py-8">
-        <div className="h-40 animate-pulse rounded-3xl bg-panel" />
-        <div className="mt-3 h-24 animate-pulse rounded-3xl bg-panel" />
+        {/* a sombra do que vem: cartão de identidade, tempo de antena,
+            os três contadores e a série-farol */}
+        <Bone className="h-52 w-full rounded-3xl" />
+        <Bone className="mt-3 h-36 w-full rounded-3xl" />
+        <div className="mt-3 grid grid-cols-3 gap-3">
+          {[0, 1, 2].map((i) => (
+            <Bone key={i} className="h-24 rounded-2xl" />
+          ))}
+        </div>
+        <Bone className="mt-3 h-28 w-full rounded-2xl" />
       </main>
     );
   }

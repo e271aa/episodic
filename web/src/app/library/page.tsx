@@ -26,6 +26,7 @@ import {
 import { pushUndo } from "@/lib/undo";
 import { decadeLabel, groupSorted, letterLabel, periodLabel } from "@/lib/grouping";
 import PosterCard from "@/components/PosterCard";
+import { PosterGridBone, TitleBone } from "@/components/Skeleton";
 import {
   TvIcon,
   CheckIcon,
@@ -906,11 +907,7 @@ function LibraryContent() {
       )}
 
       {loading ? (
-        <div className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-          {[0, 1, 2, 3, 4].map((i) => (
-            <div key={i} className="aspect-2/3 animate-pulse rounded-2xl bg-panel" />
-          ))}
-        </div>
+        <PosterGridBone count={9} />
       ) : showing > 0 ? (
         segment === "series" ? (
           showGroups ? (
@@ -1038,7 +1035,8 @@ export default function LibraryPage() {
     <Suspense
       fallback={
         <main className="mx-auto w-full max-w-2xl px-4 py-8">
-          <div className="h-8 w-40 animate-pulse rounded-lg bg-panel" />
+          <TitleBone />
+          <PosterGridBone count={9} />
         </main>
       }
     >

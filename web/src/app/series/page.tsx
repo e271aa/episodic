@@ -18,6 +18,7 @@ import { pushUndo } from "@/lib/undo";
 import WatchNextCard from "@/components/WatchNextCard";
 import TonightHero from "@/components/TonightHero";
 import { CheckIcon } from "@/components/icons";
+import { Bone, CardsBone, TitleBone } from "@/components/Skeleton";
 
 export default function SeriesPage() {
   const [shows, setShows] = useState<ShowWithProgress[] | null>(null);
@@ -163,12 +164,11 @@ export default function SeriesPage() {
   if (shows === null) {
     return (
       <main className="mx-auto w-full max-w-2xl px-4 py-8">
-        <div className="h-8 w-40 animate-pulse rounded-lg bg-panel" />
-        <div className="mt-6 space-y-3">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-[104px] animate-pulse rounded-2xl bg-panel" />
-          ))}
-        </div>
+        <TitleBone />
+        {/* o herói é grande: o esqueleto tem de o anunciar, senão o salto
+            quando os dados chegam é enorme */}
+        <Bone className="mt-6 aspect-4/5 w-full rounded-3xl sm:aspect-video" />
+        <CardsBone count={2} height="h-[104px]" />
       </main>
     );
   }
@@ -314,7 +314,7 @@ export default function SeriesPage() {
           <h1 className="mt-1 font-display text-3xl font-bold">Séries</h1>
           <div className="mt-6 space-y-3">
             {watching.slice(0, 3).map((s) => (
-              <div key={s.uuid} className="h-[104px] animate-pulse rounded-2xl bg-panel" />
+              <Bone key={s.uuid} className="h-[104px] w-full rounded-2xl" />
             ))}
           </div>
         </>

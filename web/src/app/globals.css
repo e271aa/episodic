@@ -151,7 +151,8 @@ input:focus-visible,
     transform: translateX(100%);
   }
 }
-.poster-shimmer::after {
+.poster-shimmer::after,
+.skeleton::after {
   content: "";
   position: absolute;
   inset: 0;
@@ -163,6 +164,16 @@ input:focus-visible,
   );
   opacity: 0.15;
   animation: shimmer-sweep 1.6s ease-in-out infinite;
+}
+
+/* A peça de esqueleto: uma só linguagem de carregamento em toda a app.
+   Antes convivia o `animate-pulse` do Tailwind (opacidade) com este brilho
+   nos cartazes — duas gramáticas diferentes para a mesma ideia.
+   A cor de fundo NÃO vem daqui: quem usa escolhe (bg-panel por omissão,
+   bg-raised quando o esqueleto está dentro de um painel). */
+.skeleton {
+  position: relative;
+  overflow: hidden;
 }
 
 /* Resposta ao toque, por omissão e em todo o lado. Metade dos botões e links

@@ -10,6 +10,7 @@ import { isCloudConfigured } from "@/lib/supabase";
 import type { DiscoverItem } from "@/lib/tmdb";
 import DiscoverCard from "@/components/DiscoverCard";
 import { CompassIcon } from "@/components/icons";
+import { Bone, PosterRowBone, TitleBone } from "@/components/Skeleton";
 
 type Kind = "tv" | "movie";
 
@@ -143,15 +144,8 @@ function ExplorarContent({ kind }: { kind: Kind }) {
         <div className="mt-6 space-y-8">
           {[0, 1].map((s) => (
             <div key={s}>
-              <div className="h-4 w-40 animate-pulse rounded bg-panel" />
-              <div className="mt-3 flex gap-3 overflow-hidden">
-                {[0, 1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="aspect-2/3 w-32 shrink-0 animate-pulse rounded-2xl bg-panel sm:w-36"
-                  />
-                ))}
-              </div>
+              <Bone className="h-4 w-40 rounded" />
+              <PosterRowBone />
             </div>
           ))}
         </div>
@@ -220,7 +214,9 @@ export default function ExplorarPage() {
     <Suspense
       fallback={
         <main className="mx-auto w-full max-w-2xl px-4 py-8">
-          <div className="h-8 w-40 animate-pulse rounded-lg bg-panel" />
+          <TitleBone />
+          <Bone className="mt-4 h-12 w-full rounded-full" />
+          <PosterRowBone />
         </main>
       }
     >

@@ -14,6 +14,7 @@ import {
 import { isCloudConfigured } from "@/lib/supabase";
 import Poster from "@/components/Poster";
 import { CheckIcon, UserIcon } from "@/components/icons";
+import { Bone } from "@/components/Skeleton";
 
 /**
  * O cartão de identidade do perfil: capa da série favorita, avatar, nome e
@@ -276,10 +277,7 @@ function EditorPerfil({
             {elenco === null ? (
               <div className="mt-2 flex gap-2 overflow-hidden">
                 {[0, 1, 2, 3].map((i) => (
-                  <div
-                    key={i}
-                    className="h-24 w-16 shrink-0 animate-pulse rounded-xl bg-panel"
-                  />
+                  <Bone key={i} className="h-24 w-16 shrink-0 rounded-xl" />
                 ))}
               </div>
             ) : elenco.length === 0 ? (

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { loadAdvancedStats, type AdvancedStats } from "@/lib/advancedStats";
+import { CardsBone, TitleBone } from "@/components/Skeleton";
 
 function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString("pt-PT", {
@@ -30,12 +31,8 @@ export default function EstatisticasPage() {
   if (stats === null) {
     return (
       <main className="mx-auto w-full max-w-2xl px-4 py-8">
-        <div className="h-8 w-40 animate-pulse rounded-lg bg-panel" />
-        <div className="mt-6 space-y-3">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-24 animate-pulse rounded-2xl bg-panel" />
-          ))}
-        </div>
+        <TitleBone />
+        <CardsBone count={4} height="h-28" />
       </main>
     );
   }

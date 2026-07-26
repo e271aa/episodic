@@ -20,6 +20,7 @@ import ProgressRing from "@/components/ProgressRing";
 import AddToListButton from "@/components/AddToListButton";
 import StreamingBadges from "@/components/StreamingBadges";
 import Poster from "@/components/Poster";
+import { Bone, CardsBone, DetailHeaderBone } from "@/components/Skeleton";
 import { CheckIcon } from "@/components/icons";
 
 interface SeasonView {
@@ -283,10 +284,10 @@ export default function ShowPage() {
   if (show === undefined) {
     return (
       <main className="mx-auto w-full max-w-2xl">
-        <div className="h-44 animate-pulse bg-panel sm:h-56" />
-        <div className="space-y-3 px-4 pt-6">
-          <div className="h-6 w-48 animate-pulse rounded-lg bg-panel" />
-          <div className="h-4 w-32 animate-pulse rounded-lg bg-panel" />
+        <DetailHeaderBone />
+        <div className="px-4">
+          <Bone className="mt-5 h-14 w-full rounded-2xl" />
+          <CardsBone count={4} height="h-14" />
         </div>
       </main>
     );
@@ -369,7 +370,7 @@ export default function ShowPage() {
         {/* Ação principal — a decisão nº 1 na página de série */}
         <div className="mt-5">
           {nextUp === undefined ? (
-            <div className="h-14 animate-pulse rounded-2xl bg-panel" />
+            <Bone className="h-14 w-full rounded-2xl" />
           ) : nextUp ? (
             <button
               onClick={() => void markNext()}

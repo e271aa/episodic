@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { createList, getLists, type CustomList } from "@/lib/db";
 import { LibraryIcon } from "@/components/icons";
+import { CardsBone } from "@/components/Skeleton";
 
 export default function ListasPage() {
   const [lists, setLists] = useState<CustomList[] | null>(null);
@@ -68,11 +69,7 @@ export default function ListasPage() {
       </form>
 
       {lists === null ? (
-        <div className="mt-6 space-y-2">
-          {[0, 1].map((i) => (
-            <div key={i} className="h-16 animate-pulse rounded-2xl bg-panel" />
-          ))}
-        </div>
+        <CardsBone count={3} height="h-16" />
       ) : lists.length === 0 ? (
         <div className="mt-16 flex flex-col items-center text-center">
           <LibraryIcon className="h-12 w-12 text-faint" />

@@ -15,6 +15,7 @@ import {
   type StoredMovie,
 } from "@/lib/db";
 import Poster from "@/components/Poster";
+import { PosterGridBone, TitleBone } from "@/components/Skeleton";
 
 interface ResolvedItem {
   kind: "show" | "movie";
@@ -100,7 +101,8 @@ export default function ListaPage() {
   if (list === undefined) {
     return (
       <main className="mx-auto w-full max-w-2xl px-4 py-8">
-        <div className="h-8 w-40 animate-pulse rounded-lg bg-panel" />
+        <TitleBone />
+        <PosterGridBone />
       </main>
     );
   }

@@ -9,6 +9,7 @@ import { pushUndo } from "@/lib/undo";
 import AddToListButton from "@/components/AddToListButton";
 import Poster from "@/components/Poster";
 import StreamingBadges from "@/components/StreamingBadges";
+import { Bone, DetailHeaderBone } from "@/components/Skeleton";
 import { CheckIcon } from "@/components/icons";
 
 function formatWatchedDate(iso: string): string {
@@ -58,10 +59,12 @@ export default function MoviePage() {
   if (movie === undefined) {
     return (
       <main className="mx-auto w-full max-w-2xl">
-        <div className="h-44 animate-pulse bg-panel sm:h-56" />
-        <div className="space-y-3 px-4 pt-6">
-          <div className="h-6 w-48 animate-pulse rounded-lg bg-panel" />
-          <div className="h-4 w-32 animate-pulse rounded-lg bg-panel" />
+        <DetailHeaderBone />
+        <div className="px-4">
+          <Bone className="mt-4 h-11 w-28 rounded-full" />
+          <Bone className="mt-5 h-4 w-full rounded" />
+          <Bone className="mt-2 h-4 w-5/6 rounded" />
+          <Bone className="mt-2 h-4 w-2/3 rounded" />
         </div>
       </main>
     );

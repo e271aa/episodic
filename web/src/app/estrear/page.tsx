@@ -7,6 +7,7 @@ import { buildUpcomingCalendar, type UpcomingEntry } from "@/lib/upcoming";
 import { loadShows } from "@/lib/shows";
 import { ClapperboardIcon } from "@/components/icons";
 import Poster from "@/components/Poster";
+import { ListRowsBone } from "@/components/Skeleton";
 
 function relativeDay(airDate: string): string {
   const today = new Date().toISOString().slice(0, 10);
@@ -46,11 +47,7 @@ export default function EstrearPage() {
       </p>
 
       {entries === null ? (
-        <div className="mt-6 space-y-3">
-          {[0, 1, 2].map((i) => (
-            <div key={i} className="h-20 animate-pulse rounded-2xl bg-panel" />
-          ))}
-        </div>
+        <ListRowsBone />
       ) : entries.length === 0 ? (
         <div className="mt-16 flex flex-col items-center text-center">
           <ClapperboardIcon className="h-12 w-12 text-faint" />

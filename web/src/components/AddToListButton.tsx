@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { Bone } from "@/components/Skeleton";
 import {
   addToList,
   createList,
@@ -75,7 +76,7 @@ export default function AddToListButton({ kind, refId }: AddToListButtonProps) {
       {open && (
         <div className="page-enter absolute left-0 top-full z-20 mt-2 w-64 rounded-2xl border border-line bg-panel p-3 shadow-lg">
           {lists === null ? (
-            <div className="h-8 animate-pulse rounded-lg bg-raised" />
+            <Bone tone="raised" className="h-8 rounded-lg" />
           ) : lists.length === 0 ? (
             <p className="px-1 py-1 text-xs text-dim">Ainda não tens listas.</p>
           ) : (
