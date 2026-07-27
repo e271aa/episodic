@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Image from "next/image";
-import { getShows, type StoredShow } from "@/lib/db";
-import { getSeriesCast, type CastMember } from "@/lib/tmdb";
+import { getShows, updateShow, type StoredShow } from "@/lib/db";
+import { findShowByTvdbId, getSeriesCast, type CastMember } from "@/lib/tmdb";
+import { hasTmdb } from "@/lib/metadata";
 import {
   EMPTY_PROFILE,
   getProfile,
@@ -144,7 +145,7 @@ function EditorPerfil({
   const [showUuid, setShowUuid] = useState(perfil.favoriteShowUuid ?? "");
   // guarda a que série pertence o elenco: trocar de série mostra o esqueleto
   // sem precisar de repor o estado dentro do efeito
-  const [elencoDe, setElencoDe] = useState<{ tmdbId: number; cast: CastMember[] } | null>(
+  const [elencoDe, setElencoDe] = useState<{ showUuid: string; cast: CastMember[] } | null>(
     null,
   );
   const [personagem, setPersonagem] = useState(perfil.favoriteCharacter ?? "");
@@ -152,32 +153,52 @@ function EditorPerfil({
   const [erro, setErro] = useState<string | null>(null);
   const ficheiro = useRef<HTMLInputElement>(null);
 
-  // séries com tmdbId primeiro: só essas conseguem trazer elenco
+  // Todas as séries arquivadas de fora, sem exigir tmdbId — exigir tmdbId
+  // deixava de fora quase a biblioteca toda (é a TVmaze quem enriquece a
+  // maioria das séries, e só a TMDB tem elenco), e o menu ficava com uma
+  // meia dúzia de opções em vez das dezenas que a pessoa realmente segue.
   const seriesOrdenadas = [...shows]
-    .filter((s) => s.tmdbId)
+    .filter((s) => !s.archived)
     .sort((a, b) => a.name.localeCompare(b.name, "pt"));
 
   const escolhida = shows.find((s) => s.uuid === showUuid);
 
-  const tmdbId = escolhida?.tmdbId ?? null;
-
   useEffect(() => {
-    if (!tmdbId) return;
+    if (!showUuid || !escolhida) return;
     let vivo = true;
-    void getSeriesCast(tmdbId)
-      .then((c) => {
-        if (vivo) setElencoDe({ tmdbId, cast: c.slice(0, 24) });
-      })
-      .catch(() => {
-        if (vivo) setElencoDe({ tmdbId, cast: [] });
-      });
+    void (async () => {
+      // A maioria das séries só tem tvmazeId (a TVmaze não tem elenco) — antes
+      // de desistir, tenta encontrar o id TMDB pelo tvdbId, como o resto da
+      // app já faz para posters e sinopses. Guarda-o na série para a próxima
+      // vez não repetir a pesquisa.
+      let tmdbId = escolhida.tmdbId;
+      if (!tmdbId && escolhida.tvdbId && (await hasTmdb())) {
+        const hit = await findShowByTvdbId(escolhida.tvdbId).catch(() => null);
+        if (!vivo) return;
+        if (hit) {
+          tmdbId = hit.id;
+          await updateShow(showUuid, { tmdbId: hit.id });
+        }
+      }
+      if (!vivo) return;
+      if (!tmdbId) {
+        setElencoDe({ showUuid, cast: [] });
+        return;
+      }
+      try {
+        const cast = await getSeriesCast(tmdbId);
+        if (vivo) setElencoDe({ showUuid, cast: cast.slice(0, 24) });
+      } catch {
+        if (vivo) setElencoDe({ showUuid, cast: [] });
+      }
+    })();
     return () => {
       vivo = false;
     };
-  }, [tmdbId]);
+  }, [showUuid, escolhida]);
 
   /** null enquanto o elenco desta série não chegou */
-  const elenco = elencoDe && elencoDe.tmdbId === tmdbId ? elencoDe.cast : null;
+  const elenco = elencoDe && elencoDe.showUuid === showUuid ? elencoDe.cast : null;
 
   const guardar = async () => {
     setAGuardar(true);
