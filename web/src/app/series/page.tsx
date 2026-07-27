@@ -2,9 +2,10 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { getWatchedForShow, markWatched, unmarkWatched, updateShow } from "@/lib/db";
+import { getWatchedForShow, kvGet, kvSet, markWatched, unmarkWatched, updateShow } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
-import { enrichShow } from "@/lib/metadata";
+import { enrichShow, hasTmdb } from "@/lib/metadata";
+import { findShowByTvdbId } from "@/lib/tmdb";
 import { findNextUnwatched, formatEpCode } from "@/lib/watchnext";
 import {
   classifyQueue,
@@ -19,6 +20,13 @@ import WatchNextCard from "@/components/WatchNextCard";
 import TonightHero from "@/components/TonightHero";
 import { CheckIcon } from "@/components/icons";
 import { Bone, CardsBone, TitleBone } from "@/components/Skeleton";
+
+// Preenche o id TMDB em falta, uma vez só. Sem ele, o Explorar volta a
+// sugerir séries que já tens sempre que o título guardado não bate com
+// nenhum dos títulos da TMDB — é o caso dos animes guardados em romaji
+// ("Boku Dake ga Inai Machi" contra "Erased" e "僕だけがいない街").
+const TMDB_BACKFILL_KEY = "shows:tmdb-backfill-v";
+const TMDB_BACKFILL_VERSION = 1;
 
 export default function SeriesPage() {
   const [shows, setShows] = useState<ShowWithProgress[] | null>(null);
@@ -69,6 +77,29 @@ export default function SeriesPage() {
       enriching.current = true;
       try {
         let changed = false;
+
+        // Passagem única: o enriquecimento normal salta séries que já têm
+        // capa, e quase toda a biblioteca foi enriquecida pela TVmaze — por
+        // isso o id TMDB ficava a null para sempre.
+        const feito = ((await kvGet<number>(TMDB_BACKFILL_KEY)) ?? 0) >= TMDB_BACKFILL_VERSION;
+        if (!feito && (await hasTmdb())) {
+          for (const show of list) {
+            if (show.tmdbId || !show.tvdbId) continue;
+            const hit = await findShowByTvdbId(show.tvdbId).catch(() => null);
+            if (hit) {
+              // Guarda também os títulos: o id sozinho não chega quando a
+              // TMDB tem a mesma série em duas entradas (o "Erased" existe
+              // com dois ids diferentes).
+              const aliases = [hit.name, hit.original_name].filter(
+                (n): n is string => !!n,
+              );
+              await updateShow(show.uuid, { tmdbId: hit.id, tmdbAliases: aliases });
+              changed = true;
+            }
+          }
+          await kvSet(TMDB_BACKFILL_KEY, TMDB_BACKFILL_VERSION);
+        }
+
         for (const show of list) {
           if (show.posterPath && show.totalEpisodes) continue;
           const patch = await enrichShow(show);

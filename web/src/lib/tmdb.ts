@@ -10,6 +10,8 @@ export class TmdbKeyMissingError extends Error {
 export interface TmdbShowLite {
   id: number;
   name: string;
+  /** título na língua original — guardado como alias, ver StoredShow.tmdbAliases */
+  original_name?: string;
   poster_path: string | null;
   backdrop_path: string | null;
   overview: string;
@@ -179,6 +181,14 @@ export interface DiscoverItem {
   kind: "tv" | "movie";
   tmdbId: number;
   name: string;
+  /**
+   * Título na língua original. A TMDB responde em pt-PT, e a biblioteca do
+   * Ruben guarda os nomes como o TV Time os exportou (quase sempre em
+   * inglês): o "Prison Break" que ele tem é o "Prison Break: Fuga da Prisão"
+   * da TMDB. Sem isto, comparar títulos falha exatamente nas séries que ele
+   * já tem — que são as que não deviam aparecer.
+   */
+  originalName: string | null;
   year: string | null;
   posterPath: string | null;
   backdropPath: string | null;
@@ -192,6 +202,8 @@ interface TmdbDiscoverRow {
   id: number;
   name?: string; // séries
   title?: string; // filmes
+  original_name?: string; // séries, na língua original
+  original_title?: string; // filmes, idem
   first_air_date?: string;
   release_date?: string;
   poster_path: string | null;
@@ -203,10 +215,12 @@ interface TmdbDiscoverRow {
 
 function toDiscoverItem(row: TmdbDiscoverRow, kind: "tv" | "movie"): DiscoverItem {
   const date = kind === "tv" ? row.first_air_date : row.release_date;
+  const original = kind === "tv" ? row.original_name : row.original_title;
   return {
     kind,
     tmdbId: row.id,
     name: (kind === "tv" ? row.name : row.title) ?? "",
+    originalName: original || null,
     year: date ? date.slice(0, 4) : null,
     posterPath: row.poster_path,
     backdropPath: row.backdrop_path,

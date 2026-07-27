@@ -35,10 +35,15 @@ export interface ExploreData {
  * outra vez) séries que já lá estavam, como o Arrow e o Prison Break.
  */
 export function alreadyInLibrary(item: DiscoverItem, taste: TasteProfile): boolean {
-  const nome = normalizeTitle(item.name);
-  return item.kind === "tv"
-    ? taste.knownShowTmdbIds.has(item.tmdbId) || taste.knownShowNames.has(nome)
-    : taste.knownMovieTmdbIds.has(item.tmdbId) || taste.knownMovieNames.has(nome);
+  // Os dois títulos: a TMDB responde em pt-PT, a biblioteca guarda o nome como
+  // o TV Time o exportou. O "Prison Break" dele é "Prison Break: Fuga da
+  // Prisão" na TMDB — só o original bate certo.
+  const nomes = [normalizeTitle(item.name)];
+  if (item.originalName) nomes.push(normalizeTitle(item.originalName));
+
+  const ids = item.kind === "tv" ? taste.knownShowTmdbIds : taste.knownMovieTmdbIds;
+  const conhecidos = item.kind === "tv" ? taste.knownShowNames : taste.knownMovieNames;
+  return ids.has(item.tmdbId) || nomes.some((n) => conhecidos.has(n));
 }
 
 /** Remove o que já tens e o que dispensaste, e corta duplicados entre secções. */

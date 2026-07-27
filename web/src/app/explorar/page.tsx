@@ -276,13 +276,16 @@ function ExplorarContent({ kind }: { kind: Kind }) {
    *  nome: a série importada do TV Time tem o uuid do TV Time, não `tmdb-<id>`,
    *  e procurar só por `tmdb-<id>` criava uma segunda cópia da mesma série. */
   const guardar = useCallback(async (item: DiscoverItem) => {
-    const nome = normalizeTitle(item.name);
+    // Os dois títulos, pela mesma razão do alreadyInLibrary: a TMDB devolve
+    // pt-PT e a biblioteca guarda o nome do TV Time, quase sempre em inglês.
+    const nomes = new Set([normalizeTitle(item.name)]);
+    if (item.originalName) nomes.add(normalizeTitle(item.originalName));
 
     if (item.kind === "movie") {
       const existente =
         (await getMovie(`tmdb-${item.tmdbId}`)) ??
         (await getMovies()).find(
-          (m) => m.tmdbId === item.tmdbId || normalizeTitle(m.name) === nome,
+          (m) => m.tmdbId === item.tmdbId || nomes.has(normalizeTitle(m.name)),
         );
       if (existente) return; // já lá está — nada a fazer, nada a anular
       await putMovie({
@@ -310,7 +313,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
       (s) =>
         s.uuid === `tmdb-${item.tmdbId}` ||
         (s.tmdbId != null && s.tmdbId === item.tmdbId) ||
-        normalizeTitle(s.name) === nome,
+        nomes.has(normalizeTitle(s.name)),
     );
 
     if (existente) {

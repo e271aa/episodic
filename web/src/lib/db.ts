@@ -17,6 +17,17 @@ export interface StoredShow {
   status?: string | null; // "Running", "Ended", …
   genres?: string[] | null;
   imdbId?: string | null; // ex. "tt1234567" — para link externo
+  /**
+   * Outros títulos por que esta série é conhecida na TMDB (o pt-PT e o
+   * original), capturados quando se resolve o id TMDB.
+   *
+   * Servem para o Explorar reconhecer o que já tens. O nome guardado vem do
+   * TV Time e muitas vezes não é nenhum dos dois — "Boku Dake ga Inai Machi"
+   * é "Erased" em pt-PT e "僕だけがいない街" no original — e a TMDB às vezes
+   * tem a MESMA série em duas entradas com ids diferentes, que o id sozinho
+   * não apanha.
+   */
+  tmdbAliases?: string[];
   followed: boolean;
   inWatchlist: boolean;
   archived: boolean;

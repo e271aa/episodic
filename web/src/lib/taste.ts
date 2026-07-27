@@ -88,7 +88,12 @@ export async function buildTasteProfile(
     movies.map((m) => m.tmdbId).filter((id): id is number => id !== null),
   );
 
-  const knownShowNames = new Set(shows.map((s) => normalizeTitle(s.name)));
+  // O nome guardado mais os títulos que a TMDB usa para a mesma série
+  const knownShowNames = new Set<string>();
+  for (const s of shows) {
+    knownShowNames.add(normalizeTitle(s.name));
+    for (const alias of s.tmdbAliases ?? []) knownShowNames.add(normalizeTitle(alias));
+  }
   const knownMovieNames = new Set(movies.map((m) => normalizeTitle(m.name)));
 
   return {
