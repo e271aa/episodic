@@ -4,8 +4,10 @@ import {
   discoverByGenres,
   getGenreMap,
   getRecommendations,
+  getTmdbList,
   getTrending,
   type DiscoverItem,
+  type TmdbList,
 } from "./tmdb";
 import { buildTasteProfile, type TasteProfile } from "./taste";
 import { isDismissed, loadDismissed } from "./dismissed";
@@ -61,6 +63,28 @@ async function generoPages(kind: "tv" | "movie", genreIds: number[]): Promise<Di
   ]);
   return [...p1, ...p2];
 }
+
+/**
+ * As listas prontas da TMDB, a seguir ao que é personalizado. Antes o
+ * Explorar vivia só de tendências e do gosto calculado — quem não tem
+ * histórico via meia dúzia de títulos, e quem tem esgotava-os depressa.
+ *
+ * Cada uma é um eixo diferente de "vale a pena ver": a nota de sempre, o
+ * que toda a gente está a ver agora, e o que está mesmo a sair.
+ */
+const LISTAS: Record<"tv" | "movie", { id: string; title: string; list: TmdbList }[]> = {
+  movie: [
+    { id: "melhores", title: "Melhores de sempre", list: "top_rated" },
+    { id: "populares", title: "Populares agora", list: "popular" },
+    { id: "cinemas", title: "Nos cinemas", list: "now_playing" },
+    { id: "estreias", title: "A estrear", list: "upcoming" },
+  ],
+  tv: [
+    { id: "melhores", title: "Melhores de sempre", list: "top_rated" },
+    { id: "populares", title: "Populares agora", list: "popular" },
+    { id: "no-ar", title: "A dar agora", list: "on_the_air" },
+  ],
+};
 
 /**
  * As secções do Explorar, para o tipo escolhido (séries ou filmes).
@@ -134,6 +158,21 @@ export async function loadExplore(kind: "tv" | "movie"): Promise<ExploreData> {
       }
     } catch {
       // idem
+    }
+  }
+
+  // As listas prontas vão todas ao mesmo tempo — são independentes umas das
+  // outras e esperar por elas em fila somava meio segundo por secção.
+  const listas = LISTAS[kind];
+  const resultados = await Promise.all(
+    listas.map((l) => getTmdbList(kind, l.list).catch(() => [] as DiscoverItem[])),
+  );
+  for (const [i, itens] of resultados.entries()) {
+    // O `clean` corta o que já apareceu acima, por isso a ordem aqui importa:
+    // o que é personalizado fica no topo e estas completam o resto.
+    const items = clean(itens, taste, dismissed, seen, 20);
+    if (items.length >= 3) {
+      sections.push({ id: listas[i].id, title: listas[i].title, items });
     }
   }
 

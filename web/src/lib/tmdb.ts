@@ -251,6 +251,27 @@ export async function discoverByGenres(
   return (data.results ?? []).map((r) => toDiscoverItem(r, kind));
 }
 
+/** Listas prontas da TMDB. `top_rated` é o equivalente ao "top IMDb":
+ *  ordenado por nota com um mínimo de votos, calculado do lado deles. */
+export type TmdbList =
+  | "top_rated"
+  | "popular"
+  | "now_playing" // só filmes
+  | "upcoming" // só filmes
+  | "on_the_air" // só séries
+  | "airing_today"; // só séries
+
+export async function getTmdbList(
+  kind: "tv" | "movie",
+  list: TmdbList,
+  page = 1,
+): Promise<DiscoverItem[]> {
+  const data = await tmdbGet<{ results: TmdbDiscoverRow[] }>(`${kind}/${list}`, {
+    page: String(page),
+  });
+  return (data.results ?? []).map((r) => toDiscoverItem(r, kind));
+}
+
 /** Pesquisa por título no catálogo TMDB — não fica presa ao que já foi
  *  sugerido, procura em tudo. Mesma forma de linha que trending/discover,
  *  por isso reaproveita o mesmo mapeamento. */

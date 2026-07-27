@@ -3,8 +3,11 @@ import { NextResponse, type NextRequest } from "next/server";
 const TMDB_BASE = "https://api.themoviedb.org/3";
 
 // Só expomos os endpoints de leitura de que a app precisa.
+// As listas prontas (top_rated, popular, …) vêm antes de `tv/\d+` na
+// alternância de propósito: o \d+ não as apanharia, e sem elas o Explorar
+// só tinha tendências.
 const ALLOWED =
-  /^(find\/\d+|search\/(tv|movie|multi)|tv\/\d+(\/season\/\d+)?|movie\/\d+|(tv|movie)\/\d+\/watch\/providers|trending\/(tv|movie)\/(day|week)|(tv|movie)\/\d+\/recommendations|discover\/(tv|movie)|genre\/(tv|movie)\/list|tv\/\d+\/aggregate_credits)$/;
+  /^(find\/\d+|search\/(tv|movie|multi)|(tv|movie)\/(top_rated|popular)|movie\/(now_playing|upcoming)|tv\/(airing_today|on_the_air)|tv\/\d+(\/season\/\d+)?|movie\/\d+|(tv|movie)\/\d+\/watch\/providers|trending\/(tv|movie)\/(day|week)|(tv|movie)\/\d+\/recommendations|discover\/(tv|movie)|genre\/(tv|movie)\/list|tv\/\d+\/aggregate_credits)$/;
 
 export async function GET(
   request: NextRequest,
