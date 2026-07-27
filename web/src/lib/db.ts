@@ -340,13 +340,20 @@ export async function countWatched(): Promise<number> {
   return database.count("watched");
 }
 
+/**
+ * `at` só é passado por quem está a REPOR uma marcação antiga (o anular da
+ * reparação da Fase P): sem ele, desfazer devolvia o episódio com a data de
+ * hoje e a data original perdia-se — que é precisamente o que "reverter" não
+ * pode fazer. No uso normal fica a hora atual.
+ */
 export async function markWatched(
   showUuid: string,
   season: number,
   episode: number,
+  at?: string,
 ): Promise<void> {
   const database = await db();
-  const watchedAt = new Date().toISOString();
+  const watchedAt = at ?? new Date().toISOString();
   await database.put("watched", {
     id: episodeKey(showUuid, season, episode),
     showUuid,
@@ -364,7 +371,7 @@ export async function markWatched(
     season,
     episode,
     watchedAt,
-    at: watchedAt,
+    at: new Date().toISOString(),
   });
 }
 
