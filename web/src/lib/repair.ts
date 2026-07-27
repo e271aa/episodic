@@ -220,11 +220,31 @@ export interface DuplicateShow {
 }
 
 /**
+ * Duas séries com o mesmo nome são MESMO a mesma série?
+ *
+ * Nem sempre. A biblioteca do Ruben tem duas "Hunter x Hunter" — a de 1999
+ * (TheTVDB 79076, TVmaze 1537) e o reboot de 2011 (TheTVDB 252322, TVmaze
+ * 1536), ambas seguidas e ambas sem episódios marcados. Só pelo nome, uma
+ * regra automática apagaria uma delas.
+ *
+ * Regra: se as duas trazem o mesmo tipo de id e os ids são DIFERENTES, são
+ * séries diferentes — e nada as junta, por muito que o nome coincida.
+ */
+function idsEmConflito(a: StoredShow, b: StoredShow): boolean {
+  const pares: [number | null | undefined, number | null | undefined][] = [
+    [a.tmdbId, b.tmdbId],
+    [a.tvdbId, b.tvdbId],
+    [a.tvmazeId, b.tvmazeId],
+  ];
+  return pares.some(([x, y]) => x != null && y != null && x !== y);
+}
+
+/**
  * Procura séries repetidas (mesmo id TMDB ou mesmo nome normalizado).
  *
- * Só devolve pares em que a cópia a apagar NÃO tem episódios marcados — se
- * ambas tiverem histórico, juntá-las é uma decisão que precisa de olhos, não
- * de uma regra automática, e essas ficam de fora.
+ * Dois travões, os dois necessários:
+ *  - a cópia a apagar não pode ter episódios marcados
+ *  - as duas não podem ter ids de fornecedor que se contradigam
  */
 export async function findDuplicateShows(): Promise<DuplicateShow[]> {
   const shows = await getShows();
@@ -235,14 +255,8 @@ export async function findDuplicateShows(): Promise<DuplicateShow[]> {
     }),
   );
 
-  const grupos = new Map<string, StoredShow[]>();
-  for (const s of shows) {
-    // O id TMDB é a chave mais forte quando existe; o nome apanha o resto
-    const chave = s.tmdbId != null ? `tmdb:${s.tmdbId}` : `nome:${normalizeTitle(s.name)}`;
-    grupos.set(chave, [...(grupos.get(chave) ?? []), s]);
-  }
-  // Segunda passagem por nome: a original pode ter tmdbId e a cópia também,
-  // mas séries sem tmdbId nenhum só se encontram pelo nome.
+  // Agrupar por nome apanha tudo o que interessa; o id TMDB entra depois
+  // como confirmação, não como chave de agrupamento.
   const porNome = new Map<string, StoredShow[]>();
   for (const s of shows) {
     const n = normalizeTitle(s.name);
@@ -252,7 +266,7 @@ export async function findDuplicateShows(): Promise<DuplicateShow[]> {
   const pares: DuplicateShow[] = [];
   const jaVistos = new Set<string>();
 
-  for (const grupo of [...grupos.values(), ...porNome.values()]) {
+  for (const grupo of porNome.values()) {
     if (grupo.length < 2) continue;
     const ordenado = [...grupo].sort(
       (a, b) => (contagens.get(b.uuid) ?? 0) - (contagens.get(a.uuid) ?? 0),
@@ -262,6 +276,8 @@ export async function findDuplicateShows(): Promise<DuplicateShow[]> {
       if (jaVistos.has(sai.uuid)) continue;
       // nunca apagar uma cópia que tem histórico próprio
       if ((contagens.get(sai.uuid) ?? 0) > 0) continue;
+      // nem duas séries que os fornecedores dizem ser diferentes
+      if (idsEmConflito(fica, sai)) continue;
       jaVistos.add(sai.uuid);
       pares.push({
         keepUuid: fica.uuid,
