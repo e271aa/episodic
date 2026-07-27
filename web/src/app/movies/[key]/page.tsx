@@ -5,6 +5,7 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { getMovie, putMovie, updateMovie, type StoredMovie } from "@/lib/db";
 import { getMovieDetails, type TmdbMovieDetails } from "@/lib/tmdb";
+import { enrichMovie } from "@/lib/metadata";
 import { pushUndo } from "@/lib/undo";
 import AddToListButton from "@/components/AddToListButton";
 import Poster from "@/components/Poster";
@@ -35,6 +36,7 @@ export default function MoviePage() {
   const { key } = useParams<{ key: string }>();
   const [movie, setMovie] = useState<StoredMovie | null | undefined>(undefined);
   const [details, setDetails] = useState<TmdbMovieDetails | null>(null);
+  const [aProcurar, setAProcurar] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -42,12 +44,28 @@ export default function MoviePage() {
       setMovie(stored ?? null);
       if (!stored) return;
 
-      // Filmes só têm tmdbId se já tiverem sido enriquecidos (aba Filmes);
-      // aqui pedimos sempre os detalhes completos (sinopse, elenco de género,
-      // duração) — não fazem parte do enriquecimento em massa por serem raramente vistos.
-      if (stored.tmdbId) {
+      let tmdbId = stored.tmdbId;
+      if (!tmdbId) {
+        // A pessoa abriu esta página à espera de ver o filme — vale a pena
+        // tentar mesmo que uma tentativa anterior tenha falhado. O `refresh`
+        // ignora a "lembrança" de 24h que a Biblioteca usa para não martelar
+        // a TMDB com centenas de filmes de uma vez: aqui é só um filme, e é
+        // um pedido explícito de quem está a olhar para ele agora.
+        setAProcurar(true);
+        const patch = await enrichMovie(stored, true);
+        setAProcurar(false);
+        if (patch) {
+          await updateMovie(key, patch);
+          tmdbId = patch.tmdbId;
+          setMovie((m) => (m ? { ...m, ...patch } : m));
+        }
+      }
+
+      // Pedidos sempre os detalhes completos (sinopse, género, duração) —
+      // não fazem parte do enriquecimento em massa por serem raramente vistos.
+      if (tmdbId) {
         try {
-          const full = await getMovieDetails(stored.tmdbId);
+          const full = await getMovieDetails(tmdbId);
           setDetails(full);
           if (!stored.posterPath && full.poster_path) {
             await updateMovie(key, { posterPath: full.poster_path });
@@ -145,6 +163,10 @@ export default function MoviePage() {
             <div className="relative aspect-2/3 w-24 shrink-0 overflow-hidden rounded-xl shadow-lg">
               <Poster path={posterPath} alt={movie.name} fill sizes="96px" priority className="object-cover" />
             </div>
+          ) : aProcurar ? (
+            // A tentar encontrar a capa agora — um retângulo cinzento parado
+            // aqui lia-se como "sem capa", quando na verdade está a chegar.
+            <Bone className="h-36 w-24 shrink-0 rounded-xl shadow-lg" />
           ) : (
             <div className="flex h-36 w-24 shrink-0 items-center justify-center rounded-xl bg-raised p-2 text-center font-display text-sm font-bold text-dim shadow-lg">
               {movie.name}
@@ -190,11 +212,13 @@ export default function MoviePage() {
         <section className="mt-4">
           {details?.overview ? (
             <p className="text-sm leading-relaxed text-dim">{details.overview}</p>
+          ) : aProcurar ? (
+            <p className="text-sm text-dim">A procurar na TMDB…</p>
           ) : movie.tmdbId ? (
             <p className="text-sm text-dim">A carregar sinopse…</p>
           ) : (
             <p className="text-sm text-dim">
-              Sem sinopse disponível — este filme ainda não foi encontrado na TMDB.
+              Sem sinopse disponível — este filme não foi encontrado na TMDB.
             </p>
           )}
         </section>
