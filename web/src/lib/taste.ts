@@ -5,6 +5,7 @@
 // mas a API de descoberta da TMDB filtra por ID. Por isso o mapa id→nome é
 // invertido aqui para traduzir de volta.
 import { getAllWatched, getMovies, getShows, type StoredShow } from "./db";
+import { normalizeTitle } from "./names";
 
 export interface TasteProfile {
   /** ids de género TMDB, do mais visto para o menos */
@@ -21,6 +22,11 @@ export interface TasteProfile {
   knownShowTmdbIds: Set<number>;
   /** idem, para filmes — visto ou só na lista para ver, os dois já contam */
   knownMovieTmdbIds: Set<number>;
+  /** os mesmos, mas por NOME normalizado: a maior parte da biblioteca veio do
+   *  TV Time sem id TMDB nenhum, por isso filtrar só por id deixava passar
+   *  quase tudo e o Explorar sugeria séries que já lá estavam */
+  knownShowNames: Set<string>;
+  knownMovieNames: Set<string>;
   /** true quando ainda não há histórico suficiente para personalizar */
   isEmpty: boolean;
 }
@@ -82,6 +88,9 @@ export async function buildTasteProfile(
     movies.map((m) => m.tmdbId).filter((id): id is number => id !== null),
   );
 
+  const knownShowNames = new Set(shows.map((s) => normalizeTitle(s.name)));
+  const knownMovieNames = new Set(movies.map((m) => normalizeTitle(m.name)));
+
   return {
     topGenreIds,
     topGenreNames,
@@ -89,6 +98,8 @@ export async function buildTasteProfile(
     topMovies,
     knownShowTmdbIds,
     knownMovieTmdbIds,
+    knownShowNames,
+    knownMovieNames,
     isEmpty: topGenreIds.length === 0 && topShows.length === 0 && topMovies.length === 0,
   };
 }

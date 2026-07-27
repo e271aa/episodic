@@ -325,6 +325,22 @@ export async function updateShow(
   return next;
 }
 
+/** Apaga a série e tudo o que lhe pertence. Usado só pela limpeza de séries
+ *  duplicadas — a cópia a apagar nunca tem episódios marcados, mas apagar os
+ *  dela à mesma evita deixar linhas órfãs se isso mudar. */
+export async function deleteShow(uuid: string): Promise<void> {
+  const database = await db();
+  const tx = database.transaction(["shows", "watched"], "readwrite");
+  void tx.objectStore("shows").delete(uuid);
+  const index = tx.objectStore("watched").index("by-show");
+  let cursor = await index.openCursor(IDBKeyRange.only(uuid));
+  while (cursor) {
+    void cursor.delete();
+    cursor = await cursor.continue();
+  }
+  await tx.done;
+}
+
 export async function getWatchedForShow(showUuid: string): Promise<WatchedEpisode[]> {
   const database = await db();
   return database.getAllFromIndex("watched", "by-show", showUuid);

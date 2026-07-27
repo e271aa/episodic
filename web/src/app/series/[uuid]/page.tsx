@@ -260,7 +260,13 @@ export default function ShowPage() {
     });
   }, [show, uuid]);
 
-  const watchedCount = watched.size;
+  // Sem as especiais (temporada 0): o total do fornecedor só conta episódios
+  // regulares, por isso incluí-las dava "90/88" no Prison Break. Continuam
+  // marcadas e continuam a contar nas estatísticas do perfil.
+  const watchedCount = useMemo(
+    () => [...watched.values()].filter((w) => w.season !== 0).length,
+    [watched],
+  );
   const backdropPath = show?.backdropPath ?? null;
   const posterPath = show?.posterPath ?? null;
   const percent = show?.totalEpisodes

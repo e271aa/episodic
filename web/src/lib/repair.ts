@@ -36,6 +36,7 @@
  * essas são comunicadas e não se lhes toca.
  */
 import {
+  deleteShow,
   getShows,
   getWatchedForShow,
   kvGet,
@@ -46,6 +47,7 @@ import {
   type WatchedEpisode,
 } from "./db";
 import { getSeasons } from "./metadata";
+import { normalizeTitle } from "./names";
 
 /** Cópia do que foi removido, para dar para voltar atrás. */
 const BACKUP_KEY = "repair:episodios-removidos";
@@ -197,4 +199,85 @@ export async function undoRepair(): Promise<number> {
   }
   await kvSet(BACKUP_KEY, null);
   return backup.episodes.length;
+}
+
+// ── Séries duplicadas ──────────────────────────────────────────
+//
+// Adicionar pelo Explorar criava uma segunda cópia da mesma série: a
+// importada do TV Time tem o uuid do TV Time, a nova tem `tmdb-<id>`, e a
+// verificação de "já existe" só olhava para o uuid novo. Isto encontra os
+// pares e apaga a cópia vazia, ficando com a que tem o histórico.
+
+export interface DuplicateShow {
+  /** a que fica — a que tem episódios marcados */
+  keepUuid: string;
+  keepName: string;
+  keepWatched: number;
+  /** a que sai */
+  dropUuid: string;
+  dropName: string;
+  dropWatched: number;
+}
+
+/**
+ * Procura séries repetidas (mesmo id TMDB ou mesmo nome normalizado).
+ *
+ * Só devolve pares em que a cópia a apagar NÃO tem episódios marcados — se
+ * ambas tiverem histórico, juntá-las é uma decisão que precisa de olhos, não
+ * de uma regra automática, e essas ficam de fora.
+ */
+export async function findDuplicateShows(): Promise<DuplicateShow[]> {
+  const shows = await getShows();
+  const contagens = new Map<string, number>();
+  await Promise.all(
+    shows.map(async (s) => {
+      contagens.set(s.uuid, (await getWatchedForShow(s.uuid)).length);
+    }),
+  );
+
+  const grupos = new Map<string, StoredShow[]>();
+  for (const s of shows) {
+    // O id TMDB é a chave mais forte quando existe; o nome apanha o resto
+    const chave = s.tmdbId != null ? `tmdb:${s.tmdbId}` : `nome:${normalizeTitle(s.name)}`;
+    grupos.set(chave, [...(grupos.get(chave) ?? []), s]);
+  }
+  // Segunda passagem por nome: a original pode ter tmdbId e a cópia também,
+  // mas séries sem tmdbId nenhum só se encontram pelo nome.
+  const porNome = new Map<string, StoredShow[]>();
+  for (const s of shows) {
+    const n = normalizeTitle(s.name);
+    porNome.set(n, [...(porNome.get(n) ?? []), s]);
+  }
+
+  const pares: DuplicateShow[] = [];
+  const jaVistos = new Set<string>();
+
+  for (const grupo of [...grupos.values(), ...porNome.values()]) {
+    if (grupo.length < 2) continue;
+    const ordenado = [...grupo].sort(
+      (a, b) => (contagens.get(b.uuid) ?? 0) - (contagens.get(a.uuid) ?? 0),
+    );
+    const fica = ordenado[0];
+    for (const sai of ordenado.slice(1)) {
+      if (jaVistos.has(sai.uuid)) continue;
+      // nunca apagar uma cópia que tem histórico próprio
+      if ((contagens.get(sai.uuid) ?? 0) > 0) continue;
+      jaVistos.add(sai.uuid);
+      pares.push({
+        keepUuid: fica.uuid,
+        keepName: fica.name,
+        keepWatched: contagens.get(fica.uuid) ?? 0,
+        dropUuid: sai.uuid,
+        dropName: sai.name,
+        dropWatched: contagens.get(sai.uuid) ?? 0,
+      });
+    }
+  }
+  return pares;
+}
+
+/** Apaga as cópias vazias. Devolve quantas saíram. */
+export async function removeDuplicateShows(pares: DuplicateShow[]): Promise<number> {
+  for (const p of pares) await deleteShow(p.dropUuid);
+  return pares.length;
 }

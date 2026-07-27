@@ -4,9 +4,12 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   applyRepair,
+  findDuplicateShows,
   getRepairBackup,
   planRepair,
+  removeDuplicateShows,
   undoRepair,
+  type DuplicateShow,
   type RepairPlan,
 } from "@/lib/repair";
 
@@ -22,6 +25,7 @@ export default function IntegrityCheck() {
   const [progress, setProgress] = useState<{ done: number; total: number } | null>(null);
   const [estado, setEstado] = useState<string | null>(null);
   const [podeReverter, setPodeReverter] = useState<number>(0);
+  const [duplicados, setDuplicados] = useState<DuplicateShow[] | null>(null);
 
   useEffect(() => {
     void getRepairBackup().then((b) => setPodeReverter(b?.episodes.length ?? 0));
@@ -31,6 +35,8 @@ export default function IntegrityCheck() {
     setPlan(null);
     setEstado(null);
     setProgress({ done: 0, total: 0 });
+    setDuplicados(null);
+    void findDuplicateShows().then(setDuplicados).catch(() => setDuplicados([]));
     void planRepair((done, total) => setProgress({ done, total }))
       .then((p) => {
         setPlan(p);
@@ -64,17 +70,28 @@ export default function IntegrityCheck() {
       .catch(() => setEstado("Não foi possível repor."));
   }, []);
 
+  const limparDuplicados = useCallback(() => {
+    if (!duplicados || duplicados.length === 0) return;
+    setEstado(null);
+    void removeDuplicateShows(duplicados)
+      .then((n) => {
+        setEstado(`${n} ${n === 1 ? "série repetida removida" : "séries repetidas removidas"}.`);
+        setDuplicados([]);
+      })
+      .catch(() => setEstado("Não foi possível remover as repetidas."));
+  }, [duplicados]);
+
   const seguras = plan?.repairs.filter((r) => r.safe) ?? [];
   const duvidosas = plan?.repairs.filter((r) => !r.safe) ?? [];
   const totalSeguro = seguras.reduce((n, r) => n + r.extras.length, 0);
 
   return (
     <div className="mt-2 rounded-2xl border border-line bg-panel p-4">
-      <p className="font-display font-semibold">Verificar episódios</p>
+      <p className="font-display font-semibold">Verificar biblioteca</p>
       <p className="mt-1 text-sm text-dim">
-        Procura séries com mais episódios marcados do que o fornecedor tem —
-        acontece quando o import do TV Time e a app usam numerações diferentes
-        e cada uma cria as suas marcações.
+        Procura séries repetidas e séries com mais episódios marcados do que o
+        fornecedor tem — as duas coisas acontecem quando o import do TV Time e
+        a app usam numerações e identificadores diferentes.
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
@@ -101,7 +118,33 @@ export default function IntegrityCheck() {
 
       {estado && <p className="mt-3 text-sm text-ink">{estado}</p>}
 
-      {plan && plan.repairs.length === 0 && (
+      {duplicados && duplicados.length > 0 && (
+        <div className="mt-4 rounded-xl border border-line bg-raised p-3">
+          <p className="ep-code text-sm text-ink">
+            {duplicados.length}{" "}
+            {duplicados.length === 1 ? "série repetida" : "séries repetidas"}
+          </p>
+          <p className="mt-1 text-xs text-dim">
+            A mesma série ficou duas vezes na biblioteca — uma com o teu
+            histórico, outra vazia, adicionada pelo Explorar. Sai a vazia.
+          </p>
+          <ul className="mt-2 flex flex-col gap-1">
+            {duplicados.map((d) => (
+              <li key={d.dropUuid} className="ep-code text-xs text-faint">
+                {d.keepName} · fica a que tem {d.keepWatched} episódios
+              </li>
+            ))}
+          </ul>
+          <button
+            onClick={limparDuplicados}
+            className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full bg-ink px-4 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95"
+          >
+            Remover {duplicados.length === 1 ? "a repetida" : "as repetidas"}
+          </button>
+        </div>
+      )}
+
+      {plan && plan.repairs.length === 0 && duplicados?.length === 0 && (
         <p className="mt-3 text-sm text-dim">
           Nada a corrigir em {plan.checked} séries.
         </p>

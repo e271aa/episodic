@@ -2,8 +2,14 @@
 
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getMovie, getShow, putMovie, putShow, updateShow } from "@/lib/db";
-import { loadExplore, type ExploreData, type ExploreSection } from "@/lib/explore";
+import { getMovie, getMovies, getShows, putMovie, putShow, updateShow } from "@/lib/db";
+import {
+  alreadyInLibrary,
+  loadExplore,
+  type ExploreData,
+  type ExploreSection,
+} from "@/lib/explore";
+import { normalizeTitle } from "@/lib/names";
 import { dismiss, undismiss } from "@/lib/dismissed";
 import { pushUndo } from "@/lib/undo";
 import { isCloudConfigured } from "@/lib/supabase";
@@ -243,7 +249,13 @@ function ExplorarContent({ kind }: { kind: Kind }) {
     let vivo = true;
     void searchDiscover(kind, termo)
       .then((results) => {
-        if (vivo) setSearchState({ query: termo, items: results.filter((r) => r.posterPath) });
+        // Os resultados da pesquisa passavam ao lado do filtro das secções, e
+        // por isso apareciam séries que já estão na biblioteca — foi assim que
+        // o Arrow e o Prison Break entraram duas vezes.
+        const filtrados = data
+          ? results.filter((r) => r.posterPath && !alreadyInLibrary(r, data.taste))
+          : results.filter((r) => r.posterPath);
+        if (vivo) setSearchState({ query: termo, items: filtrados });
       })
       .catch(() => {
         if (vivo) setSearchState({ query: termo, items: [] });
@@ -251,20 +263,30 @@ function ExplorarContent({ kind }: { kind: Kind }) {
     return () => {
       vivo = false;
     };
-  }, [searching, termo, kind]);
+  }, [searching, termo, kind, data]);
 
   // null enquanto o termo atual ainda não tem resultado (nunca pesquisado,
   // ou o resultado guardado é de um termo anterior — a pessoa continuou a
   // escrever antes de a pesquisa anterior responder)
   const searchResults = searchState && searchState.query === termo ? searchState.items : null;
 
-  /** Guardar = entra na lista "para ver" (a mesma da Fase L). */
+  /** Guardar = entra na lista "para ver" (a mesma da Fase L).
+   *
+   *  Antes de criar, procura o mesmo título na biblioteca por id TMDB OU por
+   *  nome: a série importada do TV Time tem o uuid do TV Time, não `tmdb-<id>`,
+   *  e procurar só por `tmdb-<id>` criava uma segunda cópia da mesma série. */
   const guardar = useCallback(async (item: DiscoverItem) => {
+    const nome = normalizeTitle(item.name);
+
     if (item.kind === "movie") {
-      const key = `tmdb-${item.tmdbId}`;
-      if (await getMovie(key)) return;
+      const existente =
+        (await getMovie(`tmdb-${item.tmdbId}`)) ??
+        (await getMovies()).find(
+          (m) => m.tmdbId === item.tmdbId || normalizeTitle(m.name) === nome,
+        );
+      if (existente) return; // já lá está — nada a fazer, nada a anular
       await putMovie({
-        key,
+        key: `tmdb-${item.tmdbId}`,
         name: item.name,
         watchedAt: null,
         dateIsExact: true,
@@ -273,39 +295,60 @@ function ExplorarContent({ kind }: { kind: Kind }) {
         tmdbId: item.tmdbId,
         posterPath: item.posterPath,
       });
-    } else {
-      const uuid = `tmdb-${item.tmdbId}`;
-      const existing = await getShow(uuid);
-      if (existing) {
-        await updateShow(uuid, { inWatchlist: true });
-      } else {
-        await putShow({
-          uuid,
-          name: item.name,
-          tvdbId: null,
-          tmdbId: item.tmdbId,
-          tvmazeId: null,
-          posterPath: item.posterPath,
-          backdropPath: item.backdropPath,
-          overview: item.overview,
-          totalEpisodes: null,
-          followed: false,
-          inWatchlist: true,
-          archived: false,
-          addedAt: new Date().toISOString(),
-        });
-      }
+      pushUndo({
+        label: "Guardado para ver",
+        detail: item.name,
+        undo: async () => {
+          const { deleteMovie } = await import("@/lib/db");
+          await deleteMovie(`tmdb-${item.tmdbId}`);
+        },
+      });
+      return;
     }
+
+    const existente = (await getShows()).find(
+      (s) =>
+        s.uuid === `tmdb-${item.tmdbId}` ||
+        (s.tmdbId != null && s.tmdbId === item.tmdbId) ||
+        normalizeTitle(s.name) === nome,
+    );
+
+    if (existente) {
+      // Já a segues ou já está arquivada? Então não é "para ver" — deixa-a
+      // como está, em vez de a puxar de volta para uma lista onde não pertence.
+      if (existente.followed || existente.archived || existente.inWatchlist) return;
+      await updateShow(existente.uuid, { inWatchlist: true });
+      pushUndo({
+        label: "Guardado para ver",
+        detail: item.name,
+        undo: async () => {
+          await updateShow(existente.uuid, { inWatchlist: false });
+        },
+      });
+      return;
+    }
+
+    const uuid = `tmdb-${item.tmdbId}`;
+    await putShow({
+      uuid,
+      name: item.name,
+      tvdbId: null,
+      tmdbId: item.tmdbId,
+      tvmazeId: null,
+      posterPath: item.posterPath,
+      backdropPath: item.backdropPath,
+      overview: item.overview,
+      totalEpisodes: null,
+      followed: false,
+      inWatchlist: true,
+      archived: false,
+      addedAt: new Date().toISOString(),
+    });
     pushUndo({
       label: "Guardado para ver",
       detail: item.name,
       undo: async () => {
-        if (item.kind === "movie") {
-          const { deleteMovie } = await import("@/lib/db");
-          await deleteMovie(`tmdb-${item.tmdbId}`);
-        } else {
-          await updateShow(`tmdb-${item.tmdbId}`, { inWatchlist: false });
-        }
+        await updateShow(uuid, { inWatchlist: false });
       },
     });
   }, []);

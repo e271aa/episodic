@@ -14,6 +14,12 @@ export async function loadShows(): Promise<ShowWithProgress[]> {
   const counts = new Map<string, number>();
   const last = new Map<string, string>();
   for (const ep of watched) {
+    // A temporada 0 são especiais/OVAs. Contam como visionamento (e entram
+    // nas estatísticas do perfil), mas NÃO no progresso da série: o total do
+    // fornecedor só inclui episódios regulares, e somá-las aqui dava
+    // "90/88 episódios vistos" no Prison Break, com todas as temporadas
+    // certas e a série a 100% mesmo assim.
+    if (ep.season === 0) continue;
     counts.set(ep.showUuid, (counts.get(ep.showUuid) ?? 0) + 1);
     const seen = last.get(ep.showUuid);
     if (!seen || ep.watchedAt > seen) last.set(ep.showUuid, ep.watchedAt);

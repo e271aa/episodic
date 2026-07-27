@@ -11,6 +11,7 @@ import {
 } from "./tmdb";
 import { buildTasteProfile, type TasteProfile } from "./taste";
 import { isDismissed, loadDismissed } from "./dismissed";
+import { normalizeTitle } from "./names";
 
 export interface ExploreSection {
   id: string;
@@ -23,6 +24,21 @@ export interface ExploreSection {
 export interface ExploreData {
   sections: ExploreSection[];
   taste: TasteProfile;
+}
+
+/**
+ * Já está na biblioteca?
+ *
+ * Por id TMDB E por nome normalizado. Só por id não chegava: a esmagadora
+ * maioria da biblioteca veio do TV Time e foi enriquecida pela TVmaze, ficando
+ * com `tmdbId` a null — e por isso o Explorar sugeria (e deixava adicionar
+ * outra vez) séries que já lá estavam, como o Arrow e o Prison Break.
+ */
+export function alreadyInLibrary(item: DiscoverItem, taste: TasteProfile): boolean {
+  const nome = normalizeTitle(item.name);
+  return item.kind === "tv"
+    ? taste.knownShowTmdbIds.has(item.tmdbId) || taste.knownShowNames.has(nome)
+    : taste.knownMovieTmdbIds.has(item.tmdbId) || taste.knownMovieNames.has(nome);
 }
 
 /** Remove o que já tens e o que dispensaste, e corta duplicados entre secções. */
@@ -38,8 +54,7 @@ function clean(
     const key = `${item.kind}:${item.tmdbId}`;
     if (seen.has(key)) continue;
     if (isDismissed(dismissed, item.kind, item.tmdbId)) continue;
-    if (item.kind === "tv" && taste.knownShowTmdbIds.has(item.tmdbId)) continue;
-    if (item.kind === "movie" && taste.knownMovieTmdbIds.has(item.tmdbId)) continue;
+    if (alreadyInLibrary(item, taste)) continue;
     if (!item.posterPath) continue; // sem capa não vale a pena mostrar
     seen.add(key);
     out.push(item);
