@@ -4,7 +4,7 @@
 // Nota sobre géneros: a biblioteca guarda-os por NOME (vindos do fornecedor),
 // mas a API de descoberta da TMDB filtra por ID. Por isso o mapa id→nome é
 // invertido aqui para traduzir de volta.
-import { getAllWatched, getShows, type StoredShow } from "./db";
+import { getAllWatched, getMovies, getShows, type StoredShow } from "./db";
 
 export interface TasteProfile {
   /** ids de género TMDB, do mais visto para o menos */
@@ -13,8 +13,14 @@ export interface TasteProfile {
   topGenreNames: string[];
   /** séries com mais episódios vistos — a base do "porque viste X" */
   topShows: { uuid: string; name: string; tmdbId: number | null; watched: number }[];
+  /** filmes vistos mais recentemente — a base do "porque viste X" em filmes.
+   *  Sem contagem de episódios para pesar, a ordem possível é a de quando
+   *  os viste. */
+  topMovies: { key: string; name: string; tmdbId: number | null; watchedAt: string }[];
   /** tudo o que já está na biblioteca, para não sugerir o que já tens */
   knownShowTmdbIds: Set<number>;
+  /** idem, para filmes — visto ou só na lista para ver, os dois já contam */
+  knownMovieTmdbIds: Set<number>;
   /** true quando ainda não há histórico suficiente para personalizar */
   isEmpty: boolean;
 }
@@ -22,7 +28,7 @@ export interface TasteProfile {
 export async function buildTasteProfile(
   genreNameToId: Map<string, number>,
 ): Promise<TasteProfile> {
-  const [shows, watched] = await Promise.all([getShows(), getAllWatched()]);
+  const [shows, watched, movies] = await Promise.all([getShows(), getAllWatched(), getMovies()]);
 
   const perShow = new Map<string, number>();
   for (const ep of watched) {
@@ -66,11 +72,23 @@ export async function buildTasteProfile(
     shows.map((s) => s.tmdbId).filter((id): id is number => id !== null),
   );
 
+  const topMovies = movies
+    .filter((m) => m.watchedAt && m.tmdbId)
+    .sort((a, b) => (b.watchedAt ?? "").localeCompare(a.watchedAt ?? ""))
+    .slice(0, 5)
+    .map((m) => ({ key: m.key, name: m.name, tmdbId: m.tmdbId ?? null, watchedAt: m.watchedAt! }));
+
+  const knownMovieTmdbIds = new Set(
+    movies.map((m) => m.tmdbId).filter((id): id is number => id !== null),
+  );
+
   return {
     topGenreIds,
     topGenreNames,
     topShows,
+    topMovies,
     knownShowTmdbIds,
-    isEmpty: topGenreIds.length === 0 && topShows.length === 0,
+    knownMovieTmdbIds,
+    isEmpty: topGenreIds.length === 0 && topShows.length === 0 && topMovies.length === 0,
   };
 }

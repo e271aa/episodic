@@ -217,8 +217,10 @@ function toDiscoverItem(row: TmdbDiscoverRow, kind: "tv" | "movie"): DiscoverIte
 }
 
 /** O que está a dar esta semana. */
-export async function getTrending(kind: "tv" | "movie"): Promise<DiscoverItem[]> {
-  const data = await tmdbGet<{ results: TmdbDiscoverRow[] }>(`trending/${kind}/week`);
+export async function getTrending(kind: "tv" | "movie", page = 1): Promise<DiscoverItem[]> {
+  const data = await tmdbGet<{ results: TmdbDiscoverRow[] }>(`trending/${kind}/week`, {
+    page: String(page),
+  });
   return (data.results ?? []).map((r) => toDiscoverItem(r, kind));
 }
 

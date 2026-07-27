@@ -29,7 +29,7 @@ function clean(
   taste: TasteProfile,
   dismissed: Set<string>,
   seen: Set<string>,
-  limit = 20,
+  limit = 24,
 ): DiscoverItem[] {
   const out: DiscoverItem[] = [];
   for (const item of items) {
@@ -37,12 +37,29 @@ function clean(
     if (seen.has(key)) continue;
     if (isDismissed(dismissed, item.kind, item.tmdbId)) continue;
     if (item.kind === "tv" && taste.knownShowTmdbIds.has(item.tmdbId)) continue;
+    if (item.kind === "movie" && taste.knownMovieTmdbIds.has(item.tmdbId)) continue;
     if (!item.posterPath) continue; // sem capa não vale a pena mostrar
     seen.add(key);
     out.push(item);
     if (out.length >= limit) break;
   }
   return out;
+}
+
+/** Duas páginas em vez de uma — filtrar o que já se tem e o que se dispensou
+ *  come itens a sério, e uma página só (20 em bruto) esvaziava depressa a
+ *  secção de filmes, que não tinha "porque viste X" nenhum a compensar. */
+async function trendingPages(kind: "tv" | "movie"): Promise<DiscoverItem[]> {
+  const [p1, p2] = await Promise.all([getTrending(kind, 1), getTrending(kind, 2)]);
+  return [...p1, ...p2];
+}
+
+async function generoPages(kind: "tv" | "movie", genreIds: number[]): Promise<DiscoverItem[]> {
+  const [p1, p2] = await Promise.all([
+    discoverByGenres(kind, genreIds, 1),
+    discoverByGenres(kind, genreIds, 2),
+  ]);
+  return [...p1, ...p2];
 }
 
 /**
@@ -58,7 +75,7 @@ export async function loadExplore(kind: "tv" | "movie"): Promise<ExploreData> {
   const [taste, dismissed, trending] = await Promise.all([
     buildTasteProfile(nameToId),
     loadDismissed(),
-    getTrending(kind),
+    trendingPages(kind),
   ]);
 
   const seen = new Set<string>();
@@ -73,32 +90,40 @@ export async function loadExplore(kind: "tv" | "movie"): Promise<ExploreData> {
     });
   }
 
-  // "Porque viste X" — só faz sentido para séries, que é onde a TMDB tem
-  // recomendações fortes e onde o histórico do Ruben é profundo
-  if (kind === "tv") {
-    for (const show of taste.topShows.slice(0, 2)) {
-      if (!show.tmdbId) continue;
-      try {
-        const recs = await getRecommendations("tv", show.tmdbId);
-        const items = clean(recs, taste, dismissed, seen, 12);
-        if (items.length >= 3) {
-          sections.push({
-            id: `porque-${show.tmdbId}`,
-            title: `Porque viste ${show.name}`,
-            items,
-          });
-        }
-      } catch {
-        // uma recomendação falhada não pode deitar abaixo o ecrã inteiro
+  // "Porque viste X" — a TMDB dá recomendações fortes a partir de um título
+  // concreto, tanto para séries como para filmes. Para séries pesa-se pelos
+  // episódios vistos; um filme não tem "quantidade", por isso usam-se os
+  // vistos mais recentemente.
+  const baseTitles =
+    kind === "tv"
+      ? taste.topShows.slice(0, 2).map((s) => ({ id: s.tmdbId, name: s.name, key: s.uuid }))
+      : taste.topMovies.slice(0, 2).map((m) => ({ id: m.tmdbId, name: m.name, key: m.key }));
+
+  for (const title of baseTitles) {
+    if (!title.id) continue;
+    try {
+      const recs = await getRecommendations(kind, title.id);
+      const items = clean(recs, taste, dismissed, seen, 12);
+      if (items.length >= 3) {
+        sections.push({
+          id: `porque-${title.id}`,
+          title: `Porque viste ${title.name}`,
+          items,
+        });
       }
+    } catch {
+      // uma recomendação falhada não pode deitar abaixo o ecrã inteiro
     }
   }
 
-  // Mais do que gostas, por género
+  // Mais do que gostas, por género — a pesagem de géneros vem só das séries
+  // (é onde a biblioteca guarda o género de cada título); para filmes isto
+  // continua a assumir que o gosto se sobrepõe, o que é uma aproximação, não
+  // um cálculo feito a sério a partir dos filmes vistos.
   if (taste.topGenreIds.length > 0) {
     try {
-      const byGenre = await discoverByGenres(kind, taste.topGenreIds.slice(0, 2));
-      const items = clean(byGenre, taste, dismissed, seen, 20);
+      const byGenre = await generoPages(kind, taste.topGenreIds.slice(0, 2));
+      const items = clean(byGenre, taste, dismissed, seen, 24);
       if (items.length > 0) {
         sections.push({
           id: "generos",

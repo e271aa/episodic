@@ -9,7 +9,7 @@ import { formatEpCode } from "@/lib/watchnext";
 import { pushUndo } from "@/lib/undo";
 import type { MetaEpisode } from "@/lib/metadata";
 import SwipeCard from "@/components/SwipeCard";
-import SwipeCoach from "@/components/SwipeCoach";
+import SwipeCoach, { EM_DIA_COACH_KEY } from "@/components/SwipeCoach";
 import { CheckIcon } from "@/components/icons";
 import { Bone, TitleBone } from "@/components/Skeleton";
 
@@ -208,7 +208,13 @@ export default function EmDiaPage() {
                 onDecide={(watched) => handleDecide(item, watched)}
               />
             ))}
-            <SwipeCoach />
+            <SwipeCoach
+              kvKey={EM_DIA_COACH_KEY}
+              titulo="Arrasta o cartão"
+              detalhe="Cada cartão é o próximo episódio por ver de uma série."
+              esquerda={{ seta: "←", titulo: "Ainda não", detalhe: "Passa à frente sem marcar" }}
+              direita={{ seta: "→", titulo: "Visto", detalhe: "Marca o episódio como visto" }}
+            />
           </div>
 
           <div className="mt-5 flex items-center justify-center gap-6">

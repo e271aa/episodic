@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getMovie, getShow, putMovie, putShow, updateShow } from "@/lib/db";
 import { loadExplore, type ExploreData } from "@/lib/explore";
@@ -8,7 +8,8 @@ import { dismiss, undismiss } from "@/lib/dismissed";
 import { pushUndo } from "@/lib/undo";
 import { isCloudConfigured } from "@/lib/supabase";
 import type { DiscoverItem } from "@/lib/tmdb";
-import DiscoverCard from "@/components/DiscoverCard";
+import DiscoverSwipeCard, { type DeckItem } from "@/components/DiscoverSwipeCard";
+import SwipeCoach, { EXPLORAR_COACH_KEY } from "@/components/SwipeCoach";
 import { CompassIcon } from "@/components/icons";
 import { Bone, PosterRowBone, TitleBone } from "@/components/Skeleton";
 
@@ -19,6 +20,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
 
   const [data, setData] = useState<ExploreData | null>(null);
   const [erro, setErro] = useState<string | null>(null);
+  const [cursor, setCursor] = useState(0);
 
   useEffect(() => {
     // O `kind` é a chave deste componente (ver ExplorarSwitcher): trocar de
@@ -39,6 +41,21 @@ function ExplorarContent({ kind }: { kind: Kind }) {
       vivo = false;
     };
   }, [kind]);
+
+  /** As secções lado a lado escondiam quantos títulos existiam de facto —
+   *  um baralho só, na ordem das secções, é o que se percorre a sério. O
+   *  título da secção de onde veio fica no cartão, para não se perder o
+   *  "porquê" de aparecer. */
+  const baralho: DeckItem[] = useMemo(() => {
+    if (!data) return [];
+    return data.sections.flatMap((section) =>
+      section.items.map((item) => ({
+        item,
+        sectionTitle: section.title,
+        sectionReason: section.reason,
+      })),
+    );
+  }, [data]);
 
   /** Guardar = entra na lista "para ver" (a mesma da Fase L). */
   const guardar = useCallback(async (item: DiscoverItem) => {
@@ -103,13 +120,36 @@ function ExplorarContent({ kind }: { kind: Kind }) {
     });
   }, []);
 
+  const decidir = (deckItem: DeckItem, quero: boolean) => {
+    void (quero ? guardar(deckItem.item) : naoInteressa(deckItem.item));
+    setCursor((c) => c + 1);
+  };
+
   const setKind = (next: Kind) =>
     router.replace(next === "movie" ? "/explorar?tipo=filmes" : "/explorar", {
       scroll: false,
     });
 
+  const remaining = baralho.slice(cursor, cursor + 3);
+  const topo = remaining[0];
+
+  // Alternativa por teclado — o gesto de arrastar nunca é a única forma de decidir
+  useEffect(() => {
+    if (!topo) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowRight") decidir(topo, true);
+      else if (e.key === "ArrowLeft") decidir(topo, false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [topo]);
+
+  const total = baralho.length;
+  const acabou = cursor >= total && total > 0;
+
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-8">
+    <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-8">
       <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Explorar</h1>
 
       {/* Séries ou filmes — o mesmo padrão da Biblioteca, para não haver
@@ -149,7 +189,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
             </div>
           ))}
         </div>
-      ) : data.sections.length === 0 ? (
+      ) : total === 0 ? (
         <div className="mt-12 flex flex-col items-center px-6 text-center">
           <CompassIcon className="mb-3 h-10 w-10 text-faint" />
           <p className="font-display font-semibold">Nada para mostrar agora</p>
@@ -160,42 +200,93 @@ function ExplorarContent({ kind }: { kind: Kind }) {
           </p>
         </div>
       ) : (
-        <div className="mt-6 space-y-8">
-          {data.taste.isEmpty && (
-            <p className="rounded-2xl border border-line bg-panel p-3 text-xs text-dim">
+        <>
+          {data.taste.isEmpty && cursor === 0 && (
+            <p className="mt-4 rounded-2xl border border-line bg-panel p-3 text-xs text-dim">
               Ainda não sei o que gostas. À medida que marcares episódios, isto
               passa a sugerir com base nas tuas séries.
             </p>
           )}
 
-          {data.sections.map((section) => (
-            <section key={section.id}>
-              <div className="flex items-baseline justify-between gap-3">
-                <h2 className="font-display text-sm font-semibold uppercase tracking-[0.15em] text-dim [font-stretch:80%]">
-                  {section.title}
-                </h2>
-                {section.reason && (
-                  <span className="ep-code shrink-0 text-xs text-faint">
-                    {section.reason}
-                  </span>
-                )}
-              </div>
-              {/* fila horizontal: dá para percorrer com o polegar sem sair
-                  do sítio, e mantém várias secções à vista de uma vez */}
-              <div className="-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
-                {section.items.map((item, i) => (
-                  <DiscoverCard
-                    key={`${item.kind}-${item.tmdbId}`}
-                    item={item}
-                    index={i}
-                    onSave={guardar}
-                    onDismiss={naoInteressa}
+          {acabou ? (
+            <div className="mt-16 flex flex-1 flex-col items-center justify-center text-center">
+              <CompassIcon className="h-10 w-10 text-faint" />
+              <p className="mt-4 font-display font-semibold">Por agora é tudo</p>
+              <p className="mt-1 max-w-xs text-sm text-dim">
+                Passaste por {total} sugestões. Volta amanhã para veres mais.
+              </p>
+              <button
+                onClick={() => setCursor(0)}
+                className="mt-6 cursor-pointer rounded-full bg-ink px-6 py-2.5 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95"
+              >
+                Rever outra vez
+              </button>
+            </div>
+          ) : (
+            <>
+              <p className="ep-code mt-4 text-center text-xs text-faint">
+                {cursor + 1} de {total}
+              </p>
+              <div className="relative mt-3 aspect-2/3 flex-1" data-swipe-stack>
+                {remaining.map((deckItem, i) => (
+                  <DiscoverSwipeCard
+                    key={`${deckItem.item.kind}-${deckItem.item.tmdbId}`}
+                    deckItem={deckItem}
+                    active={i === 0}
+                    depth={i}
+                    onDecide={(quero) => decidir(deckItem, quero)}
                   />
                 ))}
+                <SwipeCoach
+                  kvKey={EXPLORAR_COACH_KEY}
+                  titulo="Arrasta o cartão"
+                  detalhe="Descobre séries e filmes um a um, à tua medida."
+                  esquerda={{
+                    seta: "←",
+                    titulo: "Não quero",
+                    detalhe: "Passa à frente e nunca mais aparece",
+                  }}
+                  direita={{
+                    seta: "→",
+                    titulo: "Para ver",
+                    detalhe: "Guarda na tua lista para ver",
+                  }}
+                />
               </div>
-            </section>
-          ))}
-        </div>
+
+              <div className="mt-5 flex items-center justify-center gap-6">
+                <button
+                  onClick={() => decidir(remaining[0], false)}
+                  aria-label="Não me interessa"
+                  className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-2 border-line text-faint transition hover:border-ink hover:text-ink active:scale-90"
+                >
+                  <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>
+                    <path
+                      d="M6 6l12 12M18 6L6 18"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => decidir(remaining[0], true)}
+                  aria-label="Guardar para ver"
+                  className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-full bg-ink text-tube transition hover:brightness-110 active:scale-90"
+                >
+                  <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" aria-hidden>
+                    <path
+                      d="M12 5v14M5 12h14"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    />
+                  </svg>
+                </button>
+              </div>
+            </>
+          )}
+        </>
       )}
     </main>
   );
