@@ -251,6 +251,20 @@ export async function discoverByGenres(
   return (data.results ?? []).map((r) => toDiscoverItem(r, kind));
 }
 
+/** Pesquisa por título no catálogo TMDB — não fica presa ao que já foi
+ *  sugerido, procura em tudo. Mesma forma de linha que trending/discover,
+ *  por isso reaproveita o mesmo mapeamento. */
+export async function searchDiscover(
+  kind: "tv" | "movie",
+  query: string,
+): Promise<DiscoverItem[]> {
+  const data = await tmdbGet<{ results: TmdbDiscoverRow[] }>(`search/${kind}`, {
+    query,
+    include_adult: "false",
+  });
+  return (data.results ?? []).map((r) => toDiscoverItem(r, kind));
+}
+
 /** Mapa id→nome dos géneros, para traduzir os `genre_ids` dos resultados. */
 export async function getGenreMap(kind: "tv" | "movie"): Promise<Map<number, string>> {
   const data = await tmdbGet<{ genres: { id: number; name: string }[] }>(
