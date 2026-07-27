@@ -13,8 +13,10 @@ import {
   countOutbox,
   getOutbox,
   isMovieOp,
+  isShowOp,
   type EpisodeOp,
   type MovieOp,
+  type ShowOp,
 } from "./db";
 import { getUser } from "./cloud";
 
@@ -78,8 +80,11 @@ export async function flushOutbox(): Promise<void> {
     const epDelete: EpisodeOp[] = [];
     const movieUpsert: MovieOp[] = [];
     const movieDelete: MovieOp[] = [];
+    const showDelete: ShowOp[] = [];
     for (const op of ops) {
-      if (isMovieOp(op)) {
+      if (isShowOp(op)) {
+        showDelete.push(op);
+      } else if (isMovieOp(op)) {
         if (op.kind === "movie-watched") movieUpsert.push(op);
         else movieDelete.push(op);
       } else if (op.kind === "episode-watched") {
@@ -140,6 +145,23 @@ export async function flushOutbox(): Promise<void> {
         .from("watched_movies")
         .delete()
         .match({ user_id: user.id, key: op.movieKey });
+      if (!error) done.push(op.key);
+    }
+
+    // Apagar uma série leva os episódios dela atrás: a tabela não tem
+    // chave estrangeira entre as duas, por isso deixar as linhas de
+    // watched_episodes para trás deixaria histórico órfão a contar nas
+    // estatísticas de uma série que já não existe.
+    for (const op of showDelete) {
+      const { error: epErr } = await supabase
+        .from("watched_episodes")
+        .delete()
+        .match({ user_id: user.id, show_uuid: op.showUuid });
+      if (epErr) continue;
+      const { error } = await supabase
+        .from("shows")
+        .delete()
+        .match({ user_id: user.id, uuid: op.showUuid });
       if (!error) done.push(op.key);
     }
 

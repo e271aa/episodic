@@ -105,10 +105,25 @@ export interface MovieOp extends OutboxCommon {
   watchedAt: string | null;
 }
 
-export type OutboxOp = EpisodeOp | MovieOp;
+/**
+ * Apagar uma série tem de subir para a cloud como intenção própria: o
+ * `pushToCloud` só faz upsert do que existe localmente, portanto uma série
+ * apagada só aqui continuava na cloud — e a sincronização seguinte trazia-a
+ * de volta. Era exatamente o que ia acontecer às cópias duplicadas.
+ */
+export interface ShowOp extends OutboxCommon {
+  kind: "show-deleted";
+  showUuid: string;
+}
+
+export type OutboxOp = EpisodeOp | MovieOp | ShowOp;
 
 export function isMovieOp(op: OutboxOp): op is MovieOp {
   return op.kind === "movie-watched" || op.kind === "movie-unwatched";
+}
+
+export function isShowOp(op: OutboxOp): op is ShowOp {
+  return op.kind === "show-deleted";
 }
 
 interface TvlogDB extends DBSchema {
@@ -325,9 +340,10 @@ export async function updateShow(
   return next;
 }
 
-/** Apaga a série e tudo o que lhe pertence. Usado só pela limpeza de séries
- *  duplicadas — a cópia a apagar nunca tem episódios marcados, mas apagar os
- *  dela à mesma evita deixar linhas órfãs se isso mudar. */
+/** Apaga a série e tudo o que lhe pertence, aqui e na cloud. Usado só pela
+ *  limpeza de séries duplicadas — a cópia a apagar nunca tem episódios
+ *  marcados, mas apagar os dela à mesma evita deixar linhas órfãs se isso
+ *  mudar. */
 export async function deleteShow(uuid: string): Promise<void> {
   const database = await db();
   const tx = database.transaction(["shows", "watched"], "readwrite");
@@ -339,6 +355,12 @@ export async function deleteShow(uuid: string): Promise<void> {
     cursor = await cursor.continue();
   }
   await tx.done;
+  await enqueueOp({
+    key: `show:${uuid}`,
+    kind: "show-deleted",
+    showUuid: uuid,
+    at: new Date().toISOString(),
+  });
 }
 
 export async function getWatchedForShow(showUuid: string): Promise<WatchedEpisode[]> {
