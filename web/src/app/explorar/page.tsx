@@ -1,33 +1,51 @@
 "use client";
 
-import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
+/**
+ * Direção B — "Baralho de bordo a bordo".
+ *
+ * Cromo: 264px → 74px. Uma só linha: o catálogo como menu (Séries ▾), a
+ * lupa, e os ícones de modo. O baralho ocupa tudo o resto, de bordo a bordo,
+ * e as ações flutuam sobre ele na zona do polegar — nada por baixo da dock.
+ *
+ * Perde-se o enquadramento 2:3 (o cartaz é recortado) e a leitura de
+ * "objeto" com bordas; ganha-se imagem e um alvo "Para ver" com rótulo.
+ */
+
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getMovie, getMovies, getShows, putMovie, putShow, updateShow } from "@/lib/db";
 import {
   alreadyInLibrary,
   loadExplore,
   type ExploreData,
   type ExploreSection,
 } from "@/lib/explore";
-import { normalizeTitle } from "@/lib/names";
-import { dismiss, undismiss } from "@/lib/dismissed";
-import { pushUndo } from "@/lib/undo";
 import { isCloudConfigured } from "@/lib/supabase";
 import { searchDiscover, type DiscoverItem } from "@/lib/tmdb";
 import DiscoverCard from "@/components/DiscoverCard";
-import SectionHeader from "@/components/SectionHeader";
 import DiscoverSwipeCard, { type DeckItem } from "@/components/DiscoverSwipeCard";
 import SwipeCoach, { EXPLORAR_COACH_KEY } from "@/components/SwipeCoach";
-import { CompassIcon, SearchIcon } from "@/components/icons";
+import ViewModeToggle, { type Modo } from "@/components/ViewModeToggle";
+import { useExploreAcoes } from "@/lib/useExploreAcoes";
+import {
+  CheckIcon,
+  ChevronDownIcon,
+  CloseIcon,
+  CompassIcon,
+  PlusIcon,
+  SearchIcon,
+} from "@/components/icons";
 import { Bone, PosterRowBone, TitleBone } from "@/components/Skeleton";
 
 type Kind = "tv" | "movie";
-type Modo = "cartoes" | "grelha";
 
-/** O modo cartões, à parte: tem cursor próprio, e troca de chave (a
- *  pesquisa) remonta-o com o cursor limpo, em vez de arrastar posição de
- *  um baralho para o outro. */
-function CardStack({
+const BAR_COLORS = ["#3fd2c8", "#e6c832", "#d24bd2", "#37c837", "#3c46e6", "#e6483c"];
+function barColor(seed: string) {
+  let n = 0;
+  for (let i = 0; i < seed.length; i++) n = (n + seed.charCodeAt(i)) % BAR_COLORS.length;
+  return BAR_COLORS[n];
+}
+
+function Baralho({
   sections,
   onGuardar,
   onDispensar,
@@ -40,12 +58,8 @@ function CardStack({
 
   const baralho: DeckItem[] = useMemo(
     () =>
-      sections.flatMap((section) =>
-        section.items.map((item) => ({
-          item,
-          sectionTitle: section.title,
-          sectionReason: section.reason,
-        })),
+      sections.flatMap((s) =>
+        s.items.map((item) => ({ item, sectionTitle: s.title, sectionReason: s.reason })),
       ),
     [sections],
   );
@@ -62,7 +76,6 @@ function CardStack({
   const remaining = baralho.slice(cursor, cursor + 3);
   const topo = remaining[0];
 
-  // Alternativa por teclado — o gesto de arrastar nunca é a única forma de decidir
   useEffect(() => {
     if (!topo) return;
     const onKey = (e: KeyboardEvent) => {
@@ -74,19 +87,21 @@ function CardStack({
   }, [topo, decidir]);
 
   const total = baralho.length;
-  const acabou = cursor >= total && total > 0;
 
-  if (acabou) {
+  if (cursor >= total && total > 0) {
     return (
-      <div className="mt-16 flex flex-1 flex-col items-center justify-center text-center">
+      <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
         <CompassIcon className="h-10 w-10 text-faint" />
-        <p className="mt-4 font-display font-semibold">Por agora é tudo</p>
-        <p className="mt-1 max-w-xs text-[15px] text-dim">
-          Passaste por {total} sugestões.
+        <p className="mt-4 font-display text-lg font-semibold [font-stretch:105%]">
+          Por agora é tudo
+        </p>
+        <p className="mt-1 max-w-xs text-sm text-dim">
+          Passaste por {total} sugestões. Marca episódios e volta cá: o que aparece aqui muda
+          com o que vais vendo.
         </p>
         <button
           onClick={() => setCursor(0)}
-          className="mt-6 cursor-pointer rounded-full bg-ink px-6 py-2.5 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95"
+          className="mt-6 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-sm font-semibold text-tube transition hover:brightness-110"
         >
           Rever outra vez
         </button>
@@ -95,73 +110,70 @@ function CardStack({
   }
 
   return (
-    <>
-      <p className="ep-code mt-4 text-center text-xs text-faint">
-        {cursor + 1} de {total}
-      </p>
-      <div className="relative mt-3 aspect-2/3 flex-1" data-swipe-stack>
-        {remaining.map((deckItem, i) => (
-          <DiscoverSwipeCard
-            key={`${deckItem.item.kind}-${deckItem.item.tmdbId}`}
-            deckItem={deckItem}
-            active={i === 0}
-            depth={i}
-            onDecide={(quero) => decidir(deckItem, quero)}
-          />
-        ))}
-        <SwipeCoach
-          kvKey={EXPLORAR_COACH_KEY}
-          titulo="Arrasta o cartão"
-          detalhe="Descobre séries e filmes um a um, à tua medida."
-          esquerda={{
-            seta: "←",
-            titulo: "Não quero",
-            detalhe: "Passa à frente e nunca mais aparece",
-          }}
-          direita={{
-            seta: "→",
-            titulo: "Para ver",
-            detalhe: "Guarda na tua lista para ver",
-          }}
+    <div className="relative min-h-0 flex-1" data-swipe-stack>
+      {remaining.map((deckItem, i) => (
+        <DiscoverSwipeCard
+          key={`${deckItem.item.kind}-${deckItem.item.tmdbId}`}
+          deckItem={deckItem}
+          active={i === 0}
+          depth={i}
+          posicao={cursor + 1 + i}
+          total={total}
+          variante="bordo"
+          onDecide={(quero) => decidir(deckItem, quero)}
         />
+      ))}
+
+      {/* As ações flutuam sobre o cartaz, acima da dock. O gesto continua a
+          existir; isto é a outra metade, nunca a alternativa única. */}
+      <div className="pointer-events-none absolute inset-x-0 bottom-[calc(var(--dock-h)+2.25rem)] z-20 flex items-center justify-center gap-5">
+        <button
+          onClick={() => decidir(topo, false)}
+          aria-label="Não me interessa — passa à frente e nunca mais aparece"
+          className="pointer-events-auto flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border border-ink/20 bg-tube/70 text-ink backdrop-blur-md transition active:scale-90"
+        >
+          <CloseIcon className="h-6 w-6" />
+        </button>
+        <button
+          onClick={() => decidir(topo, true)}
+          className="pointer-events-auto flex h-14 cursor-pointer items-center gap-2.5 rounded-full bg-ink px-7 text-base font-semibold text-tube transition hover:brightness-110 active:scale-95"
+        >
+          <PlusIcon className="h-5 w-5" />
+          Para ver
+        </button>
       </div>
 
-      <div className="mt-5 flex items-center justify-center gap-6">
-        <button
-          onClick={() => decidir(remaining[0], false)}
-          aria-label="Não me interessa"
-          className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-2 border-line text-faint transition hover:border-ink hover:text-ink active:scale-90"
-        >
-          <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>
-            <path
-              d="M6 6l12 12M18 6L6 18"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
-        <button
-          onClick={() => decidir(remaining[0], true)}
-          aria-label="Guardar para ver"
-          className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-full bg-ink text-tube transition hover:brightness-110 active:scale-90"
-        >
-          <svg viewBox="0 0 24 24" className="h-7 w-7" fill="none" aria-hidden>
-            <path
-              d="M12 5v14M5 12h14"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            />
-          </svg>
-        </button>
+      {/* Progresso do baralho: faixa SMPTE a encher, com o contador em mono */}
+      <div className="pointer-events-none absolute inset-x-5 bottom-[calc(var(--dock-h)+0.5rem)] z-20">
+        <div className="flex items-center justify-between pb-1.5">
+          <span className="ep-code text-[11px] text-faint">
+            {cursor + 1} / {total}
+          </span>
+          <span className="text-[11px] text-faint">arrasta ou decide aqui</span>
+        </div>
+        <div className="h-[3px] overflow-hidden rounded-full bg-ink/8">
+          <div
+            className="bars h-full transition-[width] duration-300"
+            style={{ width: `${((cursor + 1) / Math.max(total, 1)) * 100}%` }}
+          />
+        </div>
       </div>
-    </>
+
+      <SwipeCoach
+        kvKey={EXPLORAR_COACH_KEY}
+        titulo="Arrasta o cartão"
+        detalhe="Descobre séries e filmes um a um, à tua medida."
+        esquerda={{
+          seta: "←",
+          titulo: "Não quero",
+          detalhe: "Passa à frente e nunca mais aparece",
+        }}
+        direita={{ seta: "→", titulo: "Para ver", detalhe: "Guarda na tua lista para ver" }}
+      />
+    </div>
   );
 }
 
-/** O modo grelha: as secções lado a lado, cada uma numa fila que se
- *  percorre com o polegar — como era antes do modo cartões existir. */
 function Grelha({
   sections,
   onGuardar,
@@ -172,11 +184,23 @@ function Grelha({
   onDispensar: (item: DiscoverItem) => Promise<void>;
 }) {
   return (
-    <div className="mt-6 space-y-8">
+    <div className="space-y-7 overflow-y-auto pb-[calc(var(--dock-h)+1rem)] pt-4">
       {sections.map((section) => (
         <section key={section.id}>
-<SectionHeader label={section.title} meta={section.reason} />
-          <div className="-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
+          <div className="flex items-baseline justify-between gap-3 px-4">
+            <h2 className="flex items-center gap-2 font-display text-[13px] font-semibold uppercase tracking-[0.15em] text-ink [font-stretch:80%]">
+              <span
+                aria-hidden
+                className="h-3.5 w-[3px] shrink-0 rounded-full"
+                style={{ backgroundColor: barColor(section.title) }}
+              />
+              {section.title}
+            </h2>
+            <span className="ep-code shrink-0 text-xs text-faint">
+              {section.reason ?? section.items.length}
+            </span>
+          </div>
+          <div className="mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
             {section.items.map((item, i) => (
               <DiscoverCard
                 key={`${item.kind}-${item.tmdbId}`}
@@ -195,27 +219,21 @@ function Grelha({
 
 function ExplorarContent({ kind }: { kind: Kind }) {
   const router = useRouter();
+  const { guardar, naoInteressa } = useExploreAcoes();
 
   const [data, setData] = useState<ExploreData | null>(null);
   const [erro, setErro] = useState<string | null>(null);
   const [modo, setModo] = useState<Modo>("cartoes");
+  const [catalogoAberto, setCatalogoAberto] = useState(false);
+  const [pesquisaAberta, setPesquisaAberta] = useState(false);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  // Guarda a par com o termo a que pertence — em vez de repor a null a cada
-  // tecla (que teria de acontecer de forma síncrona no corpo do efeito),
-  // resultados de um termo antigo são simplesmente ignorados no render.
-  const [searchState, setSearchState] = useState<{
-    query: string;
-    items: DiscoverItem[];
-  } | null>(null);
+  const [searchState, setSearchState] = useState<{ query: string; items: DiscoverItem[] } | null>(
+    null,
+  );
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    // O `kind` é a chave deste componente (ver ExplorarSwitcher): trocar de
-    // separador remonta-o com estado limpo. Isso dispensa repor `data` a
-    // null aqui dentro — que era o que obrigava a envolver tudo num
-    // requestAnimationFrame para escapar ao `set-state-in-effect`, e nessa
-    // versão o resultado chegava a uma instância que já não era a que
-    // renderizava, deixando o ecrã preso no esqueleto.
     let vivo = true;
     void loadExplore(kind)
       .then((d) => {
@@ -229,7 +247,6 @@ function ExplorarContent({ kind }: { kind: Kind }) {
     };
   }, [kind]);
 
-  // Debounce: só procura na TMDB depois de a pessoa parar de escrever
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 350);
     return () => clearTimeout(t);
@@ -242,13 +259,14 @@ function ExplorarContent({ kind }: { kind: Kind }) {
     if (!searching) return;
     let vivo = true;
     void searchDiscover(kind, termo)
-      .then((results) => {
-        // Os resultados da pesquisa passavam ao lado do filtro das secções, e
-        // por isso apareciam séries que já estão na biblioteca — foi assim que
-        // o Arrow e o Prison Break entraram duas vezes.
+      .then((r) => {
+        // Sem este filtro, a pesquisa devolve séries que já estão na
+        // biblioteca — foi por aqui que o Arrow e o Prison Break entraram
+        // duas vezes. As secções normais já passam pelo mesmo crivo dentro
+        // do `loadExplore`; a pesquisa tem de o fazer aqui.
         const filtrados = data
-          ? results.filter((r) => r.posterPath && !alreadyInLibrary(r, data.taste))
-          : results.filter((r) => r.posterPath);
+          ? r.filter((x) => x.posterPath && !alreadyInLibrary(x, data.taste))
+          : r.filter((x) => x.posterPath);
         if (vivo) setSearchState({ query: termo, items: filtrados });
       })
       .catch(() => {
@@ -259,115 +277,13 @@ function ExplorarContent({ kind }: { kind: Kind }) {
     };
   }, [searching, termo, kind, data]);
 
-  // null enquanto o termo atual ainda não tem resultado (nunca pesquisado,
-  // ou o resultado guardado é de um termo anterior — a pessoa continuou a
-  // escrever antes de a pesquisa anterior responder)
   const searchResults = searchState && searchState.query === termo ? searchState.items : null;
 
-  /** Guardar = entra na lista "para ver" (a mesma da Fase L).
-   *
-   *  Antes de criar, procura o mesmo título na biblioteca por id TMDB OU por
-   *  nome: a série importada do TV Time tem o uuid do TV Time, não `tmdb-<id>`,
-   *  e procurar só por `tmdb-<id>` criava uma segunda cópia da mesma série. */
-  const guardar = useCallback(async (item: DiscoverItem) => {
-    // Os dois títulos, pela mesma razão do alreadyInLibrary: a TMDB devolve
-    // pt-PT e a biblioteca guarda o nome do TV Time, quase sempre em inglês.
-    const nomes = new Set([normalizeTitle(item.name)]);
-    if (item.originalName) nomes.add(normalizeTitle(item.originalName));
+  const escolherKind = (next: Kind) => {
+    setCatalogoAberto(false);
+    router.replace(next === "movie" ? "/explorar?tipo=filmes" : "/explorar", { scroll: false });
+  };
 
-    if (item.kind === "movie") {
-      const existente =
-        (await getMovie(`tmdb-${item.tmdbId}`)) ??
-        (await getMovies()).find(
-          (m) => m.tmdbId === item.tmdbId || nomes.has(normalizeTitle(m.name)),
-        );
-      if (existente) return; // já lá está — nada a fazer, nada a anular
-      await putMovie({
-        key: `tmdb-${item.tmdbId}`,
-        name: item.name,
-        watchedAt: null,
-        dateIsExact: true,
-        releaseDate: item.year ? `${item.year}-01-01` : null,
-        addedAt: new Date().toISOString(),
-        tmdbId: item.tmdbId,
-        posterPath: item.posterPath,
-      });
-      pushUndo({
-        label: "Guardado para ver",
-        detail: item.name,
-        undo: async () => {
-          const { deleteMovie } = await import("@/lib/db");
-          await deleteMovie(`tmdb-${item.tmdbId}`);
-        },
-      });
-      return;
-    }
-
-    const existente = (await getShows()).find(
-      (s) =>
-        s.uuid === `tmdb-${item.tmdbId}` ||
-        (s.tmdbId != null && s.tmdbId === item.tmdbId) ||
-        nomes.has(normalizeTitle(s.name)),
-    );
-
-    if (existente) {
-      // Já a segues ou já está arquivada? Então não é "para ver" — deixa-a
-      // como está, em vez de a puxar de volta para uma lista onde não pertence.
-      if (existente.followed || existente.archived || existente.inWatchlist) return;
-      await updateShow(existente.uuid, { inWatchlist: true });
-      pushUndo({
-        label: "Guardado para ver",
-        detail: item.name,
-        undo: async () => {
-          await updateShow(existente.uuid, { inWatchlist: false });
-        },
-      });
-      return;
-    }
-
-    const uuid = `tmdb-${item.tmdbId}`;
-    await putShow({
-      uuid,
-      name: item.name,
-      tvdbId: null,
-      tmdbId: item.tmdbId,
-      tvmazeId: null,
-      posterPath: item.posterPath,
-      backdropPath: item.backdropPath,
-      overview: item.overview,
-      totalEpisodes: null,
-      followed: false,
-      inWatchlist: true,
-      archived: false,
-      addedAt: new Date().toISOString(),
-    });
-    pushUndo({
-      label: "Guardado para ver",
-      detail: item.name,
-      undo: async () => {
-        await updateShow(uuid, { inWatchlist: false });
-      },
-    });
-  }, []);
-
-  const naoInteressa = useCallback(async (item: DiscoverItem) => {
-    await dismiss(item.kind, item.tmdbId);
-    pushUndo({
-      label: "Dispensado",
-      detail: item.name,
-      undo: async () => {
-        await undismiss(item.kind, item.tmdbId);
-      },
-    });
-  }, []);
-
-  const setKind = (next: Kind) =>
-    router.replace(next === "movie" ? "/explorar?tipo=filmes" : "/explorar", {
-      scroll: false,
-    });
-
-  // Enquanto se procura, as secções normais (tendências, "porque viste")
-  // dão lugar aos resultados da pesquisa — não faz sentido misturar as duas
   const sections: ExploreSection[] = searching
     ? searchResults
       ? [{ id: "pesquisa", title: `Resultados para "${termo}"`, items: searchResults }]
@@ -377,86 +293,119 @@ function ExplorarContent({ kind }: { kind: Kind }) {
   const totalItens = sections.reduce((n, s) => n + s.items.length, 0);
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-8">
-      <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Explorar</h1>
-
-      {/* Séries ou filmes — o mesmo padrão da Biblioteca, para não haver
-          dois vocabulários diferentes para a mesma escolha */}
-      <div className="mt-4 flex gap-1 rounded-full border border-line bg-panel p-1">
-        {(
-          [
-            ["tv", "Séries"],
-            ["movie", "Filmes"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setKind(id)}
-            aria-pressed={kind === id}
-            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full text-[15px] font-semibold transition ${
-              kind === id ? "bg-ink text-tube" : "text-dim hover:text-ink"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {/* Pesquisa no catálogo TMDB — não fica presa ao que já foi sugerido */}
-      <div className="relative mt-3">
-        <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder={kind === "tv" ? "Procurar uma série…" : "Procurar um filme…"}
-          className="min-h-11 w-full rounded-full border border-line bg-panel py-2.5 pl-10 pr-4 outline-none transition-colors focus:border-ink"
-        />
-      </div>
-
-      {/* Cartões (arrastar, um a um) ou grelha (filas, tudo à vista) */}
-      <div className="mt-3 flex gap-1 rounded-full border border-line bg-panel p-1">
-        {(
-          [
-            ["cartoes", "Cartões"],
-            ["grelha", "Grelha"],
-          ] as const
-        ).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setModo(id)}
-            aria-pressed={modo === id}
-            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full text-[15px] font-semibold transition ${
-              modo === id ? "bg-ink text-tube" : "text-dim hover:text-ink"
-            }`}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
-
-      {erro ? (
-        <div className="mt-12 flex flex-col items-center px-6 text-center">
-          <span className="bars mb-4 h-11 w-11 rounded-full opacity-40" aria-hidden />
-          <p className="font-display font-semibold">Não deu para carregar</p>
-          <p className="mt-1 max-w-xs text-[15px] text-dim">{erro}</p>
-        </div>
-      ) : carregando ? (
-        <div className="mt-6 space-y-8">
-          {[0, 1].map((s) => (
-            <div key={s}>
-              <Bone className="h-4 w-40 rounded" />
-              <PosterRowBone />
+    <main
+      className="page-enter mx-auto flex w-full max-w-md flex-col overflow-hidden"
+      style={{ height: "100dvh" }}
+    >
+      <div className="relative z-30 flex h-9 shrink-0 items-center gap-2 px-4 pt-1">
+        {pesquisaAberta ? (
+          <>
+            <div className="relative flex-1">
+              <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
+              <input
+                ref={inputRef}
+                autoFocus
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={kind === "tv" ? "Procurar uma série…" : "Procurar um filme…"}
+                className="tap-44 relative h-9 w-full rounded-full border border-ink bg-panel/90 pl-9 pr-3 text-sm outline-none backdrop-blur-md"
+              />
             </div>
+            <button
+              onClick={() => {
+                setPesquisaAberta(false);
+                setQuery("");
+              }}
+              aria-label="Fechar pesquisa"
+              className="tap-44 relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim"
+            >
+              <CloseIcon className="h-[18px] w-[18px]" />
+            </button>
+          </>
+        ) : (
+          <>
+            <button
+              onClick={() => setCatalogoAberto((v) => !v)}
+              aria-expanded={catalogoAberto}
+              aria-label="Mudar de catálogo"
+              className="tap-44 relative flex flex-1 cursor-pointer items-center gap-1.5 text-ink"
+            >
+              <span className="font-display text-[22px] font-bold [font-stretch:110%]">
+                {kind === "tv" ? "Séries" : "Filmes"}
+              </span>
+              <ChevronDownIcon
+                className={`h-4 w-4 transition-transform ${catalogoAberto ? "rotate-180" : ""}`}
+                strokeWidth={2.5}
+              />
+            </button>
+            <button
+              onClick={() => setPesquisaAberta(true)}
+              aria-label="Procurar no catálogo"
+              className="tap-44 relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line bg-raised/80 text-dim backdrop-blur-md"
+            >
+              <SearchIcon className="h-[17px] w-[17px]" />
+            </button>
+            <ViewModeToggle modo={modo} onChange={setModo} />
+          </>
+        )}
+      </div>
+
+      {catalogoAberto && (
+        <div className="relative z-30 mx-4 mt-2 flex shrink-0 flex-col gap-0.5 rounded-[1.25rem] border border-line bg-panel p-1.5">
+          {(
+            [
+              ["tv", "Séries"],
+              ["movie", "Filmes"],
+            ] as const
+          ).map(([id, label]) => (
+            <button
+              key={id}
+              onClick={() => escolherKind(id)}
+              aria-pressed={kind === id}
+              className={`flex min-h-11 cursor-pointer items-center justify-between rounded-2xl px-3.5 text-[15px] font-semibold transition ${
+                kind === id ? "bg-raised text-ink" : "text-dim hover:text-ink"
+              }`}
+            >
+              {label}
+              {kind === id && <CheckIcon className="h-4 w-4" />}
+            </button>
           ))}
         </div>
+      )}
+
+      {!searching && data?.taste.isEmpty && !catalogoAberto && (
+        <p className="relative z-30 shrink-0 px-4 pt-1 text-center text-xs text-faint">
+          Ainda não sei o que gostas — isto afina-se à medida que marcares episódios.
+        </p>
+      )}
+
+      {erro ? (
+        <div className="mt-16 flex flex-col items-center px-8 text-center">
+          <span className="bars mb-4 h-11 w-11 rounded-full opacity-40" aria-hidden />
+          <p className="font-display font-semibold">Não deu para carregar</p>
+          <p className="mt-1 max-w-xs text-sm text-dim">{erro}</p>
+        </div>
+      ) : carregando ? (
+        modo === "cartoes" ? (
+          <Bone className="mt-3 min-h-0 w-full flex-1" />
+        ) : (
+          <div className="space-y-7 pt-4">
+            {[0, 1].map((s) => (
+              <div key={s} className="px-4">
+                <Bone className="h-4 w-40 rounded" />
+                <PosterRowBone />
+              </div>
+            ))}
+          </div>
+        )
       ) : totalItens === 0 ? (
-        <div className="mt-12 flex flex-col items-center px-6 text-center">
+        <div className="mt-16 flex flex-col items-center px-8 text-center">
           <CompassIcon className="mb-3 h-10 w-10 text-faint" />
           <p className="font-display font-semibold">
             {searching ? "Nada encontrado" : "Nada para mostrar agora"}
           </p>
-          <p className="mt-1 max-w-xs text-[15px] text-dim">
+          <p className="mt-1 max-w-xs text-sm text-dim">
             {searching
               ? `Sem resultados para "${termo}".`
               : isCloudConfigured()
@@ -464,33 +413,20 @@ function ExplorarContent({ kind }: { kind: Kind }) {
                 : "A TMDB não está configurada nesta instalação."}
           </p>
         </div>
+      ) : modo === "cartoes" ? (
+        <Baralho
+          key={termo}
+          sections={sections}
+          onGuardar={(item) => void guardar(item)}
+          onDispensar={(item) => void naoInteressa(item)}
+        />
       ) : (
-        <>
-          {!searching && data?.taste.isEmpty && (
-            <p className="mt-4 rounded-2xl border border-line bg-panel p-3 text-xs text-dim">
-              Ainda não sei o que gostas. À medida que marcares episódios, isto
-              passa a sugerir com base nas tuas séries.
-            </p>
-          )}
-
-          {modo === "cartoes" ? (
-            <CardStack
-              key={termo}
-              sections={sections}
-              onGuardar={(item) => void guardar(item)}
-              onDispensar={(item) => void naoInteressa(item)}
-            />
-          ) : (
-            <Grelha sections={sections} onGuardar={guardar} onDispensar={naoInteressa} />
-          )}
-        </>
+        <Grelha sections={sections} onGuardar={guardar} onDispensar={naoInteressa} />
       )}
     </main>
   );
 }
 
-/** Lê o separador do URL e usa-o como chave — trocar de séries para filmes
- *  remonta o conteúdo com estado limpo, sem lógica de reposição. */
 function ExplorarSwitcher() {
   const params = useSearchParams();
   const kind: Kind = params.get("tipo") === "filmes" ? "movie" : "tv";
@@ -501,10 +437,9 @@ export default function ExplorarPage() {
   return (
     <Suspense
       fallback={
-        <main className="mx-auto w-full max-w-2xl px-4 py-8">
+        <main className="mx-auto w-full max-w-md px-4 pt-2">
           <TitleBone />
-          <Bone className="mt-4 h-12 w-full rounded-full" />
-          <PosterRowBone />
+          <Bone className="mt-3 h-[60vh] w-full rounded-none" />
         </main>
       }
     >

@@ -3,38 +3,49 @@
 import { useRef, useState } from "react";
 import Poster from "@/components/Poster";
 import type { DiscoverItem } from "@/lib/tmdb";
+import { sectionColor } from "@/components/SectionHeader";
 
 export interface DeckItem {
   item: DiscoverItem;
-  /** de que secção veio ("Em alta esta semana", "Porque viste X"…) —
-   *  sem as filas lado a lado, é a única forma de o utilizador saber
-   *  porque é que aquele título está a aparecer */
   sectionTitle: string;
   sectionReason?: string;
 }
 
-/** distância a partir da qual largar o cartão decide */
+/** física calibrada — igual à do "Pôr em dia". Não mexer. */
 const THRESHOLD = 100;
-/** a partir daqui o selo já está a 100% — decidir "sente-se" antes do limiar */
 const STAMP_FULL = 70;
 
 const YES = "#37c837";
 const NO = "#e8564a";
 
+
 /**
- * Cartão do Explorar em modo cartões — mesma física do SwipeCard do "Pôr em
- * dia" (arrasta-se com o dedo, ou usa os botões por baixo). Aqui a decisão é
- * "quero ver" vs. "não me interessa", não "vi" vs. "ainda não".
+ * Cartão do Explorar em modo cartões.
+ *
+ * Duas apresentações, mesma física:
+ *  - `variante="cartao"`  → objeto com bordas, 2:3, para o layout A
+ *  - `variante="bordo"`   → de bordo a bordo, recortado, para o layout B
+ *
+ * O progresso do baralho vive no cartão (faixa SMPTE + contador mono) em vez
+ * de numa linha própria acima dele: poupa 30px e põe o "onde vou" onde os
+ * olhos já estão.
  */
 export default function DiscoverSwipeCard({
   deckItem,
   active,
   depth,
+  posicao,
+  total,
+  variante = "cartao",
   onDecide,
 }: {
   deckItem: DeckItem;
   active: boolean;
   depth: number;
+  /** 1-based, para o contador */
+  posicao: number;
+  total: number;
+  variante?: "cartao" | "bordo";
   onDecide: (guardar: boolean) => void;
 }) {
   const { item, sectionTitle, sectionReason } = deckItem;
@@ -55,7 +66,7 @@ export default function DiscoverSwipeCard({
     try {
       (e.target as Element).setPointerCapture(e.pointerId);
     } catch {
-      // idem SwipeCard: nem todo ponteiro sintético tem captura disponível
+      // nem todo ponteiro sintético tem captura disponível
     }
     setDrag({ x: 0, dragging: true });
   };
@@ -67,11 +78,8 @@ export default function DiscoverSwipeCard({
 
   const endDrag = () => {
     if (!drag.dragging) return;
-    if (Math.abs(drag.x) > THRESHOLD) {
-      decide(drag.x > 0);
-    } else {
-      setDrag({ x: 0, dragging: false });
-    }
+    if (Math.abs(drag.x) > THRESHOLD) decide(drag.x > 0);
+    else setDrag({ x: 0, dragging: false });
     pointerId.current = null;
   };
 
@@ -84,6 +92,12 @@ export default function DiscoverSwipeCard({
   const transform = leaving
     ? `translateX(${leaving === "right" ? 600 : -600}px) rotate(${leaving === "right" ? 24 : -24}deg)`
     : `translateX(${drag.x}px) rotate(${rotate}deg) ${depth > 0 ? rest : ""}`;
+
+  const bordo = variante === "bordo";
+  const cor = sectionColor(sectionTitle);
+  // O rating só aparece quando diz alguma coisa. A app evita transformar
+  // tudo em números: abaixo de 8,0 não ajuda a decidir, é ruído.
+  const nota = item.rating && item.rating >= 8 ? item.rating.toFixed(1).replace(".", ",") : null;
 
   return (
     <div
@@ -99,7 +113,11 @@ export default function DiscoverSwipeCard({
       onPointerCancel={endDrag}
     >
       <div
-        className="ep-card relative h-full overflow-hidden"
+        className={
+          bordo
+            ? "relative h-full overflow-hidden bg-panel"
+            : "ep-card relative h-full overflow-hidden"
+        }
         style={{
           boxShadow: committed
             ? `0 0 0 3px ${drag.x > 0 ? YES : NO}, 0 18px 40px -12px rgba(0,0,0,.7)`
@@ -111,7 +129,7 @@ export default function DiscoverSwipeCard({
           <Poster
             path={item.posterPath}
             alt=""
-            size="w500"
+            size="w780"
             fill
             priority={active}
             sizes="(max-width: 640px) 100vw, 480px"
@@ -123,7 +141,15 @@ export default function DiscoverSwipeCard({
             {item.name}
           </div>
         )}
-        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-tube via-tube/60 to-transparent" />
+
+        <div
+          className="pointer-events-none absolute inset-0"
+          style={{
+            background: bordo
+              ? "linear-gradient(to top,#101014 2%,rgba(16,16,20,.85) 26%,rgba(16,16,20,.15) 52%,rgba(16,16,20,.55) 100%)"
+              : "linear-gradient(to top,#101014 0%,rgba(16,16,20,.72) 38%,rgba(16,16,20,0) 68%)",
+          }}
+        />
 
         <div
           className="pointer-events-none absolute inset-0"
@@ -134,8 +160,23 @@ export default function DiscoverSwipeCard({
           style={{ backgroundColor: NO, opacity: no * 0.28 }}
         />
 
-        {/* Selo do lado contrário ao movimento — o cartão foge para a
-            direita, o selo "Para ver" fica à esquerda para continuar visível. */}
+        {/* Progresso do baralho: faixa SMPTE no topo (cartão) — cor só onde
+            há progresso, como manda o sistema. */}
+        {!bordo && (
+          <>
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-ink/5">
+              <div
+                className="bars h-full"
+                style={{ width: `${(posicao / Math.max(total, 1)) * 100}%` }}
+              />
+            </div>
+            <div className="ep-code pointer-events-none absolute right-4 top-4 rounded-full border border-line bg-tube/70 px-2.5 py-1 text-[11px] text-dim">
+              {posicao} / {total}
+            </div>
+          </>
+        )}
+
+        {/* Selos do lado contrário ao movimento */}
         <div
           className="pointer-events-none absolute left-4 top-6 rounded-xl border-[5px] px-4 py-1.5 text-center font-display text-2xl font-bold uppercase leading-none tracking-wide [font-stretch:75%]"
           style={{
@@ -165,17 +206,43 @@ export default function DiscoverSwipeCard({
           quero
         </div>
 
-        <div className="relative flex h-full flex-col justify-end p-5">
-          <p className="truncate font-display text-xs font-semibold uppercase tracking-[0.18em] text-dim [font-stretch:80%]">
-            {sectionTitle}
-            {sectionReason ? ` · ${sectionReason}` : ""}
+        <div
+          className={`pointer-events-none relative flex h-full flex-col justify-end ${
+            bordo ? "px-5 pb-[13rem]" : "p-5"
+          }`}
+        >
+          {/* De onde veio isto — sem as filas lado a lado é a única pista do
+              porquê. A barrinha de cor liga o cartão à secção de origem. */}
+          <p className="flex max-w-full items-center gap-2 self-start truncate rounded-full border border-line bg-raised/80 py-1 pl-2 pr-3 font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-ink [font-stretch:80%]">
+            <span
+              aria-hidden
+              className="h-[3px] w-5 shrink-0 rounded-full"
+              style={{ backgroundColor: cor }}
+            />
+            <span className="truncate">
+              {sectionTitle}
+              {sectionReason ? ` · ${sectionReason}` : ""}
+            </span>
           </p>
-          <h2 className="mt-2 font-display text-2xl font-bold leading-tight text-ink [font-stretch:105%]">
+
+          <h2
+            className={`mt-2 font-display font-bold leading-tight text-ink [font-stretch:105%] ${
+              bordo ? "text-[2.125rem] leading-[1.02]" : "text-2xl"
+            }`}
+          >
             {item.name}
           </h2>
-          {item.year && <p className="ep-code mt-1 text-xs text-faint">{item.year}</p>}
+
+          <p className="ep-code mt-1 text-xs uppercase text-faint">
+            {[item.year, nota ? `TMDB ${nota}` : null].filter(Boolean).join(" · ")}
+          </p>
+
           {item.overview && (
-            <p className="mt-2 line-clamp-3 text-base text-dim">{item.overview}</p>
+            <p
+              className={`mt-2 text-sm text-dim ${bordo ? "line-clamp-3 text-[15px]" : "line-clamp-2"}`}
+            >
+              {item.overview}
+            </p>
           )}
         </div>
       </div>
