@@ -72,3 +72,36 @@ export function groupSorted<T>(
   if (soltos > groups.length * 0.6) return null;
   return groups;
 }
+
+/**
+ * Agrupa em secções fixas, pela ordem dada — ao contrário do `groupSorted`,
+ * que corta a lista em troços consecutivos e por isso só serve quando o
+ * rótulo acompanha a ordenação.
+ *
+ * Foi preciso porque a Biblioteca passou a agrupar por ESTADO enquanto
+ * continua ordenada por data: com o `groupSorted`, "Completas" aparecia
+ * várias vezes intercalado com "A ver" — e como o rótulo é a chave do React,
+ * dava secções repetidas e um aviso de chaves duplicadas.
+ *
+ * Dentro de cada secção a ordem de entrada mantém-se, que é a ordenação
+ * escolhida pelo utilizador.
+ */
+export function groupByBucket<T>(
+  items: T[],
+  labelOf: (item: T) => string,
+  ordem: string[],
+): Group<T>[] | null {
+  const baldes = new Map<string, T[]>();
+  for (const item of items) {
+    const label = labelOf(item);
+    baldes.set(label, [...(baldes.get(label) ?? []), item]);
+  }
+  const groups = ordem
+    .filter((label) => (baldes.get(label)?.length ?? 0) > 0)
+    .map((label) => ({ label, items: baldes.get(label)! }));
+  // secções que não estavam na ordem conhecida vão para o fim, sem se perderem
+  for (const [label, lista] of baldes) {
+    if (!ordem.includes(label)) groups.push({ label, items: lista });
+  }
+  return groups.length >= 2 ? groups : null;
+}

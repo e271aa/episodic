@@ -26,16 +26,23 @@ import {
   type MetaSearchResult,
 } from "@/lib/metadata";
 import { pushUndo } from "@/lib/undo";
-import { decadeLabel, groupSorted, letterLabel, periodLabel } from "@/lib/grouping";
+import {
+  decadeLabel,
+  groupByBucket,
+  groupSorted,
+  letterLabel,
+  periodLabel,
+} from "@/lib/grouping";
 import PosterCard from "@/components/PosterCard";
 import SectionHeader from "@/components/SectionHeader";
+import LibraryControls from "@/components/LibraryControls";
+import SheetPanel from "@/components/SheetPanel";
 import { PosterGridBone, TitleBone } from "@/components/Skeleton";
 import {
   TvIcon,
   CheckIcon,
   ClapperboardIcon,
   SearchIcon,
-  SortIcon,
 } from "@/components/icons";
 
 type Segment = "series" | "filmes";
@@ -60,6 +67,18 @@ const MOVIE_SORTS: { id: MovieSort; label: string }[] = [
 ];
 
 type FollowState = "idle" | "following" | "done";
+
+/** A ordem por que as secções de estado aparecem, e a cor de cada uma. As
+ *  cores são as mesmas da barra de progresso do cartaz: verde = a andar,
+ *  roxo = acabou. Cor com significado, não decoração. */
+const ESTADOS = ["A ver", "Completas", "Para ver", "Já não sigo", "Arquivadas"];
+const COR_ESTADO: Record<string, string> = {
+  "A ver": "#37c837",
+  Completas: "#d24bd2",
+  "Para ver": "#3fd2c8",
+  "Já não sigo": "#8a8880",
+  Arquivadas: "#8a8880",
+};
 
 // Sobe quando a forma de escolher o filme no TMDB muda: obriga a rever os
 // filmes já enriquecidos uma vez, em vez de deixar os erros antigos fossilizados.
@@ -338,68 +357,18 @@ function MovieCard({
  * A ordem tem de estar sempre à vista — dizer "A–Z" ou "Vistos há pouco" em
  * texto resolve a dúvida sem ser preciso abrir nada; o ícone só muda.
  */
-function SortMenu<T extends string>({
-  options,
-  value,
-  onChange,
+function StickySectionHeader({
+  label,
+  count,
+  color,
 }: {
-  options: { id: T; label: string }[];
-  value: T;
-  onChange: (id: T) => void;
+  label: string;
+  count: number;
+  color?: string;
 }) {
-  const [open, setOpen] = useState(false);
-  const current = options.find((o) => o.id === value);
-
   return (
-    <div className="relative">
-      <button
-        onClick={() => setOpen((o) => !o)}
-        aria-expanded={open}
-        className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-3 text-xs text-dim transition hover:border-ink hover:text-ink active:scale-95"
-        data-testid="sort-button"
-      >
-        <SortIcon className="h-3.5 w-3.5" />
-        {current?.label}
-      </button>
-      {open && (
-        <>
-          <button
-            aria-label="Fechar"
-            onClick={() => setOpen(false)}
-            className="fixed inset-0 z-10 cursor-default"
-          />
-          <div className="absolute right-0 z-20 mt-1 w-52 overflow-hidden rounded-2xl border border-line bg-panel shadow-lg shadow-black/40">
-            {options.map((o) => (
-              <button
-                key={o.id}
-                onClick={() => {
-                  onChange(o.id);
-                  setOpen(false);
-                }}
-                className={`flex w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-2.5 text-left text-[15px] transition hover:bg-raised ${
-                  o.id === value ? "text-ink" : "text-dim"
-                }`}
-              >
-                {o.label}
-                {o.id === value && <CheckIcon className="h-4 w-4 shrink-0" />}
-              </button>
-            ))}
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
-
-/**
- * Banda de secção. Fica colada ao topo enquanto a secção passa, para nunca
- * se perder o sítio a meio de 227 cartazes. O conteúdo é o cabeçalho
- * partilhado — só o comportamento pegajoso é que é daqui.
- */
-function StickySectionHeader({ label, count }: { label: string; count: number }) {
-  return (
-    <div className="sticky top-0 z-10 -mx-4 mb-2 mt-5 bg-tube/90 px-4 py-2 backdrop-blur">
-      <SectionHeader label={label} meta={count} />
+    <div className="sticky top-0 z-10 -mx-5 mb-2 mt-5 bg-tube/90 px-5 py-2 backdrop-blur">
+      <SectionHeader label={label} meta={count} color={color} />
     </div>
   );
 }
@@ -512,6 +481,10 @@ function LibraryContent() {
   const [shows, setShows] = useState<ShowWithProgress[] | null>(null);
   const [movies, setMovies] = useState<StoredMovie[] | null>(null);
   const [query, setQuery] = useState("");
+  // A pesquisa e os filtros saíram do cabeçalho; vivem atrás dos ícones da
+  // barra flutuante e abrem por cima do conteúdo.
+  const [pesquisaAberta, setPesquisaAberta] = useState(false);
+  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   // Pesquisa remota é secundária: só corre quando o utilizador a pede
   const [remote, setRemote] = useState<MetaSearchResult[] | null>(null);
   const [remoteMovies, setRemoteMovies] = useState<MetaMovieResult[] | null>(null);
@@ -716,17 +689,29 @@ function LibraryContent() {
   // Secções derivadas da ordem ativa: por tempo dá períodos, A–Z dá letras,
   // estreia dá décadas. A pesquisar não se agrupa — são poucos resultados e
   // as bandas só atrapalhavam.
+  /** O estado da série, para as secções da grelha. É o agrupamento por
+   *  omissão: sem filtro aplicado, "o que estou a ver" e "o que já acabei"
+   *  são as duas perguntas que a Biblioteca responde. */
+  const estadoLabel = (s: ShowWithProgress): string => {
+    if (s.archived) return "Arquivadas";
+    if (!s.followed) return s.inWatchlist ? "Para ver" : "Já não sigo";
+    if (s.totalEpisodes && s.watchedCount >= s.totalEpisodes) return "Completas";
+    return "A ver";
+  };
+
   const showGroups = useMemo(
     () =>
       q
         ? null
-        : groupSorted(filteredShows, {
+        : filter === "tudo" && seriesSort === "vistos"
+          ? groupByBucket(filteredShows, estadoLabel, ESTADOS)
+          : groupSorted(filteredShows, {
             vistos: (s: ShowWithProgress) => periodLabel(s.lastWatchedAt || null),
             adicionadas: (s: ShowWithProgress) => periodLabel(s.addedAt),
             az: (s: ShowWithProgress) => letterLabel(s.name),
             progresso: null,
           }[seriesSort]),
-    [filteredShows, seriesSort, q],
+    [filteredShows, seriesSort, filter, q],
   );
 
   const movieGroups = useMemo(
@@ -760,164 +745,7 @@ function LibraryContent() {
   ];
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-8">
-      <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Biblioteca</h1>
-
-      {/* Atalhos compactos: a biblioteca é dos teus títulos — as outras
-          paragens são uma linha, não 400px de cartões antes do conteúdo */}
-      <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-        <Link
-          href="/em-dia"
-          className="flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full border border-line px-3.5 text-[15px] text-dim transition hover:border-ink hover:text-ink active:scale-95"
-        >
-          <span className="bars h-4 w-4 shrink-0 rounded-full" />
-          Pôr em dia
-        </Link>
-        <Link
-          href="/estrear"
-          className="inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border border-line px-3.5 text-[15px] text-dim transition hover:border-ink hover:text-ink active:scale-95"
-        >
-          A estrear
-        </Link>
-        <Link
-          href="/listas"
-          className="inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border border-line px-3.5 text-[15px] text-dim transition hover:border-ink hover:text-ink active:scale-95"
-        >
-          Listas
-        </Link>
-      </div>
-
-      {/* Pesquisa: filtra ao vivo o que já tens; procurar novas é um segundo passo */}
-      <div className="relative mt-4">
-        <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
-        <input
-          type="search"
-          value={query}
-          onChange={(e) => handleQueryChange(e.target.value)}
-          placeholder="Procurar na biblioteca…"
-          className="min-h-11 w-full rounded-full border border-line bg-panel py-2.5 pl-10 pr-4 outline-none transition-colors focus:border-ink"
-          data-testid="search-input"
-        />
-      </div>
-
-      {/* Segmentos: séries e filmes lado a lado, não em páginas separadas */}
-      <div className="mt-4 flex gap-1 rounded-full border border-line bg-panel p-1">
-        {(
-          [
-            ["series", "Séries", shows?.length ?? 0],
-            ["filmes", "Filmes", movies?.length ?? 0],
-          ] as const
-        ).map(([id, label, total]) => (
-          <button
-            key={id}
-            onClick={() => changeSegment(id)}
-            aria-pressed={segment === id}
-            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-[15px] font-semibold transition ${
-              segment === id ? "bg-ink text-tube" : "text-dim hover:text-ink"
-            }`}
-          >
-            {label}
-            <span className={`ep-code text-xs ${segment === id ? "opacity-70" : "text-faint"}`}>
-              {total}
-            </span>
-          </button>
-        ))}
-      </div>
-
-      {segment === "series" && (
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {FILTERS.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setParams({ filtro: f.id === "tudo" ? null : f.id })}
-              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
-                filter === f.id
-                  ? "border-ink bg-ink text-tube"
-                  : "border-line text-dim hover:border-ink hover:text-ink"
-              }`}
-            >
-              {f.label}
-              <span
-                className={`ep-code text-xs ${filter === f.id ? "opacity-70" : "text-faint"}`}
-              >
-                {counts[f.id]}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {segment === "filmes" && (
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {MOVIE_FILTERS.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setParams({ filtro: f.id === "vistos" ? null : f.id })}
-              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
-                movieFilter === f.id
-                  ? "border-ink bg-ink text-tube"
-                  : "border-line text-dim hover:border-ink hover:text-ink"
-              }`}
-            >
-              {f.label}
-              <span
-                className={`ep-code text-xs ${movieFilter === f.id ? "opacity-70" : "text-faint"}`}
-              >
-                {movieCounts[f.id]}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
-
-      {segment === "filmes" && decades.length > 1 && (
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          <button
-            onClick={() => setParams({ decada: null })}
-            className={`inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
-              decade === null
-                ? "border-ink bg-ink text-tube"
-                : "border-line text-dim hover:border-ink hover:text-ink"
-            }`}
-          >
-            Todas as décadas
-          </button>
-          {decades.map((d) => (
-            <button
-              key={d}
-              onClick={() => setParams({ decada: d === decade ? null : String(d) })}
-              className={`ep-code inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border px-3.5 text-sm transition active:scale-95 ${
-                decade === d
-                  ? "border-ink bg-ink text-tube"
-                  : "border-line text-dim hover:border-ink hover:text-ink"
-              }`}
-            >
-              {decadeLabel(d)}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {!loading && (
-        <div className="mt-4 flex items-center justify-between gap-3">
-          <p className="ep-code text-xs text-faint">
-            {showing} {segment === "series" ? "séries" : "filmes"}
-          </p>
-          {segment === "series" ? (
-            <SortMenu
-              options={SERIES_SORTS}
-              value={seriesSort}
-              onChange={(id) => setParams({ ordem: id === "vistos" ? null : id })}
-            />
-          ) : (
-            <SortMenu
-              options={MOVIE_SORTS}
-              value={movieSort}
-              onChange={(id) => setParams({ ordem: id === "vistos" ? null : id })}
-            />
-          )}
-        </div>
-      )}
+    <main className="mx-auto w-full max-w-2xl px-5 pt-10 pb-[calc(var(--dock-h)+5.5rem)]">
 
       {loading ? (
         <PosterGridBone count={9} />
@@ -927,8 +755,12 @@ function LibraryContent() {
             <div data-testid="library-grid">
               {showGroups.map((g) => (
                 <section key={g.label}>
-                  <StickySectionHeader label={g.label} count={g.items.length} />
-                  <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+                  <StickySectionHeader
+                    label={g.label}
+                    count={g.items.length}
+                    color={COR_ESTADO[g.label]}
+                  />
+                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                     {g.items.map((s, i) => (
                       <ShowPoster key={s.uuid} show={s} index={i} />
                     ))}
@@ -938,7 +770,7 @@ function LibraryContent() {
             </div>
           ) : (
             <div
-              className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5"
+              className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
               data-testid="library-grid"
             >
               {filteredShows.map((s, i) => (
@@ -951,7 +783,7 @@ function LibraryContent() {
             {movieGroups.map((g) => (
               <section key={g.label}>
                 <StickySectionHeader label={g.label} count={g.items.length} />
-                <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
+                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
                   {g.items.map((m, i) => (
                     <MovieCard key={m.key} movie={m} index={i} onChanged={reloadMovies} />
                   ))}
@@ -961,7 +793,7 @@ function LibraryContent() {
           </div>
         ) : (
           <div
-            className="mt-3 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5"
+            className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
             data-testid="library-grid"
           >
             {filteredMovies.map((m, i) => (
@@ -1037,6 +869,173 @@ function LibraryContent() {
           )}
         </div>
       )}
+
+      <LibraryControls
+        segment={segment}
+        counts={{ series: shows?.length ?? 0, filmes: movies?.length ?? 0 }}
+        onSegment={changeSegment}
+        onSearch={() => setPesquisaAberta(true)}
+        onFilters={() => setFiltrosAbertos(true)}
+        filtrosAtivos={
+          segment === "series"
+            ? filter !== "tudo" || seriesSort !== "vistos"
+            : movieFilter !== "vistos" || movieSort !== "vistos" || decade !== null
+        }
+      />
+
+      {/* A pesquisa sobe por cima de tudo: enquanto se procura, procurar é a
+          única coisa que interessa no ecrã. */}
+      <SheetPanel
+        titulo="Procurar"
+        aberto={pesquisaAberta}
+        onFechar={() => setPesquisaAberta(false)}
+      >
+        <div className="relative">
+          <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
+          <input
+            type="search"
+            autoFocus
+            value={query}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            placeholder="Procurar na biblioteca…"
+            className="min-h-12 w-full rounded-full border border-line bg-tube py-2.5 pl-10 pr-4 outline-none transition-colors focus:border-ink"
+            data-testid="search-input"
+          />
+        </div>
+        <p className="mt-3 text-[15px] text-dim">
+          {q
+            ? `${showing} ${segment === "series" ? "séries" : "filmes"} na biblioteca`
+            : "Escreve para filtrar o que já tens. Procurar títulos novos é o passo seguinte, no fim da lista."}
+        </p>
+        {q && (
+          <button
+            onClick={() => setPesquisaAberta(false)}
+            className="mt-4 flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full bg-ink text-[15px] font-semibold text-tube transition active:scale-95"
+          >
+            Ver resultados
+          </button>
+        )}
+      </SheetPanel>
+
+      <SheetPanel
+        titulo="Filtros e ordenação"
+        aberto={filtrosAbertos}
+        onFechar={() => setFiltrosAbertos(false)}
+      >
+        {segment === "series" && (
+          <>
+            <SectionHeader label="Mostrar" />
+            <div className="mt-3 flex flex-wrap gap-2">
+              {FILTERS.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setParams({ filtro: f.id === "tudo" ? null : f.id })}
+                  className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
+                    filter === f.id
+                      ? "border-ink bg-ink text-tube"
+                      : "border-line text-dim hover:border-ink hover:text-ink"
+                  }`}
+                >
+                  {f.label}
+                  <span
+                    className={`ep-code text-xs ${filter === f.id ? "opacity-70" : "text-faint"}`}
+                  >
+                    {counts[f.id]}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <SectionHeader label="Ordenar por" className="mt-6" />
+            <div className="mt-3 flex flex-wrap gap-2">
+              {SERIES_SORTS.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => setParams({ ordem: o.id === "vistos" ? null : o.id })}
+                  className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
+                    seriesSort === o.id
+                      ? "border-ink bg-ink text-tube"
+                      : "border-line text-dim hover:border-ink hover:text-ink"
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+          </>
+        )}
+
+        {segment === "filmes" && (
+          <>
+            <SectionHeader label="Mostrar" />
+            <div className="mt-3 flex flex-wrap gap-2">
+              {MOVIE_FILTERS.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => setParams({ filtro: f.id === "vistos" ? null : f.id })}
+                  className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
+                    movieFilter === f.id
+                      ? "border-ink bg-ink text-tube"
+                      : "border-line text-dim hover:border-ink hover:text-ink"
+                  }`}
+                >
+                  {f.label}
+                  <span
+                    className={`ep-code text-xs ${movieFilter === f.id ? "opacity-70" : "text-faint"}`}
+                  >
+                    {movieCounts[f.id]}
+                  </span>
+                </button>
+              ))}
+            </div>
+            <SectionHeader label="Ordenar por" className="mt-6" />
+            <div className="mt-3 flex flex-wrap gap-2">
+              {MOVIE_SORTS.map((o) => (
+                <button
+                  key={o.id}
+                  onClick={() => setParams({ ordem: o.id === "vistos" ? null : o.id })}
+                  className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
+                    movieSort === o.id
+                      ? "border-ink bg-ink text-tube"
+                      : "border-line text-dim hover:border-ink hover:text-ink"
+                  }`}
+                >
+                  {o.label}
+                </button>
+              ))}
+            </div>
+            {decades.length > 1 && (
+              <>
+                <SectionHeader label="Década" className="mt-6" />
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    onClick={() => setParams({ decada: null })}
+                    className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
+                      decade === null
+                        ? "border-ink bg-ink text-tube"
+                        : "border-line text-dim hover:border-ink hover:text-ink"
+                    }`}
+                  >
+                    Todas
+                  </button>
+                  {decades.map((d) => (
+                    <button
+                      key={d}
+                      onClick={() => setParams({ decada: d === decade ? null : String(d) })}
+                      className={`ep-code min-h-11 cursor-pointer rounded-full border px-3.5 text-sm transition active:scale-95 ${
+                        decade === d
+                          ? "border-ink bg-ink text-tube"
+                          : "border-line text-dim hover:border-ink hover:text-ink"
+                      }`}
+                    >
+                      {decadeLabel(d)}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </>
+        )}
+      </SheetPanel>
     </main>
   );
 }

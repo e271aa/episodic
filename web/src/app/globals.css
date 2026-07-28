@@ -99,6 +99,11 @@ input:focus-visible,
     transform: translateY(0);
   }
 }
+/* Nota para quem puser aqui algo `position: fixed`: este elemento tem um
+   `transform` aplicado pela animação, e um transform — mesmo identidade —
+   torna-o o bloco de referência dos descendentes fixos. Um elemento fixo
+   dentro de uma página NÃO se posiciona pelo viewport. A barra flutuante da
+   Biblioteca resolve isto com um portal para o body (ver LibraryControls). */
 .page-enter {
   animation: page-enter 220ms ease-out both;
 }
