@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getWatchedForShow, kvGet, kvSet, markWatched, unmarkWatched, updateShow } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
+import { buildUpcomingCalendar, type UpcomingEntry } from "@/lib/upcoming";
 import { enrichShow, hasTmdb } from "@/lib/metadata";
 import { findShowByTvdbId } from "@/lib/tmdb";
 import { findNextUnwatched, formatEpCode } from "@/lib/watchnext";
@@ -18,6 +19,7 @@ import {
 import { pushUndo } from "@/lib/undo";
 import WatchNextCard from "@/components/WatchNextCard";
 import TonightHero from "@/components/TonightHero";
+import Poster from "@/components/Poster";
 import SectionHeader from "@/components/SectionHeader";
 import { CheckIcon } from "@/components/icons";
 import { Bone, CardsBone, TitleBone } from "@/components/Skeleton";
@@ -37,6 +39,9 @@ export default function SeriesPage() {
   const [showNotStarted, setShowNotStarted] = useState(false);
   // instante de referência para o corte de 30 dias, fixado ao montar
   const [now] = useState(() => Date.now());
+  // "A estrear" era um ecrã à parte e quase sempre vazio. A mesma informação
+  // aqui responde à pergunta seguinte à do herói: "e depois?".
+  const [upcoming, setUpcoming] = useState<UpcomingEntry[] | null>(null);
   const enriching = useRef(false);
   const hadCache = useRef(false);
 
@@ -72,6 +77,23 @@ export default function SeriesPage() {
 
   // Completa séries com poster/sinopse/nº de episódios (TVmaze por defeito,
   // TMDB com chave). Persiste — nas visitas seguintes já está em cache.
+  // Depois das séries, e sem bloquear o ecrã: o calendário é o extra do fim
+  // da página, não pode atrasar o herói.
+  useEffect(() => {
+    if (!shows) return;
+    let vivo = true;
+    void buildUpcomingCalendar(shows)
+      .then((e) => {
+        if (vivo) setUpcoming(e);
+      })
+      .catch(() => {
+        if (vivo) setUpcoming([]);
+      });
+    return () => {
+      vivo = false;
+    };
+  }, [shows]);
+
   const enrich = useCallback(
     async (list: ShowWithProgress[]) => {
       if (enriching.current) return;
@@ -381,9 +403,12 @@ export default function SeriesPage() {
             backdropPath={heroShow.backdropPath}
             posterPath={heroShow.posterPath}
             episode={nextUp.get(heroShow.uuid)!.episode}
+            watchedCount={heroShow.watchedCount}
+            totalEpisodes={heroShow.totalEpisodes}
+            emDia={queue.length}
             eyebrow={
               heroKind === "a-seguir"
-                ? "A seguir"
+                ? "Esta noite"
                 : heroKind === "retomar"
                   ? "Retomar onde ficaste"
                   : "Começar do início"
@@ -397,26 +422,6 @@ export default function SeriesPage() {
             </section>
           )}
         </>
-      )}
-
-      {/* O swipe pertence aqui: é onde a fila vive. Só aparece quando há
-          mesmo fila para pôr em dia, senão seria um botão morto. */}
-      {queue.length > 1 && (
-        <Link
-          href="/em-dia"
-          className="ep-card ep-card-hover mt-6 flex items-center gap-3 p-4"
-        >
-          <span className="bars flex h-11 w-11 shrink-0 items-center justify-center rounded-full" />
-          <span className="min-w-0 flex-1">
-            <span className="block font-display font-semibold text-ink">
-              Pôr {queue.length} episódios em dia
-            </span>
-            <span className="block text-xs text-dim">
-              Arrasta para a direita o que já viste, para a esquerda o resto
-            </span>
-          </span>
-          <span className="text-faint">→</span>
-        </Link>
       )}
 
       {staleRest.length > 0 && (
@@ -442,6 +447,56 @@ export default function SeriesPage() {
             () => setShowNotStarted((v) => !v),
           )}
           {showNotStarted && queueCards(notStartedRest)}
+        </section>
+      )}
+
+      {/* "Esta semana" — o que vem a seguir ao que estás a ver. Era um ecrã
+          próprio ("A estrear") quase sempre vazio; aqui responde à pergunta
+          seguinte à do herói e não custa um destino na navegação. */}
+      {upcoming && upcoming.length > 0 && (
+        <section className="mt-8">
+          <SectionHeader
+            label="Esta semana"
+            meta={upcoming.length}
+            color="#3fd2c8"
+          />
+          <div className="-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
+            {upcoming.slice(0, 10).map(({ show, episode }) => (
+              <Link
+                key={`${show.uuid}-${episode.season}-${episode.episode}`}
+                href={`/series/${show.uuid}`}
+                className="ep-card w-[104px] shrink-0 overflow-hidden p-0"
+              >
+                <div className="relative h-[60px] w-full overflow-hidden bg-raised">
+                  {show.backdropPath || show.posterPath ? (
+                    <Poster
+                      path={show.backdropPath ?? show.posterPath}
+                      alt=""
+                      size="w342"
+                      fill
+                      sizes="104px"
+                      className="object-cover"
+                    />
+                  ) : null}
+                </div>
+                <div className="p-2">
+                  <p className="truncate text-[15px] font-semibold leading-tight">
+                    {show.name}
+                  </p>
+                  {/* duas linhas: num cartão de 104px o código e a data não
+                      cabem lado a lado, e truncar a data tira-lhe o sentido */}
+                  <p className="ep-code mt-0.5 truncate text-xs text-faint">
+                    {formatEpCode(episode.season, episode.episode)}
+                  </p>
+                  {episode.airDate && (
+                    <p className="ep-code truncate text-xs text-dim">
+                      {episode.airDate.slice(8, 10)}/{episode.airDate.slice(5, 7)}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
         </section>
       )}
 
