@@ -67,20 +67,20 @@ export default function FirstSync() {
       {estado.fase === "erro" ? (
         <>
           <p className="mt-6 font-display text-lg font-bold">Não deu para trazer tudo</p>
-          <p className="mt-1.5 max-w-xs text-sm text-dim">
+          <p className="mt-1.5 max-w-xs text-[15px] text-dim">
             Verifica a ligação. Podes tentar outra vez, ou continuar e sincronizar
             depois pelo Perfil.
           </p>
           <div className="mt-6 flex gap-3">
             <button
               onClick={() => void correr()}
-              className="min-h-11 cursor-pointer rounded-full bg-ink px-6 text-sm font-semibold text-tube transition hover:brightness-110"
+              className="min-h-11 cursor-pointer rounded-full bg-ink px-6 text-[15px] font-semibold text-tube transition hover:brightness-110"
             >
               Tentar outra vez
             </button>
             <button
               onClick={() => setEstado({ fase: "inativo" })}
-              className="min-h-11 cursor-pointer rounded-full border border-line px-6 text-sm font-semibold text-dim transition hover:border-ink hover:text-ink"
+              className="min-h-11 cursor-pointer rounded-full border border-line px-6 text-[15px] font-semibold text-dim transition hover:border-ink hover:text-ink"
             >
               Continuar
             </button>

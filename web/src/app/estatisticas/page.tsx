@@ -43,7 +43,7 @@ export default function EstatisticasPage() {
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Estatísticas</h1>
-        <Link href="/profile" className="-mr-2 inline-flex min-h-11 items-center px-2 text-sm text-dim hover:text-ink hover:underline">
+        <Link href="/profile" className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline">
           Perfil
         </Link>
       </div>
@@ -68,7 +68,7 @@ export default function EstatisticasPage() {
           <p className="ep-code mt-2 text-3xl font-bold text-ink">
             {stats.bestBinge.count} <span className="text-lg font-normal text-dim">episódios</span>
           </p>
-          <p className="mt-1 text-sm text-dim">{formatDate(stats.bestBinge.date)}</p>
+          <p className="mt-1 text-[15px] text-dim">{formatDate(stats.bestBinge.date)}</p>
           {stats.bestBinge.topShow && (
             <p className="mt-2 text-xs text-faint">
               A maior parte foi de{" "}
@@ -88,7 +88,7 @@ export default function EstatisticasPage() {
             {stats.longestStreak.days}{" "}
             <span className="text-lg font-normal text-dim">dias seguidos</span>
           </p>
-          <p className="mt-1 text-sm text-dim">
+          <p className="mt-1 text-[15px] text-dim">
             {formatDate(stats.longestStreak.from)} → {formatDate(stats.longestStreak.to)}
           </p>
         </section>
@@ -120,7 +120,7 @@ export default function EstatisticasPage() {
           <p className="mt-2 font-display text-xl font-bold text-ink first-letter:uppercase">
             {formatMonth(stats.busiestMonth.month)}
           </p>
-          <p className="text-sm text-dim">{stats.busiestMonth.count} episódios</p>
+          <p className="text-[15px] text-dim">{stats.busiestMonth.count} episódios</p>
         </section>
       )}
 
@@ -133,7 +133,7 @@ export default function EstatisticasPage() {
             {stats.distinctShowsWatchedInADay.count}{" "}
             <span className="text-lg font-normal text-dim">séries no mesmo dia</span>
           </p>
-          <p className="mt-1 text-sm text-dim">
+          <p className="mt-1 text-[15px] text-dim">
             {formatDate(stats.distinctShowsWatchedInADay.date)}
           </p>
         </section>

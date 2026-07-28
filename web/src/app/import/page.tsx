@@ -107,7 +107,7 @@ export default function ImportPage() {
   return (
     <main className="mx-auto max-w-xl px-4 py-10">
       <h1 className="font-display text-2xl font-bold">Importar do TV Time</h1>
-      <p className="mt-2 text-sm text-dim">
+      <p className="mt-2 text-[15px] text-dim">
         Envia o ZIP do export GDPR (gdpr.tvtime.com) — ou os CSVs extraídos. Tudo é
         processado aqui no teu browser; nada é enviado para servidores.
       </p>
@@ -138,14 +138,14 @@ export default function ImportPage() {
       </label>
 
       {busy && !preview && (
-        <div className="mt-4 flex items-center gap-2 text-sm text-dim">
+        <div className="mt-4 flex items-center gap-2 text-[15px] text-dim">
           <span className="spinner h-4 w-4 shrink-0 rounded-full border-2 border-line border-t-ink" />
           A processar…
         </div>
       )}
 
       {error && (
-        <div className="page-enter mt-4 rounded-lg border border-danger/30 bg-danger/10 p-4 text-sm text-danger">
+        <div className="page-enter mt-4 rounded-lg border border-danger/30 bg-danger/10 p-4 text-[15px] text-danger">
           {error}
         </div>
       )}
@@ -153,7 +153,7 @@ export default function ImportPage() {
       {preview && (
         <div className="page-enter mt-6 rounded-2xl border border-line bg-panel p-5">
           <h2 className="font-display font-semibold">Resumo do export</h2>
-          <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+          <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[15px]">
             <dt className="text-dim">Séries</dt>
             <dd className="ep-code" data-testid="summary-shows">{preview.shows.length}</dd>
             <dt className="text-dim">— a seguir</dt>

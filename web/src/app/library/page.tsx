@@ -28,6 +28,7 @@ import {
 import { pushUndo } from "@/lib/undo";
 import { decadeLabel, groupSorted, letterLabel, periodLabel } from "@/lib/grouping";
 import PosterCard from "@/components/PosterCard";
+import SectionHeader from "@/components/SectionHeader";
 import { PosterGridBone, TitleBone } from "@/components/Skeleton";
 import {
   TvIcon,
@@ -125,11 +126,11 @@ function ResultCard({ result }: { result: MetaSearchResult }) {
             <span className="ep-code ml-2 text-sm text-faint">{result.year}</span>
           )}
         </p>
-        <p className="mt-1 line-clamp-2 text-xs text-dim">{result.overview}</p>
+        <p className="mt-1 line-clamp-2 text-[15px] text-dim">{result.overview}</p>
         {state === "done" ? (
           <button
             disabled
-            className="mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-4 text-sm font-semibold text-dim"
+            className="mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-4 text-[15px] font-semibold text-dim"
           >
             <CheckIcon className="check-pop h-3.5 w-3.5" />
             {inWatchlist ? "Na lista para ver" : "A seguir"}
@@ -139,7 +140,7 @@ function ResultCard({ result }: { result: MetaSearchResult }) {
             <button
               onClick={() => void add(true)}
               disabled={state !== "idle"}
-              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
             >
               {state === "following" && (
                 <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-tube/30 border-t-tube" />
@@ -149,7 +150,7 @@ function ResultCard({ result }: { result: MetaSearchResult }) {
             <button
               onClick={() => void add(false)}
               disabled={state !== "idle"}
-              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-sm font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
+              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[15px] font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
             >
               Para ver
             </button>
@@ -227,11 +228,11 @@ function MovieResultCard({
             <span className="ep-code ml-2 text-sm text-faint">{result.year}</span>
           )}
         </p>
-        <p className="mt-1 line-clamp-2 text-xs text-dim">{result.overview}</p>
+        <p className="mt-1 line-clamp-2 text-[15px] text-dim">{result.overview}</p>
         {state === "done" ? (
           <button
             disabled
-            className="mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-4 text-sm font-semibold text-dim"
+            className="mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-4 text-[15px] font-semibold text-dim"
           >
             <CheckIcon className="check-pop h-3.5 w-3.5" />
             Na biblioteca
@@ -241,7 +242,7 @@ function MovieResultCard({
             <button
               onClick={() => void add(true)}
               disabled={state !== "idle"}
-              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
             >
               {state === "following" && (
                 <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-tube/30 border-t-tube" />
@@ -251,7 +252,7 @@ function MovieResultCard({
             <button
               onClick={() => void add(false)}
               disabled={state !== "idle"}
-              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-sm font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
+              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[15px] font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
             >
               Para ver
             </button>
@@ -301,7 +302,7 @@ function MovieCard({
     >
       <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30 transition duration-200 group-hover:-translate-y-0.5 group-hover:ring-2 group-hover:ring-ink/60">
         {/* nome por baixo da capa — ver nota em PosterCard */}
-        <div className="absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display text-sm font-bold text-dim">
+        <div className="absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display text-[15px] font-bold text-dim">
           {movie.name}
         </div>
         <Poster
@@ -327,7 +328,7 @@ function MovieCard({
           </>
         )}
       </div>
-      <p className="mt-1.5 truncate text-sm font-medium">{movie.name}</p>
+      <p className="mt-1.5 truncate text-[15px] font-medium">{movie.name}</p>
       <p className="ep-code truncate text-xs text-dim">{year ?? movie.watchedAt?.slice(0, 4) ?? ""}</p>
     </Link>
   );
@@ -375,7 +376,7 @@ function SortMenu<T extends string>({
                   onChange(o.id);
                   setOpen(false);
                 }}
-                className={`flex w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-2.5 text-left text-sm transition hover:bg-raised ${
+                className={`flex w-full cursor-pointer items-center justify-between gap-2 px-3.5 py-2.5 text-left text-[15px] transition hover:bg-raised ${
                   o.id === value ? "text-ink" : "text-dim"
                 }`}
               >
@@ -392,17 +393,13 @@ function SortMenu<T extends string>({
 
 /**
  * Banda de secção. Fica colada ao topo enquanto a secção passa, para nunca
- * se perder o sítio a meio de 227 cartazes.
+ * se perder o sítio a meio de 227 cartazes. O conteúdo é o cabeçalho
+ * partilhado — só o comportamento pegajoso é que é daqui.
  */
-function SectionHeader({ label, count }: { label: string; count: number }) {
+function StickySectionHeader({ label, count }: { label: string; count: number }) {
   return (
     <div className="sticky top-0 z-10 -mx-4 mb-2 mt-5 bg-tube/90 px-4 py-2 backdrop-blur">
-      <h2 className="flex items-baseline gap-2 font-display text-sm font-semibold uppercase tracking-[0.15em] text-dim [font-stretch:80%]">
-        {label}
-        <span className="ep-code text-xs normal-case tracking-normal text-faint">
-          {count}
-        </span>
-      </h2>
+      <SectionHeader label={label} meta={count} />
     </div>
   );
 }
@@ -449,7 +446,7 @@ function EmptyState({
               ? "Ainda não há séries"
               : "Ainda não há filmes"}
       </p>
-      <p className="mt-1 max-w-xs text-sm text-dim">
+      <p className="mt-1 max-w-xs text-[15px] text-dim">
         {query
           ? "Procura no catálogo em baixo para o adicionares."
           : filtrado
@@ -459,7 +456,7 @@ function EmptyState({
       {filtrado && !query && (
         <button
           onClick={onClearFilter}
-          className="mt-5 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-sm font-semibold text-tube transition hover:brightness-110"
+          className="mt-5 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-[15px] font-semibold text-tube transition hover:brightness-110"
         >
           Ver tudo
         </button>
@@ -771,20 +768,20 @@ function LibraryContent() {
       <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
         <Link
           href="/em-dia"
-          className="flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full border border-line px-3.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
+          className="flex min-h-11 shrink-0 cursor-pointer items-center gap-2 rounded-full border border-line px-3.5 text-[15px] text-dim transition hover:border-ink hover:text-ink active:scale-95"
         >
           <span className="bars h-4 w-4 shrink-0 rounded-full" />
           Pôr em dia
         </Link>
         <Link
           href="/estrear"
-          className="inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border border-line px-3.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
+          className="inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border border-line px-3.5 text-[15px] text-dim transition hover:border-ink hover:text-ink active:scale-95"
         >
           A estrear
         </Link>
         <Link
           href="/listas"
-          className="inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border border-line px-3.5 text-sm text-dim transition hover:border-ink hover:text-ink active:scale-95"
+          className="inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border border-line px-3.5 text-[15px] text-dim transition hover:border-ink hover:text-ink active:scale-95"
         >
           Listas
         </Link>
@@ -815,7 +812,7 @@ function LibraryContent() {
             key={id}
             onClick={() => changeSegment(id)}
             aria-pressed={segment === id}
-            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-sm font-semibold transition ${
+            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-[15px] font-semibold transition ${
               segment === id ? "bg-ink text-tube" : "text-dim hover:text-ink"
             }`}
           >
@@ -833,7 +830,7 @@ function LibraryContent() {
             <button
               key={f.id}
               onClick={() => setParams({ filtro: f.id === "tudo" ? null : f.id })}
-              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-sm transition active:scale-95 ${
+              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
                 filter === f.id
                   ? "border-ink bg-ink text-tube"
                   : "border-line text-dim hover:border-ink hover:text-ink"
@@ -856,7 +853,7 @@ function LibraryContent() {
             <button
               key={f.id}
               onClick={() => setParams({ filtro: f.id === "vistos" ? null : f.id })}
-              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-sm transition active:scale-95 ${
+              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
                 movieFilter === f.id
                   ? "border-ink bg-ink text-tube"
                   : "border-line text-dim hover:border-ink hover:text-ink"
@@ -877,7 +874,7 @@ function LibraryContent() {
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
           <button
             onClick={() => setParams({ decada: null })}
-            className={`inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border px-3.5 text-sm transition active:scale-95 ${
+            className={`inline-flex min-h-11 shrink-0 cursor-pointer items-center rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
               decade === null
                 ? "border-ink bg-ink text-tube"
                 : "border-line text-dim hover:border-ink hover:text-ink"
@@ -930,7 +927,7 @@ function LibraryContent() {
             <div data-testid="library-grid">
               {showGroups.map((g) => (
                 <section key={g.label}>
-                  <SectionHeader label={g.label} count={g.items.length} />
+                  <StickySectionHeader label={g.label} count={g.items.length} />
                   <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
                     {g.items.map((s, i) => (
                       <ShowPoster key={s.uuid} show={s} index={i} />
@@ -953,7 +950,7 @@ function LibraryContent() {
           <div data-testid="library-grid">
             {movieGroups.map((g) => (
               <section key={g.label}>
-                <SectionHeader label={g.label} count={g.items.length} />
+                <StickySectionHeader label={g.label} count={g.items.length} />
                 <div className="grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
                   {g.items.map((m, i) => (
                     <MovieCard key={m.key} movie={m} index={i} onChanged={reloadMovies} />
@@ -988,7 +985,7 @@ function LibraryContent() {
             <button
               onClick={() => void searchRemote()}
               disabled={remoteBusy}
-              className={`flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full text-sm font-semibold transition active:scale-95 disabled:opacity-50 ${
+              className={`flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full text-[15px] font-semibold transition active:scale-95 disabled:opacity-50 ${
                 // sem nada na biblioteca, adicionar é a ação óbvia — deixa de
                 // ser um botão discreto no fundo da página
                 showing === 0
@@ -1008,12 +1005,12 @@ function LibraryContent() {
             </button>
           ) : (
             <>
-              <h2 className="font-display text-sm font-semibold uppercase tracking-[0.15em] text-dim [font-stretch:80%]">
-                {segment === "series" ? "Séries encontradas" : "Filmes encontrados"}
-              </h2>
+              <SectionHeader
+                label={segment === "series" ? "Séries encontradas" : "Filmes encontrados"}
+              />
               <div className="mt-3 flex flex-col gap-3" data-testid="search-results">
                 {searched.length === 0 && !remoteError && (
-                  <p className="text-center text-sm text-dim">
+                  <p className="text-center text-[15px] text-dim">
                     Sem resultados. Tenta o nome original
                     {segment === "series" ? " da série" : " do filme"}.
                   </p>
@@ -1036,7 +1033,7 @@ function LibraryContent() {
             </>
           )}
           {remoteError && (
-            <p className="page-enter mt-3 text-center text-sm text-danger">{remoteError}</p>
+            <p className="page-enter mt-3 text-center text-[15px] text-danger">{remoteError}</p>
           )}
         </div>
       )}

@@ -18,6 +18,7 @@ import {
 import { pushUndo } from "@/lib/undo";
 import WatchNextCard from "@/components/WatchNextCard";
 import TonightHero from "@/components/TonightHero";
+import SectionHeader from "@/components/SectionHeader";
 import { CheckIcon } from "@/components/icons";
 import { Bone, CardsBone, TitleBone } from "@/components/Skeleton";
 
@@ -243,7 +244,7 @@ export default function SeriesPage() {
               </span>
               <div>
                 <p className="font-display font-semibold">{step.title}</p>
-                <p className="mt-0.5 text-sm text-dim">{step.text}</p>
+                <p className="mt-0.5 text-[15px] text-dim">{step.text}</p>
               </div>
             </li>
           ))}
@@ -358,14 +359,14 @@ export default function SeriesPage() {
               <CheckIcon className="h-5 w-5" />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="text-sm font-medium">Estás em dia</p>
+              <p className="text-[15px] font-medium">Estás em dia</p>
               <p className="text-xs text-dim">
                 Nenhum episódio por ver nas séries que segues.
               </p>
             </div>
             <Link
               href="/library"
-              className="-mr-2 inline-flex min-h-11 shrink-0 cursor-pointer items-center px-2 text-sm font-semibold text-ink hover:underline"
+              className="-mr-2 inline-flex min-h-11 shrink-0 cursor-pointer items-center px-2 text-[15px] font-semibold text-ink hover:underline"
             >
               Biblioteca
             </Link>
@@ -391,9 +392,7 @@ export default function SeriesPage() {
           />
           {restActive.length > 0 && (
             <section className="mt-6">
-              <h2 className="font-display text-sm font-semibold uppercase tracking-[0.15em] text-dim [font-stretch:80%]">
-                Continuar
-              </h2>
+<SectionHeader label="Continuar" meta={restActive.length} />
               {queueCards(restActive)}
             </section>
           )}
@@ -449,7 +448,7 @@ export default function SeriesPage() {
       <p className="mt-10 text-center">
         <Link
           href="/library"
-          className="inline-flex min-h-11 cursor-pointer items-center px-3 text-sm font-semibold text-dim hover:text-ink hover:underline"
+          className="inline-flex min-h-11 cursor-pointer items-center px-3 text-[15px] font-semibold text-dim hover:text-ink hover:underline"
         >
           Ver toda a biblioteca ({shows.length}) →
         </Link>

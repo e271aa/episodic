@@ -71,10 +71,14 @@ export default function ShowPage() {
   // Chave (season-episode) do episódio a "saltar" no momento em que é
   // marcado como visto, e flag equivalente para o botão de ação principal.
   const [pulseEp, setPulseEp] = useState<string | null>(null);
+  // temporada que fechou agora — a faixa SMPTE atravessa-a uma vez
+  const [sweepSeason, setSweepSeason] = useState<number | null>(null);
+  const sweepTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [pulseNext, setPulseNext] = useState(false);
   const pulseTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
   useEffect(() => () => clearTimeout(pulseTimeout.current), []);
+  useEffect(() => () => clearTimeout(sweepTimeout.current), []);
 
   // Recarrega o mapa de vistos e recalcula qual o próximo episódio por ver.
   const syncWatched = useCallback(
@@ -181,6 +185,15 @@ export default function ShowPage() {
         setPulseEp(key);
         clearTimeout(pulseTimeout.current);
         pulseTimeout.current = setTimeout(() => setPulseEp(null), 450);
+
+        // Este era o último que faltava? Então a temporada fechou.
+        const total = seasons.find((sv) => sv.number === season)?.episodeCount ?? 0;
+        const antes = [...watched.values()].filter((w) => w.season === season).length;
+        if (total > 0 && antes + 1 >= total) {
+          setSweepSeason(season);
+          clearTimeout(sweepTimeout.current);
+          sweepTimeout.current = setTimeout(() => setSweepSeason(null), 560);
+        }
       }
       await syncWatched(show);
       pushUndo({
@@ -193,7 +206,7 @@ export default function ShowPage() {
         },
       });
     },
-    [uuid, watched, show, syncWatched],
+    [uuid, watched, show, syncWatched, seasons],
   );
 
   const markSeasonAll = useCallback(
@@ -338,7 +351,7 @@ export default function ShowPage() {
         <div className="bars absolute inset-x-0 top-0 h-[3px]" />
         <Link
           href="/series"
-          className="absolute left-3 top-3 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-black/50 px-4 text-sm text-white backdrop-blur"
+          className="absolute left-3 top-3 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-black/50 px-4 text-[15px] text-white backdrop-blur"
         >
           ← Séries
         </Link>
@@ -352,7 +365,7 @@ export default function ShowPage() {
               <Poster path={posterPath} alt={show.name} fill sizes="96px" priority className="object-cover" />
             </div>
           ) : (
-            <div className="flex h-36 w-24 shrink-0 items-center justify-center rounded-xl bg-raised p-2 text-center font-display text-sm font-bold text-dim shadow-lg">
+            <div className="flex h-36 w-24 shrink-0 items-center justify-center rounded-xl bg-raised p-2 text-center font-display text-[15px] font-bold text-dim shadow-lg">
               {show.name}
             </div>
           )}
@@ -385,14 +398,14 @@ export default function ShowPage() {
             >
               <CheckIcon className={`h-6 w-6 shrink-0 ${pulseNext ? "check-pop" : ""}`} />
               <span className="min-w-0 flex-1">
-                <span className="block text-sm font-semibold">Marcar próximo episódio</span>
+                <span className="block text-[15px] font-semibold">Marcar próximo episódio</span>
                 <span className="ep-code block truncate text-xs opacity-80">
                   {formatEpCode(nextUp.season, nextUp.episode)} · {nextUp.name}
                 </span>
               </span>
             </button>
           ) : (
-            <div className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-panel px-4 py-3 text-sm text-dim">
+            <div className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-panel px-4 py-3 text-[15px] text-dim">
               <CheckIcon className="h-5 w-5" style={{ color: accent }} />
               Estás em dia com esta série
             </div>
@@ -406,7 +419,7 @@ export default function ShowPage() {
           {!show.followed && (
             <button
               onClick={() => void toggleWatchlist()}
-              className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition active:scale-95 ${
+              className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-[15px] font-medium transition active:scale-95 ${
                 show.inWatchlist
                   ? "border-ink bg-ink text-tube"
                   : "border-line text-dim hover:border-ink hover:text-ink"
@@ -435,7 +448,7 @@ export default function ShowPage() {
               aria-selected={tab === id}
               onClick={() => setTab(id)}
               data-testid={`tab-${id}`}
-              className={`-mb-px flex min-h-11 cursor-pointer items-center border-b-2 px-3 text-sm transition-colors ${
+              className={`-mb-px flex min-h-11 cursor-pointer items-center border-b-2 px-3 text-[15px] transition-colors ${
                 tab === id
                   ? "border-ink font-semibold text-ink"
                   : "border-transparent text-dim hover:text-ink"
@@ -456,7 +469,7 @@ export default function ShowPage() {
             )}
             <div className="flex flex-col gap-2">
               {seasons.length === 0 && (
-                <p className="text-sm text-dim">Sem informação de temporadas.</p>
+                <p className="text-[15px] text-dim">Sem informação de temporadas.</p>
               )}
               {seasons.map((season) => {
                 const seen = seasonWatchedCount.get(season.number) ?? 0;
@@ -466,7 +479,9 @@ export default function ShowPage() {
                 return (
                   <div
                     key={season.number}
-                    className="overflow-hidden rounded-xl border border-line bg-panel"
+                    className={`overflow-hidden rounded-xl border border-line bg-panel ${
+                      sweepSeason === season.number ? "season-sweep" : ""
+                    }`}
                   >
                     <button
                       onClick={() => void toggleSeason(season)}
@@ -517,7 +532,7 @@ export default function ShowPage() {
                                   ✓
                                 </span>
                                 <span className="min-w-0 flex-1">
-                                  <span className="block truncate text-sm">
+                                  <span className="block truncate text-[15px]">
                                     <span className="ep-code mr-2 text-faint">
                                       {String(epNumber).padStart(2, "0")}
                                     </span>
@@ -545,11 +560,11 @@ export default function ShowPage() {
         {tab === "sobre" && (
           <section className="mt-4 space-y-4">
             {show.overview ? (
-              <p className="text-sm leading-relaxed text-dim">{show.overview}</p>
+              <p className="text-base leading-relaxed text-dim">{show.overview}</p>
             ) : (
-              <p className="text-sm text-dim">Sem sinopse disponível.</p>
+              <p className="text-[15px] text-dim">Sem sinopse disponível.</p>
             )}
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-sm">
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[15px]">
               {show.firstAired && (
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-faint">Estreia</dt>
@@ -591,7 +606,7 @@ export default function ShowPage() {
                 href={`https://www.imdb.com/title/${show.imdbId}/`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-11 cursor-pointer items-center text-sm text-ink hover:underline"
+                className="inline-flex min-h-11 cursor-pointer items-center text-[15px] text-ink hover:underline"
               >
                 Ver no IMDb ↗
               </a>
@@ -614,7 +629,7 @@ export default function ShowPage() {
                   {watchedCount}
                   {show.totalEpisodes ? ` / ${show.totalEpisodes}` : ""}
                 </p>
-                <p className="text-sm text-dim">episódios vistos</p>
+                <p className="text-[15px] text-dim">episódios vistos</p>
                 {activity && (
                   <p className="ep-code mt-1 text-xs text-faint">
                     {activity.first === activity.last
@@ -625,7 +640,7 @@ export default function ShowPage() {
               </div>
             </div>
 
-            <h3 className="mt-6 font-display text-sm font-semibold text-dim">
+            <h3 className="mt-6 font-display text-[15px] font-semibold text-dim">
               Progresso por temporada
             </h3>
             <div className="mt-3 space-y-2.5">
@@ -643,7 +658,7 @@ export default function ShowPage() {
                     </div>
                     <div className="mt-1 h-1.5 overflow-hidden rounded-full bg-raised">
                       <div
-                        className="h-full rounded-full transition-[width] duration-500"
+                        className="h-full rounded-full transition-[width] duration-[240ms] ease-out"
                         style={{
                           width: `${pct}%`,
                           background: pct >= 100 ? accent : "var(--color-ink)",

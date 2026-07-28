@@ -131,7 +131,7 @@ export default function EmDiaPage() {
     <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-6">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Pôr em dia</h1>
-        <Link href="/series" className="-mr-2 inline-flex min-h-11 items-center px-2 text-sm text-dim hover:text-ink hover:underline">
+        <Link href="/series" className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline">
           Sair
         </Link>
       </div>
@@ -151,7 +151,7 @@ export default function EmDiaPage() {
             <button
               key={f.id}
               onClick={() => changeFilter(f.id)}
-              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition active:scale-95 ${
+              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-[15px] font-medium transition active:scale-95 ${
                 isActive
                   ? "border-ink bg-ink text-tube"
                   : "border-line text-dim hover:border-ink hover:text-ink"
@@ -170,7 +170,7 @@ export default function EmDiaPage() {
         <div className="mt-16 flex flex-1 flex-col items-center justify-center text-center">
           <CheckIcon className="h-10 w-10 text-faint" />
           <p className="mt-4 font-display font-semibold">Nada para pôr em dia aqui</p>
-          <p className="mt-1 max-w-xs text-sm text-dim">
+          <p className="mt-1 max-w-xs text-[15px] text-dim">
             Este filtro está vazio — experimenta outro acima.
           </p>
         </div>
@@ -178,12 +178,12 @@ export default function EmDiaPage() {
         <div className="mt-16 flex flex-1 flex-col items-center justify-center text-center">
           <CheckIcon className="h-10 w-10 text-faint" />
           <p className="mt-4 font-display font-semibold">Passaste tudo em revista</p>
-          <p className="mt-1 max-w-xs text-sm text-dim">
+          <p className="mt-1 max-w-xs text-[15px] text-dim">
             {decided} episódios revistos neste filtro.
           </p>
           <button
             onClick={() => changeFilter(filter)}
-            className="mt-6 cursor-pointer rounded-full bg-ink px-6 py-2.5 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95"
+            className="mt-6 cursor-pointer rounded-full bg-ink px-6 py-2.5 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95"
           >
             Rever outra vez
           </button>

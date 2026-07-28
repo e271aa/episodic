@@ -120,7 +120,7 @@ export default function ListaPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
-      <Link href="/listas" className="-mr-2 inline-flex min-h-11 items-center px-2 text-sm text-dim hover:text-ink hover:underline">
+      <Link href="/listas" className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline">
         ← Listas
       </Link>
 
@@ -141,7 +141,7 @@ export default function ListaPage() {
             />
             <button
               type="submit"
-              className="min-h-11 cursor-pointer rounded-full bg-ink px-4 text-sm font-semibold text-tube"
+              className="min-h-11 cursor-pointer rounded-full bg-ink px-4 text-[15px] font-semibold text-tube"
             >
               Guardar
             </button>
@@ -161,7 +161,7 @@ export default function ListaPage() {
       </p>
 
       {items.length === 0 ? (
-        <p className="mt-10 text-center text-sm text-dim">
+        <p className="mt-10 text-center text-[15px] text-dim">
           Sem itens ainda — adiciona séries e filmes a partir da página de cada um.
         </p>
       ) : (
@@ -180,12 +180,12 @@ export default function ListaPage() {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-raised p-2 text-center font-display text-sm font-bold text-dim">
+                      <div className="flex h-full w-full items-center justify-center bg-raised p-2 text-center font-display text-[15px] font-bold text-dim">
                         {item.name}
                       </div>
                     )}
                   </div>
-                  <p className="mt-1.5 truncate text-sm font-medium">{item.name}</p>
+                  <p className="mt-1.5 truncate text-[15px] font-medium">{item.name}</p>
                 </Link>
                 <button
                   onClick={() => void handleRemoveItem(item)}
@@ -209,7 +209,7 @@ export default function ListaPage() {
 
       <button
         onClick={() => void handleDelete()}
-        className="mt-10 cursor-pointer rounded-2xl border border-danger/40 px-4 py-3 text-sm font-medium text-danger transition-colors hover:bg-danger/10"
+        className="mt-10 cursor-pointer rounded-2xl border border-danger/40 px-4 py-3 text-[15px] font-medium text-danger transition-colors hover:bg-danger/10"
       >
         {confirmDelete ? "Tens a certeza? Toca outra vez para apagar" : "Apagar lista"}
       </button>

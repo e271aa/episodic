@@ -37,11 +37,11 @@ export default function ListasPage() {
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Listas</h1>
-        <Link href="/library" className="-mr-2 inline-flex min-h-11 items-center px-2 text-sm text-dim hover:text-ink hover:underline">
+        <Link href="/library" className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline">
           Biblioteca
         </Link>
       </div>
-      <p className="mt-1 text-sm text-dim">
+      <p className="mt-1 text-[15px] text-dim">
         Junta séries e filmes como quiseres — maratonas, favoritos, o que for.
       </p>
 
@@ -57,12 +57,12 @@ export default function ListasPage() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nome da nova lista…"
-          className="min-h-11 flex-1 rounded-full border border-line bg-panel px-5 text-sm outline-none transition-colors focus:border-ink"
+          className="min-h-11 flex-1 rounded-full border border-line bg-panel px-5 text-[15px] outline-none transition-colors focus:border-ink"
         />
         <button
           type="submit"
           disabled={creating || !name.trim()}
-          className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+          className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-ink px-5 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
         >
           Criar
         </button>
@@ -74,7 +74,7 @@ export default function ListasPage() {
         <div className="mt-16 flex flex-col items-center text-center">
           <LibraryIcon className="h-12 w-12 text-faint" />
           <p className="mt-4 max-w-sm font-display font-semibold">Ainda sem listas</p>
-          <p className="mt-2 max-w-sm text-sm text-dim">
+          <p className="mt-2 max-w-sm text-[15px] text-dim">
             Cria a primeira acima — depois adiciona séries e filmes a partir da
             página de cada um.
           </p>

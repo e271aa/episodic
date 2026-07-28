@@ -150,7 +150,7 @@ export default function MoviePage() {
         <div className="bars absolute inset-x-0 top-0 h-[3px]" />
         <Link
           href="/library?tipo=filmes"
-          className="absolute left-3 top-3 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-black/50 px-4 text-sm text-white backdrop-blur"
+          className="absolute left-3 top-3 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-black/50 px-4 text-[15px] text-white backdrop-blur"
         >
           ← Filmes
         </Link>
@@ -168,7 +168,7 @@ export default function MoviePage() {
             // aqui lia-se como "sem capa", quando na verdade está a chegar.
             <Bone className="h-36 w-24 shrink-0 rounded-xl shadow-lg" />
           ) : (
-            <div className="flex h-36 w-24 shrink-0 items-center justify-center rounded-xl bg-raised p-2 text-center font-display text-sm font-bold text-dim shadow-lg">
+            <div className="flex h-36 w-24 shrink-0 items-center justify-center rounded-xl bg-raised p-2 text-center font-display text-[15px] font-bold text-dim shadow-lg">
               {movie.name}
             </div>
           )}
@@ -193,7 +193,7 @@ export default function MoviePage() {
             className="mt-4 flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-left text-tube transition hover:brightness-110 active:scale-[0.99]"
           >
             <CheckIcon className="h-6 w-6 shrink-0" />
-            <span className="text-sm font-semibold">Marcar como visto</span>
+            <span className="text-[15px] font-semibold">Marcar como visto</span>
           </button>
         )}
 
@@ -211,13 +211,13 @@ export default function MoviePage() {
 
         <section className="mt-4">
           {details?.overview ? (
-            <p className="text-sm leading-relaxed text-dim">{details.overview}</p>
+            <p className="text-base leading-relaxed text-dim">{details.overview}</p>
           ) : aProcurar ? (
-            <p className="text-sm text-dim">A procurar na TMDB…</p>
+            <p className="text-[15px] text-dim">A procurar na TMDB…</p>
           ) : movie.tmdbId ? (
-            <p className="text-sm text-dim">A carregar sinopse…</p>
+            <p className="text-[15px] text-dim">A carregar sinopse…</p>
           ) : (
-            <p className="text-sm text-dim">
+            <p className="text-[15px] text-dim">
               Sem sinopse disponível — este filme não foi encontrado na TMDB.
             </p>
           )}
@@ -228,7 +228,7 @@ export default function MoviePage() {
             href={`https://www.themoviedb.org/movie/${movie.tmdbId}`}
             target="_blank"
             rel="noreferrer"
-            className="mt-4 inline-flex min-h-11 cursor-pointer items-center text-sm text-ink hover:underline"
+            className="mt-4 inline-flex min-h-11 cursor-pointer items-center text-[15px] text-ink hover:underline"
           >
             Ver na TMDB ↗
           </a>

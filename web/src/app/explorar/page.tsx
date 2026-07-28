@@ -15,6 +15,7 @@ import { pushUndo } from "@/lib/undo";
 import { isCloudConfigured } from "@/lib/supabase";
 import { searchDiscover, type DiscoverItem } from "@/lib/tmdb";
 import DiscoverCard from "@/components/DiscoverCard";
+import SectionHeader from "@/components/SectionHeader";
 import DiscoverSwipeCard, { type DeckItem } from "@/components/DiscoverSwipeCard";
 import SwipeCoach, { EXPLORAR_COACH_KEY } from "@/components/SwipeCoach";
 import { CompassIcon, SearchIcon } from "@/components/icons";
@@ -80,12 +81,12 @@ function CardStack({
       <div className="mt-16 flex flex-1 flex-col items-center justify-center text-center">
         <CompassIcon className="h-10 w-10 text-faint" />
         <p className="mt-4 font-display font-semibold">Por agora é tudo</p>
-        <p className="mt-1 max-w-xs text-sm text-dim">
+        <p className="mt-1 max-w-xs text-[15px] text-dim">
           Passaste por {total} sugestões.
         </p>
         <button
           onClick={() => setCursor(0)}
-          className="mt-6 cursor-pointer rounded-full bg-ink px-6 py-2.5 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95"
+          className="mt-6 cursor-pointer rounded-full bg-ink px-6 py-2.5 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95"
         >
           Rever outra vez
         </button>
@@ -174,14 +175,7 @@ function Grelha({
     <div className="mt-6 space-y-8">
       {sections.map((section) => (
         <section key={section.id}>
-          <div className="flex items-baseline justify-between gap-3">
-            <h2 className="font-display text-sm font-semibold uppercase tracking-[0.15em] text-dim [font-stretch:80%]">
-              {section.title}
-            </h2>
-            {section.reason && (
-              <span className="ep-code shrink-0 text-xs text-faint">{section.reason}</span>
-            )}
-          </div>
+<SectionHeader label={section.title} meta={section.reason} />
           <div className="-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
             {section.items.map((item, i) => (
               <DiscoverCard
@@ -399,7 +393,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
             key={id}
             onClick={() => setKind(id)}
             aria-pressed={kind === id}
-            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full text-sm font-semibold transition ${
+            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full text-[15px] font-semibold transition ${
               kind === id ? "bg-ink text-tube" : "text-dim hover:text-ink"
             }`}
           >
@@ -432,7 +426,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
             key={id}
             onClick={() => setModo(id)}
             aria-pressed={modo === id}
-            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full text-sm font-semibold transition ${
+            className={`flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full text-[15px] font-semibold transition ${
               modo === id ? "bg-ink text-tube" : "text-dim hover:text-ink"
             }`}
           >
@@ -445,7 +439,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
         <div className="mt-12 flex flex-col items-center px-6 text-center">
           <span className="bars mb-4 h-11 w-11 rounded-full opacity-40" aria-hidden />
           <p className="font-display font-semibold">Não deu para carregar</p>
-          <p className="mt-1 max-w-xs text-sm text-dim">{erro}</p>
+          <p className="mt-1 max-w-xs text-[15px] text-dim">{erro}</p>
         </div>
       ) : carregando ? (
         <div className="mt-6 space-y-8">
@@ -462,7 +456,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
           <p className="font-display font-semibold">
             {searching ? "Nada encontrado" : "Nada para mostrar agora"}
           </p>
-          <p className="mt-1 max-w-xs text-sm text-dim">
+          <p className="mt-1 max-w-xs text-[15px] text-dim">
             {searching
               ? `Sem resultados para "${termo}".`
               : isCloudConfigured()

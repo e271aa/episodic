@@ -69,7 +69,7 @@ export default function AddToListButton({ kind, refId }: AddToListButtonProps) {
     <div ref={rootRef} className="relative inline-block">
       <button
         onClick={() => setOpen((v) => !v)}
-        className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-sm font-medium text-dim transition hover:bg-raised hover:text-ink"
+        className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[15px] font-medium text-dim transition hover:bg-raised hover:text-ink"
       >
         + Lista
       </button>
@@ -85,7 +85,7 @@ export default function AddToListButton({ kind, refId }: AddToListButtonProps) {
                 <li key={list.id}>
                   <button
                     onClick={() => void toggle(list)}
-                    className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-sm hover:bg-raised"
+                    className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-[15px] hover:bg-raised"
                   >
                     <span
                       className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${

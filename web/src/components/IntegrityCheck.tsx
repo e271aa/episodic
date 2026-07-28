@@ -88,7 +88,7 @@ export default function IntegrityCheck() {
   return (
     <div className="mt-2 rounded-2xl border border-line bg-panel p-4">
       <p className="font-display font-semibold">Verificar biblioteca</p>
-      <p className="mt-1 text-sm text-dim">
+      <p className="mt-1 text-[15px] text-dim">
         Procura séries repetidas e séries com mais episódios marcados do que o
         fornecedor tem — as duas coisas acontecem quando o import do TV Time e
         a app usam numerações e identificadores diferentes.
@@ -98,7 +98,7 @@ export default function IntegrityCheck() {
         <button
           onClick={verificar}
           disabled={progress !== null}
-          className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-line px-4 text-sm font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
+          className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-line px-4 text-[15px] font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
         >
           {progress !== null && (
             <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-dim/30 border-t-dim" />
@@ -109,14 +109,14 @@ export default function IntegrityCheck() {
         {podeReverter > 0 && (
           <button
             onClick={reverter}
-            className="flex min-h-11 cursor-pointer items-center rounded-full border border-line px-4 text-sm font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95"
+            className="flex min-h-11 cursor-pointer items-center rounded-full border border-line px-4 text-[15px] font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95"
           >
             Repor {podeReverter} marcações
           </button>
         )}
       </div>
 
-      {estado && <p className="mt-3 text-sm text-ink">{estado}</p>}
+      {estado && <p className="mt-3 text-[15px] text-ink">{estado}</p>}
 
       {duplicados && duplicados.length > 0 && (
         <div className="mt-4 rounded-xl border border-line bg-raised p-3">
@@ -137,7 +137,7 @@ export default function IntegrityCheck() {
           </ul>
           <button
             onClick={limparDuplicados}
-            className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full bg-ink px-4 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95"
+            className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full bg-ink px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95"
           >
             Remover {duplicados.length === 1 ? "a repetida" : "as repetidas"}
           </button>
@@ -145,7 +145,7 @@ export default function IntegrityCheck() {
       )}
 
       {plan && plan.repairs.length === 0 && duplicados?.length === 0 && (
-        <p className="mt-3 text-sm text-dim">
+        <p className="mt-3 text-[15px] text-dim">
           Nada a corrigir em {plan.checked} séries.
         </p>
       )}
@@ -163,7 +163,7 @@ export default function IntegrityCheck() {
                   <li key={r.uuid} className="rounded-xl bg-raised p-3">
                     <Link
                       href={`/series/${r.uuid}`}
-                      className="font-display text-sm font-semibold hover:underline"
+                      className="font-display text-[15px] font-semibold hover:underline"
                     >
                       {r.name}
                     </Link>
@@ -180,7 +180,7 @@ export default function IntegrityCheck() {
               </ul>
               <button
                 onClick={reparar}
-                className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full bg-ink px-4 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95"
+                className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full bg-ink px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95"
               >
                 Remover as {totalSeguro} marcações a mais
               </button>
@@ -192,7 +192,7 @@ export default function IntegrityCheck() {
 
           {duvidosas.length > 0 && (
             <div className="mt-4 border-t border-line pt-3">
-              <p className="text-sm text-dim">
+              <p className="text-[15px] text-dim">
                 Estas ficam como estão — removê-las deixaria buracos, por isso
                 podem ser episódios a sério que o fornecedor numera de outra
                 maneira:

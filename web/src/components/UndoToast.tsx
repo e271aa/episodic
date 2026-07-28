@@ -43,7 +43,7 @@ export default function UndoToast() {
       >
         <div className="flex items-center gap-3 p-3">
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium">
+            <p className="truncate text-[15px] font-medium">
               {top.label}
               {behind > 0 && (
                 <span className="ep-code ml-2 text-xs text-faint">+{behind}</span>
@@ -55,7 +55,7 @@ export default function UndoToast() {
           </div>
           <button
             onClick={() => undoLast()}
-            className="shrink-0 cursor-pointer rounded-full bg-ink px-4 py-2 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95"
+            className="shrink-0 cursor-pointer rounded-full bg-ink px-4 py-2 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95"
             data-testid="undo-button"
           >
             Anular

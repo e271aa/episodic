@@ -74,20 +74,20 @@ export default function ProfilePage() {
             {time.months > 0 && (
               <span className="flex items-baseline gap-1.5">
                 <span className="ep-code text-4xl font-bold text-ink">{time.months}</span>
-                <span className="text-sm text-dim">meses</span>
+                <span className="text-[15px] text-dim">meses</span>
               </span>
             )}
             <span className="flex items-baseline gap-1.5">
               <span className="ep-code text-4xl font-bold text-ink">{time.days}</span>
-              <span className="text-sm text-dim">dias</span>
+              <span className="text-[15px] text-dim">dias</span>
             </span>
             <span className="flex items-baseline gap-1.5">
               <span className="ep-code text-4xl font-bold text-ink">{time.hours}</span>
-              <span className="text-sm text-dim">horas</span>
+              <span className="text-[15px] text-dim">horas</span>
             </span>
           </div>
         ) : (
-          <p className="mt-3 text-sm text-dim">
+          <p className="mt-3 text-[15px] text-dim">
             Disponível depois de importares o TV Time.
           </p>
         )}
@@ -114,7 +114,7 @@ export default function ProfilePage() {
           </div>
           <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
             {stats.genres.map((g) => (
-              <li key={g.name} className="flex items-center gap-1.5 text-sm">
+              <li key={g.name} className="flex items-center gap-1.5 text-[15px]">
                 <span
                   className="h-2.5 w-2.5 shrink-0 rounded-sm"
                   style={{ background: g.color }}
@@ -143,7 +143,7 @@ export default function ProfilePage() {
           href="/library"
           className="flex flex-col justify-center rounded-2xl border border-line bg-panel p-4 transition-colors hover:bg-raised"
         >
-          <p className="font-display text-sm font-semibold text-ink">Biblioteca</p>
+          <p className="font-display text-[15px] font-semibold text-ink">Biblioteca</p>
           <p className="text-xs text-faint">ver tudo →</p>
         </Link>
       </div>

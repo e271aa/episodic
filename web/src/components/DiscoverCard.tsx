@@ -63,7 +63,7 @@ export default function DiscoverCard({
         )}
       </div>
 
-      <p className="mt-1.5 truncate text-sm font-medium">{item.name}</p>
+      <p className="mt-1.5 truncate text-[17px] font-semibold">{item.name}</p>
       <p className="ep-code truncate text-xs text-dim">{item.year ?? ""}</p>
 
       {estado === "idle" && (

@@ -175,7 +175,7 @@ export default function DiscoverSwipeCard({
           </h2>
           {item.year && <p className="ep-code mt-1 text-xs text-faint">{item.year}</p>}
           {item.overview && (
-            <p className="mt-2 line-clamp-3 text-sm text-dim">{item.overview}</p>
+            <p className="mt-2 line-clamp-3 text-base text-dim">{item.overview}</p>
           )}
         </div>
       </div>

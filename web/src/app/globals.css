@@ -185,6 +185,34 @@ input:focus-visible,
   overflow: hidden;
 }
 
+/* Fechar uma temporada é o único momento que merece festa. A faixa SMPTE
+   atravessa a linha da temporada uma vez e desaparece.
+
+   Festa rara é festa; festa a cada toque é ruído — por isso o `check-pop`
+   de cada episódio fica como está, discreto, e isto só acontece quando o
+   último episódio de uma temporada entra. */
+@keyframes season-sweep {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(100%);
+  }
+}
+.season-sweep {
+  position: relative;
+  overflow: hidden;
+}
+.season-sweep::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--bars);
+  opacity: 0.55;
+  animation: season-sweep 520ms ease-out both;
+  pointer-events: none;
+}
+
 /* Botões pequenos por cima de cartazes (marcar visto, remover da lista): o
    círculo tem de ser discreto para não tapar a capa, mas 28–32px é metade
    de um polegar. Isto estica só a área de toque até aos 44px do iOS — o que

@@ -93,3 +93,52 @@ export function CompassIcon(props: SVGProps<SVGSVGElement>) {
     </Icon>
   );
 }
+
+// ── Ronda 4 (redesenho) ───────────────────────────────────────
+
+/** Baralho de cartões — o modo "um a um". */
+export function CardsIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <rect x="6" y="3" width="12" height="18" rx="2" />
+      <path d="M3 7v10M21 7v10" />
+    </Icon>
+  );
+}
+
+/** Grelha — o modo "tudo à vista". Igual ao LibraryIcon mas com os quadrados
+ *  mais soltos, para não se confundir com o separador Biblioteca da dock. */
+export function GridIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <rect x="3" y="4" width="7" height="7" rx="1.5" />
+      <rect x="14" y="4" width="7" height="7" rx="1.5" />
+      <rect x="3" y="15" width="7" height="7" rx="1.5" />
+      <rect x="14" y="15" width="7" height="7" rx="1.5" />
+    </Icon>
+  );
+}
+
+export function ChevronDownIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="m6 9 6 6 6-6" />
+    </Icon>
+  );
+}
+
+export function CloseIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <path d="M6 6l12 12M18 6L6 18" />
+    </Icon>
+  );
+}
+
+export function PlusIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props} strokeWidth="2.5">
+      <path d="M12 5v14M5 12h14" />
+    </Icon>
+  );
+}

@@ -140,7 +140,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
     return (
       <section className="mt-8">
         <h2 className="font-display text-lg font-semibold">Conta &amp; sync</h2>
-        <p className="mt-2 rounded-2xl border border-line bg-panel p-4 text-sm text-dim">
+        <p className="mt-2 rounded-2xl border border-line bg-panel p-4 text-[15px] text-dim">
           A sincronização na cloud ainda não está ligada. Quando estiver, poderás
           entrar com o email e ter a tua biblioteca em todos os dispositivos.
         </p>
@@ -154,7 +154,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
 
       {user ? (
         <div className="mt-3 rounded-2xl border border-line bg-panel p-4">
-          <p className="text-sm">
+          <p className="text-[15px]">
             Sessão iniciada como{" "}
             <span className="font-medium text-ink">{user.email}</span>
           </p>
@@ -163,7 +163,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
             <button
               onClick={() => void handleSync()}
               disabled={status === "syncing"}
-              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-ink px-5 py-2 text-sm font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-ink px-5 py-2 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
             >
               {status === "syncing" && (
                 <span className="spinner h-4 w-4 rounded-full border-2 border-tube/30 border-t-tube" />
@@ -172,7 +172,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
             </button>
             <button
               onClick={() => void handleSignOut()}
-              className="min-h-11 cursor-pointer rounded-full border border-line px-5 py-2 text-sm font-medium text-dim transition hover:bg-raised"
+              className="min-h-11 cursor-pointer rounded-full border border-line px-5 py-2 text-[15px] font-medium text-dim transition hover:bg-raised"
             >
               Terminar sessão
             </button>
@@ -199,12 +199,12 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
                 placeholder="nova password (mín. 8)"
                 autoComplete="new-password"
                 minLength={8}
-                className="min-h-11 flex-1 rounded-full border border-line bg-tube px-5 py-2 text-sm outline-none transition-colors focus:border-ink"
+                className="min-h-11 flex-1 rounded-full border border-line bg-tube px-5 py-2 text-[15px] outline-none transition-colors focus:border-ink"
               />
               <button
                 type="submit"
                 disabled={status === "verifying" || newPassword.length < 8}
-                className="min-h-11 cursor-pointer rounded-full border border-line px-5 py-2 text-sm font-medium text-dim transition hover:bg-raised disabled:opacity-50"
+                className="min-h-11 cursor-pointer rounded-full border border-line px-5 py-2 text-[15px] font-medium text-dim transition hover:bg-raised disabled:opacity-50"
               >
                 Guardar
               </button>
@@ -213,12 +213,12 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
         </div>
       ) : (
         <div className="mt-3 rounded-2xl border border-line bg-panel p-4">
-          <p className="text-sm text-dim">
+          <p className="text-[15px] text-dim">
             Sem sessão iniciada neste dispositivo.
           </p>
           <Link
             href="/login"
-            className="mt-3 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-ink px-5 text-sm font-semibold text-tube transition hover:brightness-110"
+            className="mt-3 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-ink px-5 text-[15px] font-semibold text-tube transition hover:brightness-110"
           >
             Entrar
           </Link>

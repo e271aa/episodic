@@ -91,7 +91,7 @@ export default function TonightHero({
         <button
           onClick={() => void handleCheck()}
           disabled={checking}
-          className="mt-4 flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-sm font-semibold text-tube transition active:scale-95 disabled:opacity-60"
+          className="mt-4 flex min-h-11 w-fit cursor-pointer items-center gap-2 rounded-full bg-ink px-5 py-2.5 text-[15px] font-semibold text-tube transition active:scale-95 disabled:opacity-60"
         >
           {checking ? (
             <span className="spinner h-4 w-4 rounded-full border-2 border-tube/30 border-t-tube" />

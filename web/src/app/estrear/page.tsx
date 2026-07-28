@@ -38,11 +38,11 @@ export default function EstrearPage() {
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">A estrear</h1>
-        <Link href="/series" className="-mr-2 inline-flex min-h-11 items-center px-2 text-sm text-dim hover:text-ink hover:underline">
+        <Link href="/series" className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline">
           A seguir
         </Link>
       </div>
-      <p className="mt-1 text-sm text-dim">
+      <p className="mt-1 text-[15px] text-dim">
         O calendário dos próximos episódios das séries que segues.
       </p>
 
@@ -52,7 +52,7 @@ export default function EstrearPage() {
         <div className="mt-16 flex flex-col items-center text-center">
           <ClapperboardIcon className="h-12 w-12 text-faint" />
           <p className="mt-4 max-w-sm font-display font-semibold">Nada agendado</p>
-          <p className="mt-2 max-w-sm text-sm text-dim">
+          <p className="mt-2 max-w-sm text-[15px] text-dim">
             Nenhuma das tuas séries tem estreia confirmada nos próximos tempos —
             ou já estão todas terminadas.
           </p>

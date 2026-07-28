@@ -69,7 +69,7 @@ function LoginForm() {
     return (
       <main className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
         <p className="font-display text-lg font-bold">Cloud não configurada</p>
-        <p className="mt-2 max-w-xs text-sm text-dim">
+        <p className="mt-2 max-w-xs text-[15px] text-dim">
           A app está a correr só em modo local. Não há conta para iniciar sessão.
         </p>
       </main>
@@ -83,7 +83,7 @@ function LoginForm() {
         <h1 className="mt-5 text-center font-display text-3xl font-bold [font-stretch:110%]">
           Episodic
         </h1>
-        <p className="mt-1.5 text-center text-sm text-dim">
+        <p className="mt-1.5 text-center text-[15px] text-dim">
           Entra para teres a tua biblioteca em todos os dispositivos.
         </p>
 
@@ -115,7 +115,7 @@ function LoginForm() {
             </label>
 
             {erro && (
-              <p className="page-enter text-sm text-danger" role="alert">
+              <p className="page-enter text-[15px] text-danger" role="alert">
                 {erro}
               </p>
             )}
@@ -137,7 +137,7 @@ function LoginForm() {
                 setModo("codigo");
                 setErro(null);
               }}
-              className="mt-1 min-h-11 cursor-pointer text-sm text-dim transition hover:text-ink"
+              className="mt-1 min-h-11 cursor-pointer text-[15px] text-dim transition hover:text-ink"
             >
               Não tenho palavra-passe — enviem-me um código
             </button>
@@ -174,7 +174,7 @@ function LoginForm() {
             )}
 
             {erro && (
-              <p className="page-enter text-sm text-danger" role="alert">
+              <p className="page-enter text-[15px] text-danger" role="alert">
                 {erro}
               </p>
             )}
@@ -211,7 +211,7 @@ function LoginForm() {
                 setCodigoEnviado(false);
                 setErro(null);
               }}
-              className="mt-1 min-h-11 cursor-pointer text-sm text-dim transition hover:text-ink"
+              className="mt-1 min-h-11 cursor-pointer text-[15px] text-dim transition hover:text-ink"
             >
               Voltar à palavra-passe
             </button>

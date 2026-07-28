@@ -63,7 +63,7 @@ export default function PosterCard({
         {/* O nome fica sempre por baixo: enquanto a capa não chega (ou se
             faltar de todo), a caixa lê-se como um cartaz sem arte em vez de
             um buraco preto que parece avariado. */}
-        <div className="absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display text-sm font-bold text-dim">
+        <div className="absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display text-[15px] font-bold text-dim">
           {name}
         </div>
         <Poster
@@ -78,7 +78,7 @@ export default function PosterCard({
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 h-1 bg-black/50">
               <div
-                className="h-full transition-[width]"
+                className="h-full transition-[width] duration-[240ms] ease-out"
                 style={{
                   width: `${progress}%`,
                   background: barColor ?? undefined,
@@ -89,7 +89,7 @@ export default function PosterCard({
           </>
         )}
       </div>
-      <p className="mt-1.5 truncate text-sm font-medium">{name}</p>
+      <p className="mt-1.5 truncate text-[17px] font-semibold">{name}</p>
       {(watched !== undefined || subtitle) && (
         <p className="ep-code truncate text-xs text-dim">
           {subtitle ?? (total ? `${watched}/${total}` : `${watched} vistos`)}
