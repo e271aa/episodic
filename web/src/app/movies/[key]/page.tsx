@@ -11,7 +11,7 @@ import AddToListButton from "@/components/AddToListButton";
 import Poster from "@/components/Poster";
 import StreamingBadges from "@/components/StreamingBadges";
 import { Bone, DetailHeaderBone } from "@/components/Skeleton";
-import { CheckIcon } from "@/components/icons";
+import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
 
 /**
  * `dateIsExact` false = só sabemos o ano (registos em massa do TV Time, ou
@@ -129,7 +129,7 @@ export default function MoviePage() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-2xl pb-8">
+    <main className="mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]">
       <div className="relative h-44 sm:h-56">
         {backdropPath ? (
           <>
@@ -148,11 +148,14 @@ export default function MoviePage() {
           <div className="h-full w-full bg-gradient-to-r from-raised to-panel" />
         )}
         <div className="bars absolute inset-x-0 top-0 h-[3px]" />
+        {/* botão redondo, igual ao do Detalhe de série — antes era uma
+            pílula de texto "← Filmes", a única sobrevivente desse desenho */}
         <Link
           href="/library?tipo=filmes"
-          className="absolute left-3 top-3 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-black/50 px-4 text-[15px] text-white backdrop-blur"
+          aria-label="Voltar aos filmes"
+          className="absolute left-4 top-4 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-tube/60 text-ink backdrop-blur transition active:scale-90"
         >
-          ← Filmes
+          <ArrowLeftIcon className="h-5 w-5" />
         </Link>
       </div>
 
@@ -173,7 +176,7 @@ export default function MoviePage() {
             </div>
           )}
           <div className="min-w-0 flex-1 pb-1">
-            <h1 className="font-display text-xl font-bold leading-tight">{movie.name}</h1>
+            <h1 className="font-display text-2xl font-bold leading-tight [font-stretch:110%]">{movie.name}</h1>
             {metaBits.length > 0 && (
               <p className="ep-code mt-1 truncate text-xs text-dim">{metaBits.join("  ·  ")}</p>
             )}

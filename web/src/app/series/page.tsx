@@ -455,9 +455,19 @@ export default function SeriesPage() {
           seguinte à do herói e não custa um destino na navegação. */}
       {upcoming && upcoming.length > 0 && (
         <section className="mt-8">
+          {/* O "meta" é um link, não só o número: sem isto, "/estrear" ficou
+              sem porta de entrada nenhuma depois de a Biblioteca perder o
+              cabeçalho onde vivia o atalho. */}
           <SectionHeader
             label="Esta semana"
-            meta={upcoming.length}
+            meta={
+              <Link
+                href="/estrear"
+                className="tap-44 relative hover:text-ink hover:underline"
+              >
+                {upcoming.length} · ver tudo
+              </Link>
+            }
             color="#3fd2c8"
           />
           <div className="-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2">

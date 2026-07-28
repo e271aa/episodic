@@ -1035,6 +1035,19 @@ function LibraryContent() {
             )}
           </>
         )}
+
+        {/* As Listas perderam a entrada que tinham no cabeçalho quando o
+            cabeçalho saiu de cena (Fase T). Ficam aqui — são outra forma de
+            ver a mesma biblioteca, não um filtro dela, mas é o painel que
+            sobrou depois do cromo todo ter descido para a barra flutuante. */}
+        <SectionHeader label="Coleções" className="mt-6" />
+        <Link
+          href="/listas"
+          className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-between rounded-full border border-line px-4 text-[15px] text-dim transition hover:border-ink hover:text-ink"
+        >
+          As tuas listas
+          <span className="text-faint">→</span>
+        </Link>
       </SheetPanel>
     </main>
   );

@@ -35,7 +35,7 @@ export default function EstrearPage() {
   }, []);
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-8">
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">A estrear</h1>
         <Link href="/series" className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline">
@@ -49,7 +49,7 @@ export default function EstrearPage() {
       {entries === null ? (
         <ListRowsBone />
       ) : entries.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center text-center">
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
           <ClapperboardIcon className="h-12 w-12 text-faint" />
           <p className="mt-4 max-w-sm font-display font-semibold">Nada agendado</p>
           <p className="mt-2 max-w-sm text-[15px] text-dim">

@@ -30,7 +30,7 @@ export default function EstatisticasPage() {
 
   if (stats === null) {
     return (
-      <main className="mx-auto w-full max-w-2xl px-4 py-8">
+      <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
         <TitleBone />
         <CardsBone count={4} height="h-28" />
       </main>
@@ -40,7 +40,7 @@ export default function EstatisticasPage() {
   const maxWeekday = Math.max(1, ...stats.perWeekday.map((w) => w.count));
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-8">
+    <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Estatísticas</h1>
         <Link href="/profile" className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline">

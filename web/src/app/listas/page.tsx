@@ -34,7 +34,7 @@ export default function ListasPage() {
   }, [name, reload]);
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-8">
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Listas</h1>
         <Link href="/library" className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline">
@@ -71,7 +71,10 @@ export default function ListasPage() {
       {lists === null ? (
         <CardsBone count={3} height="h-16" />
       ) : lists.length === 0 ? (
-        <div className="mt-16 flex flex-col items-center text-center">
+        // Centrado no espaço que sobra, não a 16 fixos do topo — um vazio a
+        // meio do ecrã lê-se como "não há nada"; um vazio encostado ao topo,
+        // com 600px de nada por baixo, lê-se como "isto está partido".
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
           <LibraryIcon className="h-12 w-12 text-faint" />
           <p className="mt-4 max-w-sm font-display font-semibold">Ainda sem listas</p>
           <p className="mt-2 max-w-sm text-[15px] text-dim">
