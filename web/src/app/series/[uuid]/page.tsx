@@ -21,7 +21,7 @@ import AddToListButton from "@/components/AddToListButton";
 import StreamingBadges from "@/components/StreamingBadges";
 import Poster from "@/components/Poster";
 import { Bone, CardsBone, DetailHeaderBone } from "@/components/Skeleton";
-import { CheckIcon } from "@/components/icons";
+import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
 
 interface SeasonView {
   /** posição na lista (1, 2, 3…) — a numeração que o TV Time assume e que
@@ -54,6 +54,17 @@ const ENDED_STATUSES = new Set(["Ended", "Canceled", "Cancelled"]);
 function stateColor(complete: boolean, status: string | null | undefined): string {
   if (!complete) return "var(--color-ink)";
   return ENDED_STATUSES.has(status ?? "") ? "#d24bd2" : "#37c837";
+}
+
+/** O rótulo que acompanha a barra de cor no cabeçalho — diz em palavras o
+ *  que a cor já diz em cor, para quem não distingue as duas ao relance. */
+function stateLabel(
+  complete: boolean,
+  remaining: number,
+  status: string | null | undefined,
+): string {
+  if (!complete) return `${remaining} por ver`;
+  return ENDED_STATUSES.has(status ?? "") ? "Em dia · terminada" : "Em dia";
 }
 
 export default function ShowPage() {
@@ -281,7 +292,6 @@ export default function ShowPage() {
     [watched],
   );
   const backdropPath = show?.backdropPath ?? null;
-  const posterPath = show?.posterPath ?? null;
   const percent = show?.totalEpisodes
     ? (watchedCount / show.totalEpisodes) * 100
     : null;
@@ -323,115 +333,123 @@ export default function ShowPage() {
   }
 
   const year = show.firstAired?.slice(0, 4);
-  const metaBits = [year, show.genres?.slice(0, 2).join(" · ")].filter(Boolean);
+  const genreBits = show.genres?.slice(0, 2).join(" · ").toUpperCase();
   const showComplete =
     show.totalEpisodes != null && watchedCount >= show.totalEpisodes;
   const accent = stateColor(showComplete, show.status);
+  const remaining = show.totalEpisodes != null ? show.totalEpisodes - watchedCount : 0;
+  const label = stateLabel(showComplete, remaining, show.status);
+  const metaLine = [
+    year,
+    genreBits,
+    show.totalEpisodes != null
+      ? `${watchedCount}/${show.totalEpisodes} EP`
+      : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
 
   return (
-    <main className="mx-auto w-full max-w-2xl pb-8">
-      <div className="relative h-44 sm:h-56">
+    <main className="mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]">
+      {/* O backdrop É a identidade — sem cartaz sobreposto. O título vive no
+          terço de baixo, por cima do gradiente, tal como no herói do "A
+          seguir": a arte respira em cima, o texto lê-se em baixo. */}
+      <div className="relative -mx-4 h-[420px] overflow-hidden bg-panel sm:mx-0">
         {backdropPath ? (
-          <>
-            <Poster
-              path={backdropPath}
-              alt=""
-              size="w780"
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-tube via-tube/40 to-transparent" />
-          </>
+          <Poster
+            path={backdropPath}
+            alt=""
+            size="w780"
+            fill
+            priority
+            sizes="100vw"
+            className="object-cover"
+          />
         ) : (
-          <div className="h-full w-full bg-gradient-to-r from-raised to-panel" />
+          <div className="h-full w-full bg-gradient-to-br from-raised to-panel" />
         )}
-        {/* fio de cor — a assinatura, consistente com o "A seguir" e o perfil */}
-        <div className="bars absolute inset-x-0 top-0 h-[3px]" />
+        <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-tube via-tube/75 via-45% to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-tube/70 to-transparent" />
+        {/* barra de estado — a mesma cor da barra de progresso, não a SMPTE:
+            aqui diz "como está esta série", não "isto é o Episodic" */}
+        <div className="absolute inset-x-0 top-0 h-[3px]" style={{ background: accent }} />
+
         <Link
           href="/series"
-          className="absolute left-3 top-3 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-black/50 px-4 text-[15px] text-white backdrop-blur"
+          aria-label="Voltar às séries"
+          className="absolute left-4 top-4 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-tube/60 text-ink backdrop-blur transition active:scale-90"
         >
-          ← Séries
+          <ArrowLeftIcon className="h-5 w-5" />
         </Link>
+
+        <div className="absolute inset-x-4 bottom-5">
+          <div className="flex items-center gap-2.5">
+            <span
+              aria-hidden
+              className="h-[14px] w-[3px] shrink-0 rounded-full"
+              style={{ background: accent }}
+            />
+            <p className="ep-code text-[13px] text-dim">{label}</p>
+          </div>
+          <h1 className="mt-1.5 font-display text-[36px] font-bold leading-[1] text-ink [font-stretch:110%]">
+            {show.name}
+          </h1>
+          {metaLine && <p className="ep-code mt-2 text-sm text-dim">{metaLine}</p>}
+        </div>
       </div>
 
-      {/* relative: sem isto, o gradiente absoluto da subcapa pinta por cima do poster */}
-      <div className="relative px-4">
-        <div className="-mt-10 flex items-end gap-4">
-          {posterPath ? (
-            <div className="relative aspect-2/3 w-24 shrink-0 overflow-hidden rounded-xl shadow-lg">
-              <Poster path={posterPath} alt={show.name} fill sizes="96px" priority className="object-cover" />
-            </div>
-          ) : (
-            <div className="flex h-36 w-24 shrink-0 items-center justify-center rounded-xl bg-raised p-2 text-center font-display text-[15px] font-bold text-dim shadow-lg">
-              {show.name}
-            </div>
-          )}
-          <div className="flex flex-1 items-end justify-between gap-3 pb-1">
-            <div className="min-w-0">
-              <h1 className="font-display text-xl font-bold leading-tight">{show.name}</h1>
-              {metaBits.length > 0 && (
-                <p className="ep-code mt-1 truncate text-xs text-dim">
-                  {metaBits.join("  ·  ")}
-                </p>
-              )}
-              <p className="ep-code mt-1 text-sm text-dim" data-testid="show-progress">
-                {watchedCount}
-                {show.totalEpisodes ? `/${show.totalEpisodes}` : ""} episódios vistos
-              </p>
-            </div>
-            {percent !== null && <ProgressRing percent={percent} color={accent} />}
-          </div>
+      <div className="px-4">
+        {/* Duas ações, sempre as mesmas duas perguntas: juntar a uma lista,
+            ver onde passa. Lado a lado, mesmo peso — nenhuma é secundária
+            da outra. */}
+        <div className="mt-4 flex gap-2.5">
+          <AddToListButton
+            kind="show"
+            refId={uuid}
+            label="Lista"
+            wrapperClassName="relative flex-1"
+            className="flex h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line bg-raised/60 text-[15px] font-medium text-ink backdrop-blur transition active:scale-95"
+          />
+          <StreamingBadges kind="tv" tmdbId={show.tmdbId} variant="action" />
         </div>
 
-        {/* Ação principal — a decisão nº 1 na página de série */}
-        <div className="mt-5">
-          {nextUp === undefined ? (
-            <Bone className="h-14 w-full rounded-2xl" />
-          ) : nextUp ? (
-            <button
-              onClick={() => void markNext()}
-              data-testid="mark-next"
-              className="flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-left text-tube transition hover:brightness-110 active:scale-[0.99]"
-            >
-              <CheckIcon className={`h-6 w-6 shrink-0 ${pulseNext ? "check-pop" : ""}`} />
-              <span className="min-w-0 flex-1">
-                <span className="block text-[15px] font-semibold">Marcar próximo episódio</span>
-                <span className="ep-code block truncate text-xs opacity-80">
-                  {formatEpCode(nextUp.season, nextUp.episode)} · {nextUp.name}
-                </span>
+        {/* só faz sentido para quem não está a seguir ativamente — uma série
+            já em acompanhamento não precisa de "para ver" a redundar */}
+        {!show.followed && (
+          <button
+            onClick={() => void toggleWatchlist()}
+            className={`mt-2.5 flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border px-4 text-[15px] font-medium transition active:scale-95 ${
+              show.inWatchlist
+                ? "border-ink bg-ink text-tube"
+                : "border-line text-dim hover:border-ink hover:text-ink"
+            }`}
+          >
+            {show.inWatchlist && <CheckIcon className="h-3.5 w-3.5" />}
+            {show.inWatchlist ? "Na lista para ver" : "Para ver"}
+          </button>
+        )}
+
+        {/* Ação principal — a decisão nº 1 na página de série. Sem episódio
+            por marcar não há ação nenhuma a propor: o cabeçalho já disse "Em
+            dia" a par do título, repetir num cartão por baixo era a mesma
+            frase duas vezes na mesma página. */}
+        {nextUp === undefined ? (
+          <Bone className="mt-4 h-14 w-full rounded-2xl" />
+        ) : nextUp ? (
+          <button
+            onClick={() => void markNext()}
+            data-testid="mark-next"
+            className="mt-4 flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-left text-tube transition hover:brightness-110 active:scale-[0.99]"
+          >
+            <CheckIcon className={`h-6 w-6 shrink-0 ${pulseNext ? "check-pop" : ""}`} />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[15px] font-semibold">Marcar próximo episódio</span>
+              <span className="ep-code block truncate text-xs opacity-80">
+                {formatEpCode(nextUp.season, nextUp.episode)} · {nextUp.name}
               </span>
-            </button>
-          ) : (
-            <div className="flex items-center justify-center gap-2 rounded-2xl border border-line bg-panel px-4 py-3 text-[15px] text-dim">
-              <CheckIcon className="h-5 w-5" style={{ color: accent }} />
-              Estás em dia com esta série
-            </div>
-          )}
-        </div>
-
-        <div className="mt-3 flex flex-wrap gap-2">
-          <AddToListButton kind="show" refId={uuid} />
-          {/* só faz sentido para quem não está a seguir ativamente — uma série
-              já em acompanhamento não precisa de "para ver" a redundar */}
-          {!show.followed && (
-            <button
-              onClick={() => void toggleWatchlist()}
-              className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-[15px] font-medium transition active:scale-95 ${
-                show.inWatchlist
-                  ? "border-ink bg-ink text-tube"
-                  : "border-line text-dim hover:border-ink hover:text-ink"
-              }`}
-            >
-              {show.inWatchlist && <CheckIcon className="h-3.5 w-3.5" />}
-              {show.inWatchlist ? "Na lista para ver" : "Para ver"}
-            </button>
-          )}
-        </div>
-
-        <StreamingBadges kind="tv" tmdbId={show.tmdbId} />
+            </span>
+          </button>
+        ) : null}
 
         {/* Separadores */}
         <div className="mt-6 flex gap-1 border-b border-line" role="tablist">
@@ -467,45 +485,83 @@ export default function ShowPage() {
                 ou sem ligação) — mostramos só as temporadas com episódios vistos.
               </p>
             )}
-            <div className="flex flex-col gap-2">
-              {seasons.length === 0 && (
-                <p className="text-[15px] text-dim">Sem informação de temporadas.</p>
-              )}
-              {seasons.map((season) => {
-                const seen = seasonWatchedCount.get(season.number) ?? 0;
-                const complete = season.episodeCount > 0 && seen >= season.episodeCount;
-                const episodes = episodesBySeason.get(season.number);
-                const open = openSeason === season.number;
-                return (
-                  <div
-                    key={season.number}
-                    className={`overflow-hidden rounded-xl border border-line bg-panel ${
-                      sweepSeason === season.number ? "season-sweep" : ""
-                    }`}
-                  >
-                    <button
-                      onClick={() => void toggleSeason(season)}
-                      className="flex min-h-12 w-full cursor-pointer items-center justify-between px-4 py-3 text-left"
-                      data-testid={`season-${season.number}`}
-                    >
-                      <span className="font-medium">{season.name}</span>
-                      <span
-                        className={`ep-code text-sm ${complete ? "font-semibold text-ink" : "text-dim"}`}
-                      >
-                        {seen}/{season.episodeCount} {open ? "▴" : "▾"}
-                      </span>
-                    </button>
 
-                    {open && (
-                      <div className="border-t border-line px-2 py-2">
+            {seasons.length === 0 ? (
+              <p className="text-[15px] text-dim">Sem informação de temporadas.</p>
+            ) : (
+              <>
+                {/* Temporadas como faixas: cinco toques em vez de uma lista de
+                    cinco cartões, e o estado de todas lê-se de uma vez, sem
+                    abrir nada. Até 5 dividem o espaço todo; mais do que isso
+                    (animes longos, séries de 20 temporadas) passam a scroll
+                    horizontal com largura fixa — cinco a espremer-se até à
+                    ilegibilidade não é "ver tudo de uma vez", é o oposto. */}
+                <div
+                  className={
+                    seasons.length > 5
+                      ? "-mx-4 flex gap-2 overflow-x-auto px-4 pb-1"
+                      : "flex gap-2"
+                  }
+                >
+                  {seasons.map((season) => {
+                    const seen = seasonWatchedCount.get(season.number) ?? 0;
+                    const complete = season.episodeCount > 0 && seen >= season.episodeCount;
+                    const cor = stateColor(complete, show.status);
+                    const selected = openSeason === season.number;
+                    return (
+                      <button
+                        key={season.number}
+                        onClick={() => void toggleSeason(season)}
+                        data-testid={`season-${season.number}`}
+                        aria-pressed={selected}
+                        className={`relative h-[72px] shrink-0 cursor-pointer overflow-hidden rounded-xl border transition-colors ${
+                          seasons.length > 5 ? "w-16" : "flex-1"
+                        } ${
+                          selected
+                            ? "border-ink/40 bg-raised"
+                            : "border-line bg-panel hover:border-ink/25"
+                        } ${sweepSeason === season.number ? "season-sweep" : ""}`}
+                      >
+                        <span
+                          aria-hidden
+                          className="absolute inset-x-0 top-0 h-[3px]"
+                          style={{ background: cor }}
+                        />
+                        <span className="flex h-full flex-col items-center justify-center gap-0.5">
+                          <span className="ep-code text-[15px] font-semibold text-ink">
+                            {season.number}
+                          </span>
+                          <span className="ep-code text-[11px] text-faint">
+                            {seen}/{season.episodeCount}
+                          </span>
+                        </span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {(() => {
+                  const season = seasons.find((s) => s.number === openSeason);
+                  if (!season) return null;
+                  const seen = seasonWatchedCount.get(season.number) ?? 0;
+                  const complete = season.episodeCount > 0 && seen >= season.episodeCount;
+                  const episodes = episodesBySeason.get(season.number);
+                  return (
+                    <div className="mt-4">
+                      <div className="flex items-center justify-between gap-3">
+                        <p className="font-display text-[15px] font-semibold">
+                          {season.name}
+                        </p>
                         {!complete && season.episodeCount > 0 && (
                           <button
                             onClick={() => void markSeasonAll(season)}
-                            className="mb-2 ml-2 cursor-pointer text-xs font-semibold text-ink hover:underline"
+                            className="cursor-pointer text-xs font-semibold text-ink hover:underline"
                           >
                             Marcar temporada como vista
                           </button>
                         )}
+                      </div>
+                      <div className="mt-2 flex flex-col">
                         {Array.from({ length: season.episodeCount }, (_, i) => i + 1).map(
                           (epNumber) => {
                             const metaEp = episodes?.find((e) => e.episode === epNumber);
@@ -515,27 +571,28 @@ export default function ShowPage() {
                             return (
                               <button
                                 key={epNumber}
-                                onClick={() =>
-                                  void toggleEpisode(season.number, epNumber)
-                                }
-                                className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-2 py-2 text-left transition-colors hover:bg-raised"
+                                onClick={() => void toggleEpisode(season.number, epNumber)}
+                                className="flex h-[52px] w-full cursor-pointer items-center gap-3 rounded-lg px-2 text-left transition-colors hover:bg-raised"
                                 data-testid={`ep-${season.number}-${epNumber}`}
                               >
+                                <span className="ep-code w-[34px] shrink-0 text-[13px] text-faint">
+                                  E{String(epNumber).padStart(2, "0")}
+                                </span>
                                 <span
                                   aria-hidden
-                                  className={`relative flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors ${
+                                  className={`relative flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors ${
+                                    isPulsing ? "check-pop check-ring" : ""
+                                  }`}
+                                  style={
                                     isSeen
-                                      ? "border-ink bg-ink text-tube"
-                                      : "border-line text-transparent"
-                                  } ${isPulsing ? "check-pop check-ring" : ""}`}
+                                      ? { borderColor: accent, background: accent, color: "var(--color-tube)" }
+                                      : { borderColor: "var(--color-line)", color: "transparent" }
+                                  }
                                 >
                                   ✓
                                 </span>
                                 <span className="min-w-0 flex-1">
-                                  <span className="block truncate text-[15px]">
-                                    <span className="ep-code mr-2 text-faint">
-                                      {String(epNumber).padStart(2, "0")}
-                                    </span>
+                                  <span className="block truncate text-base">
                                     {metaEp?.name ?? `Episódio ${epNumber}`}
                                   </span>
                                   {metaEp?.airDate && (
@@ -549,11 +606,11 @@ export default function ShowPage() {
                           },
                         )}
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
+                    </div>
+                  );
+                })()}
+              </>
+            )}
           </section>
         )}
 

@@ -13,11 +13,28 @@ import {
 export interface AddToListButtonProps {
   kind: "show" | "movie";
   refId: string;
+  /** por omissão é a pílula discreta de sempre; o Detalhe de série 2b passa
+   *  o visual das duas ações lado a lado (48px, translúcida, largura igual) */
+  className?: string;
+  label?: string;
+  /** o botão em si pode ser `flex-1`, mas sem o invólucro acompanhar (que por
+   *  omissão é só `inline-block`) o flex não tem o que esticar — ficava um
+   *  círculo pequeno em vez de ocupar metade da linha */
+  wrapperClassName?: string;
 }
+
+const TRIGGER_DEFAULT =
+  "flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[15px] font-medium text-dim transition hover:bg-raised hover:text-ink";
 
 // Botão + painel para juntar esta série/filme a uma ou mais listas
 // personalizadas — usado nas páginas de detalhe.
-export default function AddToListButton({ kind, refId }: AddToListButtonProps) {
+export default function AddToListButton({
+  kind,
+  refId,
+  className = TRIGGER_DEFAULT,
+  label = "+ Lista",
+  wrapperClassName = "relative inline-block",
+}: AddToListButtonProps) {
   const [open, setOpen] = useState(false);
   const [lists, setLists] = useState<CustomList[] | null>(null);
   const [newName, setNewName] = useState("");
@@ -66,12 +83,9 @@ export default function AddToListButton({ kind, refId }: AddToListButtonProps) {
   }, [newName, kind, refId, reload]);
 
   return (
-    <div ref={rootRef} className="relative inline-block">
-      <button
-        onClick={() => setOpen((v) => !v)}
-        className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[15px] font-medium text-dim transition hover:bg-raised hover:text-ink"
-      >
-        + Lista
+    <div ref={rootRef} className={wrapperClassName}>
+      <button onClick={() => setOpen((v) => !v)} className={className}>
+        {label}
       </button>
       {open && (
         <div className="page-enter absolute left-0 top-full z-20 mt-2 w-64 rounded-2xl border border-line bg-panel p-3 shadow-lg">
