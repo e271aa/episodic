@@ -10,7 +10,7 @@ import { pushUndo } from "@/lib/undo";
 import type { MetaEpisode } from "@/lib/metadata";
 import SwipeCard from "@/components/SwipeCard";
 import SwipeCoach, { EM_DIA_COACH_KEY } from "@/components/SwipeCoach";
-import { CheckIcon } from "@/components/icons";
+import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
 import { Bone, TitleBone } from "@/components/Skeleton";
 
 type Filter = "continuar" | "retomar" | "comecar" | "todas";
@@ -128,15 +128,22 @@ export default function EmDiaPage() {
   const finished = cursor >= total && total > 0;
 
   return (
-    <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Pôr em dia</h1>
-        <Link href="/series" className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline">
-          Sair
+    <main
+      className="mx-auto flex w-full max-w-md flex-col overflow-hidden px-4 pt-2"
+      style={{ height: "100dvh" }}
+    >
+      <div className="flex shrink-0 items-center gap-2">
+        <Link
+          href="/series"
+          aria-label="Voltar às séries"
+          className="-ml-2 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-90"
+        >
+          <ArrowLeftIcon className="h-5 w-5" />
         </Link>
+        <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Pôr em dia</h1>
       </div>
 
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+      <div className="mt-4 flex shrink-0 gap-2 overflow-x-auto pb-1">
         {FILTERS.map((f) => {
           const count =
             f.id === "continuar"
@@ -167,7 +174,7 @@ export default function EmDiaPage() {
       </div>
 
       {total === 0 ? (
-        <div className="mt-16 flex flex-1 flex-col items-center justify-center text-center">
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
           <CheckIcon className="h-10 w-10 text-faint" />
           <p className="mt-4 font-display font-semibold">Nada para pôr em dia aqui</p>
           <p className="mt-1 max-w-xs text-[15px] text-dim">
@@ -175,7 +182,7 @@ export default function EmDiaPage() {
           </p>
         </div>
       ) : finished ? (
-        <div className="mt-16 flex flex-1 flex-col items-center justify-center text-center">
+        <div className="flex flex-1 flex-col items-center justify-center text-center">
           <CheckIcon className="h-10 w-10 text-faint" />
           <p className="mt-4 font-display font-semibold">Passaste tudo em revista</p>
           <p className="mt-1 max-w-xs text-[15px] text-dim">
@@ -190,10 +197,14 @@ export default function EmDiaPage() {
         </div>
       ) : (
         <>
-          <p className="ep-code mt-4 text-center text-xs text-faint">
+          <p className="ep-code mt-3 shrink-0 text-center text-xs text-faint">
             {cursor + 1} de {total}
           </p>
-          <div className="relative mt-3 aspect-3/4 flex-1" data-swipe-stack>
+          {/* min-h-0: sem isto, o cartão empurraria as ações para debaixo da
+              dock em ecrãs mais baixos — a mesma avaria que a Fase Q
+              corrigiu no Explorar. Aqui a pilha ocupa o que sobra do ecrã,
+              nunca mais do que isso. */}
+          <div className="relative mt-3 min-h-0 flex-1 pb-4" data-swipe-stack>
             {remaining.map((item, i) => (
               <SwipeCard
                 key={item.showUuid}
@@ -215,30 +226,32 @@ export default function EmDiaPage() {
               esquerda={{ seta: "←", titulo: "Ainda não", detalhe: "Passa à frente sem marcar" }}
               direita={{ seta: "→", titulo: "Visto", detalhe: "Marca o episódio como visto" }}
             />
-          </div>
 
-          <div className="mt-5 flex items-center justify-center gap-6">
-            <button
-              onClick={() => handleDecide(remaining[0], false)}
-              aria-label="Saltar — ainda não vi"
-              className="flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border-2 border-line text-faint transition hover:border-ink hover:text-ink active:scale-90"
-            >
-              <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>
-                <path
-                  d="M6 6l12 12M18 6L6 18"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                />
-              </svg>
-            </button>
-            <button
-              onClick={() => handleDecide(remaining[0], true)}
-              aria-label="Marcar como visto"
-              className="flex h-16 w-16 cursor-pointer items-center justify-center rounded-full bg-ink text-tube transition hover:brightness-110 active:scale-90"
-            >
-              <CheckIcon className="h-7 w-7" />
-            </button>
+            {/* As ações flutuam sobre o cartaz, acima da dock — nunca por
+                baixo dela, que era a avaria (o degradê da dock apagava-as). */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-[calc(var(--dock-h)+2.25rem)] z-20 flex items-center justify-center gap-6">
+              <button
+                onClick={() => handleDecide(remaining[0], false)}
+                aria-label="Saltar — ainda não vi"
+                className="pointer-events-auto flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border border-ink/20 bg-tube/70 text-ink backdrop-blur-md transition active:scale-90"
+              >
+                <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>
+                  <path
+                    d="M6 6l12 12M18 6L6 18"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  />
+                </svg>
+              </button>
+              <button
+                onClick={() => handleDecide(remaining[0], true)}
+                aria-label="Marcar como visto"
+                className="pointer-events-auto flex h-16 w-16 cursor-pointer items-center justify-center rounded-full bg-ink text-tube transition hover:brightness-110 active:scale-90"
+              >
+                <CheckIcon className="h-7 w-7" />
+              </button>
+            </div>
           </div>
         </>
       )}

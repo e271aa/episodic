@@ -20,6 +20,10 @@ export interface SwipeCardProps {
   onDecide: (watched: boolean) => void;
 }
 
+/** faixa junto ao bordo esquerdo reservada ao gesto de recuar — tem de bater
+ *  certo com o `EDGE` do `BackGesture`, senão os dois gestos disputam o
+ *  mesmo toque */
+const BACK_GESTURE_EDGE = 26;
 /** distância a partir da qual largar o cartão decide */
 const THRESHOLD = 100;
 /** a partir daqui o selo já está a 100% — decidir "sente-se" antes do limiar */
@@ -53,7 +57,7 @@ export default function SwipeCard({
   };
 
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (!active || leaving) return;
+    if (!active || leaving || e.clientX <= BACK_GESTURE_EDGE) return;
     startX.current = e.clientX;
     pointerId.current = e.pointerId;
     try {
@@ -186,8 +190,10 @@ export default function SwipeCard({
         </div>
 
         {/* Qual episódio estou a decidir: o código é o protagonista, porque é
-            isso que fica marcado; a série é só o contexto por cima. */}
-        <div className="relative flex h-full flex-col justify-end p-5">
+            isso que fica marcado; a série é só o contexto por cima. O
+            `pb` sobe o texto acima das ações flutuantes e da dock — sem
+            isto o título ficava tapado por baixo delas. */}
+        <div className="relative flex h-full flex-col justify-end px-5 pt-5 pb-[calc(var(--dock-h)+7rem)]">
           <p className="truncate font-display text-xs font-semibold uppercase tracking-[0.18em] text-dim [font-stretch:80%]">
             {showName}
           </p>

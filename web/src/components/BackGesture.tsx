@@ -39,10 +39,10 @@ function insideScroller(target: EventTarget | null, horizontal: boolean): boolea
 
 /**
  * Recuar por gesto, porque a app instalada no telemóvel não tem barra do
- * browser: arrastar do bordo esquerdo para a direita volta atrás.
- *
- * No "Pôr em dia" o eixo horizontal é dos cartões, por isso aí recua-se de
- * cima para baixo — e nunca a partir da própria pilha, que tem o gesto dela.
+ * browser: arrastar do bordo esquerdo para a direita volta atrás — o mesmo
+ * gesto em toda a app, incluindo no "Pôr em dia". O cartão do topo da pilha
+ * ignora os primeiros 26px a partir do bordo (ver `SwipeCard`) para o
+ * arrastar dele nunca competir com este.
  */
 export default function BackGesture({ children }: { children: React.ReactNode }) {
   const router = useRouter();
@@ -50,49 +50,36 @@ export default function BackGesture({ children }: { children: React.ReactNode })
   const [offset, setOffset] = useState(0);
   const drag = useRef<{ id: number; x: number; y: number; live: boolean } | null>(null);
 
-  const vertical = pathname === "/em-dia";
   const enabled = !ROOTS.has(pathname);
 
   const onPointerDown = useCallback(
     (e: React.PointerEvent) => {
       if (!enabled || e.pointerType === "mouse") return;
-      if (vertical) {
-        // a pilha de cartões trata do gesto dela; e só do topo da página,
-        // para não roubar o arrastar a quem está a percorrer a lista
-        if ((e.target as Element).closest?.("[data-swipe-stack]")) return;
-        if (window.scrollY > 0) return;
-      } else if (e.clientX > EDGE) {
-        return;
-      }
-      if (insideScroller(e.target, !vertical)) return;
+      if (e.clientX > EDGE) return;
+      if (insideScroller(e.target, true)) return;
       drag.current = { id: e.pointerId, x: e.clientX, y: e.clientY, live: false };
     },
-    [enabled, vertical],
+    [enabled],
   );
 
-  const onPointerMove = useCallback(
-    (e: React.PointerEvent) => {
-      const d = drag.current;
-      if (!d || d.id !== e.pointerId) return;
-      const dx = e.clientX - d.x;
-      const dy = e.clientY - d.y;
-      const along = vertical ? dy : dx;
-      const across = vertical ? dx : dy;
+  const onPointerMove = useCallback((e: React.PointerEvent) => {
+    const d = drag.current;
+    if (!d || d.id !== e.pointerId) return;
+    const dx = e.clientX - d.x;
+    const dy = e.clientY - d.y;
 
-      if (!d.live) {
-        if (Math.abs(along) < AXIS_LOCK) return;
-        // desviou-se demasiado do eixo, ou foi para o lado errado: é scroll
-        if (along < 0 || Math.abs(along) < Math.abs(across) * 1.5) {
-          drag.current = null;
-          return;
-        }
-        d.live = true;
+    if (!d.live) {
+      if (Math.abs(dx) < AXIS_LOCK) return;
+      // desviou-se demasiado do eixo, ou foi para o lado errado: é scroll
+      if (dx < 0 || Math.abs(dx) < Math.abs(dy) * 1.5) {
+        drag.current = null;
+        return;
       }
-      // resistência: puxar mais não desloca proporcionalmente
-      setOffset(Math.min(along * 0.7, 140));
-    },
-    [vertical],
-  );
+      d.live = true;
+    }
+    // resistência: puxar mais não desloca proporcionalmente
+    setOffset(Math.min(dx * 0.7, 140));
+  }, []);
 
   const endDrag = useCallback(() => {
     const d = drag.current;
@@ -118,19 +105,13 @@ export default function BackGesture({ children }: { children: React.ReactNode })
       {enabled && dragging && (
         <div
           aria-hidden
-          className={`pointer-events-none fixed z-50 flex h-11 w-11 items-center justify-center rounded-full bg-panel text-ink shadow-lg ${
-            vertical
-              ? "left-1/2 top-3 -translate-x-1/2"
-              : "left-3 top-1/2 -translate-y-1/2"
-          }`}
+          className="pointer-events-none fixed left-3 top-1/2 z-50 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full bg-panel text-ink shadow-lg"
           style={{
             opacity: Math.min(1, offset / THRESHOLD),
-            transform: `${vertical ? "translateX(-50%)" : "translateY(-50%)"} scale(${
-              0.8 + Math.min(1, offset / THRESHOLD) * 0.2
-            })`,
+            transform: `translateY(-50%) scale(${0.8 + Math.min(1, offset / THRESHOLD) * 0.2})`,
           }}
         >
-          {vertical ? "↓" : "←"}
+          ←
         </div>
       )}
       {/* o transform vive aqui dentro e só durante o gesto: permanente, tornaria
@@ -138,9 +119,7 @@ export default function BackGesture({ children }: { children: React.ReactNode })
       <div
         className="flex min-w-0 flex-1 flex-col"
         style={{
-          transform: dragging
-            ? `translate${vertical ? "Y" : "X"}(${offset}px)`
-            : undefined,
+          transform: dragging ? `translateX(${offset}px)` : undefined,
           transition: dragging ? "none" : "transform 200ms ease-out",
         }}
       >
