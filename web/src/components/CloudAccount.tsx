@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Link from "next/link";
 import { isCloudConfigured } from "@/lib/supabase";
+import SectionHeader from "@/components/SectionHeader";
+import { Panel, PanelRow } from "@/components/Panel";
 import {
   getUser,
   onAuthChange,
@@ -139,96 +140,84 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
   if (!isCloudConfigured()) {
     return (
       <section className="mt-8">
-        <h2 className="font-display text-lg font-semibold">Conta &amp; sync</h2>
-        <p className="mt-2 rounded-2xl border border-line bg-panel p-4 text-[15px] text-dim">
-          A sincronização na cloud ainda não está ligada. Quando estiver, poderás
-          entrar com o email e ter a tua biblioteca em todos os dispositivos.
-        </p>
+        <SectionHeader label="Conta" />
+        <Panel className="mt-3">
+          <PanelRow
+            titulo="Sincronização desligada"
+            detalhe="Quando estiver ligada, entras com o email e tens a biblioteca em todos os dispositivos."
+          />
+        </Panel>
       </section>
     );
   }
 
   return (
     <section className="mt-8">
-      <h2 className="font-display text-lg font-semibold">Conta &amp; sync</h2>
+      <SectionHeader label="Conta" meta={user ? "ligada" : "sem sessão"} />
 
       {user ? (
-        <div className="mt-3 rounded-2xl border border-line bg-panel p-4">
-          <p className="text-[15px]">
-            Sessão iniciada como{" "}
-            <span className="font-medium text-ink">{user.email}</span>
-          </p>
-          <p className="ep-code mt-1 text-xs text-faint">{autoSyncLabel}</p>
-          <div className="mt-3 flex flex-wrap gap-2">
-            <button
-              onClick={() => void handleSync()}
-              disabled={status === "syncing"}
-              className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-ink px-5 py-2 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
-            >
-              {status === "syncing" && (
-                <span className="spinner h-4 w-4 rounded-full border-2 border-tube/30 border-t-tube" />
-              )}
-              {status === "syncing" ? "A sincronizar…" : "Sincronizar agora"}
-            </button>
-            <button
-              onClick={() => void handleSignOut()}
-              className="min-h-11 cursor-pointer rounded-full border border-line px-5 py-2 text-[15px] font-medium text-dim transition hover:bg-raised"
-            >
-              Terminar sessão
-            </button>
-          </div>
+        <Panel className="mt-3">
+          <PanelRow titulo={user.email ?? "Sessão iniciada"} detalhe={autoSyncLabel} />
+          <PanelRow
+            titulo={status === "syncing" ? "A sincronizar…" : "Sincronizar agora"}
+            onClick={() => void handleSync()}
+            fim={
+              status === "syncing" ? (
+                <span className="spinner h-4 w-4 rounded-full border-2 border-dim/30 border-t-dim" />
+              ) : (
+                "→"
+              )
+            }
+          />
 
           {/* Password opcional: entra noutros dispositivos sem depender de
               emails (o link/código continua disponível como alternativa). */}
           <form
-            className="mt-4 border-t border-line pt-4"
+            className="px-5 py-4"
             onSubmit={(e) => {
               e.preventDefault();
               void handleSetPassword();
             }}
           >
-            <p className="text-xs text-dim">
-              Define uma password para entrares noutros dispositivos sem esperar
-              por emails (ideal no telemóvel).
+            <p className="font-display text-[15px] font-semibold">Password</p>
+            <p className="mt-0.5 text-xs text-dim">
+              Para entrares noutros dispositivos sem esperar por emails.
             </p>
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2.5 flex gap-2">
               <input
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
-                placeholder="nova password (mín. 8)"
+                placeholder="mínimo 8 caracteres"
                 autoComplete="new-password"
                 minLength={8}
-                className="min-h-11 flex-1 rounded-full border border-line bg-tube px-5 py-2 text-base outline-none transition-colors focus:border-ink"
+                className="min-h-11 w-0 flex-1 rounded-full border border-line bg-tube px-4 text-base outline-none transition-colors focus:border-ink"
               />
               <button
                 type="submit"
                 disabled={status === "verifying" || newPassword.length < 8}
-                className="min-h-11 cursor-pointer rounded-full border border-line px-5 py-2 text-[15px] font-medium text-dim transition hover:bg-raised disabled:opacity-50"
+                className="min-h-11 shrink-0 cursor-pointer rounded-full border border-line px-5 text-[15px] font-medium text-dim transition hover:bg-raised disabled:opacity-50"
               >
                 Guardar
               </button>
             </div>
           </form>
-        </div>
+
+          <PanelRow titulo="Terminar sessão" onClick={() => void handleSignOut()} />
+        </Panel>
       ) : (
-        <div className="mt-3 rounded-2xl border border-line bg-panel p-4">
-          <p className="text-[15px] text-dim">
-            Sem sessão iniciada neste dispositivo.
-          </p>
-          <Link
+        <Panel className="mt-3">
+          <PanelRow
+            titulo="Entrar"
+            detalhe="Sem sessão neste dispositivo — a biblioteca vive só aqui."
             href="/login"
-            className="mt-3 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-ink px-5 text-[15px] font-semibold text-tube transition hover:brightness-110"
-          >
-            Entrar
-          </Link>
-        </div>
+            fim="→"
+          />
+        </Panel>
       )}
 
       {message && (
-        <p
-          className={`mt-2 text-xs ${status === "error" ? "text-danger" : "text-dim"}`}
-        >
+        <p className={`mt-2 px-1 text-xs ${status === "error" ? "text-danger" : "text-dim"}`}>
           {message}
         </p>
       )}

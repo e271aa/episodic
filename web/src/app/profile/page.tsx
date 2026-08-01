@@ -7,6 +7,8 @@ import { loadProfileStats, type ProfileStats } from "@/lib/stats";
 import CloudAccount from "@/components/CloudAccount";
 import ProfileCard from "@/components/ProfileCard";
 import Poster from "@/components/Poster";
+import SectionHeader from "@/components/SectionHeader";
+import { Panel, PanelRow } from "@/components/Panel";
 import { Bone } from "@/components/Skeleton";
 import IntegrityCheck from "@/components/IntegrityCheck";
 
@@ -27,15 +29,13 @@ export default function ProfilePage() {
     void loadProfileStats().then(setStats);
   }, []);
 
+  // A confirmação é agora um estado do painel, não um segundo clique no mesmo
+  // botão: "clica outra vez" obrigava a ler o botão que se acabou de premir.
   const handleClear = useCallback(async () => {
-    if (!confirmClear) {
-      setConfirmClear(true);
-      return;
-    }
     await clearAllData();
     setConfirmClear(false);
     setStats(await loadProfileStats());
-  }, [confirmClear]);
+  }, []);
 
   if (stats === null) {
     return (
@@ -106,9 +106,7 @@ export default function ProfilePage() {
       <section className="mt-3 divide-y divide-line rounded-3xl border border-line bg-panel">
         {stats.genres.length > 0 && (
           <div className="p-5">
-            <h2 className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-dim [font-stretch:80%]">
-              O teu espetro
-            </h2>
+            <SectionHeader label="O teu espetro" />
             <div className="mt-3 flex h-3 overflow-hidden rounded-full">
               {stats.genres.map((g) => (
                 <div
@@ -180,9 +178,7 @@ export default function ProfilePage() {
 
         {stats.perYear.length > 1 && (
           <div className="p-5">
-            <h2 className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-dim [font-stretch:80%]">
-              Por ano
-            </h2>
+            <SectionHeader label="Por ano" meta={`${stats.perYear.length} anos`} />
             <div className="mt-4 flex items-end justify-between gap-1.5">
               {stats.perYear.map((y) => (
                 <div key={y.year} className="flex flex-1 flex-col items-center gap-1.5">
@@ -215,33 +211,71 @@ export default function ProfilePage() {
       <CloudAccount onSynced={() => void loadProfileStats().then(setStats)} />
 
       <section className="mt-8">
-        <h2 className="font-display text-lg font-semibold">Dados</h2>
-        <div className="mt-3 flex flex-col gap-2">
-          <Link
+        {/* Cor fixada à mão: a que sai do rótulo "Dados" calhava no vermelho
+            SMPTE, ao lado do "Apagar dados locais". Ter o mesmo vermelho a
+            marcar uma secção e a assinalar perigo tira o significado ao
+            segundo — e o significado é a única razão de haver cor nesta app. */}
+        <SectionHeader label="Dados" color="#3c46e6" />
+        <Panel className="mt-3">
+          <PanelRow
+            titulo="Importar do TV Time"
+            detalhe={
+              stats.importedAt
+                ? `Última importação a ${stats.importedAt.slice(0, 10)}`
+                : "Traz o histórico do export GDPR"
+            }
             href="/import"
-            className="cursor-pointer rounded-2xl border border-line bg-panel px-4 py-3 font-medium transition-colors hover:bg-raised"
-          >
-            Importar do TV Time
-            {stats.importedAt && (
-              <span className="ep-code block text-xs font-normal text-faint">
-                última importação: {stats.importedAt.slice(0, 10)}
-              </span>
-            )}
-          </Link>
+            fim="→"
+          />
           <IntegrityCheck />
-          <button
-            onClick={() => void handleClear()}
-            className="cursor-pointer rounded-2xl border border-danger/40 px-4 py-3 text-left font-medium text-danger transition-colors hover:bg-danger/10"
-          >
-            {confirmClear
-              ? "Tens a certeza? Clica outra vez para apagar tudo"
-              : "Apagar dados locais"}
-          </button>
-        </div>
+          {/* O vermelho só acende quando a destruição está mesmo a um toque.
+              Em repouso é uma linha como as outras — a app tem um único
+              acento de perigo e não pode estar sempre ligado, ou deixa de
+              querer dizer alguma coisa. */}
+          {confirmClear ? (
+            <div className="px-5 py-4">
+              <p className="font-display text-[15px] font-semibold text-danger">
+                Apagar tudo o que está neste dispositivo?
+              </p>
+              <p className="mt-0.5 text-xs text-dim">
+                Séries, filmes, episódios marcados e listas. Não há como voltar
+                atrás{" "}
+                {stats.importedAt
+                  ? "— terias de importar o TV Time outra vez."
+                  : "daqui."}
+              </p>
+              <div className="mt-3 flex gap-2">
+                {/* text-tube e não text-ink: branco sobre o vermelho dá 3,3:1,
+                    abaixo do mínimo para 15px. Escuro sobre cor é, além
+                    disso, o que os botões primários da app já fazem. */}
+                <button
+                  onClick={() => void handleClear()}
+                  className="min-h-11 flex-1 cursor-pointer rounded-full bg-danger px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95"
+                >
+                  Apagar tudo
+                </button>
+                <button
+                  onClick={() => setConfirmClear(false)}
+                  className="min-h-11 flex-1 cursor-pointer rounded-full border border-line px-4 text-[15px] font-semibold text-dim transition hover:border-ink hover:text-ink"
+                >
+                  Manter
+                </button>
+              </div>
+            </div>
+          ) : (
+            <PanelRow
+              titulo="Apagar dados locais"
+              detalhe="Limpa esta cópia — a da cloud, se tiveres sessão, fica"
+              onClick={() => setConfirmClear(true)}
+              perigo
+            />
+          )}
+        </Panel>
       </section>
 
-      <p className="mt-8 text-center text-xs text-faint">
-        Episodic · os teus dados vivem neste dispositivo e (se iniciares sessão) na cloud
+      <p className="mt-10 text-center text-xs leading-relaxed text-faint">
+        Episodic — os teus dados vivem neste dispositivo
+        <br />e na cloud, se iniciares sessão.
         <br />
         Metadados por TVmaze e TMDB.
       </p>

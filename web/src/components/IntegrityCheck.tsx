@@ -12,6 +12,7 @@ import {
   type DuplicateShow,
   type RepairPlan,
 } from "@/lib/repair";
+import { PanelRow } from "@/components/Panel";
 
 /**
  * Verificação e reparação de episódios duplicados por numerações diferentes
@@ -85,9 +86,33 @@ export default function IntegrityCheck() {
   const duvidosas = plan?.repairs.filter((r) => !r.safe) ?? [];
   const totalSeguro = seguras.reduce((n, r) => n + r.extras.length, 0);
 
+  // Nada de resultados ainda e nada por repor: a verificação é uma linha
+  // como as outras. O relatório só ocupa espaço depois de haver relatório.
+  const emRepouso = plan === null && duplicados === null && estado === null && podeReverter === 0;
+
+  if (emRepouso) {
+    return (
+      <PanelRow
+        titulo="Verificar biblioteca"
+        detalhe="Procura séries repetidas e episódios contados duas vezes"
+        onClick={verificar}
+        fim={
+          progress !== null ? (
+            <span className="ep-code flex items-center gap-2 text-xs">
+              <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-dim/30 border-t-dim" />
+              {progress.done}/{progress.total}
+            </span>
+          ) : (
+            "→"
+          )
+        }
+      />
+    );
+  }
+
   return (
-    <div className="mt-2 rounded-2xl border border-line bg-panel p-4">
-      <p className="font-display font-semibold">Verificar biblioteca</p>
+    <div className="px-5 py-4">
+      <p className="font-display text-[15px] font-semibold">Verificar biblioteca</p>
       <p className="mt-1 text-[15px] text-dim">
         Procura séries repetidas e séries com mais episódios marcados do que o
         fornecedor tem — as duas coisas acontecem quando o import do TV Time e
