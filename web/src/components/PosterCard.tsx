@@ -3,6 +3,13 @@
 import Link from "next/link";
 import Poster from "@/components/Poster";
 
+/**
+ * "grelha" = cartaz em pé, para ver a arte. "lista" = uma linha por item,
+ * para **procurar** — numa biblioteca de 136 séries e 239 filmes, ler
+ * nomes seguidos é mais rápido do que reconhecer capas.
+ */
+export type VarianteCartaz = "grelha" | "lista";
+
 export interface PosterCardProps {
   href: string;
   name: string;
@@ -15,6 +22,9 @@ export interface PosterCardProps {
   subtitle?: string;
   /** estado da série no fornecedor (TMDB/TVmaze) — dita a cor da barra quando em dia */
   status?: string | null;
+  variante?: VarianteCartaz;
+  /** cantos e nome mais pequenos quando cabem 3+ por linha */
+  compacta?: boolean;
 }
 
 // A série acabou de vez — sem isto, "em dia" fica sempre verde (o valor
@@ -46,24 +56,73 @@ export default function PosterCard({
   total,
   subtitle,
   status,
+  variante = "grelha",
+  compacta = false,
 }: PosterCardProps) {
   const progress =
     watched !== undefined && total ? Math.min(100, (watched / total) * 100) : null;
   const barColor =
     watched !== undefined && total ? progressBarColor(watched, total, status) : null;
+  const legenda =
+    watched !== undefined || subtitle
+      ? (subtitle ?? (total ? `${watched}/${total}` : `${watched} vistos`))
+      : null;
+  // entrada escalonada: a grelha monta-se em cascata, não toda de uma vez
+  const entrada =
+    index !== undefined ? { animationDelay: `${Math.min(index, 11) * 35}ms` } : undefined;
+
+  if (variante === "lista") {
+    return (
+      <Link
+        href={href}
+        className="poster-in group flex min-h-[72px] cursor-pointer items-center gap-3 border-b border-line py-2 transition active:scale-[0.99]"
+        style={entrada}
+      >
+        <div className="relative h-14 w-[38px] shrink-0 overflow-hidden rounded-lg bg-raised shadow-sm shadow-black/30">
+          <Poster
+            path={posterPath}
+            alt=""
+            size="w185"
+            fill
+            sizes="38px"
+            className="object-cover"
+          />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[17px] font-semibold">{name}</p>
+          {legenda && <p className="ep-code truncate text-xs text-dim">{legenda}</p>}
+          {progress !== null && (
+            <div className="mt-1.5 h-[3px] overflow-hidden rounded-full bg-raised">
+              <div
+                className="h-full transition-[width] duration-[240ms] ease-out"
+                style={{ width: `${progress}%`, background: barColor ?? undefined }}
+              />
+            </div>
+          )}
+        </div>
+      </Link>
+    );
+  }
 
   return (
     <Link
       href={href}
       className="poster-in group block cursor-pointer transition active:scale-[0.97]"
-      // entrada escalonada: a grelha monta-se em cascata, não toda de uma vez
-      style={index !== undefined ? { animationDelay: `${Math.min(index, 11) * 35}ms` } : undefined}
+      style={entrada}
     >
-      <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30 transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-ink/60">
+      <div
+        className={`relative aspect-2/3 overflow-hidden bg-panel shadow-md shadow-black/30 transition duration-200 group-hover:-translate-y-0.5 group-hover:shadow-lg group-hover:ring-2 group-hover:ring-ink/60 ${
+          compacta ? "rounded-xl" : "rounded-2xl"
+        }`}
+      >
         {/* O nome fica sempre por baixo: enquanto a capa não chega (ou se
             faltar de todo), a caixa lê-se como um cartaz sem arte em vez de
             um buraco preto que parece avariado. */}
-        <div className="absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display text-[15px] font-bold text-dim">
+        <div
+          className={`absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display font-bold text-dim ${
+            compacta ? "text-xs" : "text-[15px]"
+          }`}
+        >
           {name}
         </div>
         <Poster
@@ -89,12 +148,12 @@ export default function PosterCard({
           </>
         )}
       </div>
-      <p className="mt-1.5 truncate text-[17px] font-semibold">{name}</p>
-      {(watched !== undefined || subtitle) && (
-        <p className="ep-code truncate text-xs text-dim">
-          {subtitle ?? (total ? `${watched}/${total}` : `${watched} vistos`)}
-        </p>
-      )}
+      <p
+        className={`mt-1.5 truncate font-semibold ${compacta ? "text-[15px]" : "text-[17px]"}`}
+      >
+        {name}
+      </p>
+      {legenda && <p className="ep-code truncate text-xs text-dim">{legenda}</p>}
     </Link>
   );
 }

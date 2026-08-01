@@ -18,6 +18,7 @@ import {
 } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
 import { backfillMovies, backfillShows } from "@/lib/backfill";
+import { usePref } from "@/lib/prefs";
 import {
   searchMovies,
   searchShows,
@@ -66,6 +67,30 @@ const MOVIE_SORTS: { id: MovieSort; label: string }[] = [
 ];
 
 type FollowState = "idle" | "following" | "done";
+
+/**
+ * Quão junto se arruma a biblioteca. Dois cartazes por linha mostram bem a
+ * arte, mas com 136 séries e 239 filmes é muito rolar para pouca coisa;
+ * a lista troca a arte por velocidade a procurar.
+ *
+ * É preferência de apresentação, não de navegação — por isso vive no
+ * `usePref` e não no URL, ao contrário do filtro e da ordem, que se
+ * partilham e sobrevivem ao gesto de recuar.
+ */
+type Densidade = "grande" | "compacta" | "lista";
+const DENSIDADES: readonly Densidade[] = ["grande", "compacta", "lista"];
+
+const DENSIDADE_LABEL: Record<Densidade, string> = {
+  grande: "Cartazes grandes",
+  compacta: "Cartazes pequenos",
+  lista: "Lista",
+};
+
+const CLASSE_GRELHA: Record<Densidade, string> = {
+  grande: "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4",
+  compacta: "grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6",
+  lista: "flex flex-col",
+};
 
 /** A ordem por que as secções de estado aparecem, e a cor de cada uma. As
  *  cores são as mesmas da barra de progresso do cartaz: verde = a andar,
@@ -285,13 +310,16 @@ function MovieCard({
   movie,
   index,
   onChanged,
+  densidade,
 }: {
   movie: StoredMovie;
   index: number;
   onChanged: () => void;
+  densidade: Densidade;
 }) {
   const year = movie.releaseDate?.slice(0, 4);
   const paraVer = !movie.watchedAt;
+  const compacta = densidade === "compacta";
 
   const markWatched = useCallback(
     async (e: React.MouseEvent) => {
@@ -312,15 +340,55 @@ function MovieCard({
     [movie, onChanged],
   );
 
+  if (densidade === "lista") {
+    return (
+      <Link
+        href={`/movies/${movie.key}`}
+        className="poster-in group flex min-h-[72px] cursor-pointer items-center gap-3 border-b border-line py-2 transition active:scale-[0.99]"
+        style={{ animationDelay: `${Math.min(index, 11) * 35}ms` }}
+      >
+        <div className="relative h-14 w-[38px] shrink-0 overflow-hidden rounded-lg bg-raised shadow-sm shadow-black/30">
+          <Poster path={movie.posterPath} alt="" size="w185" fill sizes="38px" className="object-cover" />
+        </div>
+        <div className="min-w-0 flex-1">
+          <p className="truncate text-[17px] font-semibold">{movie.name}</p>
+          <p className="ep-code truncate text-xs text-dim">
+            {year ?? movie.watchedAt?.slice(0, 4) ?? ""}
+            {paraVer ? " · para ver" : ""}
+          </p>
+        </div>
+        {/* Na lista o "para ver" não cabe como selo sobre a capa, mas a ação
+            de marcar visto é a razão de a pessoa estar a percorrer isto. */}
+        {paraVer && (
+          <button
+            onClick={(e) => void markWatched(e)}
+            aria-label={`Marcar ${movie.name} como visto`}
+            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line text-dim transition hover:border-ink hover:text-ink active:scale-90"
+          >
+            <CheckIcon className="h-4 w-4" />
+          </button>
+        )}
+      </Link>
+    );
+  }
+
   return (
     <Link
       href={`/movies/${movie.key}`}
       className="poster-in group block cursor-pointer transition active:scale-[0.97]"
       style={{ animationDelay: `${Math.min(index, 11) * 35}ms` }}
     >
-      <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30 transition duration-200 group-hover:-translate-y-0.5 group-hover:ring-2 group-hover:ring-ink/60">
+      <div
+        className={`relative aspect-2/3 overflow-hidden bg-panel shadow-md shadow-black/30 transition duration-200 group-hover:-translate-y-0.5 group-hover:ring-2 group-hover:ring-ink/60 ${
+          compacta ? "rounded-xl" : "rounded-2xl"
+        }`}
+      >
         {/* nome por baixo da capa — ver nota em PosterCard */}
-        <div className="absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display text-[15px] font-bold text-dim">
+        <div
+          className={`absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display font-bold text-dim ${
+            compacta ? "text-xs" : "text-[15px]"
+          }`}
+        >
           {movie.name}
         </div>
         <Poster
@@ -346,7 +414,11 @@ function MovieCard({
           </>
         )}
       </div>
-      <p className="mt-1.5 truncate text-[15px] font-medium">{movie.name}</p>
+      <p
+        className={`mt-1.5 truncate font-medium ${compacta ? "text-[13px]" : "text-[15px]"}`}
+      >
+        {movie.name}
+      </p>
       <p className="ep-code truncate text-xs text-dim">{year ?? movie.watchedAt?.slice(0, 4) ?? ""}</p>
     </Link>
   );
@@ -372,7 +444,15 @@ function StickySectionHeader({
   );
 }
 
-function ShowPoster({ show, index }: { show: ShowWithProgress; index: number }) {
+function ShowPoster({
+  show,
+  index,
+  densidade,
+}: {
+  show: ShowWithProgress;
+  index: number;
+  densidade: Densidade;
+}) {
   return (
     <PosterCard
       href={`/series/${show.uuid}`}
@@ -382,6 +462,8 @@ function ShowPoster({ show, index }: { show: ShowWithProgress; index: number }) 
       watched={show.watchedCount}
       total={show.totalEpisodes}
       status={show.status}
+      variante={densidade === "lista" ? "lista" : "grelha"}
+      compacta={densidade === "compacta"}
     />
   );
 }
@@ -483,6 +565,11 @@ function LibraryContent() {
   // A pesquisa e os filtros saíram do cabeçalho; vivem atrás dos ícones da
   // barra flutuante e abrem por cima do conteúdo.
   const [pesquisaAberta, setPesquisaAberta] = useState(false);
+  const [densidade, setDensidade] = usePref<Densidade>(
+    "biblioteca-densidade",
+    "grande",
+    DENSIDADES,
+  );
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
   // Pesquisa remota é secundária: só corre quando o utilizador a pede
   const [remote, setRemote] = useState<MetaSearchResult[] | null>(null);
@@ -757,21 +844,18 @@ function LibraryContent() {
                     count={g.items.length}
                     color={COR_ESTADO[g.label]}
                   />
-                  <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                  <div className={CLASSE_GRELHA[densidade]}>
                     {g.items.map((s, i) => (
-                      <ShowPoster key={s.uuid} show={s} index={i} />
+                      <ShowPoster key={s.uuid} show={s} index={i} densidade={densidade} />
                     ))}
                   </div>
                 </section>
               ))}
             </div>
           ) : (
-            <div
-              className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
-              data-testid="library-grid"
-            >
+            <div className={`mt-3 ${CLASSE_GRELHA[densidade]}`} data-testid="library-grid">
               {filteredShows.map((s, i) => (
-                <ShowPoster key={s.uuid} show={s} index={i} />
+                <ShowPoster key={s.uuid} show={s} index={i} densidade={densidade} />
               ))}
             </div>
           )
@@ -780,21 +864,30 @@ function LibraryContent() {
             {movieGroups.map((g) => (
               <section key={g.label}>
                 <StickySectionHeader label={g.label} count={g.items.length} />
-                <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
+                <div className={CLASSE_GRELHA[densidade]}>
                   {g.items.map((m, i) => (
-                    <MovieCard key={m.key} movie={m} index={i} onChanged={reloadMovies} />
+                    <MovieCard
+                      key={m.key}
+                      movie={m}
+                      index={i}
+                      onChanged={reloadMovies}
+                      densidade={densidade}
+                    />
                   ))}
                 </div>
               </section>
             ))}
           </div>
         ) : (
-          <div
-            className="mt-3 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4"
-            data-testid="library-grid"
-          >
+          <div className={`mt-3 ${CLASSE_GRELHA[densidade]}`} data-testid="library-grid">
             {filteredMovies.map((m, i) => (
-              <MovieCard key={m.key} movie={m} index={i} onChanged={reloadMovies} />
+              <MovieCard
+                key={m.key}
+                movie={m}
+                index={i}
+                onChanged={reloadMovies}
+                densidade={densidade}
+              />
             ))}
           </div>
         )
@@ -1032,6 +1125,28 @@ function LibraryContent() {
             )}
           </>
         )}
+
+        {/* Vista fica fora do `segment`: é a mesma escolha para séries e
+            filmes, e mudá-la ao passar de um para o outro seria uma
+            surpresa. A barra flutuante já tem quatro alvos — cabia lá um
+            quinto, mas isto não é uma coisa que se mexa a toda a hora. */}
+        <SectionHeader label="Vista" className="mt-6" />
+        <div className="mt-3 flex flex-wrap gap-2">
+          {DENSIDADES.map((d) => (
+            <button
+              key={d}
+              onClick={() => setDensidade(d)}
+              aria-pressed={densidade === d}
+              className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
+                densidade === d
+                  ? "border-ink bg-ink text-tube"
+                  : "border-line text-dim hover:border-ink hover:text-ink"
+              }`}
+            >
+              {DENSIDADE_LABEL[d]}
+            </button>
+          ))}
+        </div>
 
         {/* As Listas perderam a entrada que tinham no cabeçalho quando o
             cabeçalho saiu de cena (Fase T). Ficam aqui — são outra forma de
