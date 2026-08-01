@@ -13,13 +13,12 @@ import {
   kvSet,
   putMovie,
   putShow,
-  updateMovie,
   updateShow,
   type StoredMovie,
 } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
+import { backfillMovies, backfillShows } from "@/lib/backfill";
 import {
-  enrichMovie,
   searchMovies,
   searchShows,
   type MetaMovieResult,
@@ -501,43 +500,41 @@ function LibraryContent() {
   }, []);
 
   useEffect(() => {
-    void loadShows().then(setShows);
-    void getMovies().then(async (list) => {
-      setMovies(list.sort(byWatchedDesc));
-      // Completa capas e datas de estreia em falta via TMDB. A capa vivia na
-      // antiga página /movies, que quase não tinha entradas — filmes sem
-      // capa nunca eram enriquecidos. A data de estreia é a mesma história:
-      // muitos filmes importados do TV Time nunca a trouxeram, e sem ela o
-      // filtro de décadas usava a data em que marcaste como visto (errado).
+    void (async () => {
+      const [listaShows, listaMovies] = await Promise.all([loadShows(), getMovies()]);
+      setShows(listaShows);
+      setMovies(listaMovies.sort(byWatchedDesc));
+
       if (enriching.current) return;
       enriching.current = true;
       try {
+        // As séries também se completam aqui, não só no "A seguir": quem
+        // entra direto na Biblioteca — que é onde as capas se veem todas de
+        // uma vez — não disparava enriquecimento nenhum, e ficava à espera
+        // de uma visita a outro ecrã que podia nunca acontecer.
+        await backfillShows(listaShows, () => {
+          void loadShows().then(setShows);
+        });
+
+        // Completa capas e datas de estreia em falta via TMDB. A capa vivia na
+        // antiga página /movies, que quase não tinha entradas — filmes sem
+        // capa nunca eram enriquecidos. A data de estreia é a mesma história:
+        // muitos filmes importados do TV Time nunca a trouxeram, e sem ela o
+        // filtro de décadas usava a data em que marcaste como visto (errado).
+        //
         // Uma revisão em massa quando a regra de escolha do filme muda: os que
         // já estavam enriquecidos guardaram o filme ERRADO (o "Ciao Alberto"
         // ficou com o homónimo de 2003 em vez do spin-off do Luca de 2021) e
         // como têm capa e data nunca mais seriam tocados.
         const rever = ((await kvGet<number>(ENRICH_KEY)) ?? 0) < ENRICH_VERSION;
-        let changed = false;
-        for (const movie of list) {
-          // Filmes vindos do Explorar já trazem o id TMDB certo — pesquisar
-          // outra vez pelo nome só arriscaria trocá-los por um homónimo.
-          if (movie.key.startsWith("tmdb-")) continue;
-          if (!rever && movie.posterPath && movie.releaseDate) continue;
-          const patch = await enrichMovie(movie, rever);
-          if (patch) {
-            await updateMovie(movie.key, patch);
-            changed = true;
-          }
-        }
+        await backfillMovies(listaMovies, rever, () => {
+          void getMovies().then((fresh) => setMovies(fresh.sort(byWatchedDesc)));
+        });
         if (rever) await kvSet(ENRICH_KEY, ENRICH_VERSION);
-        if (changed) {
-          const fresh = await getMovies();
-          setMovies(fresh.sort(byWatchedDesc));
-        }
       } finally {
         enriching.current = false;
       }
-    });
+    })();
   }, []);
 
   // Filtrar o que já tens é instantâneo (é tudo local) — sem botão, sem espera

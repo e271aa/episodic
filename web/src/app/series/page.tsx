@@ -5,7 +5,8 @@ import Link from "next/link";
 import { getWatchedForShow, kvGet, kvSet, markWatched, unmarkWatched, updateShow } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
 import { buildUpcomingCalendar, type UpcomingEntry } from "@/lib/upcoming";
-import { enrichShow, hasTmdb } from "@/lib/metadata";
+import { hasTmdb } from "@/lib/metadata";
+import { backfillShows } from "@/lib/backfill";
 import { findShowByTvdbId } from "@/lib/tmdb";
 import { findNextUnwatched, formatEpCode } from "@/lib/watchnext";
 import {
@@ -123,17 +124,25 @@ export default function SeriesPage() {
           await kvSet(TMDB_BACKFILL_KEY, TMDB_BACKFILL_VERSION);
         }
 
-        for (const show of list) {
-          if (show.posterPath && show.totalEpisodes) continue;
-          const patch = await enrichShow(show);
-          if (patch) {
-            await updateShow(show.uuid, patch);
-            changed = true;
-          }
+        // A fila calcula-se duas vezes de propósito. À primeira, com o que já
+        // está guardado: é instantâneo e é o que a pessoa veio ver. Mas uma
+        // série ainda sem metadados não sabe qual é o próximo episódio e cai
+        // fora da fila — daí a segunda passagem, depois de as capas e os
+        // episódios chegarem. Sem ela, uma biblioteca acabada de importar
+        // dizia "estás em dia" só porque ainda não sabia o contrário.
+        await computeNextUp(changed ? await loadShows() : list);
+
+        let entrouCoisaNova = false;
+        await backfillShows(list, () => {
+          entrouCoisaNova = true;
+          void loadShows().then(setShows);
+        });
+
+        if (entrouCoisaNova) {
+          const fresh = await loadShows();
+          setShows(fresh);
+          await computeNextUp(fresh);
         }
-        const fresh = changed ? await loadShows() : list;
-        if (changed) setShows(fresh);
-        await computeNextUp(fresh);
       } finally {
         enriching.current = false;
       }

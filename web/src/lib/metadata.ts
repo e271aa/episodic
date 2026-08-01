@@ -28,17 +28,23 @@ export interface MetaSearchResult {
   backdropUrl: string | null;
 }
 
-let tmdbAvailable: boolean | null = null;
+/**
+ * Guarda a *promessa*, não o resultado. Com o enriquecimento a correr em
+ * paralelo, os trabalhadores chegam aqui todos ao mesmo tempo e nenhum
+ * encontrava a resposta ainda escrita — pediam `/api/tmdb/status` um por
+ * cada, à mesma pergunta.
+ */
+let tmdbAvailable: Promise<boolean> | null = null;
 
-export async function hasTmdb(): Promise<boolean> {
-  if (tmdbAvailable === null) {
+export function hasTmdb(): Promise<boolean> {
+  tmdbAvailable ??= (async () => {
     try {
       const response = await fetch("/api/tmdb/status");
-      tmdbAvailable = response.ok && (await response.json()).available === true;
+      return response.ok && (await response.json()).available === true;
     } catch {
-      tmdbAvailable = false;
+      return false;
     }
-  }
+  })();
   return tmdbAvailable;
 }
 
