@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, type ReactNode } from "react";
+import { useEffect, useSyncExternalStore, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 import { CloseIcon } from "@/components/icons";
 
 /**
@@ -9,6 +10,13 @@ import { CloseIcon } from "@/components/icons";
  *
  * Sobe de baixo e não desce de cima porque é de baixo que vem o toque: o
  * botão que o abre está na barra flutuante, e o painel aparece a partir dela.
+ *
+ * Vai por portal para o `body` pela mesma razão que o `LibraryControls`: o
+ * `PageTransition` envolve as páginas num elemento com `transform`, e um
+ * transform — mesmo identidade — torna-se o bloco de referência de qualquer
+ * descendente `position: fixed`. Sem o portal, o painel assentava no fundo
+ * do **documento** em vez do fundo do ecrã, e era preciso rolar a página
+ * inteira para lá chegar.
  */
 export default function SheetPanel({
   titulo,
@@ -31,9 +39,16 @@ export default function SheetPanel({
     return () => window.removeEventListener("keydown", onKey);
   }, [aberto, onFechar]);
 
-  if (!aberto) return null;
+  // O portal só pode montar no cliente: no servidor não há `document`.
+  const noCliente = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
 
-  return (
+  if (!aberto || !noCliente) return null;
+
+  return createPortal(
     <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={titulo}>
       {/* O véu escurece o suficiente para o painel ser o assunto, e fecha ao
           toque — a saída não pode depender de acertar num botão pequeno. */}
@@ -55,6 +70,7 @@ export default function SheetPanel({
         </div>
         <div className="px-5 py-4">{children}</div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

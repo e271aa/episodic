@@ -27,6 +27,22 @@ body {
   font-family: var(--font-body), system-ui, sans-serif;
 }
 
+/* O iOS amplia a página sozinho ao tocar num campo com fonte abaixo de 16px,
+   e a partir daí metade da interface fica fora do ecrã — foi assim que o ✕
+   de fechar a pesquisa do Explorar deixou de ser alcançável. 16px é o mínimo
+   que o Safari aceita sem ampliar.
+   Vai em `base` de propósito: assim protege qualquer campo novo por omissão,
+   mas uma classe `text-*` explícita continua a ganhar (o `utilities` do
+   Tailwind tem prioridade sobre o `base`) — só nunca deve ser uma abaixo
+   dos 16px. */
+@layer base {
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+}
+
 :root {
   /* Espaço que a dock ocupa mesmo: a pílula (44px de alvo + 6px de padding
      de cada lado + 1px de contorno de cada lado) mais o respiro por baixo,

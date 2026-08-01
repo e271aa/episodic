@@ -135,7 +135,7 @@ export default function AddToListButton({
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Nova lista…"
-              className="min-h-11 flex-1 rounded-full border border-line bg-tube px-3 text-xs outline-none focus:border-ink"
+              className="min-h-11 w-0 flex-1 rounded-full border border-line bg-tube px-3 text-base outline-none focus:border-ink"
             />
             <button
               type="submit"

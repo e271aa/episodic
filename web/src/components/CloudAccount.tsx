@@ -199,7 +199,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
                 placeholder="nova password (mín. 8)"
                 autoComplete="new-password"
                 minLength={8}
-                className="min-h-11 flex-1 rounded-full border border-line bg-tube px-5 py-2 text-[15px] outline-none transition-colors focus:border-ink"
+                className="min-h-11 flex-1 rounded-full border border-line bg-tube px-5 py-2 text-base outline-none transition-colors focus:border-ink"
               />
               <button
                 type="submit"

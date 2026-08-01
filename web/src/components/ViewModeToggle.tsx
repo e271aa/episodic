@@ -4,6 +4,8 @@ import { CardsIcon, GridIcon } from "@/components/icons";
 
 export type Modo = "cartoes" | "grelha";
 
+export const MODOS: readonly Modo[] = ["cartoes", "grelha"];
+
 /**
  * Escolha de *apresentação*, não de conteúdo. Por isso é menor, sem rótulos
  * e à direita do título — subordinada ao filtro Séries/Filmes, que fica com

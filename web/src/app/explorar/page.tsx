@@ -24,8 +24,9 @@ import { searchDiscover, type DiscoverItem } from "@/lib/tmdb";
 import DiscoverCard from "@/components/DiscoverCard";
 import DiscoverSwipeCard, { type DeckItem } from "@/components/DiscoverSwipeCard";
 import SwipeCoach, { EXPLORAR_COACH_KEY } from "@/components/SwipeCoach";
-import ViewModeToggle, { type Modo } from "@/components/ViewModeToggle";
+import ViewModeToggle, { MODOS, type Modo } from "@/components/ViewModeToggle";
 import { useExploreAcoes } from "@/lib/useExploreAcoes";
+import { usePref } from "@/lib/prefs";
 import {
   CheckIcon,
   ChevronDownIcon,
@@ -223,7 +224,9 @@ function ExplorarContent({ kind }: { kind: Kind }) {
 
   const [data, setData] = useState<ExploreData | null>(null);
   const [erro, setErro] = useState<string | null>(null);
-  const [modo, setModo] = useState<Modo>("cartoes");
+  // Grelha por omissão: vê-se tudo de uma vez. O baralho continua lá, num
+  // toque, e a escolha fica guardada entre visitas.
+  const [modo, setModo] = usePref<Modo>("explorar-modo", "grelha", MODOS);
   const [catalogoAberto, setCatalogoAberto] = useState(false);
   const [pesquisaAberta, setPesquisaAberta] = useState(false);
   const [query, setQuery] = useState("");
@@ -297,10 +300,19 @@ function ExplorarContent({ kind }: { kind: Kind }) {
       className="page-enter mx-auto flex w-full max-w-md flex-col overflow-hidden"
       style={{ height: "100dvh" }}
     >
-      <div className="relative z-30 flex h-9 shrink-0 items-center gap-2 px-4 pt-1">
+      {/* A linha cresce para 44px com a pesquisa aberta: o campo tem de ter
+          16px de fonte (senão o iOS amplia a página e o ✕ sai do ecrã) e
+          16px não cabem numa linha de 36px. */}
+      <div
+        className={`relative z-30 flex shrink-0 items-center gap-2 px-4 pt-1 ${
+          pesquisaAberta ? "h-11" : "h-9"
+        }`}
+      >
         {pesquisaAberta ? (
           <>
-            <div className="relative flex-1">
+            {/* min-w-0: sem isto o campo recusa-se a encolher abaixo da
+                largura do `placeholder` e empurra o ✕ para fora do ecrã */}
+            <div className="relative min-w-0 flex-1">
               <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
               <input
                 ref={inputRef}
@@ -309,7 +321,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={kind === "tv" ? "Procurar uma série…" : "Procurar um filme…"}
-                className="tap-44 relative h-9 w-full rounded-full border border-ink bg-panel/90 pl-9 pr-3 text-sm outline-none backdrop-blur-md"
+                className="relative h-11 w-full rounded-full border border-ink bg-panel/90 pl-9 pr-3 text-base outline-none backdrop-blur-md"
               />
             </div>
             <button
@@ -318,7 +330,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
                 setQuery("");
               }}
               aria-label="Fechar pesquisa"
-              className="tap-44 relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim"
+              className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim"
             >
               <CloseIcon className="h-[18px] w-[18px]" />
             </button>
