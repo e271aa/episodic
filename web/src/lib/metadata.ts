@@ -67,6 +67,45 @@ async function rememberEnrichFailure(uuid: string): Promise<void> {
   await kvSet(`enrich-fail:${uuid}`, Date.now());
 }
 
+// `normTitle` e `MIN_VOTES_EXACT` estão mais abaixo, junto ao `pickBestMovie`
+// que também os usa — como são `function`/`const` de topo de módulo,
+// referenciá-los aqui em cima resolve-se em tempo de chamada, não de
+// definição, por isso a ordem no ficheiro não importa.
+
+function isExactShowTitle(r: tmdb.TmdbShowLite, wanted: string): boolean {
+  return (
+    normTitle(r.name) === wanted ||
+    (r.original_name ? normTitle(r.original_name) === wanted : false)
+  );
+}
+
+/**
+ * Escolhe a série certa entre os resultados de pesquisa da TMDB — o mesmo
+ * crivo do `pickBestMovie`: título exato mais votado; sem nenhum exato
+ * acima do piso de notoriedade, o mais votado de todos os resultados.
+ *
+ * O título exato falha com frequência aqui porque a TMDB devolve o nome
+ * original quando falta a tradução ("Captain Tsubasa: Road to 2002" vem
+ * como "キャプテン翼") — é precisamente o motivo de esta pesquisa existir,
+ * então o fallback "mais votado de todos" carrega mais peso do que nos
+ * filmes. Verificado contra as três séries que motivaram isto: a pesquisa
+ * de cada uma devolve um **único** resultado, sem homónimos a desempatar.
+ */
+function pickBestShow(
+  results: tmdb.TmdbShowLite[],
+  name: string,
+): tmdb.TmdbShowLite | undefined {
+  if (results.length === 0) return undefined;
+  const wanted = normTitle(name);
+  const exact = results.filter(
+    (r) => isExactShowTitle(r, wanted) && (r.vote_count ?? 0) >= MIN_VOTES_EXACT,
+  );
+  const pool = exact.length > 0 ? exact : results;
+  return pool.reduce((best, r) =>
+    (r.vote_count ?? 0) > (best.vote_count ?? 0) ? r : best,
+  );
+}
+
 /**
  * Completa uma série da biblioteca com poster, sinopse e nº de episódios.
  * Devolve o patch a aplicar ao registo, ou null se não houver dados novos.
@@ -130,6 +169,35 @@ export async function enrichShow(show: StoredShow): Promise<Partial<StoredShow> 
           status: mazeShow.status ?? null,
           genres: mazeShow.genres.length > 0 ? mazeShow.genres : null,
           imdbId: mazeShow.externals?.imdb ?? null,
+        };
+      }
+    }
+
+    // Nem por id (sem tvdbId, ou a TMDB não tem o mapeamento) nem por nome
+    // exato na TVmaze (que é estrita de propósito): último recurso, uma
+    // pesquisa por nome na TMDB. Foi assim que se descobriu a falha — "A
+    // Place Further Than the Universe" existe na TMDB, só que como "宇宙よ
+    // りも遠い場所"; a TVmaze também a tem, mas só por esse mesmo nome
+    // original, que nunca bate com o que o TV Time guardou.
+    if (!fromTmdb && !fromMaze && (await hasTmdb())) {
+      const hit = pickBestShow(await tmdb.searchTv(show.name), show.name);
+      if (hit) {
+        const details = await tmdb.getShowDetails(hit.id);
+        fromTmdb = {
+          tmdbId: hit.id,
+          posterPath: details.poster_path,
+          backdropPath: details.backdrop_path,
+          overview: details.overview || null,
+          totalEpisodes: details.number_of_episodes || null,
+          firstAired: details.first_air_date || null,
+          status: details.status || null,
+          genres: details.genres?.map((g) => g.name) ?? null,
+          // Guardar os títulos aqui, não só o id, é o que já resolveu o
+          // "Erased" (duas entradas TMDB diferentes) — sem isto o Explorar
+          // voltaria a sugerir esta série como se fosse nova.
+          tmdbAliases: [hit.name, hit.original_name].filter(
+            (n): n is string => !!n,
+          ),
         };
       }
     }

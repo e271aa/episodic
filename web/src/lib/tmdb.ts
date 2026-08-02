@@ -16,6 +16,9 @@ export interface TmdbShowLite {
   backdrop_path: string | null;
   overview: string;
   first_air_date?: string;
+  /** só vem preenchido em resultados de pesquisa — usado para desempatar
+   *  homónimos, como o `pickBestMovie` já faz para filmes */
+  vote_count?: number;
 }
 
 export interface TmdbSeasonSummary {

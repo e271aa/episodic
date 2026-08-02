@@ -302,9 +302,12 @@ function ExplorarContent({ kind }: { kind: Kind }) {
     >
       {/* A linha cresce para 44px com a pesquisa aberta: o campo tem de ter
           16px de fonte (senão o iOS amplia a página e o ✕ sai do ecrã) e
-          16px não cabem numa linha de 36px. */}
+          16px não cabem numa linha de 36px. `transition-[height]` para o
+          crescimento se ver — sem ela a linha saltava de 36 para 44px no
+          mesmo instante em que o teclado sobe, e as duas mudanças a
+          acontecerem de repente é o que se lê como "esquisito". */}
       <div
-        className={`relative z-30 flex shrink-0 items-center gap-2 px-4 pt-1 ${
+        className={`relative z-30 flex shrink-0 items-center gap-2 px-4 pt-1 transition-[height] duration-150 ease-out ${
           pesquisaAberta ? "h-11" : "h-9"
         }`}
       >
