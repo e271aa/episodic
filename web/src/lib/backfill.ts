@@ -153,6 +153,17 @@ const CHAVE_SERIES = "backfill:series-v1";
 const CHAVE_FILMES = "backfill:filmes-v1";
 
 /**
+ * Sobe quando a lógica de correspondência do `enrichShow` muda o bastante
+ * para valer a pena voltar a tentar séries que já tinham desistido — a v2
+ * é o fallback de pesquisa por nome na TMDB. Sem isto, uma série que
+ * falhou antes de esse fallback existir ficava presa até 24h (a memória
+ * de "falhou há pouco" de cada série, e a própria volta fechada) a repetir
+ * o "falhou" de ontem contra uma lógica que hoje já resolvia.
+ */
+const SHOW_MATCH_VERSION = 2;
+const CHAVE_SERIES_VERSAO = "backfill:series-match-v";
+
+/**
  * Completa capas, totais e sinopses das séries. `aoMudar` é chamado sempre
  * que uma série ganha dados novos, para a grelha os mostrar já.
  */
@@ -163,19 +174,28 @@ export async function backfillShows(
   if (aCorrer) return;
   aCorrer = true;
   try {
+    const rever = ((await kvGet<number>(CHAVE_SERIES_VERSAO)) ?? 0) < SHOW_MATCH_VERSION;
+    if (rever) {
+      // A volta anterior não conta: o que ela registou como "tentado" foi
+      // contra uma lógica de correspondência que já não é a de agora — só
+      // as séries sem dados nenhuns entram aqui, nunca as que já resolveram
+      // corretamente, por isso não há risco de trocar uma capa boa por má.
+      await kvSet(CHAVE_SERIES, { tentados: [], fechadaEm: null } satisfies Volta);
+    }
     await correrVolta(
       CHAVE_SERIES,
       lista.filter((s) => !s.posterPath),
       lista.filter((s) => s.posterPath && !s.totalEpisodes),
       (s) => s.uuid,
       async (show) => {
-        const patch = await enrichShow(show);
+        const patch = await enrichShow(show, rever);
         if (!patch) return false;
         await updateShow(show.uuid, patch);
         return true;
       },
       aoMudar,
     );
+    if (rever) await kvSet(CHAVE_SERIES_VERSAO, SHOW_MATCH_VERSION);
   } finally {
     aCorrer = false;
   }

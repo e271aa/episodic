@@ -109,9 +109,18 @@ function pickBestShow(
 /**
  * Completa uma série da biblioteca com poster, sinopse e nº de episódios.
  * Devolve o patch a aplicar ao registo, ou null se não houver dados novos.
+ *
+ * `refresh` ignora a memória de "falhou há pouco" — o mesmo que o
+ * `enrichMovie` já tinha. Precisa disto sempre que a lógica de
+ * correspondência muda: sem ele, uma série que desistiu antes do
+ * fallback por nome na TMDB existir ficava presa 24h a repetir o
+ * "falhou" de ontem contra uma lógica que hoje já resolvia.
  */
-export async function enrichShow(show: StoredShow): Promise<Partial<StoredShow> | null> {
-  if (await enrichFailedRecently(show.uuid)) return null;
+export async function enrichShow(
+  show: StoredShow,
+  refresh = false,
+): Promise<Partial<StoredShow> | null> {
+  if (!refresh && (await enrichFailedRecently(show.uuid))) return null;
   try {
     // 1º TMDB (posters HD, pt-PT); a TVmaze entra como fallback total quando
     // a TMDB não tem a série, e como complemento quando lhe faltam campos
