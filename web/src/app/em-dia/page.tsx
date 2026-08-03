@@ -129,7 +129,7 @@ export default function EmDiaPage() {
 
   return (
     <main
-      className="mx-auto flex w-full max-w-md flex-col overflow-hidden px-4 pt-2"
+      className="mx-auto flex w-full max-w-md flex-col overflow-hidden px-4 pt-[max(0.5rem,env(safe-area-inset-top))]"
       style={{ height: "100dvh" }}
     >
       <div className="flex shrink-0 items-center gap-2">

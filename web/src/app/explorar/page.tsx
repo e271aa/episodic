@@ -297,17 +297,28 @@ function ExplorarContent({ kind }: { kind: Kind }) {
 
   return (
     <main
-      className="page-enter mx-auto flex w-full max-w-md flex-col overflow-hidden"
+      className="page-enter mx-auto flex w-full max-w-md flex-col overflow-hidden pt-[max(0.25rem,env(safe-area-inset-top))]"
       style={{ height: "100dvh" }}
     >
-      {/* A linha cresce para 44px com a pesquisa aberta: o campo tem de ter
-          16px de fonte (senão o iOS amplia a página e o ✕ sai do ecrã) e
-          16px não cabem numa linha de 36px. `transition-[height]` para o
-          crescimento se ver — sem ela a linha saltava de 36 para 44px no
-          mesmo instante em que o teclado sobe, e as duas mudanças a
-          acontecerem de repente é o que se lê como "esquisito". */}
+      {/* O respiro do topo tem de contar com `safe-area-inset-top`: este
+          ecrã é o único (com o "Pôr em dia") que define a própria altura
+          em `100dvh` — o resto da app vive dentro do `<body>`, que nunca
+          precisou de tratar a área segura de cima porque todos os outros
+          cabeçalhos já tinham padding de sobra. Sem isto, o campo de
+          pesquisa (44px cheios) ficava com o topo por baixo da barra de
+          estado do iPhone. Fica no `main`, não na linha: a linha tem
+          altura fixa (36/44px), e a área segura de um iPhone com notch
+          (47–59px) é maior do que ela — pô-la como padding da própria
+          linha esmagava o campo em vez de o empurrar para baixo.
+
+          A linha cresce para 44px com a pesquisa aberta: o campo tem de
+          ter 16px de fonte (senão o iOS amplia a página e o ✕ sai do
+          ecrã) e 16px não cabem numa linha de 36px. `transition-[height]`
+          para o crescimento se ver — sem ela a linha saltava de 36 para
+          44px no mesmo instante em que o teclado sobe, e as duas mudanças
+          a acontecerem de repente é o que se lê como "esquisito". */}
       <div
-        className={`relative z-30 flex shrink-0 items-center gap-2 px-4 pt-1 transition-[height] duration-150 ease-out ${
+        className={`relative z-30 flex shrink-0 items-center gap-2 px-4 transition-[height] duration-150 ease-out ${
           pesquisaAberta ? "h-11" : "h-9"
         }`}
       >
