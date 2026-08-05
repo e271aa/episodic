@@ -231,9 +231,14 @@ function ExplorarContent({ kind }: { kind: Kind }) {
   const [pesquisaAberta, setPesquisaAberta] = useState(false);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  const [searchState, setSearchState] = useState<{ query: string; items: DiscoverItem[] } | null>(
-    null,
-  );
+  // `deKind` diz de onde vieram os itens: normalmente o catálogo aberto,
+  // mas passa ao outro quando esse catálogo não tem nada — ver o efeito
+  // de pesquisa, mais abaixo, para o motivo de isto existir.
+  const [searchState, setSearchState] = useState<{
+    query: string;
+    items: DiscoverItem[];
+    deKind: Kind;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -261,35 +266,57 @@ function ExplorarContent({ kind }: { kind: Kind }) {
   useEffect(() => {
     if (!searching) return;
     let vivo = true;
-    void searchDiscover(kind, termo)
-      .then((r) => {
-        // Sem este filtro, a pesquisa devolve séries que já estão na
-        // biblioteca — foi por aqui que o Arrow e o Prison Break entraram
-        // duas vezes. As secções normais já passam pelo mesmo crivo dentro
-        // do `loadExplore`; a pesquisa tem de o fazer aqui.
-        const filtrados = data
-          ? r.filter((x) => x.posterPath && !alreadyInLibrary(x, data.taste))
-          : r.filter((x) => x.posterPath);
-        if (vivo) setSearchState({ query: termo, items: filtrados });
-      })
-      .catch(() => {
-        if (vivo) setSearchState({ query: termo, items: [] });
-      });
+
+    const filtrar = (r: DiscoverItem[]) =>
+      // Sem este filtro, a pesquisa devolve séries que já estão na
+      // biblioteca — foi por aqui que o Arrow e o Prison Break entraram
+      // duas vezes. As secções normais já passam pelo mesmo crivo dentro
+      // do `loadExplore`; a pesquisa tem de o fazer aqui.
+      data ? r.filter((x) => x.posterPath && !alreadyInLibrary(x, data.taste)) : r.filter((x) => x.posterPath);
+
+    void (async () => {
+      try {
+        const resultados = filtrar(await searchDiscover(kind, termo));
+        // "O Herói de Hacksaw Ridge" pesquisado com o catálogo em Séries
+        // devolvia "Nada encontrado" — a busca nunca saía do catálogo
+        // aberto, e quem procura um filme não sabe (nem tem de saber) que
+        // está a olhar para a aba errada. Sem nada no catálogo atual,
+        // tenta o outro antes de desistir.
+        const outro: Kind = kind === "tv" ? "movie" : "tv";
+        if (resultados.length === 0) {
+          const doOutro = filtrar(await searchDiscover(outro, termo));
+          if (vivo) setSearchState({ query: termo, items: doOutro, deKind: outro });
+          return;
+        }
+        if (vivo) setSearchState({ query: termo, items: resultados, deKind: kind });
+      } catch {
+        if (vivo) setSearchState({ query: termo, items: [], deKind: kind });
+      }
+    })();
+
     return () => {
       vivo = false;
     };
   }, [searching, termo, kind, data]);
 
-  const searchResults = searchState && searchState.query === termo ? searchState.items : null;
+  const searchResults = searchState && searchState.query === termo ? searchState : null;
 
   const escolherKind = (next: Kind) => {
     setCatalogoAberto(false);
     router.replace(next === "movie" ? "/explorar?tipo=filmes" : "/explorar", { scroll: false });
   };
 
+  // O rótulo diz a diferença: resultados do catálogo aberto não precisam de
+  // explicação, mas os do outro têm de dizer onde estão — sem isto, um
+  // filme a aparecer debaixo de "Séries" lia-se como um erro, não como ajuda.
+  const tituloResultados =
+    searchResults && searchResults.deKind !== kind
+      ? `"${termo}" está em ${searchResults.deKind === "movie" ? "Filmes" : "Séries"}`
+      : `Resultados para "${termo}"`;
+
   const sections: ExploreSection[] = searching
     ? searchResults
-      ? [{ id: "pesquisa", title: `Resultados para "${termo}"`, items: searchResults }]
+      ? [{ id: "pesquisa", title: tituloResultados, items: searchResults.items }]
       : []
     : (data?.sections ?? []);
   const carregando = searching ? searchResults === null : data === null;
