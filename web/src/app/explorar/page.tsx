@@ -20,7 +20,7 @@ import {
   type ExploreSection,
 } from "@/lib/explore";
 import { isCloudConfigured } from "@/lib/supabase";
-import { searchDiscover, type DiscoverItem } from "@/lib/tmdb";
+import { searchMulti, type DiscoverItem } from "@/lib/tmdb";
 import DiscoverCard from "@/components/DiscoverCard";
 import DiscoverSwipeCard, { type DeckItem } from "@/components/DiscoverSwipeCard";
 import SwipeCoach, { EXPLORAR_COACH_KEY } from "@/components/SwipeCoach";
@@ -50,10 +50,13 @@ function Baralho({
   sections,
   onGuardar,
   onDispensar,
+  mostrarTipo = false,
 }: {
   sections: ExploreSection[];
   onGuardar: (item: DiscoverItem) => void;
   onDispensar: (item: DiscoverItem) => void;
+  /** a pesquisa mistura séries e filmes — sem isto não se sabe qual é qual */
+  mostrarTipo?: boolean;
 }) {
   const [cursor, setCursor] = useState(0);
 
@@ -121,6 +124,7 @@ function Baralho({
           posicao={cursor + 1 + i}
           total={total}
           variante="bordo"
+          mostrarTipo={mostrarTipo}
           onDecide={(quero) => decidir(deckItem, quero)}
         />
       ))}
@@ -179,10 +183,13 @@ function Grelha({
   sections,
   onGuardar,
   onDispensar,
+  mostrarTipo = false,
 }: {
   sections: ExploreSection[];
   onGuardar: (item: DiscoverItem) => Promise<void>;
   onDispensar: (item: DiscoverItem) => Promise<void>;
+  /** a pesquisa mistura séries e filmes — sem isto não se sabe qual é qual */
+  mostrarTipo?: boolean;
 }) {
   return (
     <div className="space-y-7 overflow-y-auto pb-[calc(var(--dock-h)+1rem)] pt-4">
@@ -209,6 +216,7 @@ function Grelha({
                 index={i}
                 onSave={onGuardar}
                 onDismiss={onDispensar}
+                mostrarTipo={mostrarTipo}
               />
             ))}
           </div>
@@ -231,14 +239,9 @@ function ExplorarContent({ kind }: { kind: Kind }) {
   const [pesquisaAberta, setPesquisaAberta] = useState(false);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
-  // `deKind` diz de onde vieram os itens: normalmente o catálogo aberto,
-  // mas passa ao outro quando esse catálogo não tem nada — ver o efeito
-  // de pesquisa, mais abaixo, para o motivo de isto existir.
-  const [searchState, setSearchState] = useState<{
-    query: string;
-    items: DiscoverItem[];
-    deKind: Kind;
-  } | null>(null);
+  const [searchState, setSearchState] = useState<{ query: string; items: DiscoverItem[] } | null>(
+    null,
+  );
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -266,57 +269,39 @@ function ExplorarContent({ kind }: { kind: Kind }) {
   useEffect(() => {
     if (!searching) return;
     let vivo = true;
-
-    const filtrar = (r: DiscoverItem[]) =>
-      // Sem este filtro, a pesquisa devolve séries que já estão na
-      // biblioteca — foi por aqui que o Arrow e o Prison Break entraram
-      // duas vezes. As secções normais já passam pelo mesmo crivo dentro
-      // do `loadExplore`; a pesquisa tem de o fazer aqui.
-      data ? r.filter((x) => x.posterPath && !alreadyInLibrary(x, data.taste)) : r.filter((x) => x.posterPath);
-
-    void (async () => {
-      try {
-        const resultados = filtrar(await searchDiscover(kind, termo));
-        // "O Herói de Hacksaw Ridge" pesquisado com o catálogo em Séries
-        // devolvia "Nada encontrado" — a busca nunca saía do catálogo
-        // aberto, e quem procura um filme não sabe (nem tem de saber) que
-        // está a olhar para a aba errada. Sem nada no catálogo atual,
-        // tenta o outro antes de desistir.
-        const outro: Kind = kind === "tv" ? "movie" : "tv";
-        if (resultados.length === 0) {
-          const doOutro = filtrar(await searchDiscover(outro, termo));
-          if (vivo) setSearchState({ query: termo, items: doOutro, deKind: outro });
-          return;
-        }
-        if (vivo) setSearchState({ query: termo, items: resultados, deKind: kind });
-      } catch {
-        if (vivo) setSearchState({ query: termo, items: [], deKind: kind });
-      }
-    })();
-
+    // A pesquisa nunca dependeu do catálogo aberto — é o mesmo pedido quer
+    // estejas em Séries ou em Filmes. `search/multi` devolve os dois juntos,
+    // ordenados pela popularidade real da TMDB (não uma ordenação inventada
+    // a juntar dois pedidos separados).
+    void searchMulti(termo)
+      .then((r) => {
+        // Sem este filtro, a pesquisa devolve séries que já estão na
+        // biblioteca — foi por aqui que o Arrow e o Prison Break entraram
+        // duas vezes. As secções normais já passam pelo mesmo crivo dentro
+        // do `loadExplore`; a pesquisa tem de o fazer aqui.
+        const filtrados = data
+          ? r.filter((x) => x.posterPath && !alreadyInLibrary(x, data.taste))
+          : r.filter((x) => x.posterPath);
+        if (vivo) setSearchState({ query: termo, items: filtrados });
+      })
+      .catch(() => {
+        if (vivo) setSearchState({ query: termo, items: [] });
+      });
     return () => {
       vivo = false;
     };
-  }, [searching, termo, kind, data]);
+  }, [searching, termo, data]);
 
-  const searchResults = searchState && searchState.query === termo ? searchState : null;
+  const searchResults = searchState && searchState.query === termo ? searchState.items : null;
 
   const escolherKind = (next: Kind) => {
     setCatalogoAberto(false);
     router.replace(next === "movie" ? "/explorar?tipo=filmes" : "/explorar", { scroll: false });
   };
 
-  // O rótulo diz a diferença: resultados do catálogo aberto não precisam de
-  // explicação, mas os do outro têm de dizer onde estão — sem isto, um
-  // filme a aparecer debaixo de "Séries" lia-se como um erro, não como ajuda.
-  const tituloResultados =
-    searchResults && searchResults.deKind !== kind
-      ? `"${termo}" está em ${searchResults.deKind === "movie" ? "Filmes" : "Séries"}`
-      : `Resultados para "${termo}"`;
-
   const sections: ExploreSection[] = searching
     ? searchResults
-      ? [{ id: "pesquisa", title: tituloResultados, items: searchResults.items }]
+      ? [{ id: "pesquisa", title: `Resultados para "${termo}"`, items: searchResults }]
       : []
     : (data?.sections ?? []);
   const carregando = searching ? searchResults === null : data === null;
@@ -472,9 +457,15 @@ function ExplorarContent({ kind }: { kind: Kind }) {
           sections={sections}
           onGuardar={(item) => void guardar(item)}
           onDispensar={(item) => void naoInteressa(item)}
+          mostrarTipo={searching}
         />
       ) : (
-        <Grelha sections={sections} onGuardar={guardar} onDispensar={naoInteressa} />
+        <Grelha
+          sections={sections}
+          onGuardar={guardar}
+          onDispensar={naoInteressa}
+          mostrarTipo={searching}
+        />
       )}
     </main>
   );

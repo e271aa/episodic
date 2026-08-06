@@ -303,6 +303,24 @@ export async function searchDiscover(
   return (data.results ?? []).map((r) => toDiscoverItem(r, kind));
 }
 
+/**
+ * Séries e filmes na mesma pesquisa, ordenados por popularidade real da
+ * TMDB — não uma ordenação inventada a juntar dois pedidos separados. A
+ * pesquisa do Explorar usa sempre isto: procurar não devia depender de
+ * saber de antemão se a coisa é série ou filme.
+ */
+export async function searchMulti(query: string): Promise<DiscoverItem[]> {
+  const data = await tmdbGet<{ results: (TmdbDiscoverRow & { media_type?: string })[] }>(
+    "search/multi",
+    { query, include_adult: "false" },
+  );
+  return (data.results ?? [])
+    .filter((r): r is TmdbDiscoverRow & { media_type: "tv" | "movie" } =>
+      r.media_type === "tv" || r.media_type === "movie",
+    )
+    .map((r) => toDiscoverItem(r, r.media_type));
+}
+
 /** Mapa id→nome dos géneros, para traduzir os `genre_ids` dos resultados. */
 export async function getGenreMap(kind: "tv" | "movie"): Promise<Map<number, string>> {
   const data = await tmdbGet<{ genres: { id: number; name: string }[] }>(

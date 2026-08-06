@@ -16,11 +16,14 @@ export default function DiscoverCard({
   index,
   onSave,
   onDismiss,
+  mostrarTipo = false,
 }: {
   item: DiscoverItem;
   index: number;
   onSave: (item: DiscoverItem) => Promise<void>;
   onDismiss: (item: DiscoverItem) => Promise<void>;
+  /** a pesquisa mistura séries e filmes — sem isto não se sabe qual é qual */
+  mostrarTipo?: boolean;
 }) {
   const [estado, setEstado] = useState<Estado>("idle");
 
@@ -64,7 +67,11 @@ export default function DiscoverCard({
       </div>
 
       <p className="mt-1.5 truncate text-[17px] font-semibold">{item.name}</p>
-      <p className="ep-code truncate text-xs text-dim">{item.year ?? ""}</p>
+      <p className="ep-code truncate text-xs text-dim">
+        {[mostrarTipo ? (item.kind === "movie" ? "Filme" : "Série") : null, item.year]
+          .filter(Boolean)
+          .join(" · ")}
+      </p>
 
       {estado === "idle" && (
         <div className="mt-1.5 flex gap-1.5">

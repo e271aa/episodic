@@ -37,6 +37,7 @@ export default function DiscoverSwipeCard({
   posicao,
   total,
   variante = "cartao",
+  mostrarTipo = false,
   onDecide,
 }: {
   deckItem: DeckItem;
@@ -46,6 +47,8 @@ export default function DiscoverSwipeCard({
   posicao: number;
   total: number;
   variante?: "cartao" | "bordo";
+  /** a pesquisa mistura séries e filmes — sem isto não se sabe qual é qual */
+  mostrarTipo?: boolean;
   onDecide: (guardar: boolean) => void;
 }) {
   const { item, sectionTitle, sectionReason } = deckItem;
@@ -234,7 +237,13 @@ export default function DiscoverSwipeCard({
           </h2>
 
           <p className="ep-code mt-1 text-xs uppercase text-faint">
-            {[item.year, nota ? `TMDB ${nota}` : null].filter(Boolean).join(" · ")}
+            {[
+              mostrarTipo ? (item.kind === "movie" ? "Filme" : "Série") : null,
+              item.year,
+              nota ? `TMDB ${nota}` : null,
+            ]
+              .filter(Boolean)
+              .join(" · ")}
           </p>
 
           {item.overview && (
