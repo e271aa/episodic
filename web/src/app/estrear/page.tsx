@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { formatEpCode } from "@/lib/watchnext";
 import { buildUpcomingCalendar, type UpcomingEntry } from "@/lib/upcoming";
-import { loadShows } from "@/lib/shows";
+import { useSeries } from "@/lib/cache";
 import { ClapperboardIcon } from "@/components/icons";
 import Poster from "@/components/Poster";
 import BotaoVoltar from "@/components/BotaoVoltar";
@@ -26,14 +26,22 @@ function relativeDay(airDate: string): string {
 }
 
 export default function EstrearPage() {
+  // A cache partilhada poupa a releitura da biblioteca a cada visita — só o
+  // calendário em si (que pede temporadas/episódios por série) continua a
+  // recalcular-se, e já tem a sua própria cache de 24h em lib/metadata.ts.
+  const shows = useSeries();
   const [entries, setEntries] = useState<UpcomingEntry[] | null>(null);
 
   useEffect(() => {
-    void (async () => {
-      const shows = await loadShows();
-      setEntries(await buildUpcomingCalendar(shows));
-    })();
-  }, []);
+    if (!shows) return;
+    let vivo = true;
+    void buildUpcomingCalendar(shows).then((e) => {
+      if (vivo) setEntries(e);
+    });
+    return () => {
+      vivo = false;
+    };
+  }, [shows]);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">

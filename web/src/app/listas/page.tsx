@@ -1,25 +1,17 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import Link from "next/link";
-import { createList, getLists, type CustomList } from "@/lib/db";
+import { createList } from "@/lib/db";
+import { recursoListas, useListas } from "@/lib/cache";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import { LibraryIcon } from "@/components/icons";
 import { CardsBone } from "@/components/Skeleton";
 
 export default function ListasPage() {
-  const [lists, setLists] = useState<CustomList[] | null>(null);
+  const lists = useListas();
   const [name, setName] = useState("");
   const [creating, setCreating] = useState(false);
-
-  const reload = useCallback(async () => {
-    setLists(await getLists());
-  }, []);
-
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => void reload());
-    return () => cancelAnimationFrame(raf);
-  }, [reload]);
 
   const handleCreate = useCallback(async () => {
     const trimmed = name.trim();
@@ -28,11 +20,11 @@ export default function ListasPage() {
     try {
       await createList(trimmed);
       setName("");
-      await reload();
+      await recursoListas.revalidar();
     } finally {
       setCreating(false);
     }
-  }, [name, reload]);
+  }, [name]);
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">

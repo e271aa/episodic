@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { Suspense, useEffect, useMemo, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { markWatched, unmarkWatched } from "@/lib/db";
-import { loadShows, type ShowWithProgress } from "@/lib/shows";
+import { useSeries } from "@/lib/cache";
 import { classifyQueue, loadCachedNextUp, type NextUpMap } from "@/lib/queue";
 import { formatEpCode } from "@/lib/watchnext";
 import { pushUndo } from "@/lib/undo";
@@ -14,6 +15,7 @@ import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
 import { Bone, TitleBone } from "@/components/Skeleton";
 
 type Filter = "continuar" | "retomar" | "comecar" | "todas";
+const FILTER_IDS = new Set<Filter>(["continuar", "retomar", "comecar", "todas"]);
 
 const FILTERS: { id: Filter; label: string }[] = [
   { id: "continuar", label: "Continuar" },
@@ -32,20 +34,24 @@ interface StackItem {
   totalEpisodes: number | null;
 }
 
-export default function EmDiaPage() {
-  const [shows, setShows] = useState<ShowWithProgress[] | null>(null);
+function EmDiaContent() {
+  const router = useRouter();
+  const params = useSearchParams();
+  // Partilhável e reversível → URL, a mesma regra da Biblioteca: recuar de
+  // um episódio marcado devolve ao filtro onde se estava, não sempre a
+  // "Continuar". Medido antes da correção: filtro em memória perdia-se a
+  // cada visita nova à página.
+  const rawFilter = params.get("filtro");
+  const filter: Filter = rawFilter && FILTER_IDS.has(rawFilter as Filter) ? (rawFilter as Filter) : "continuar";
+
+  const shows = useSeries();
   const [nextUp, setNextUp] = useState<NextUpMap | null>(null);
-  const [filter, setFilter] = useState<Filter>("continuar");
   const [cursor, setCursor] = useState(0);
   const [decided, setDecided] = useState(0);
   const [now] = useState(() => Date.now());
 
   useEffect(() => {
-    void (async () => {
-      const [list, cached] = await Promise.all([loadShows(), loadCachedNextUp()]);
-      setShows(list);
-      setNextUp(cached ?? new Map());
-    })();
+    void loadCachedNextUp().then((cached) => setNextUp(cached ?? new Map()));
   }, []);
 
   const buckets = useMemo(() => {
@@ -76,7 +82,10 @@ export default function EmDiaPage() {
 
   // Muda de filtro → recomeça a pilha desse filtro do início
   const changeFilter = (f: Filter) => {
-    setFilter(f);
+    const next = new URLSearchParams(params);
+    if (f === "continuar") next.delete("filtro");
+    else next.set("filtro", f);
+    router.replace(next.size > 0 ? `/em-dia?${next}` : "/em-dia", { scroll: false });
     setCursor(0);
     setDecided(0);
   };
@@ -256,5 +265,23 @@ export default function EmDiaPage() {
         </>
       )}
     </main>
+  );
+}
+
+// useSearchParams exige uma fronteira de Suspense para a rota poder ser
+// pré-renderizada; sem ela o build falha.
+export default function EmDiaPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-8">
+          <TitleBone />
+          <Bone className="mt-4 h-9 w-full rounded-full" />
+          <Bone className="mt-6 aspect-3/4 w-full rounded-3xl" />
+        </main>
+      }
+    >
+      <EmDiaContent />
+    </Suspense>
   );
 }

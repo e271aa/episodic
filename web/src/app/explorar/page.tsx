@@ -46,20 +46,33 @@ function barColor(seed: string) {
   return BAR_COLORS[n];
 }
 
+/**
+ * Por sessão, não por sempre — fora do componente para sobreviver a uma
+ * montagem nova, mas morre quando a app fecha de vez (persistir para lá
+ * disso não faz sentido: a lista muda com o gosto entre visitas espaçadas).
+ *
+ * Medido: trocar para a Biblioteca pela dock e voltar ao Explorar — nem é
+ * "recuar", é só espreitar outro separador — repunha o baralho a meio a 1/86
+ * depois de já ires em 5/84. `chave` distingue Séries de Filmes e pesquisa
+ * de navegação, para uma posição de um baralho nunca aparecer no outro.
+ */
+const posicaoDoBaralho = new Map<string, number>();
+
 function Baralho({
+  chave,
   sections,
   onGuardar,
   onDispensar,
   mostrarTipo = false,
 }: {
+  /** identifica este baralho — normalmente o catálogo, ou a pesquisa */
+  chave: string;
   sections: ExploreSection[];
   onGuardar: (item: DiscoverItem) => void;
   onDispensar: (item: DiscoverItem) => void;
   /** a pesquisa mistura séries e filmes — sem isto não se sabe qual é qual */
   mostrarTipo?: boolean;
 }) {
-  const [cursor, setCursor] = useState(0);
-
   const baralho: DeckItem[] = useMemo(
     () =>
       sections.flatMap((s) =>
@@ -67,6 +80,17 @@ function Baralho({
       ),
     [sections],
   );
+
+  // O total pode ter mudado desde a última visita (a lista refina-se com o
+  // que se vai vendo) — sem o `min`, uma posição guardada além do total de
+  // hoje mostraria logo "Por agora é tudo" em vez de retomar.
+  const [cursor, setCursor] = useState(() =>
+    Math.min(posicaoDoBaralho.get(chave) ?? 0, baralho.length),
+  );
+
+  useEffect(() => {
+    posicaoDoBaralho.set(chave, cursor);
+  }, [chave, cursor]);
 
   const decidir = useCallback(
     (deckItem: DeckItem, quero: boolean) => {
@@ -454,6 +478,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
       ) : modo === "cartoes" ? (
         <Baralho
           key={termo}
+          chave={`${kind}:${termo}`}
           sections={sections}
           onGuardar={(item) => void guardar(item)}
           onDispensar={(item) => void naoInteressa(item)}

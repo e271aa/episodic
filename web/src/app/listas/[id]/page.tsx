@@ -1,20 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import {
   deleteList,
-  getList,
-  getShow,
-  getMovie,
   removeFromList,
   renameList,
   type CustomList,
-  type StoredShow,
-  type StoredMovie,
 } from "@/lib/db";
+import { recursoListas, useFilmes, useListas, useSeries } from "@/lib/cache";
 import Poster from "@/components/Poster";
 import { PosterGridBone, TitleBone } from "@/components/Skeleton";
 
@@ -29,56 +25,66 @@ interface ResolvedItem {
 export default function ListaPage() {
   const { id } = useParams<{ id: string }>();
   const router = useRouter();
-  const [list, setList] = useState<CustomList | null | undefined>(undefined);
-  const [items, setItems] = useState<ResolvedItem[]>([]);
+  // Tudo o que esta página mostra vem das caches: ao voltar de um item, o
+  // conteúdo já cá está e o documento tem a altura toda a tempo de o
+  // browser repor o scroll. Antes, as 24 leituras ao IndexedDB (uma por
+  // item) faziam a página voltar vazia — e a posição perdia-se.
+  const listas = useListas();
+  const series = useSeries();
+  const filmes = useFilmes();
+
   const [editingName, setEditingName] = useState(false);
   const [name, setName] = useState("");
   const [confirmDelete, setConfirmDelete] = useState(false);
 
-  const load = useCallback(async () => {
-    const stored = await getList(id);
-    setList(stored ?? null);
-    if (!stored) return;
-    setName(stored.name);
-    const resolved = await Promise.all(
-      stored.items.map(async (item): Promise<ResolvedItem | null> => {
-        if (item.kind === "show") {
-          const show: StoredShow | null = await getShow(item.refId);
-          if (!show) return null;
-          return {
-            kind: "show",
-            refId: item.refId,
-            href: `/series/${item.refId}`,
-            name: show.name,
-            posterPath: show.posterPath,
-          };
-        }
-        const movie: StoredMovie | null = await getMovie(item.refId);
-        if (!movie) return null;
-        return {
-          kind: "movie",
-          refId: item.refId,
-          href: `/movies/${item.refId}`,
-          name: movie.name,
-          posterPath: movie.posterPath ?? null,
-        };
-      }),
-    );
-    setItems(resolved.filter((i): i is ResolvedItem => i !== null));
-  }, [id]);
+  // `undefined` = ainda a carregar; `null` = carregou e esta lista não existe
+  const list: CustomList | null | undefined =
+    listas === null ? undefined : (listas.find((l) => l.id === id) ?? null);
 
-  useEffect(() => {
-    const raf = requestAnimationFrame(() => void load());
-    return () => cancelAnimationFrame(raf);
-  }, [load]);
+  const items: ResolvedItem[] = useMemo(() => {
+    if (!list || !series || !filmes) return [];
+    const porUuid = new Map(series.map((s) => [s.uuid, s]));
+    const porChave = new Map(filmes.map((m) => [m.key, m]));
+    return list.items.flatMap((item): ResolvedItem[] => {
+      if (item.kind === "show") {
+        const show = porUuid.get(item.refId);
+        if (!show) return [];
+        return [{
+          kind: "show",
+          refId: item.refId,
+          href: `/series/${item.refId}`,
+          name: show.name,
+          posterPath: show.posterPath,
+        }];
+      }
+      const movie = porChave.get(item.refId);
+      if (!movie) return [];
+      return [{
+        kind: "movie",
+        refId: item.refId,
+        href: `/movies/${item.refId}`,
+        name: movie.name,
+        posterPath: movie.posterPath ?? null,
+      }];
+    });
+  }, [list, series, filmes]);
+
+  // O campo de edição arranca do nome guardado no momento em que se entra
+  // em edição — sem efeito a sincronizá-lo, que era o que o
+  // `set-state-in-effect` apanhava (e com razão: fora da edição este
+  // estado não tem de existir).
+  const comecarAEditar = useCallback(() => {
+    setName(list?.name ?? "");
+    setEditingName(true);
+  }, [list]);
 
   const handleRename = useCallback(async () => {
     const trimmed = name.trim();
     if (!trimmed || !list) return;
     await renameList(list.id, trimmed);
     setEditingName(false);
-    await load();
-  }, [name, list, load]);
+    await recursoListas.revalidar();
+  }, [name, list]);
 
   const handleDelete = useCallback(async () => {
     if (!list) return;
@@ -87,6 +93,7 @@ export default function ListaPage() {
       return;
     }
     await deleteList(list.id);
+    await recursoListas.revalidar();
     router.push("/listas");
   }, [list, confirmDelete, router]);
 
@@ -94,9 +101,9 @@ export default function ListaPage() {
     async (item: ResolvedItem) => {
       if (!list) return;
       await removeFromList(list.id, item.kind, item.refId);
-      await load();
+      await recursoListas.revalidar();
     },
-    [list, load],
+    [list],
   );
 
   if (list === undefined) {
@@ -157,7 +164,7 @@ export default function ListaPage() {
           </form>
         ) : (
           <h1
-            onClick={() => setEditingName(true)}
+            onClick={comecarAEditar}
             className="cursor-pointer font-display text-2xl font-bold [font-stretch:110%]"
             title="Toca para renomear"
           >
