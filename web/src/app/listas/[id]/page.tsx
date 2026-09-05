@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
+import BotaoVoltar from "@/components/BotaoVoltar";
 import {
   deleteList,
   getList,
@@ -111,18 +112,26 @@ export default function ListaPage() {
     return (
       <main className="mx-auto max-w-xl px-4 py-16 text-center">
         <p className="text-dim">Lista não encontrada.</p>
-        <Link href="/listas" className="mt-4 inline-block cursor-pointer text-ink underline">
+        <BotaoVoltar
+          label="Voltar às listas"
+          fallback="/listas"
+          className="mt-4 inline-block cursor-pointer text-ink underline"
+        >
           Voltar às listas
-        </Link>
+        </BotaoVoltar>
       </main>
     );
   }
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
-      <Link href="/listas" className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline">
+      <BotaoVoltar
+        label="Voltar às listas"
+        fallback="/listas"
+        className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline"
+      >
         ← Listas
-      </Link>
+      </BotaoVoltar>
 
       <div className="mt-2 flex items-center justify-between gap-3">
         {editingName ? (

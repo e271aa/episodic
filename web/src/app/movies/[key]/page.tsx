@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import Link from "next/link";
 import { getMovie, putMovie, updateMovie, type StoredMovie } from "@/lib/db";
 import { getMovieDetails, type TmdbMovieDetails } from "@/lib/tmdb";
 import { enrichMovie } from "@/lib/metadata";
@@ -10,6 +9,7 @@ import { pushUndo } from "@/lib/undo";
 import AddToListButton from "@/components/AddToListButton";
 import Poster from "@/components/Poster";
 import StreamingBadges from "@/components/StreamingBadges";
+import BotaoVoltar from "@/components/BotaoVoltar";
 import { Bone, DetailHeaderBone } from "@/components/Skeleton";
 import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
 
@@ -96,12 +96,13 @@ export default function MoviePage() {
     return (
       <main className="mx-auto max-w-xl px-4 py-16 text-center">
         <p className="text-dim">Filme não encontrado.</p>
-        <Link
-          href="/library?tipo=filmes"
+        <BotaoVoltar
+          label="Voltar aos filmes"
+          fallback="/library?tipo=filmes"
           className="mt-4 inline-block cursor-pointer text-ink underline"
         >
           Voltar aos filmes
-        </Link>
+        </BotaoVoltar>
       </main>
     );
   }
@@ -150,13 +151,13 @@ export default function MoviePage() {
         <div className="bars absolute inset-x-0 top-0 h-[3px]" />
         {/* botão redondo, igual ao do Detalhe de série — antes era uma
             pílula de texto "← Filmes", a única sobrevivente desse desenho */}
-        <Link
-          href="/library?tipo=filmes"
-          aria-label="Voltar aos filmes"
+        <BotaoVoltar
+          label="Voltar aos filmes"
+          fallback="/library?tipo=filmes"
           className="absolute left-4 top-4 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-tube/60 text-ink backdrop-blur transition active:scale-90"
         >
           <ArrowLeftIcon className="h-5 w-5" />
-        </Link>
+        </BotaoVoltar>
       </div>
 
       {/* relative: sem isto, o gradiente absoluto da subcapa pinta por cima do poster */}

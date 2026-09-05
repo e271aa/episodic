@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import { createList, getLists, type CustomList } from "@/lib/db";
+import BotaoVoltar from "@/components/BotaoVoltar";
 import { LibraryIcon } from "@/components/icons";
 import { CardsBone } from "@/components/Skeleton";
 
@@ -37,9 +38,13 @@ export default function ListasPage() {
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Listas</h1>
-        <Link href="/library" className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline">
+        <BotaoVoltar
+          label="Voltar à biblioteca"
+          fallback="/library"
+          className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline"
+        >
           Biblioteca
-        </Link>
+        </BotaoVoltar>
       </div>
       <p className="mt-1 text-[15px] text-dim">
         Junta séries e filmes como quiseres — maratonas, favoritos, o que for.

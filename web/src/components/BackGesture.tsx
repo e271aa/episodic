@@ -1,7 +1,8 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
-import { usePathname, useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { usePathname } from "next/navigation";
+import { marcarPisoDoHistorico, useVoltar } from "@/lib/useVoltar";
 
 /** faixa junto ao bordo onde o gesto horizontal pode começar (como no iOS) */
 const EDGE = 26;
@@ -12,12 +13,6 @@ const AXIS_LOCK = 12;
 
 /** As paragens da dock não recuam para lado nenhum — a dock é a navegação. */
 const ROOTS = new Set(["/", "/series", "/library", "/profile"]);
-
-/** Sem histórico (PWA aberta de raiz nesta página), sobe-se um nível na rota. */
-function parentOf(pathname: string): string {
-  const parts = pathname.split("/").filter(Boolean);
-  return parts.length > 1 ? `/${parts.slice(0, -1).join("/")}` : "/series";
-}
 
 /**
  * Uma fila de chips que desliza na horizontal e o gesto de recuar querem o
@@ -45,10 +40,15 @@ function insideScroller(target: EventTarget | null, horizontal: boolean): boolea
  * arrastar dele nunca competir com este.
  */
 export default function BackGesture({ children }: { children: React.ReactNode }) {
-  const router = useRouter();
   const pathname = usePathname();
+  const voltar = useVoltar();
   const [offset, setOffset] = useState(0);
   const drag = useRef<{ id: number; x: number; y: number; live: boolean } | null>(null);
+
+  // Este componente envolve a app toda e monta uma vez só (está por fora do
+  // `PageTransition`, que remonta a cada rota) — é o sítio certo para medir
+  // o histórico de partida, antes de qualquer navegação da app.
+  useEffect(marcarPisoDoHistorico, []);
 
   const enabled = !ROOTS.has(pathname);
 
@@ -87,10 +87,8 @@ export default function BackGesture({ children }: { children: React.ReactNode })
     if (!d?.live) return;
     const commit = offset > THRESHOLD;
     setOffset(0);
-    if (!commit) return;
-    if (window.history.length > 1) router.back();
-    else router.push(parentOf(pathname));
-  }, [offset, pathname, router]);
+    if (commit) voltar();
+  }, [offset, voltar]);
 
   const dragging = offset > 0;
 

@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useParams } from "next/navigation";
 import {
   episodeKey,
@@ -20,6 +19,7 @@ import ProgressRing from "@/components/ProgressRing";
 import AddToListButton from "@/components/AddToListButton";
 import StreamingBadges from "@/components/StreamingBadges";
 import Poster from "@/components/Poster";
+import BotaoVoltar from "@/components/BotaoVoltar";
 import { Bone, CardsBone, DetailHeaderBone } from "@/components/Skeleton";
 import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
 
@@ -325,9 +325,13 @@ export default function ShowPage() {
     return (
       <main className="mx-auto max-w-xl px-4 py-16 text-center">
         <p className="text-dim">Série não encontrada.</p>
-        <Link href="/series" className="mt-4 inline-block cursor-pointer text-ink underline">
+        <BotaoVoltar
+          label="Voltar às séries"
+          fallback="/series"
+          className="mt-4 inline-block cursor-pointer text-ink underline"
+        >
           Voltar às séries
-        </Link>
+        </BotaoVoltar>
       </main>
     );
   }
@@ -374,13 +378,13 @@ export default function ShowPage() {
             aqui diz "como está esta série", não "isto é o Episodic" */}
         <div className="absolute inset-x-0 top-0 h-[3px]" style={{ background: accent }} />
 
-        <Link
-          href="/series"
-          aria-label="Voltar às séries"
+        <BotaoVoltar
+          label="Voltar às séries"
+          fallback="/series"
           className="absolute left-4 top-4 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-tube/60 text-ink backdrop-blur transition active:scale-90"
         >
           <ArrowLeftIcon className="h-5 w-5" />
-        </Link>
+        </BotaoVoltar>
 
         <div className="absolute inset-x-4 bottom-5">
           <div className="flex items-center gap-2.5">

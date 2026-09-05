@@ -7,6 +7,7 @@ import { buildUpcomingCalendar, type UpcomingEntry } from "@/lib/upcoming";
 import { loadShows } from "@/lib/shows";
 import { ClapperboardIcon } from "@/components/icons";
 import Poster from "@/components/Poster";
+import BotaoVoltar from "@/components/BotaoVoltar";
 import { ListRowsBone } from "@/components/Skeleton";
 
 function relativeDay(airDate: string): string {
@@ -38,9 +39,13 @@ export default function EstrearPage() {
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">A estrear</h1>
-        <Link href="/series" className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline">
+        <BotaoVoltar
+          label="Voltar a A seguir"
+          fallback="/series"
+          className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline"
+        >
           A seguir
-        </Link>
+        </BotaoVoltar>
       </div>
       <p className="mt-1 text-[15px] text-dim">
         O calendário dos próximos episódios das séries que segues.

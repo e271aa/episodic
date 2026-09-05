@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import Link from "next/link";
 import { markWatched, unmarkWatched } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
 import { classifyQueue, loadCachedNextUp, type NextUpMap } from "@/lib/queue";
@@ -10,6 +9,7 @@ import { pushUndo } from "@/lib/undo";
 import type { MetaEpisode } from "@/lib/metadata";
 import SwipeCard from "@/components/SwipeCard";
 import SwipeCoach, { EM_DIA_COACH_KEY } from "@/components/SwipeCoach";
+import BotaoVoltar from "@/components/BotaoVoltar";
 import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
 import { Bone, TitleBone } from "@/components/Skeleton";
 
@@ -133,13 +133,13 @@ export default function EmDiaPage() {
       style={{ height: "100dvh" }}
     >
       <div className="flex shrink-0 items-center gap-2">
-        <Link
-          href="/series"
-          aria-label="Voltar às séries"
+        <BotaoVoltar
+          label="Voltar às séries"
+          fallback="/series"
           className="-ml-2 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-90"
         >
           <ArrowLeftIcon className="h-5 w-5" />
-        </Link>
+        </BotaoVoltar>
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Pôr em dia</h1>
       </div>
 
