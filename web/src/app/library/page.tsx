@@ -3,19 +3,7 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import Poster from "@/components/Poster";
-import {
-  deleteMovie,
-  getMovie,
-  getMovies,
-  getShow,
-  kvGet,
-  kvSet,
-  putMovie,
-  putShow,
-  updateShow,
-  type StoredMovie,
-} from "@/lib/db";
+import { getMovies, kvGet, kvSet, type StoredMovie } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
 import { backfillMovies, backfillShows } from "@/lib/backfill";
 import { usePref } from "@/lib/prefs";
@@ -25,7 +13,6 @@ import {
   type MetaMovieResult,
   type MetaSearchResult,
 } from "@/lib/metadata";
-import { pushUndo } from "@/lib/undo";
 import {
   decadeLabel,
   groupByBucket,
@@ -33,17 +20,17 @@ import {
   letterLabel,
   periodLabel,
 } from "@/lib/grouping";
-import PosterCard from "@/components/PosterCard";
 import SectionHeader from "@/components/SectionHeader";
+import StickySectionHeader from "@/components/StickySectionHeader";
+import ShowPoster from "@/components/ShowPoster";
+import MovieCard from "@/components/MovieCard";
+import ShowResultCard from "@/components/ShowResultCard";
+import MovieResultCard from "@/components/MovieResultCard";
+import LibraryEmptyState from "@/components/LibraryEmptyState";
 import LibraryControls from "@/components/LibraryControls";
 import SheetPanel from "@/components/SheetPanel";
 import { PosterGridBone, TitleBone } from "@/components/Skeleton";
-import {
-  TvIcon,
-  CheckIcon,
-  ClapperboardIcon,
-  SearchIcon,
-} from "@/components/icons";
+import { SearchIcon } from "@/components/icons";
 
 type Segment = "series" | "filmes";
 type SeriesFilter = "tudo" | "a-ver" | "completas" | "para-ver" | "arquivadas" | "parei";
@@ -65,8 +52,6 @@ const MOVIE_SORTS: { id: MovieSort; label: string }[] = [
   { id: "antigos", label: "Estreia mais antiga" },
   { id: "az", label: "A–Z" },
 ];
-
-type FollowState = "idle" | "following" | "done";
 
 /**
  * Quão junto se arruma a biblioteca. Dois cartazes por linha mostram bem a
@@ -115,404 +100,6 @@ function norm(text: string): string {
     .toLowerCase()
     .normalize("NFD")
     .replace(/[̀-ͯ]/g, "");
-}
-
-function ResultCard({ result }: { result: MetaSearchResult }) {
-  const [state, setState] = useState<FollowState>("idle");
-  const [inWatchlist, setInWatchlist] = useState(false);
-  const uuid = `${result.provider}-${result.providerId}`;
-
-  const add = useCallback(
-    async (followed: boolean) => {
-      setState("following");
-      const existing = await getShow(uuid);
-      if (existing) {
-        await updateShow(uuid, { followed, inWatchlist: !followed });
-      } else {
-        await putShow({
-          uuid,
-          name: result.name,
-          tvdbId: null,
-          tmdbId: result.provider === "tmdb" ? result.providerId : null,
-          tvmazeId: result.provider === "tvmaze" ? result.providerId : null,
-          posterPath: result.posterUrl,
-          backdropPath: result.backdropUrl,
-          overview: result.overview,
-          totalEpisodes: null,
-          followed,
-          inWatchlist: !followed,
-          archived: false,
-          addedAt: new Date().toISOString(),
-        });
-      }
-      setInWatchlist(!followed);
-      setState("done");
-    },
-    [result, uuid],
-  );
-
-  return (
-    <div className="page-enter flex gap-3 rounded-2xl border border-line bg-panel p-3">
-      {result.posterUrl ? (
-        <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-lg">
-          <Poster path={result.posterUrl} alt="" fill className="object-cover" />
-        </div>
-      ) : (
-        <div className="flex h-24 w-16 shrink-0 items-center justify-center rounded-lg bg-raised text-faint">
-          <TvIcon className="h-6 w-6" />
-        </div>
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="font-medium">
-          {result.name}
-          {result.year && (
-            <span className="ep-code ml-2 text-sm text-faint">{result.year}</span>
-          )}
-        </p>
-        <p className="mt-1 line-clamp-2 text-[15px] text-dim">{result.overview}</p>
-        {state === "done" ? (
-          <button
-            disabled
-            className="mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-4 text-[15px] font-semibold text-dim"
-          >
-            <CheckIcon className="check-pop h-3.5 w-3.5" />
-            {inWatchlist ? "Na lista para ver" : "A seguir"}
-          </button>
-        ) : (
-          <div className="mt-2 flex gap-2">
-            <button
-              onClick={() => void add(true)}
-              disabled={state !== "idle"}
-              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
-            >
-              {state === "following" && (
-                <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-tube/30 border-t-tube" />
-              )}
-              Seguir
-            </button>
-            <button
-              onClick={() => void add(false)}
-              disabled={state !== "idle"}
-              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[15px] font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
-            >
-              Para ver
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-/**
- * Resultado da pesquisa de filmes. Um filme não se "segue" — ou já o viste ou
- * não, por isso a ação é marcá-lo como visto hoje (a data edita-se depois na
- * página do filme).
- */
-function MovieResultCard({
-  result,
-  onAdded,
-}: {
-  result: MetaMovieResult;
-  onAdded: () => void;
-}) {
-  const [state, setState] = useState<FollowState>("idle");
-  const key = `tmdb-${result.tmdbId}`;
-
-  const add = useCallback(
-    async (watched: boolean) => {
-      setState("following");
-      const existing = await getMovie(key);
-      if (!existing) {
-        await putMovie({
-          key,
-          name: result.name,
-          watchedAt: watched ? new Date().toISOString() : null,
-          dateIsExact: true,
-          releaseDate: result.releaseDate,
-          addedAt: new Date().toISOString(),
-          tmdbId: result.tmdbId,
-          posterPath: result.posterPath,
-        });
-      }
-      setState("done");
-      onAdded();
-      // só se anula o que esta ação criou — um filme que já lá estava fica
-      if (!existing) {
-        pushUndo({
-          label: watched ? "Filme marcado como visto" : "Filme adicionado a para ver",
-          detail: result.name,
-          undo: async () => {
-            await deleteMovie(key);
-            setState("idle");
-            onAdded();
-          },
-        });
-      }
-    },
-    [key, result, onAdded],
-  );
-
-  return (
-    <div className="page-enter flex gap-3 rounded-2xl border border-line bg-panel p-3">
-      {result.posterUrl ? (
-        <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-lg">
-          <Poster path={result.posterUrl} alt="" fill className="object-cover" />
-        </div>
-      ) : (
-        <div className="flex h-24 w-16 shrink-0 items-center justify-center rounded-lg bg-raised text-faint">
-          <ClapperboardIcon className="h-6 w-6" />
-        </div>
-      )}
-      <div className="min-w-0 flex-1">
-        <p className="font-medium">
-          {result.name}
-          {result.year && (
-            <span className="ep-code ml-2 text-sm text-faint">{result.year}</span>
-          )}
-        </p>
-        <p className="mt-1 line-clamp-2 text-[15px] text-dim">{result.overview}</p>
-        {state === "done" ? (
-          <button
-            disabled
-            className="mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-4 text-[15px] font-semibold text-dim"
-          >
-            <CheckIcon className="check-pop h-3.5 w-3.5" />
-            Na biblioteca
-          </button>
-        ) : (
-          <div className="mt-2 flex gap-2">
-            <button
-              onClick={() => void add(true)}
-              disabled={state !== "idle"}
-              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
-            >
-              {state === "following" && (
-                <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-tube/30 border-t-tube" />
-              )}
-              Marcar visto
-            </button>
-            <button
-              onClick={() => void add(false)}
-              disabled={state !== "idle"}
-              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[15px] font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
-            >
-              Para ver
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
-  );
-}
-
-function MovieCard({
-  movie,
-  index,
-  onChanged,
-  densidade,
-}: {
-  movie: StoredMovie;
-  index: number;
-  onChanged: () => void;
-  densidade: Densidade;
-}) {
-  const year = movie.releaseDate?.slice(0, 4);
-  const paraVer = !movie.watchedAt;
-  const compacta = densidade === "compacta";
-
-  const markWatched = useCallback(
-    async (e: React.MouseEvent) => {
-      // o botão vive dentro do Link — não pode navegar para o detalhe
-      e.preventDefault();
-      e.stopPropagation();
-      await putMovie({ ...movie, watchedAt: new Date().toISOString() });
-      onChanged();
-      pushUndo({
-        label: "Filme marcado como visto",
-        detail: movie.name,
-        undo: async () => {
-          await putMovie({ ...movie, watchedAt: null });
-          onChanged();
-        },
-      });
-    },
-    [movie, onChanged],
-  );
-
-  if (densidade === "lista") {
-    return (
-      <Link
-        href={`/movies/${movie.key}`}
-        className="poster-in group flex min-h-[72px] cursor-pointer items-center gap-3 border-b border-line py-2 transition active:scale-[0.99]"
-        style={{ animationDelay: `${Math.min(index, 11) * 35}ms` }}
-      >
-        <div className="relative h-14 w-[38px] shrink-0 overflow-hidden rounded-lg bg-raised shadow-sm shadow-black/30">
-          <Poster path={movie.posterPath} alt="" size="w185" fill sizes="38px" className="object-cover" />
-        </div>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[17px] font-semibold">{movie.name}</p>
-          <p className="ep-code truncate text-xs text-dim">
-            {year ?? movie.watchedAt?.slice(0, 4) ?? ""}
-            {paraVer ? " · para ver" : ""}
-          </p>
-        </div>
-        {/* Na lista o "para ver" não cabe como selo sobre a capa, mas a ação
-            de marcar visto é a razão de a pessoa estar a percorrer isto. */}
-        {paraVer && (
-          <button
-            onClick={(e) => void markWatched(e)}
-            aria-label={`Marcar ${movie.name} como visto`}
-            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line text-dim transition hover:border-ink hover:text-ink active:scale-90"
-          >
-            <CheckIcon className="h-4 w-4" />
-          </button>
-        )}
-      </Link>
-    );
-  }
-
-  return (
-    <Link
-      href={`/movies/${movie.key}`}
-      className="poster-in group block cursor-pointer transition active:scale-[0.97]"
-      style={{ animationDelay: `${Math.min(index, 11) * 35}ms` }}
-    >
-      <div
-        className={`relative aspect-2/3 overflow-hidden bg-panel shadow-md shadow-black/30 transition duration-200 group-hover:-translate-y-0.5 group-hover:ring-2 group-hover:ring-ink/60 ${
-          compacta ? "rounded-xl" : "rounded-2xl"
-        }`}
-      >
-        {/* nome por baixo da capa — ver nota em PosterCard */}
-        <div
-          className={`absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display font-bold text-dim ${
-            compacta ? "text-xs" : "text-[15px]"
-          }`}
-        >
-          {movie.name}
-        </div>
-        <Poster
-          path={movie.posterPath}
-          alt={movie.name}
-          fill
-          sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
-          className="object-cover transition duration-300 group-hover:scale-105"
-        />
-        {paraVer && (
-          <>
-            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" />
-            <span className="ep-code absolute left-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink backdrop-blur">
-              Para ver
-            </span>
-            <button
-              onClick={(e) => void markWatched(e)}
-              aria-label="Marcar como visto"
-              className="tap-44 absolute bottom-1.5 right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-ink text-tube shadow-md transition active:scale-90"
-            >
-              <CheckIcon className="h-4 w-4" />
-            </button>
-          </>
-        )}
-      </div>
-      <p
-        className={`mt-1.5 truncate font-medium ${compacta ? "text-[13px]" : "text-[15px]"}`}
-      >
-        {movie.name}
-      </p>
-      <p className="ep-code truncate text-xs text-dim">{year ?? movie.watchedAt?.slice(0, 4) ?? ""}</p>
-    </Link>
-  );
-}
-
-/**
- * A ordem tem de estar sempre à vista — dizer "A–Z" ou "Vistos há pouco" em
- * texto resolve a dúvida sem ser preciso abrir nada; o ícone só muda.
- */
-function StickySectionHeader({
-  label,
-  count,
-  color,
-}: {
-  label: string;
-  count: number;
-  color?: string;
-}) {
-  return (
-    <div className="sticky top-0 z-10 -mx-5 mb-2 mt-5 bg-tube/90 px-5 py-2 backdrop-blur">
-      <SectionHeader label={label} meta={count} color={color} />
-    </div>
-  );
-}
-
-function ShowPoster({
-  show,
-  index,
-  densidade,
-}: {
-  show: ShowWithProgress;
-  index: number;
-  densidade: Densidade;
-}) {
-  return (
-    <PosterCard
-      href={`/series/${show.uuid}`}
-      name={show.name}
-      posterPath={show.posterPath}
-      index={index}
-      watched={show.watchedCount}
-      total={show.totalEpisodes}
-      status={show.status}
-      variante={densidade === "lista" ? "lista" : "grelha"}
-      compacta={densidade === "compacta"}
-    />
-  );
-}
-
-/**
- * Vazio com saída. Um ecrã que só diz "não há nada" deixa o utilizador
- * encalhado — há sempre um passo seguinte a oferecer.
- */
-function EmptyState({
-  query,
-  segment,
-  filter,
-  onClearFilter,
-}: {
-  query: string | null;
-  segment: Segment;
-  filter: SeriesFilter;
-  onClearFilter: () => void;
-}) {
-  const filtrado = segment === "series" && filter !== "tudo";
-  return (
-    <div className="mt-12 flex flex-col items-center px-6 text-center">
-      <span className="bars mb-4 h-11 w-11 rounded-full opacity-40" aria-hidden />
-      <p className="font-display font-semibold">
-        {query
-          ? `Nada na tua biblioteca para “${query}”`
-          : filtrado
-            ? "Nada neste filtro"
-            : segment === "series"
-              ? "Ainda não há séries"
-              : "Ainda não há filmes"}
-      </p>
-      <p className="mt-1 max-w-xs text-[15px] text-dim">
-        {query
-          ? "Procura no catálogo em baixo para o adicionares."
-          : filtrado
-            ? "Este filtro está vazio — vê tudo o que tens."
-            : "Procura pelo nome para adicionares o primeiro."}
-      </p>
-      {filtrado && !query && (
-        <button
-          onClick={onClearFilter}
-          className="mt-5 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-[15px] font-semibold text-tube transition hover:brightness-110"
-        >
-          Ver tudo
-        </button>
-      )}
-    </div>
-  );
 }
 
 const SERIES_SORT_IDS = new Set(SERIES_SORTS.map((s) => s.id));
@@ -892,7 +479,7 @@ function LibraryContent() {
           </div>
         )
       ) : (
-        <EmptyState
+        <LibraryEmptyState
           query={q ? query.trim() : null}
           segment={segment}
           filter={filter}
@@ -939,7 +526,7 @@ function LibraryContent() {
                 )}
                 {segment === "series"
                   ? remote?.map((result) => (
-                      <ResultCard
+                      <ShowResultCard
                         key={`${result.provider}-${result.providerId}`}
                         result={result}
                       />

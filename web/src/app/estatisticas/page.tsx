@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
 import { loadAdvancedStats, type AdvancedStats } from "@/lib/advancedStats";
+import BotaoVoltar from "@/components/BotaoVoltar";
 import { CardsBone, TitleBone } from "@/components/Skeleton";
 
 function formatDate(iso: string): string {
@@ -43,9 +43,13 @@ export default function EstatisticasPage() {
     <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Estatísticas</h1>
-        <Link href="/profile" className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline">
+        <BotaoVoltar
+          label="Voltar ao perfil"
+          fallback="/profile"
+          className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline"
+        >
           Perfil
-        </Link>
+        </BotaoVoltar>
       </div>
 
       {stats.currentStreak > 1 && (

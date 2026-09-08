@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import type { ReactNode } from "react";
 import Poster from "@/components/Poster";
 
 /**
@@ -9,6 +10,20 @@ import Poster from "@/components/Poster";
  * nomes seguidos é mais rápido do que reconhecer capas.
  */
 export type VarianteCartaz = "grelha" | "lista";
+
+/**
+ * Selo + botão sobre o cartaz — hoje só o "Para ver" dos filmes o usa, mas
+ * é o que faz o `MovieCard` deixar de duplicar o cartaz inteiro só para
+ * acrescentar um botão. O clique nunca deve deixar o `<Link>` navegar —
+ * quem o define trata do `preventDefault`/`stopPropagation`.
+ */
+export interface PosterCardAcao {
+  /** selo no canto, só na grelha — ex. "Para ver" */
+  selo?: string;
+  aria: string;
+  onClick: (e: React.MouseEvent) => void;
+  icon: ReactNode;
+}
 
 export interface PosterCardProps {
   href: string;
@@ -25,6 +40,7 @@ export interface PosterCardProps {
   variante?: VarianteCartaz;
   /** cantos e nome mais pequenos quando cabem 3+ por linha */
   compacta?: boolean;
+  acao?: PosterCardAcao;
 }
 
 // A série acabou de vez — sem isto, "em dia" fica sempre verde (o valor
@@ -58,6 +74,7 @@ export default function PosterCard({
   status,
   variante = "grelha",
   compacta = false,
+  acao,
 }: PosterCardProps) {
   const progress =
     watched !== undefined && total ? Math.min(100, (watched / total) * 100) : null;
@@ -100,6 +117,15 @@ export default function PosterCard({
             </div>
           )}
         </div>
+        {acao && (
+          <button
+            onClick={acao.onClick}
+            aria-label={acao.aria}
+            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line text-dim transition hover:border-ink hover:text-ink active:scale-90"
+          >
+            {acao.icon}
+          </button>
+        )}
       </Link>
     );
   }
@@ -145,6 +171,23 @@ export default function PosterCard({
                 }}
               />
             </div>
+          </>
+        )}
+        {acao && (
+          <>
+            <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" />
+            {acao.selo && (
+              <span className="ep-code absolute left-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink backdrop-blur">
+                {acao.selo}
+              </span>
+            )}
+            <button
+              onClick={acao.onClick}
+              aria-label={acao.aria}
+              className="tap-44 absolute bottom-1.5 right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-ink text-tube shadow-md transition active:scale-90"
+            >
+              {acao.icon}
+            </button>
           </>
         )}
       </div>
