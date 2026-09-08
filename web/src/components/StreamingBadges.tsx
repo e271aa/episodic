@@ -89,9 +89,19 @@ export default function StreamingBadges({
               <p className="text-[15px] text-dim">A verificar…</p>
             ) : data && data.streaming.length > 0 ? (
               <Badges data={data} />
+            ) : !tmdbId ? (
+              // Não é a mesma coisa que "não há", e dizer "não há" era mentira:
+              // 69 das 74 séries da biblioteca chegaram aqui sem id do TMDB —
+              // vieram todas da TVmaze — e todas afirmavam que não estavam em
+              // lado nenhum. Sem saber que série é lá fora, não há pergunta a
+              // fazer. O backfill preenche o id em segundo plano.
+              <p className="text-[15px] text-dim">
+                Ainda não identifiquei esta série no catálogo — sem isso não dá
+                para saber onde a ver. Volta daqui a pouco.
+              </p>
             ) : (
               <p className="text-[15px] text-dim">
-                Sem serviços de streaming disponíveis em Portugal.
+                Sem serviços de streaming em Portugal.
               </p>
             )}
           </div>

@@ -66,10 +66,29 @@ export interface Catalogo {
   episodios: Record<string, EpisodioTmdb[]>;
   /** detalhe por id: `movie/{id}` */
   filmes: Record<number, Record<string, unknown>>;
+  /**
+   * Onde ver, por `"tv:{id}"` / `"movie:{id}"` → nomes dos serviços em PT.
+   * Ausente = a TMDB não tem nada para Portugal.
+   */
+  ondeVer: Record<string, string[]>;
+  /**
+   * Episódios da TVmaze por id de série — `[porTemporada]`, ex. `[3, 3]` são
+   * duas temporadas de 3. Serve para provar que uma série numerada pela
+   * TVmaze não é reparticionada quando ganha um id do TMDB.
+   */
+  tvmaze: Record<number, number[]>;
 }
 
 export function catalogoVazio(): Catalogo {
-  return { multi: [], tendencias: [], series: {}, episodios: {}, filmes: {} };
+  return {
+    multi: [],
+    tendencias: [],
+    series: {},
+    episodios: {},
+    filmes: {},
+    ondeVer: {},
+    tvmaze: {},
+  };
 }
 
 /** Uma série completa (detalhe + episódios), pronta a pôr no catálogo. */
@@ -151,6 +170,24 @@ export async function interceptarTmdb(page: Page, catalogo: Catalogo): Promise<v
     if (temporada)
       return json({ episodes: catalogo.episodios[`${temporada[1]}:${temporada[2]}`] ?? [] });
 
+    const ondeVer = /^(tv|movie)\/(\d+)\/watch\/providers$/.exec(caminho);
+    if (ondeVer) {
+      const nomes = catalogo.ondeVer[`${ondeVer[1]}:${ondeVer[2]}`];
+      if (!nomes) return json({ results: {} });
+      return json({
+        results: {
+          PT: {
+            link: "https://exemplo/onde-ver",
+            flatrate: nomes.map((nome, i) => ({
+              provider_id: 100 + i,
+              provider_name: nome,
+              logo_path: "/logo.png",
+            })),
+          },
+        },
+      });
+    }
+
     const filme = /^movie\/(\d+)$/.exec(caminho);
     if (filme) {
       const detalhe = catalogo.filmes[Number(filme[1])];
@@ -172,9 +209,26 @@ export async function interceptarTmdb(page: Page, catalogo: Catalogo): Promise<v
     rota.fulfill({ status: 200, contentType: "image/png", body: PIXEL }),
   );
 
-  await page.route(/^https:\/\/api\.tvmaze\.com\//, (rota) =>
-    rota.fulfill({ status: 200, contentType: "application/json", body: "[]" }),
-  );
+  await page.route(/^https:\/\/api\.tvmaze\.com\//, (rota) => {
+    const episodios = /\/shows\/(\d+)\/episodes/.exec(rota.request().url());
+    const porTemporada = episodios ? catalogo.tvmaze[Number(episodios[1])] : undefined;
+    const corpo = porTemporada
+      ? porTemporada.flatMap((quantos, i) =>
+          Array.from({ length: quantos }, (_, j) => ({
+            id: (i + 1) * 1000 + j,
+            season: i + 1,
+            number: j + 1,
+            name: `TVmaze T${i + 1}E${j + 1}`,
+            airdate: "2020-01-01",
+          })),
+        )
+      : [];
+    return rota.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify(corpo),
+    });
+  });
 
   await page.route(/^https:\/\/(image\.tmdb\.org|static\.tvmaze\.com)\//, (rota) =>
     rota.fulfill({ status: 200, contentType: "image/png", body: PIXEL }),

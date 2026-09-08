@@ -28,6 +28,24 @@ export interface StoredShow {
    * não apanha.
    */
   tmdbAliases?: string[];
+  /**
+   * Qual dos fornecedores define a **numeração** (temporada, episódio) desta
+   * série. Nada a ver com de onde vem a capa ou a sinopse.
+   *
+   * Existe porque o id do TMDB é preciso para coisas que não são numeração —
+   * "onde ver", recomendações, reconhecer no Explorar o que já tens — e sem
+   * este campo guardá-lo mudava a numeração por efeito secundário: o
+   * `getSeasons` passava a preferir o TMDB e a série era reparticionada.
+   * Medido: o Naruto tem 6 temporadas na TVmaze (13·51·51·50·50·5) e 4 no
+   * TMDB (52·52·54·62). São os mesmos 220 episódios; se a numeração virasse,
+   * 55 marcações passavam a apontar para temporadas que já não existem.
+   *
+   * Quem já cá estava antes deste campo é tratado pela regra antiga (ver
+   * `fonteDaNumeracao`), e o `enrichShow` fixa-o **antes** de acrescentar
+   * um id novo — para nunca haver um instante em que a série tem id do TMDB
+   * e ainda não tem numeração declarada.
+   */
+  numeracao?: "tmdb" | "tvmaze";
   followed: boolean;
   inWatchlist: boolean;
   archived: boolean;

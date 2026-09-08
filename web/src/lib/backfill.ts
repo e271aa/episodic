@@ -159,8 +159,12 @@ const CHAVE_FILMES = "backfill:filmes-v1";
  * falhou antes de esse fallback existir ficava presa até 24h (a memória
  * de "falhou há pouco" de cada série, e a própria volta fechada) a repetir
  * o "falhou" de ontem contra uma lógica que hoje já resolvia.
+ *
+ * v3: séries completas mas sem id do TMDB passaram a entrar na volta (ver a
+ * fila em baixo). Sem subir a versão, as que já tinham sido "tentadas" numa
+ * volta fechada só voltariam a ser vistas 24h depois.
  */
-const SHOW_MATCH_VERSION = 2;
+const SHOW_MATCH_VERSION = 3;
 const CHAVE_SERIES_VERSAO = "backfill:series-match-v";
 
 /**
@@ -185,7 +189,21 @@ export async function backfillShows(
     await correrVolta(
       CHAVE_SERIES,
       lista.filter((s) => !s.posterPath),
-      lista.filter((s) => s.posterPath && !s.totalEpisodes),
+      [
+        lista.filter((s) => s.posterPath && !s.totalEpisodes),
+        /**
+         * Completas à vista, mas sem id do TMDB — e sem esse id não há
+         * "Onde ver", nem recomendações, nem forma de o Explorar saber que
+         * já as tens. Medido na biblioteca do Ruben: **69 de 74** séries
+         * estavam assim, porque foram emparelhadas pela TVmaze, ficaram com
+         * capa e total, e o agendamento só olhava para quem não tinha uma
+         * dessas duas coisas. Ficavam completas e cegas para sempre.
+         *
+         * Só é seguro entrarem aqui depois de o `enrichShow` fixar a
+         * `numeracao` — ver a nota em `db.ts`.
+         */
+        lista.filter((s) => s.posterPath && s.totalEpisodes && !s.tmdbId),
+      ].flat(),
       (s) => s.uuid,
       async (show) => {
         const patch = await enrichShow(show, rever);

@@ -215,22 +215,54 @@ export async function enrichShow(
       await rememberEnrichFailure(show.uuid);
       return null;
     }
-    if (!fromTmdb) return fromMaze;
-    if (!fromMaze) return fromTmdb;
 
-    // Fusão: TMDB manda; TVmaze preenche o que faltar
-    return {
-      ...fromTmdb,
-      posterPath: fromTmdb.posterPath ?? fromMaze.posterPath,
-      backdropPath: fromTmdb.backdropPath ?? fromMaze.backdropPath,
-      overview: fromTmdb.overview ?? fromMaze.overview,
-      totalEpisodes: fromTmdb.totalEpisodes ?? fromMaze.totalEpisodes,
-      firstAired: fromTmdb.firstAired ?? fromMaze.firstAired,
-      status: fromTmdb.status ?? fromMaze.status,
-      genres: fromTmdb.genres ?? fromMaze.genres,
-      tvmazeId: fromMaze.tvmazeId,
-      imdbId: fromMaze.imdbId,
-    };
+    /**
+     * Congela quem mandava na numeração ANTES deste enriquecimento.
+     *
+     * É a linha que torna seguro guardar um id do TMDB numa série que já
+     * estava numerada pela TVmaze: sem ela, o `getSeasons` mudava de
+     * fornecedor no instante em que o id aparecesse, e a série era
+     * reparticionada por efeito secundário. Vai no mesmo `patch` que o id
+     * novo — uma escrita só, sem nenhum instante pelo meio em que a série
+     * tenha id do TMDB e numeração por declarar.
+     */
+    const numeracao = show.numeracao ?? fonteDaNumeracao(show) ?? undefined;
+
+    // Fusão: para o que se vê (capa, sinopse, géneros) o TMDB manda e a
+    // TVmaze preenche o que faltar.
+    const patch: Partial<StoredShow> = !fromTmdb
+      ? { ...fromMaze }
+      : !fromMaze
+        ? { ...fromTmdb }
+        : {
+            ...fromTmdb,
+            posterPath: fromTmdb.posterPath ?? fromMaze.posterPath,
+            backdropPath: fromTmdb.backdropPath ?? fromMaze.backdropPath,
+            overview: fromTmdb.overview ?? fromMaze.overview,
+            totalEpisodes: fromTmdb.totalEpisodes ?? fromMaze.totalEpisodes,
+            firstAired: fromTmdb.firstAired ?? fromMaze.firstAired,
+            status: fromTmdb.status ?? fromMaze.status,
+            genres: fromTmdb.genres ?? fromMaze.genres,
+            tvmazeId: fromMaze.tvmazeId,
+            imdbId: fromMaze.imdbId,
+          };
+
+    if (numeracao) patch.numeracao = numeracao;
+
+    /**
+     * O **total de episódios** pertence a quem manda na numeração, e não ao
+     * fornecedor mais bonito.
+     *
+     * Sem isto, dar um id do TMDB a uma série numerada pela TVmaze punha a
+     * barra de progresso a contar marcações de uma partição contra o total
+     * de outra — "220 de 210 vistos" — e a verificação de integridade
+     * passava a acusar episódios a mais que não existem.
+     */
+    if (numeracao === "tvmaze") {
+      patch.totalEpisodes = fromMaze?.totalEpisodes ?? show.totalEpisodes ?? null;
+    }
+
+    return patch;
   } catch {
     return null; // rede em baixo ou série não encontrada — fica para a próxima
   }
@@ -345,10 +377,32 @@ export async function enrichMovie(
   }
 }
 
-/** Lista de temporadas de uma série (null quando não há fornecedor mapeado). */
+/**
+ * Quem manda na numeração desta série.
+ *
+ * Séries guardadas antes de o campo `numeracao` existir caem na regra
+ * antiga — TMDB sempre que houvesse id — que é, por construção, a numeração
+ * com que os episódios delas foram marcados. Assim a leitura de hoje é
+ * exatamente a de ontem, e o campo só muda o futuro.
+ */
+export function fonteDaNumeracao(show: StoredShow): "tmdb" | "tvmaze" | null {
+  if (show.numeracao) return show.numeracao;
+  if (show.tmdbId) return "tmdb";
+  if (show.tvmazeId != null) return "tvmaze";
+  return null;
+}
+
+/**
+ * Lista de temporadas de uma série (null quando não há fornecedor mapeado).
+ *
+ * Só pergunta ao fornecedor que manda na numeração. Cair para o outro quando
+ * este não responde daria uma resposta **com outra partição** — episódios
+ * marcados no sítio errado — e é preferível não saber a saber mal.
+ */
 export async function getSeasons(show: StoredShow): Promise<MetaSeason[] | null> {
+  const fonte = fonteDaNumeracao(show);
   try {
-    if (show.tmdbId && (await hasTmdb())) {
+    if (fonte === "tmdb" && show.tmdbId && (await hasTmdb())) {
       const details = await tmdb.getShowDetails(show.tmdbId);
       return details.seasons
         .filter((s) => s.season_number > 0)
@@ -359,7 +413,7 @@ export async function getSeasons(show: StoredShow): Promise<MetaSeason[] | null>
           name: s.name,
         }));
     }
-    if (show.tvmazeId != null) {
+    if (fonte === "tvmaze" && show.tvmazeId != null) {
       const episodes = await tvmaze.getEpisodes(show.tvmazeId);
       const counts = new Map<number, number>();
       for (const ep of episodes) {
@@ -387,8 +441,9 @@ export async function getEpisodesOfSeason(
   show: StoredShow,
   seasonNumber: number,
 ): Promise<MetaEpisode[]> {
+  const fonte = fonteDaNumeracao(show);
   try {
-    if (show.tmdbId && (await hasTmdb())) {
+    if (fonte === "tmdb" && show.tmdbId && (await hasTmdb())) {
       const episodes = await tmdb.getSeasonEpisodes(show.tmdbId, seasonNumber);
       return episodes.map((ep) => ({
         season: ep.season_number,
@@ -397,7 +452,7 @@ export async function getEpisodesOfSeason(
         airDate: ep.air_date,
       }));
     }
-    if (show.tvmazeId != null) {
+    if (fonte === "tvmaze" && show.tvmazeId != null) {
       const episodes = await tvmaze.getEpisodes(show.tvmazeId);
       return episodes
         .filter((ep) => ep.season === seasonNumber && ep.number !== null)
