@@ -1,0 +1,53 @@
+name: CI
+
+# A Vercel publica sozinha a cada push para a main. Isto corre ao lado e diz,
+# em minutos, se o que foi para o ar continua a funcionar — não trava o deploy
+# por si só (isso é uma opção do painel da Vercel, "Ignored Build Step"), mas
+# transforma "só se descobre no telemóvel" em "descobre-se aqui".
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: web
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - run: npm ci
+
+      - name: Tipos
+        run: npx tsc --noEmit
+
+      - name: Lint
+        run: npm run lint
+
+      # A app corre num iPhone: os testes correm em WebKit, e é o único motor
+      # que vale a pena instalar aqui.
+      - name: Instalar o WebKit
+        run: npx playwright install --with-deps webkit
+
+      # O `npm test` compila a app e serve-a (ver `playwright.config.ts`) — se
+      # o build partir, é aqui que se vê. Sem segredos nenhuns: a TMDB é falsa
+      # nos testes e o Supabase fica desligado de propósito.
+      - name: Testes
+        run: npm test
+
+      - uses: actions/upload-artifact@v4
+        if: ${{ !cancelled() }}
+        with:
+          name: relatorio-playwright
+          path: web/playwright-report/
+          retention-days: 7

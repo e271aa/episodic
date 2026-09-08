@@ -3,8 +3,9 @@
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getMovies, kvGet, kvSet, type StoredMovie } from "@/lib/db";
-import { loadShows, type ShowWithProgress } from "@/lib/shows";
+import { kvGet, kvSet, type StoredMovie } from "@/lib/db";
+import type { ShowWithProgress } from "@/lib/shows";
+import { recursoFilmes, recursoSeries, useFilmes, useSeries } from "@/lib/cache";
 import { backfillMovies, backfillShows } from "@/lib/backfill";
 import { usePref } from "@/lib/prefs";
 import {
@@ -146,8 +147,12 @@ function LibraryContent() {
     [params, router],
   );
 
-  const [shows, setShows] = useState<ShowWithProgress[] | null>(null);
-  const [movies, setMovies] = useState<StoredMovie[] | null>(null);
+  // Da cache partilhada, e não de uma leitura só desta página: ao voltar de
+  // uma série ou de um filme, a grelha tem de estar montada no primeiro
+  // instante. É isso — e não o scroll em si — que faz a posição aguentar
+  // (ver a nota longa em `lib/cache.ts`).
+  const shows = useSeries();
+  const movies = useFilmes();
   const [query, setQuery] = useState("");
   // A pesquisa e os filtros saíram do cabeçalho; vivem atrás dos ícones da
   // barra flutuante e abrem por cima do conteúdo.
@@ -165,51 +170,43 @@ function LibraryContent() {
   const [remoteError, setRemoteError] = useState<string | null>(null);
   const enriching = useRef(false);
 
-  // "Para ver" não tem watchedAt — cai para o fim numa ordenação por "vistos"
-  const byWatchedDesc = (a: StoredMovie, b: StoredMovie) =>
-    (b.watchedAt ?? "").localeCompare(a.watchedAt ?? "");
-
   const reloadMovies = useCallback(() => {
-    void getMovies().then((list) => setMovies(list.sort(byWatchedDesc)));
+    void recursoFilmes.revalidar();
   }, []);
 
+  // Enriquecer o que falta (capas, datas, totais) arranca assim que a cache
+  // traz a biblioteca, e uma vez só por visita — a bandeira nunca volta a
+  // `false`: cada lote revalida a cache, o que muda `shows`/`movies` e faria
+  // este efeito correr outra vez em cima de si próprio.
   useEffect(() => {
+    if (!shows || !movies || enriching.current) return;
+    enriching.current = true;
     void (async () => {
-      const [listaShows, listaMovies] = await Promise.all([loadShows(), getMovies()]);
-      setShows(listaShows);
-      setMovies(listaMovies.sort(byWatchedDesc));
+      // As séries também se completam aqui, não só no "A seguir": quem entra
+      // direto na Biblioteca — que é onde as capas se veem todas de uma vez —
+      // não disparava enriquecimento nenhum, e ficava à espera de uma visita
+      // a outro ecrã que podia nunca acontecer.
+      await backfillShows(shows, () => {
+        void recursoSeries.revalidar();
+      });
 
-      if (enriching.current) return;
-      enriching.current = true;
-      try {
-        // As séries também se completam aqui, não só no "A seguir": quem
-        // entra direto na Biblioteca — que é onde as capas se veem todas de
-        // uma vez — não disparava enriquecimento nenhum, e ficava à espera
-        // de uma visita a outro ecrã que podia nunca acontecer.
-        await backfillShows(listaShows, () => {
-          void loadShows().then(setShows);
-        });
-
-        // Completa capas e datas de estreia em falta via TMDB. A capa vivia na
-        // antiga página /movies, que quase não tinha entradas — filmes sem
-        // capa nunca eram enriquecidos. A data de estreia é a mesma história:
-        // muitos filmes importados do TV Time nunca a trouxeram, e sem ela o
-        // filtro de décadas usava a data em que marcaste como visto (errado).
-        //
-        // Uma revisão em massa quando a regra de escolha do filme muda: os que
-        // já estavam enriquecidos guardaram o filme ERRADO (o "Ciao Alberto"
-        // ficou com o homónimo de 2003 em vez do spin-off do Luca de 2021) e
-        // como têm capa e data nunca mais seriam tocados.
-        const rever = ((await kvGet<number>(ENRICH_KEY)) ?? 0) < ENRICH_VERSION;
-        await backfillMovies(listaMovies, rever, () => {
-          void getMovies().then((fresh) => setMovies(fresh.sort(byWatchedDesc)));
-        });
-        if (rever) await kvSet(ENRICH_KEY, ENRICH_VERSION);
-      } finally {
-        enriching.current = false;
-      }
+      // Completa capas e datas de estreia em falta via TMDB. A capa vivia na
+      // antiga página /movies, que quase não tinha entradas — filmes sem capa
+      // nunca eram enriquecidos. A data de estreia é a mesma história: muitos
+      // filmes importados do TV Time nunca a trouxeram, e sem ela o filtro de
+      // décadas usava a data em que marcaste como visto (errado).
+      //
+      // Uma revisão em massa quando a regra de escolha do filme muda: os que
+      // já estavam enriquecidos guardaram o filme ERRADO (o "Ciao Alberto"
+      // ficou com o homónimo de 2003 em vez do spin-off do Luca de 2021) e
+      // como têm capa e data nunca mais seriam tocados.
+      const rever = ((await kvGet<number>(ENRICH_KEY)) ?? 0) < ENRICH_VERSION;
+      await backfillMovies(movies, rever, () => {
+        void recursoFilmes.revalidar();
+      });
+      if (rever) await kvSet(ENRICH_KEY, ENRICH_VERSION);
     })();
-  }, []);
+  }, [shows, movies]);
 
   // Filtrar o que já tens é instantâneo (é tudo local) — sem botão, sem espera
   const q = norm(query.trim());

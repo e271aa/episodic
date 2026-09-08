@@ -14,9 +14,13 @@ import { loadShows, type ShowWithProgress } from "./shows";
  * instante a página ainda é um esqueleto mais curto do que a posição
  * guardada, a posição fica presa ao fim do documento. Numa lista de 24
  * itens, sair a 700px e voltar dava 0px — e com um esqueleto artificial
- * mais alto passava a dar 700px, o que confirmou a causa. A Biblioteca
- * escapava por acaso: os dados dela chegam a tempo de o documento já ser
- * alto quando o restauro acontece.
+ * mais alto passava a dar 700px, o que confirmou a causa.
+ *
+ * Aqui dizia-se que a Biblioteca escapava por acaso, porque os dados dela
+ * chegavam a tempo. Não escapava: o primeiro teste de scroll escrito na
+ * Fase AE mediu 259px depois de sair a 2000px, e com o esqueleto inchado a
+ * 90 cartazes passou a 3323px — o mesmo corte, no ecrã de onde mais se
+ * abre uma série. Passou a ler daqui também.
  *
  * Com a cache, voltar encontra o conteúdo já lá: o documento tem a altura
  * toda desde o primeiro instante e a posição aguenta. Encher esqueletos
