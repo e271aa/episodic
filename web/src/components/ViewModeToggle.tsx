@@ -11,7 +11,13 @@ export const MODOS: readonly Modo[] = ["cartoes", "grelha"];
  * e à direita do título — subordinada ao filtro Séries/Filmes, que fica com
  * a barra de pílulas só para ele.
  *
- * 36px de altura visual, 44px de alvo via `.tap-44` em cada botão.
+ * 36px de altura visual, 44px de alvo via `.tap-44` em cada botão — que é
+ * maior do que o botão em si (36px) e por isso transborda 4px para cada
+ * lado. Com os dois botões colados (`gap-0.5`, 2px), os transbordos
+ * chocavam a meio e o botão mais à direita, por vir depois no DOM, ganhava
+ * sempre esse pedaço — o de "cartões" perdia os toques da sua própria beira
+ * direita para o de "grelha". `gap-2.5` (10px) dá espaço para os dois
+ * transbordos de 4px caberem sem se tocarem.
  */
 export default function ViewModeToggle({
   modo,
@@ -29,7 +35,7 @@ export default function ViewModeToggle({
     <div
       role="group"
       aria-label="Modo de visualização"
-      className="flex items-center gap-0.5 rounded-full border border-line bg-panel/80 p-[3px]"
+      className="flex items-center gap-2.5 rounded-full border border-line bg-panel/80 p-[3px]"
     >
       {opcoes.map(({ id, label, Icon }) => {
         const ativo = modo === id;

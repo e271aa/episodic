@@ -38,7 +38,15 @@ export default function PwaSetup() {
   if (!showIosHint) return null;
 
   return (
-    <div className="fixed inset-x-0 bottom-16 z-40 mx-auto max-w-2xl px-4 pb-[env(safe-area-inset-bottom)]">
+    // z-[15]: propositadamente por baixo de qualquer controlo flutuante a
+    // sério (Explorar/Em-dia usam z-20, a Biblioteca z-40) — esta dica
+    // aparece em qualquer página, sem saber o que mais lá flutua, e nunca
+    // pode ganhar a um botão que faz alguma coisa. Medido: no z-40 antigo
+    // tapava mesmo o botão "Filtros e ordenação" da Biblioteca — visível e
+    // impossível de tocar, o tipo de avaria que não aparece numa captura de
+    // ecrã. Ainda fica acima do conteúdo normal (sem z-index) e das secções
+    // fixas da Biblioteca (z-10), por isso continua bem visível.
+    <div className="fixed inset-x-0 bottom-16 z-[15] mx-auto max-w-2xl px-4 pb-[env(safe-area-inset-bottom)]">
       <div className="page-enter flex items-start gap-3 rounded-2xl border border-line bg-raised p-3 shadow-lg">
         <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-ink text-tube">
           {/* ícone de partilha do iOS */}
