@@ -71,6 +71,8 @@ export interface Catalogo {
    * Ausente = a TMDB não tem nada para Portugal.
    */
   ondeVer: Record<string, string[]>;
+  /** `find/{tvdbId}?external_source=tvdb_id` → id do TMDB */
+  porTvdb: Record<number, number>;
   /**
    * Episódios da TVmaze por id de série — `[porTemporada]`, ex. `[3, 3]` são
    * duas temporadas de 3. Serve para provar que uma série numerada pela
@@ -87,6 +89,7 @@ export function catalogoVazio(): Catalogo {
     episodios: {},
     filmes: {},
     ondeVer: {},
+    porTvdb: {},
     tvmaze: {},
   };
 }
@@ -154,6 +157,12 @@ export async function interceptarTmdb(page: Page, catalogo: Catalogo): Promise<v
       });
 
     if (caminho === "status") return json({ available: true });
+
+    const acharPorTvdb = /^find\/(\d+)$/.exec(caminho);
+    if (acharPorTvdb) {
+      const id = catalogo.porTvdb[Number(acharPorTvdb[1])];
+      return json({ tv_results: id ? [{ id }] : [], movie_results: [] });
+    }
     if (caminho === "search/multi") return json({ results: catalogo.multi });
     if (caminho === "search/tv")
       return json({ results: catalogo.multi.filter((r) => r.media_type !== "movie") });
@@ -210,7 +219,26 @@ export async function interceptarTmdb(page: Page, catalogo: Catalogo): Promise<v
   );
 
   await page.route(/^https:\/\/api\.tvmaze\.com\//, (rota) => {
-    const episodios = /\/shows\/(\d+)\/episodes/.exec(rota.request().url());
+    const url = rota.request().url();
+    const serie = /\/shows\/(\d+)(?:\?|$)/.exec(url);
+    if (serie) {
+      const id = Number(serie[1]);
+      return rota.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          id,
+          name: `TVmaze ${id}`,
+          image: { original: "https://static.tvmaze.com/x.jpg" },
+          summary: "<p>vindo da TVmaze</p>",
+          premiered: "2019-03-08",
+          status: "Running",
+          genres: ["Documentary"],
+          externals: { imdb: "tt0000000" },
+        }),
+      });
+    }
+    const episodios = /\/shows\/(\d+)\/episodes/.exec(url);
     const porTemporada = episodios ? catalogo.tvmaze[Number(episodios[1])] : undefined;
     const corpo = porTemporada
       ? porTemporada.flatMap((quantos, i) =>

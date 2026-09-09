@@ -16,6 +16,7 @@ import type { Page } from "@playwright/test";
 export interface SerieSemeada {
   uuid: string;
   name: string;
+  tvdbId?: number | null;
   tmdbId?: number | null;
   tvmazeId?: number | null;
   posterPath?: string | null;
@@ -78,7 +79,7 @@ function registos(semente: Semente): Registos {
     shows: (semente.series ?? []).map((s) => ({
       uuid: s.uuid,
       name: s.name,
-      tvdbId: null,
+      tvdbId: s.tvdbId ?? null,
       tmdbId: s.tmdbId ?? null,
       tvmazeId: s.tvmazeId ?? null,
       posterPath: s.posterPath ?? null,

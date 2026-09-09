@@ -112,3 +112,44 @@ test("sem id do TMDB, o 'Onde ver' admite que não sabe em vez de dizer que não
   // fazer — e era a que 69 de 74 séries mostravam.
   await expect(page.getByText("Sem serviços de streaming em Portugal")).toHaveCount(0);
 });
+
+test("abrir a série resolve o id na hora — sem esperar por uma passagem noutro ecrã", async ({
+  page,
+  tmdb,
+}) => {
+  // Como o Formula 1 está na biblioteca do Ruben: a TVmaze deu-lhe capa,
+  // sinopse, estado, estreia e géneros — tudo menos o id do TMDB. O portão
+  // antigo do enriquecimento só olhava para estado/estreia/géneros, e como
+  // estavam preenchidos nunca disparava. A série ficava à espera do backfill
+  // da Biblioteca, num ecrã onde ele nem sequer estava.
+  const TVDB = 359913;
+  const TMDB = 87083;
+  tmdb.tvmaze[41074] = [10, 10];
+  tmdb.porTvdb[TVDB] = TMDB;
+  const { series, episodios } = serieCompleta(TMDB, "Formula 1", [20]);
+  Object.assign(tmdb.series, series);
+  Object.assign(tmdb.episodios, episodios);
+  tmdb.ondeVer[`tv:${TMDB}`] = ["Netflix"];
+
+  await semear(page, {
+    series: [
+      {
+        uuid: "s-f1",
+        name: "Formula 1",
+        tvdbId: TVDB,
+        tvmazeId: 41074,
+        totalEpisodes: 20,
+        status: "Running",
+      },
+    ],
+  });
+  await page.goto("/series/s-f1");
+
+  await page.getByRole("button", { name: "Onde ver" }).click();
+  await expect(page.locator('a[title="Netflix"]')).toBeVisible();
+
+  // E o id novo não pode ter mudado a numeração: continua a mandar a TVmaze,
+  // que dá duas temporadas — o TMDB dá uma só de 20.
+  await expect(page.getByTestId("season-2")).toBeVisible();
+  await expect(page.getByTestId("season-3")).toHaveCount(0);
+});

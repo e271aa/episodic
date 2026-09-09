@@ -109,22 +109,45 @@ export default function ShowPage() {
       if (!stored) return;
       await syncWatched(stored);
 
-      // Enriquecimento sob demanda: séries importadas antes de guardarmos
-      // estreia/estado/géneros não têm esses campos — completa-os agora.
-      if (
+      /**
+       * Enriquecimento sob demanda, como na página do filme: quem abriu esta
+       * página está à espera de a ver **agora**, e não que uma passagem de
+       * fundo noutro ecrã lhe chegue um dia.
+       *
+       * Duas razões para correr, e a segunda faltava:
+       *  · faltam estreia/estado/géneros — séries importadas antes de esses
+       *    campos existirem;
+       *  · falta o id do TMDB — sem ele não há "Onde ver". Medido: 69 das 74
+       *    séries da biblioteca estavam assim, e o portão antigo (que só
+       *    olhava para os três campos acima) nunca disparava para nenhuma
+       *    delas, porque a TVmaze já lhos tinha dado todos.
+       *
+       * `refresh` ignora a memória de "falhou há pouco" pela mesma razão que
+       * o filme o faz: é uma série só, e é um pedido explícito de quem está
+       * a olhar para ela.
+       */
+      const semTmdb = !stored.tmdbId;
+      const semCampos =
         stored.status === undefined &&
         stored.firstAired === undefined &&
-        stored.genres === undefined
-      ) {
-        const patch = await enrichShow(stored);
+        stored.genres === undefined;
+
+      let atual = stored;
+      if (semTmdb || semCampos) {
+        const patch = await enrichShow(stored, semTmdb);
         if (patch) {
           const updated = await updateShow(uuid, patch);
-          if (updated) setShow(updated);
+          if (updated) {
+            atual = updated;
+            setShow(updated);
+          }
         }
       }
 
       // Temporadas: do fornecedor quando possível; senão do histórico local.
-      const providerSeasons = await getSeasons(stored);
+      // Com o registo já enriquecido — senão uma série que acabou de ganhar
+      // fornecedor continuava a ser lida pelo registo velho, sem ele.
+      const providerSeasons = await getSeasons(atual);
       if (providerSeasons && providerSeasons.length > 0) {
         setSeasons(
           providerSeasons.map((s, i) => ({
@@ -135,7 +158,7 @@ export default function ShowPage() {
             fromProvider: true,
           })),
         );
-        if (!stored.totalEpisodes) {
+        if (!atual.totalEpisodes) {
           const total = providerSeasons.reduce((sum, s) => sum + s.episodeCount, 0);
           await updateShow(uuid, { totalEpisodes: total || null });
         }
