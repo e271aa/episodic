@@ -153,3 +153,32 @@ test("abrir a série resolve o id na hora — sem esperar por uma passagem noutr
   await expect(page.getByTestId("season-2")).toBeVisible();
   await expect(page.getByTestId("season-3")).toHaveCount(0);
 });
+
+test("um filme sem streaming em Portugal diz que não há, em vez de desaparecer", async ({
+  page,
+  tmdb,
+}) => {
+  // Era assim que isto foi reportado: "não me sugere nenhuma plataforma para
+  // nenhum dos filmes". Para muitos deles a resposta certa é "não há mesmo" —
+  // 19 das 74 séries da biblioteca estão nesse caso — mas a app não dizia
+  // nada, e não dizer nada lê-se como avaria.
+  tmdb.filmes[555] = { id: 555, title: "Filme Sem Streaming", release_date: "2019-01-01", overview: "", poster_path: null, backdrop_path: null, runtime: 100, genres: [], tagline: "" };
+  tmdb.filmes[556] = { id: 556, title: "Filme Com Streaming", release_date: "2019-01-01", overview: "", poster_path: null, backdrop_path: null, runtime: 100, genres: [], tagline: "" };
+  tmdb.ondeVer["movie:556"] = ["Netflix"];
+
+  await semear(page, {
+    filmes: [
+      { key: "f-sem", name: "Filme Sem Streaming", tmdbId: 555, watchedAt: "2024-01-01T00:00:00.000Z" },
+      { key: "f-com", name: "Filme Com Streaming", tmdbId: 556, watchedAt: "2024-01-01T00:00:00.000Z" },
+    ],
+  });
+
+  await page.goto("/movies/f-sem");
+  await expect(page.getByText("Sem serviços de streaming em Portugal")).toBeVisible();
+
+  // E quando há, continuam a aparecer sem um toque — que é a vantagem que os
+  // filmes têm sobre o botão da série, e que não se perde.
+  await page.goto("/movies/f-com");
+  await expect(page.getByText("Onde ver em Portugal")).toBeVisible();
+  await expect(page.locator('a[title="Netflix"]')).toBeVisible();
+});

@@ -40,9 +40,17 @@ function Badges({ data }: { data: StreamingAvailability }) {
  * que a TMDB também devolve mas raramente é a pergunta de quem está a decidir
  * o que ver a seguir).
  *
- * `variant="inline"` (por omissão, usada nos filmes) fica em silêncio se não
- * houver nada: nem toda a gente quer saber, e "sem streaming" não é um facto
- * que mereça um cartão vazio.
+ * `variant="inline"` (por omissão, usada nos filmes) mostra os serviços sem
+ * um toque — é melhor do que o botão da série, que esconde atrás de um toque
+ * uma coisa que a app já sabe.
+ *
+ * Dizia aqui que ficava "em silêncio se não houver nada", porque "sem
+ * streaming" não merecia um cartão vazio. O cartão vazio continua a não
+ * merecer; o silêncio é que estava errado. Desaparecer por completo é
+ * indistinguível de estar avariado — foi exatamente assim que isto foi
+ * reportado ("não me sugere nenhuma plataforma para nenhum dos filmes"),
+ * quando a resposta certa para muitos deles era "não há mesmo". Uma linha
+ * discreta não é um cartão.
  *
  * `variant="action"` (Detalhe de série 2b) é o oposto de propósito: é uma das
  * duas ações fixas ao lado do título, por isso tem de estar sempre lá, e um
@@ -110,7 +118,19 @@ export default function StreamingBadges({
     );
   }
 
-  if (!data || data.streaming.length === 0) return null;
+  // Enquanto verifica não escreve nada: uma linha a aparecer e a ser
+  // substituída um instante depois lê-se como um salto, não como resposta.
+  if (data === undefined) return null;
+
+  if (!data || data.streaming.length === 0) {
+    return (
+      <p className="mt-4 text-[15px] text-dim">
+        {tmdbId
+          ? "Sem serviços de streaming em Portugal."
+          : "Ainda não identifiquei este filme no catálogo."}
+      </p>
+    );
+  }
 
   return (
     <div className="mt-4">
