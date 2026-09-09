@@ -17,6 +17,7 @@ export default function DiscoverCard({
   onSave,
   onDismiss,
   mostrarTipo = false,
+  fluida = false,
 }: {
   item: DiscoverItem;
   index: number;
@@ -24,6 +25,9 @@ export default function DiscoverCard({
   onDismiss: (item: DiscoverItem) => Promise<void>;
   /** a pesquisa mistura séries e filmes — sem isto não se sabe qual é qual */
   mostrarTipo?: boolean;
+  /** numa faixa que rola, o cartaz tem largura fixa; num mosaico, acompanha
+   *  a coluna — senão as três colunas ficavam com um vão à direita */
+  fluida?: boolean;
 }) {
   const [estado, setEstado] = useState<Estado>("idle");
 
@@ -42,7 +46,7 @@ export default function DiscoverCard({
 
   return (
     <div
-      className="poster-in w-32 shrink-0 sm:w-36"
+      className={`poster-in ${fluida ? "w-full" : "w-32 shrink-0 sm:w-36"}`}
       style={{ animationDelay: `${Math.min(index, 11) * 35}ms` }}
     >
       <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30">

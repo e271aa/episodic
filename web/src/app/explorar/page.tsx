@@ -208,12 +208,24 @@ function Grelha({
   onGuardar,
   onDispensar,
   mostrarTipo = false,
+  disposicao = "faixa",
 }: {
   sections: ExploreSection[];
   onGuardar: (item: DiscoverItem) => Promise<void>;
   onDispensar: (item: DiscoverItem) => Promise<void>;
   /** a pesquisa mistura séries e filmes — sem isto não se sabe qual é qual */
   mostrarTipo?: boolean;
+  /**
+   * "faixa" = uma linha que rola para o lado, para **espreitar**: é o que
+   * as secções de descoberta querem, porque ninguém vem cá com um título
+   * na cabeça e o que interessa é caber muita secção no ecrã.
+   *
+   * "mosaico" = quebra em linhas, para **encontrar**: numa pesquisa já se
+   * sabe o que se procura. Medido: "matrix" dá 17 resultados, e numa faixa
+   * são 2400px de conteúdo numa janela de 390 — seis arrastos para chegar
+   * ao fim de uma lista que num mosaico se vê quase toda de uma vez.
+   */
+  disposicao?: "faixa" | "mosaico";
 }) {
   return (
     <div className="space-y-7 overflow-y-auto pb-[calc(var(--dock-h)+1rem)] pt-4">
@@ -232,7 +244,13 @@ function Grelha({
               {section.reason ?? section.items.length}
             </span>
           </div>
-          <div className="mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
+          <div
+            className={
+              disposicao === "mosaico"
+                ? "mt-3 grid grid-cols-3 gap-3 px-4 pb-2"
+                : "mt-3 flex gap-3 overflow-x-auto px-4 pb-2"
+            }
+          >
             {section.items.map((item, i) => (
               <DiscoverCard
                 key={`${item.kind}-${item.tmdbId}`}
@@ -241,6 +259,7 @@ function Grelha({
                 onSave={onGuardar}
                 onDismiss={onDispensar}
                 mostrarTipo={mostrarTipo}
+                fluida={disposicao === "mosaico"}
               />
             ))}
           </div>
@@ -490,6 +509,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
           onGuardar={guardar}
           onDispensar={naoInteressa}
           mostrarTipo={searching}
+          disposicao={searching ? "mosaico" : "faixa"}
         />
       )}
     </main>
