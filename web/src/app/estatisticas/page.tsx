@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { loadAdvancedStats, type AdvancedStats } from "@/lib/advancedStats";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import { CardsBone, TitleBone } from "@/components/Skeleton";
@@ -33,6 +34,45 @@ export default function EstatisticasPage() {
       <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
         <TitleBone />
         <CardsBone count={4} height="h-28" />
+      </main>
+    );
+  }
+
+  const totalMarcado = stats.perWeekday.reduce((n, w) => n + w.count, 0);
+
+  /**
+   * Sem um único episódio marcado não há estatística nenhuma — e o que se via
+   * era só um gráfico de barras todas a zero, que se lê como avaria e não
+   * como "ainda não há nada". Um ecrã vazio tem de oferecer o passo seguinte,
+   * não encolher os ombros.
+   */
+  if (totalMarcado === 0) {
+    return (
+      <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
+        <div className="flex items-center justify-between">
+          <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Estatísticas</h1>
+          <BotaoVoltar
+            label="Voltar ao perfil"
+            fallback="/profile"
+            className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline"
+          >
+            Perfil
+          </BotaoVoltar>
+        </div>
+        <div className="mt-16 flex flex-col items-center px-6 text-center">
+          <span className="bars mb-4 h-11 w-11 rounded-full opacity-40" aria-hidden />
+          <p className="font-display font-semibold">Ainda não há nada para contar</p>
+          <p className="mt-1 max-w-xs text-[15px] text-dim">
+            Estas contas saem dos episódios que marcares — maratonas, sequências,
+            o dia da semana em que vês mais.
+          </p>
+          <Link
+            href="/series"
+            className="mt-6 flex min-h-11 cursor-pointer items-center rounded-full bg-ink px-6 text-[15px] font-semibold text-tube transition hover:brightness-110"
+          >
+            Marcar o primeiro
+          </Link>
+        </div>
       </main>
     );
   }

@@ -626,6 +626,16 @@ export async function addToList(
   await database.put("lists", list);
 }
 
+/**
+ * Repõe uma lista tal e qual — id, data de criação e itens incluídos.
+ * Existe para o anular de "apagar lista": recriá-la com `createList` dava-lhe
+ * um id novo e perdia a ordem e as datas de entrada dos itens.
+ */
+export async function restoreList(list: CustomList): Promise<void> {
+  const database = await db();
+  await database.put("lists", list);
+}
+
 export async function removeFromList(
   listId: string,
   kind: "show" | "movie",

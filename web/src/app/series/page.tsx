@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getWatchedForShow, kvGet, kvSet, markWatched, unmarkWatched, updateShow } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
+import { useNextUp, useSeries } from "@/lib/cache";
 import { buildUpcomingCalendar, type UpcomingEntry } from "@/lib/upcoming";
 import { hasTmdb } from "@/lib/metadata";
 import { backfillShows } from "@/lib/backfill";
@@ -33,8 +34,31 @@ const TMDB_BACKFILL_KEY = "shows:tmdb-backfill-v";
 const TMDB_BACKFILL_VERSION = 1;
 
 export default function SeriesPage() {
-  const [shows, setShows] = useState<ShowWithProgress[] | null>(null);
-  const [nextUp, setNextUp] = useState<NextUpMap | null>(null);
+  /**
+   * A leitura própria desta página continua a mandar — é ela que o
+   * `handleCheck` atualiza de forma otimista, e esse é o caminho mais quente
+   * da app. A cache partilhada entra só como **o que se vê no primeiro
+   * instante**, e é isso que faz o scroll voltar ao sítio.
+   *
+   * Medido antes: sair do "A seguir" a 683px e voltar dava **230px**. No
+   * primeiro frame depois do recuo o documento tinha 894px (o esqueleto)
+   * contra 2030px reais — e 894 − 664 (altura do ecrã) = 230, exatamente
+   * onde ficava. O browser repõe a posição nesse instante e o que não cabe
+   * é cortado; não é o scroll que se perde, é o documento que ainda não tem
+   * altura. Com a cache, o conteúdo já lá está no primeiro frame.
+   *
+   * Sobreposição em vez de substituição de propósito: a Biblioteca podia ir
+   * toda para a cache porque não tem estado otimista; aqui, trocar o
+   * `setShows` por revalidações mexia no marcar episódio, que já teve uma
+   * regressão a sério (Fase Y).
+   */
+  const cacheSeries = useSeries();
+  const [proprias, setShows] = useState<ShowWithProgress[] | null>(null);
+  const shows = proprias ?? cacheSeries;
+  /** Mesma sobreposição das séries: a cache é o que se vê no primeiro frame. */
+  const cacheNextUp = useNextUp();
+  const [proprioNextUp, setNextUp] = useState<NextUpMap | null>(null);
+  const nextUp = proprioNextUp ?? cacheNextUp;
   // Secções secundárias da fila (como no TV Time): fechadas por omissão
   const [showStale, setShowStale] = useState(false);
   const [showNotStarted, setShowNotStarted] = useState(false);
@@ -183,7 +207,10 @@ export default function SeriesPage() {
       // guarda a entrada anterior da fila para a poder repor tal e qual
       let previous: QueueEntry | undefined;
       setNextUp((current) => {
-        const map = new Map(current);
+        // `current ?? cacheNextUp`: enquanto a leitura própria não chega, é a
+        // cache que está a ser mostrada. Partir de `null` aqui esvaziava a
+        // fila inteira para gravar uma entrada só.
+        const map = new Map(current ?? cacheNextUp);
         previous = map.get(showUuid);
         // acabou de ver um episódio → a série volta (ou mantém-se) ativa
         if (next) {
@@ -212,7 +239,7 @@ export default function SeriesPage() {
               ) ?? null,
           );
           setNextUp((current) => {
-            const map = new Map(current);
+            const map = new Map(current ?? cacheNextUp);
             if (previous) map.set(showUuid, previous);
             else map.delete(showUuid);
             persistNextUp(map);
@@ -221,7 +248,7 @@ export default function SeriesPage() {
         },
       });
     },
-    [shows],
+    [shows, cacheNextUp],
   );
 
   if (shows === null) {

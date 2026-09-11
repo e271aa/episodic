@@ -2,6 +2,7 @@
 
 import { useEffect, useSyncExternalStore } from "react";
 import { getLists, getMovies, type CustomList, type StoredMovie } from "./db";
+import { loadCachedNextUp, type NextUpMap } from "./queue";
 import { loadShows, type ShowWithProgress } from "./shows";
 
 /**
@@ -90,6 +91,15 @@ function useRecurso<T>(recurso: Recurso<T>): T | null {
 }
 
 export const recursoSeries = criarRecurso<ShowWithProgress[]>(loadShows);
+/**
+ * A fila do "A seguir". Está aqui pela mesma razão que as séries: sem ela o
+ * herói da página não desenha, e uma página sem herói é **mais curta** do que
+ * o próprio esqueleto — medido, 664px contra 894px. Ter só as séries na cache
+ * piorava o restauro do scroll em vez de o resolver.
+ */
+export const recursoNextUp = criarRecurso<NextUpMap>(
+  async () => (await loadCachedNextUp()) ?? new Map(),
+);
 export const recursoFilmes = criarRecurso<StoredMovie[]>(getMovies);
 export const recursoListas = criarRecurso<CustomList[]>(getLists);
 
@@ -97,3 +107,4 @@ export const recursoListas = criarRecurso<CustomList[]>(getLists);
 export const useSeries = () => useRecurso(recursoSeries);
 export const useFilmes = () => useRecurso(recursoFilmes);
 export const useListas = () => useRecurso(recursoListas);
+export const useNextUp = () => useRecurso(recursoNextUp);

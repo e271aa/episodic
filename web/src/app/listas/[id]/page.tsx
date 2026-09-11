@@ -5,11 +5,14 @@ import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import {
+  addToList,
   deleteList,
   removeFromList,
   renameList,
+  restoreList,
   type CustomList,
 } from "@/lib/db";
+import { pushUndo } from "@/lib/undo";
 import { recursoListas, useFilmes, useListas, useSeries } from "@/lib/cache";
 import Poster from "@/components/Poster";
 import { PosterGridBone, TitleBone } from "@/components/Skeleton";
@@ -92,8 +95,25 @@ export default function ListaPage() {
       setConfirmDelete(true);
       return;
     }
+    // Cópia antes de apagar: é o que a anulação repõe, com o mesmo id e as
+    // mesmas datas. Toda a app anula o que destrói — marcar episódios,
+    // dispensar no Explorar — menos as duas ações que destruíam a sério.
+    const copia: CustomList = { ...list, items: [...list.items] };
     await deleteList(list.id);
     await recursoListas.revalidar();
+    // A anulação regista-se ANTES de navegar: a seguir ao `push` esta página
+    // desmonta, e o `pushUndo` chegava tarde de mais para o aviso aparecer.
+    pushUndo({
+      label: "Lista apagada",
+      // apagar uma lista fecha a página dela à força — sem isto, a navegação
+      // que a própria ação provoca levava a anulação com ela
+      atravessaUmEcra: true,
+      detail: `${copia.name} · ${copia.items.length} ${copia.items.length === 1 ? "item" : "itens"}`,
+      undo: async () => {
+        await restoreList(copia);
+        await recursoListas.revalidar();
+      },
+    });
     router.push("/listas");
   }, [list, confirmDelete, router]);
 
@@ -102,6 +122,14 @@ export default function ListaPage() {
       if (!list) return;
       await removeFromList(list.id, item.kind, item.refId);
       await recursoListas.revalidar();
+      pushUndo({
+        label: "Removido da lista",
+        detail: item.name,
+        undo: async () => {
+          await addToList(list.id, item.kind, item.refId);
+          await recursoListas.revalidar();
+        },
+      });
     },
     [list],
   );

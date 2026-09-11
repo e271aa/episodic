@@ -106,7 +106,7 @@ export default function TonightHero({
         {emDia > 0 && (
           <Link
             href="/em-dia"
-            className="flex min-h-9 items-center gap-2 rounded-full border border-line bg-tube/60 px-3 text-[13px] font-semibold text-ink backdrop-blur transition active:scale-95"
+            className="flex min-h-11 items-center gap-2 rounded-full border border-line bg-tube/60 px-3 text-[13px] font-semibold text-ink backdrop-blur transition active:scale-95"
           >
             <span className="bars h-4 w-4 shrink-0 rounded-full" aria-hidden />
             {emDia} em dia
@@ -118,7 +118,11 @@ export default function TonightHero({
         <p className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-dim [font-stretch:80%]">
           {eyebrow}
         </p>
-        <Link href={`/series/${showUuid}`} className="mt-2 block">
+        {/* `py-1 -my-1`: o título tem 39px de caixa (40px de letra com
+            entrelinha apertada) e o alvo recomendado são 44. O padding
+            alarga a área de toque e a margem negativa devolve o espaço ao
+            layout — cresce o que o dedo apanha, não muda o que se vê. */}
+        <Link href={`/series/${showUuid}`} className="mt-2 -my-1 block py-1">
           <h1 className="font-display text-[40px] font-bold leading-[0.98] tracking-[-0.015em] text-ink [font-stretch:110%]">
             {showName}
           </h1>

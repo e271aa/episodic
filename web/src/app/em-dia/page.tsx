@@ -134,6 +134,10 @@ function EmDiaContent() {
 
   const remaining = stack.slice(cursor, cursor + 3);
   const total = stack.length;
+  const todosVazios =
+    buckets.active.length === 0 &&
+    buckets.stale.length === 0 &&
+    buckets.notStarted.length === 0;
   const finished = cursor >= total && total > 0;
 
   return (
@@ -185,9 +189,16 @@ function EmDiaContent() {
       {total === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <CheckIcon className="h-10 w-10 text-faint" />
-          <p className="mt-4 font-display font-semibold">Nada para pôr em dia aqui</p>
+          {/* "Experimenta outro acima" só serve quando há outro com alguma
+              coisa. Com os quatro filtros a zero, mandava procurar onde não
+              havia nada — um beco. */}
+          <p className="mt-4 font-display font-semibold">
+            {todosVazios ? "Estás em dia com tudo" : "Nada para pôr em dia aqui"}
+          </p>
           <p className="mt-1 max-w-xs text-[15px] text-dim">
-            Este filtro está vazio — experimenta outro acima.
+            {todosVazios
+              ? "Não há episódios à espera em nenhuma das séries que segues."
+              : "Este filtro está vazio — experimenta outro acima."}
           </p>
         </div>
       ) : finished ? (

@@ -381,7 +381,12 @@ export default function ShowPage() {
       {/* O backdrop É a identidade — sem cartaz sobreposto. O título vive no
           terço de baixo, por cima do gradiente, tal como no herói do "A
           seguir": a arte respira em cima, o texto lê-se em baixo. */}
-      <div className="relative -mx-4 h-[420px] overflow-hidden bg-panel sm:mx-0">
+      {/* Sem `-mx-4`: o `<main>` acima não tem padding horizontal, por isso a
+          margem negativa não tinha nada para cancelar — esticava o herói 16px
+          para fora e a página inteira rolava de lado. Medido: documento a
+          406px num ecrã de 390. Os blocos a seguir trazem o seu próprio
+          `px-4`; este é de bordo a bordo por natureza. */}
+      <div className="relative h-[420px] overflow-hidden bg-panel">
         {backdropPath ? (
           <Poster
             path={backdropPath}

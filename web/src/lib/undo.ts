@@ -14,6 +14,17 @@ export interface UndoEntry {
   undo: () => void | Promise<void>;
   /** momento (ms) em que deixa de se poder anular */
   expiresAt: number;
+  /**
+   * Sobrevive a **uma** mudança de ecrã.
+   *
+   * A regra normal é o contrário — mudar de ecrã fecha a janela, porque
+   * anular o que já não está à vista é desfazer às cegas. Mas há ações em que
+   * a navegação **é** a consequência: apagar uma lista fecha a página da
+   * lista, à força. Aí fechar a janela tirava a anulação exatamente a quem
+   * mais precisa dela. Vale uma travessia, não mais: à segunda já se anda
+   * noutro sítio.
+   */
+  atravessaUmEcra?: boolean;
 }
 
 /** Janela para mudar de ideias. O Gmail usa 10s no envio; marcar um episódio
@@ -50,6 +61,7 @@ export function pushUndo(entry: {
   label: string;
   detail?: string;
   undo: () => void | Promise<void>;
+  atravessaUmEcra?: boolean;
 }): void {
   const id = nextId++;
   stack = [...stack, { ...entry, id, expiresAt: Date.now() + GRACE_MS }];
@@ -72,7 +84,16 @@ export function undoLast(): void {
   void entry.undo();
 }
 
+/**
+ * Fecha a janela de anulação. Quem foi marcado com `atravessaUmEcra`
+ * sobrevive a esta — e só a esta: perde a marca, portanto a mudança de ecrã
+ * seguinte já o leva.
+ */
 export function dismissAll(): void {
-  for (const entry of stack) drop(entry.id);
+  const sobrevivem = stack.filter((e) => e.atravessaUmEcra);
+  for (const entry of stack) {
+    if (!entry.atravessaUmEcra) drop(entry.id);
+  }
+  stack = sobrevivem.map((e) => ({ ...e, atravessaUmEcra: false }));
   emit();
 }
