@@ -15,6 +15,9 @@ const MUITAS = Array.from({ length: 30 }, (_, i) => ({
 test("o detalhe da série não rola de lado", async ({ page }) => {
   await semear(page, { series: [{ uuid: "s-1", name: "Serie Um", totalEpisodes: 10 }] });
   await page.goto("/series/s-1");
+  // Esperar pelo herói antes de medir: sem isto mede-se o esqueleto, que não
+  // tem a margem negativa — o teste passava com o bug lá dentro.
+  await expect(page.getByRole("button", { name: "Voltar às séries" })).toBeVisible();
   // Medido antes: documento a 406px num ecrã de 390 — o herói tinha `-mx-4`
   // sem um padding do pai para cancelar.
   const largura = await page.evaluate(() => ({
@@ -109,6 +112,22 @@ test("o 'A seguir' volta ao sítio depois de abrir uma série", async ({ page, t
 
   await page.goto("/series");
   await expect(page.locator('a[href^="/series/s-"]').first()).toBeVisible();
+  // Esperar que a página ASSENTE antes de sair dela. Os cartões aparecem
+  // quando a leitura própria chega, que é uma corrida com a da cache — sair
+  // no meio disso deixava a cache fria e o teste falhava conforme a carga da
+  // máquina. A altura parar de mudar é o sinal, e é justamente a grandeza de
+  // que este teste trata.
+  await expect
+    .poll(
+      async () => {
+        const a = await page.evaluate(() => document.documentElement.scrollHeight);
+        await page.waitForTimeout(150);
+        const b = await page.evaluate(() => document.documentElement.scrollHeight);
+        return a === b ? b : -1;
+      },
+      { timeout: 10_000 },
+    )
+    .toBeGreaterThan(1200);
   await page.evaluate(() => window.scrollTo(0, 600));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(400);
   const antes = await page.evaluate(() => window.scrollY);
