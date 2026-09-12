@@ -14,6 +14,7 @@ import {
 } from "@/lib/db";
 import { enrichShow, getEpisodesOfSeason, getSeasons, type MetaEpisode } from "@/lib/metadata";
 import { findNextUnwatched, formatEpCode } from "@/lib/watchnext";
+import { contarEpisodios, encontrarBuracos } from "@/lib/buracos";
 import { pushUndo } from "@/lib/undo";
 import ProgressRing from "@/components/ProgressRing";
 import AddToListButton from "@/components/AddToListButton";
@@ -243,6 +244,44 @@ export default function ShowPage() {
     [uuid, watched, show, syncWatched, seasons],
   );
 
+  /**
+   * Episódios por marcar que têm outros vistos DEPOIS deles — quase de
+   * certeza esquecimentos, não pendências. Ver `lib/buracos.ts`.
+   */
+  const buracos = useMemo(
+    () => encontrarBuracos(seasons, (t, e) => watched.has(episodeKey(uuid, t, e))),
+    [seasons, watched, uuid],
+  );
+
+  /**
+   * Marca de uma vez os episódios que ficaram por marcar **atrás** do ponto
+   * onde a pessoa já vai. Uma anulação só para todos: foi um gesto, desfaz-se
+   * como um gesto.
+   *
+   * Não decide nada sozinho — só existe atrás de um botão que diz exatamente
+   * quantos são e onde estão.
+   */
+  const marcarBuracos = useCallback(async () => {
+    if (!show || buracos.total === 0) return;
+    const marcados: { temporada: number; episodio: number }[] = [];
+    for (const t of buracos.porTemporada) {
+      for (const e of t.episodios) {
+        await markWatched(uuid, t.temporada, e);
+        marcados.push({ temporada: t.temporada, episodio: e });
+      }
+    }
+    await syncWatched(show);
+    if (marcados.length === 0) return;
+    pushUndo({
+      label: `${contarEpisodios(marcados.length)} marcados`,
+      detail: show.name,
+      undo: async () => {
+        for (const m of marcados) await unmarkWatched(uuid, m.temporada, m.episodio);
+        await syncWatched(show);
+      },
+    });
+  }, [show, buracos, uuid, syncWatched]);
+
   const markSeasonAll = useCallback(
     async (season: SeasonView) => {
       if (!show) return;
@@ -327,6 +366,11 @@ export default function ShowPage() {
     return counts;
   }, [watched]);
 
+  const temporadasComBuraco = useMemo(
+    () => new Set(buracos.porTemporada.map((t) => t.temporada)),
+    [buracos],
+  );
+
   const activity = useMemo(() => {
     const dates = [...watched.values()].map((w) => w.watchedAt).sort();
     if (dates.length === 0) return null;
@@ -365,7 +409,18 @@ export default function ShowPage() {
     show.totalEpisodes != null && watchedCount >= show.totalEpisodes;
   const accent = stateColor(showComplete, show.status);
   const remaining = show.totalEpisodes != null ? show.totalEpisodes - watchedCount : 0;
-  const label = stateLabel(showComplete, remaining, show.status);
+  /**
+   * "22 por ver" era a mesma frase para duas coisas diferentes: episódios que
+   * faltam mesmo ver, e episódios que já foram vistos e ficaram por marcar.
+   * Quem tem 22 buracos atrás não tem 22 por ver — tem 22 por arrumar.
+   */
+  const porVerAFrente = Math.max(0, remaining - buracos.total);
+  const label =
+    buracos.total > 0
+      ? porVerAFrente > 0
+        ? `${porVerAFrente} por ver · ${buracos.total} por marcar`
+        : `${buracos.total} por marcar`
+      : stateLabel(showComplete, remaining, show.status);
   const metaLine = [
     year,
     genreBits,
@@ -461,6 +516,38 @@ export default function ShowPage() {
           </button>
         )}
 
+        {/* Episódios por marcar ATRÁS do ponto onde já se vai. Fica antes da
+            ação principal de propósito: não faz sentido propor o próximo
+            episódio a quem tem 22 esquecidos para trás — e era exatamente
+            isso que a app fazia, sem nunca dizer que eles existiam.
+
+            Repara no que NÃO diz: não afirma que os viste. Diz onde estão e
+            oferece-se para os marcar. A decisão é tua. */}
+        {buracos.total > 0 && (
+          <div
+            className="page-enter mt-4 rounded-2xl border border-line bg-raised/60 p-4"
+            data-testid="aviso-buracos"
+          >
+            <p className="font-display text-[15px] font-semibold text-ink">
+              {contarEpisodios(buracos.total)} por marcar mais atrás
+            </p>
+            <p className="mt-1 text-[15px] text-dim">
+              {buracos.porTemporada
+                .map((t) => `T${t.temporada}: ${t.episodios.length}`)
+                .join(" · ")}
+              {" — já viste episódios depois destes."}
+            </p>
+            <button
+              onClick={() => void marcarBuracos()}
+              data-testid="marcar-buracos"
+              className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-ink text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-[0.99]"
+            >
+              <CheckIcon className="h-4 w-4" />
+              Marcar {buracos.total === 1 ? "o episódio" : `os ${buracos.total}`}
+            </button>
+          </div>
+        )}
+
         {/* Ação principal — a decisão nº 1 na página de série. Sem episódio
             por marcar não há ação nenhuma a propor: o cabeçalho já disse "Em
             dia" a par do título, repetir num cartão por baixo era a mesma
@@ -540,12 +627,19 @@ export default function ShowPage() {
                     const complete = season.episodeCount > 0 && seen >= season.episodeCount;
                     const cor = stateColor(complete, show.status);
                     const selected = openSeason === season.number;
+                    // `29/51` servia para "faltam 22 no fim" e para "faltam 22
+                    // no meio" — e são coisas diferentes. O ponto diz qual é.
+                    const temBuraco = temporadasComBuraco.has(season.number);
                     return (
                       <button
                         key={season.number}
                         onClick={() => void toggleSeason(season)}
                         data-testid={`season-${season.number}`}
                         aria-pressed={selected}
+                        aria-label={
+                          `Temporada ${season.number}, ${seen} de ${season.episodeCount} vistos` +
+                          (temBuraco ? ", com episódios por marcar mais atrás" : "")
+                        }
                         className={`relative h-[72px] shrink-0 cursor-pointer overflow-hidden rounded-xl border transition-colors ${
                           seasons.length > 5 ? "w-16" : "flex-1"
                         } ${
@@ -559,6 +653,13 @@ export default function ShowPage() {
                           className="absolute inset-x-0 top-0 h-[3px]"
                           style={{ background: cor }}
                         />
+                        {temBuraco && (
+                          <span
+                            aria-hidden
+                            className="absolute right-1.5 top-[7px] h-[7px] w-[7px] rounded-full"
+                            style={{ background: "#3fd2c8" }}
+                          />
+                        )}
                         <span className="flex h-full flex-col items-center justify-center gap-0.5">
                           <span className="ep-code text-[15px] font-semibold text-ink">
                             {season.number}
