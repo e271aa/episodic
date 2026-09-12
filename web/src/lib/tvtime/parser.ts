@@ -156,20 +156,46 @@ export function parseTrackingV2(csvText: string): TvTimeExport {
  * `type=watch` + `entity_type=movie`, com nome, data e estreia.
  */
 export function parseTrackingV1Movies(csvText: string): TvTimeMovieWatch[] {
-  const movies: TvTimeMovieWatch[] = [];
+  const vistos: TvTimeMovieWatch[] = [];
+  const paraVer: TvTimeMovieWatch[] = [];
   for (const row of parseCsv(csvText)) {
-    if (row.type !== "watch" || row.entity_type !== "movie") continue;
+    if (row.entity_type !== "movie") continue;
     if (!row.movie_name || !row.uuid) continue;
-    const when = row.watch_date || row.created_at || "";
-    movies.push({
-      key: row.uuid,
-      name: row.movie_name,
-      watchedAt: sqlDateToIso(when),
-      dateIsExact: Boolean(when),
-      releaseDate: row.release_date ? row.release_date.slice(0, 10) : null,
-    });
+
+    if (row.type === "watch") {
+      const when = row.watch_date || row.created_at || "";
+      vistos.push({
+        key: row.uuid,
+        name: row.movie_name,
+        watchedAt: sqlDateToIso(when),
+        dateIsExact: Boolean(when),
+        releaseDate: row.release_date ? row.release_date.slice(0, 10) : null,
+      });
+      continue;
+    }
+
+    /**
+     * `towatch` = marcado "para ver" no TV Time, e a app tem exatamente esse
+     * conceito para filmes desde a Fase L. Só se lia `type=watch`, e estes
+     * caíam no chão — medido no export do Ruben: **22 linhas, 21 de filmes
+     * que ele nunca viu**. Vinte e um filmes que ele escolheu a dizer "quero
+     * ver isto", perdidos na única importação que a app faz.
+     */
+    if (row.type === "towatch") {
+      paraVer.push({
+        key: row.uuid,
+        name: row.movie_name,
+        watchedAt: null,
+        dateIsExact: false,
+        releaseDate: row.release_date ? row.release_date.slice(0, 10) : null,
+      });
+    }
   }
-  return movies;
+
+  // Um filme que entretanto foi visto não volta para "para ver" — o registo
+  // `towatch` fica lá no export, mas já não é a verdade sobre ele.
+  const nomesVistos = new Set(vistos.map((m) => m.name));
+  return [...vistos, ...paraVer.filter((m) => !nomesVistos.has(m.name))];
 }
 
 /** Funde listas de filmes sem duplicar (a chave é o uuid do TV Time). */

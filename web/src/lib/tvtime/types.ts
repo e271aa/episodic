@@ -36,7 +36,8 @@ export interface TvTimeEpisodeWatch {
 export interface TvTimeMovieWatch {
   key: string;
   name: string;
-  watchedAt: string;
+  /** null = marcado "para ver" no TV Time, nunca visto */
+  watchedAt: string | null;
   dateIsExact: boolean;
   /** data de estreia (YYYY-MM-DD) — ajuda a casar com a TMDB sem ambiguidade */
   releaseDate?: string | null;

@@ -270,21 +270,46 @@ export async function importExport(data: TvTimeExport): Promise<void> {
       addedAt: show.createdAt,
     });
   }
+  /**
+   * Um episódio pode vir em várias linhas: o visto original e as revisões
+   * (`rewatch-episode`). Todas colapsam na mesma chave, e fica a **mais
+   * recente** — que é o que responde a "quando é que eu vi isto pela última
+   * vez", e é o que alimenta a ordenação por vistos recentemente e o corte
+   * de 30 dias da fila.
+   *
+   * Escolher explicitamente, e não deixar o último `put` ganhar: a ordem das
+   * linhas no CSV não é garantida, e antes disto o resultado dependia dela —
+   * uma revisão de 2023 listada antes do visto de 2021 dava o contrário de
+   * uma listada depois. O mesmo dado, duas respostas.
+   */
+  const porEpisodio = new Map<string, WatchedEpisode>();
   for (const ep of data.episodes) {
     // órfão → reatribui à série homónima; se não houver, mantém o UUID original
     const showUuid = showUuids.has(ep.seriesUuid)
       ? ep.seriesUuid
       : (followedByName.get(ep.seriesName) ?? ep.seriesUuid);
-    void tx.objectStore("watched").put({
-      id: episodeKey(showUuid, ep.season, ep.episode),
+    const id = episodeKey(showUuid, ep.season, ep.episode);
+    const anterior = porEpisodio.get(id);
+    if (anterior && anterior.watchedAt >= ep.watchedAt) {
+      // a que fica é mais recente; ainda assim, uma data exata vale mais do
+      // que a data de um registo em massa com o mesmo instante
+      if (!(anterior.watchedAt === ep.watchedAt && ep.dateIsExact && !anterior.dateIsExact)) continue;
+    }
+    porEpisodio.set(id, {
+      id,
       showUuid,
       season: ep.season,
       episode: ep.episode,
       watchedAt: ep.watchedAt,
       dateIsExact: ep.dateIsExact,
-      episodeTvdbId: ep.episodeTvdbId,
+      // O id do episódio no TheTVDB é a única chave estável entre sistemas
+      // (ver `WatchedEpisode`). No export real todas as linhas o trazem — as
+      // 3416 de visto e as 6 de revisão — mas se uma vencedora vier sem ele,
+      // fica o que já se sabia: perder uma chave estável é sempre pior.
+      episodeTvdbId: ep.episodeTvdbId ?? anterior?.episodeTvdbId ?? null,
     });
   }
+  for (const ep of porEpisodio.values()) void tx.objectStore("watched").put(ep);
   for (const movie of data.movies) {
     void tx.objectStore("movies").put({
       key: movie.key,
@@ -292,6 +317,9 @@ export async function importExport(data: TvTimeExport): Promise<void> {
       watchedAt: movie.watchedAt,
       dateIsExact: movie.dateIsExact,
       releaseDate: movie.releaseDate ?? null,
+      // um filme "para ver" não tem data de visto, e a Biblioteca ordena
+      // essa lista por entrada recente — sem isto ficavam todos empatados
+      addedAt: movie.watchedAt ?? new Date().toISOString(),
     });
   }
   const meta: ImportMeta = {

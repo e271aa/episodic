@@ -102,10 +102,19 @@ export default function ImportPage() {
   const followed = preview?.shows.filter((s) => s.followed).length ?? 0;
   const watchlist = preview?.shows.filter((s) => s.inWatchlist).length ?? 0;
   const exactDates = preview?.episodes.filter((e) => e.dateIsExact).length ?? 0;
+  const filmesVistos = preview?.movies.filter((m) => m.watchedAt).length ?? 0;
+  const filmesParaVer = (preview?.movies.length ?? 0) - filmesVistos;
   const unknownEntries = Object.entries(preview?.unknownKeys ?? {});
 
   return (
-    <main className="mx-auto max-w-xl px-4 py-10">
+    /* Reserva para o que flutua por cima do fundo do ecrã — a dock e a dica
+       de instalar a PWA. Esta página era a ÚNICA sem reserva nenhuma (só os
+       40px do `py-10`), e como o "Confirmar importação" é o último elemento,
+       ficava tapado: medido, a dica ocupa até 182px acima do fundo e o botão
+       não escapava nem rolando até ao fim. Numa página onde é a única ação, e
+       logo no primeiro contacto com a app. 7rem + a dock cobrem os 182px e
+       acompanham a área segura do aparelho. */
+    <main className="mx-auto max-w-xl px-4 pt-10 pb-[calc(var(--dock-h)+7rem)]">
       <h1 className="font-display text-2xl font-bold">Importar do TV Time</h1>
       <p className="mt-2 text-[15px] text-dim">
         Envia o ZIP do export GDPR (gdpr.tvtime.com) — ou os CSVs extraídos. Tudo é
@@ -165,7 +174,9 @@ export default function ImportPage() {
             <dt className="text-dim">— com data exata</dt>
             <dd className="ep-code">{exactDates}</dd>
             <dt className="text-dim">Filmes vistos</dt>
-            <dd className="ep-code">{preview.movies.length}</dd>
+            <dd className="ep-code" data-testid="summary-movies">{filmesVistos}</dd>
+            <dt className="text-dim">— para ver</dt>
+            <dd className="ep-code" data-testid="summary-movies-towatch">{filmesParaVer}</dd>
             <dt className="text-dim">Reações</dt>
             <dd className="ep-code">{preview.emotions.length}</dd>
           </dl>
