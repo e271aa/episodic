@@ -148,3 +148,41 @@ test("o 'A seguir' volta ao sítio depois de abrir uma série", async ({ page, t
   await expect(page).toHaveURL(/\/series$/);
   await expect.poll(() => page.evaluate(() => window.scrollY), { timeout: 5000 }).toBeGreaterThan(antes - 100);
 });
+
+test("sem rede, o 'Onde ver' diz que não conseguiu perguntar — não que não há", async ({
+  page,
+  tmdb,
+}) => {
+  // Medido com a rede cortada: o pedido falhado caía no mesmo `null` da
+  // resposta vazia, e a app afirmava "sem serviços em Portugal" quando na
+  // verdade nem tinha conseguido perguntar. É a mesma mentira que já se
+  // corrigira para o caso de não haver id — noutro sítio do mesmo ficheiro.
+  tmdb.filmes[777] = {
+    id: 777, title: "Filme Offline", release_date: "2020-01-01", overview: "",
+    poster_path: null, backdrop_path: null, runtime: 90, genres: [], tagline: "",
+  };
+  await semear(page, {
+    filmes: [{ key: "f-off", name: "Filme Offline", tmdbId: 777, watchedAt: "2024-01-01T00:00:00.000Z" }],
+  });
+  // corta só o "onde ver" — registada depois da fixture, ganha-lhe
+  await page.route(/watch\/providers/, (r) => r.abort("connectionfailed"));
+
+  await page.goto("/movies/f-off");
+  await expect(page.getByText("Não deu para verificar onde ver")).toBeVisible();
+  await expect(page.getByText("Sem serviços de streaming em Portugal")).toHaveCount(0);
+});
+
+test("sem rede, a sinopse do filme admite a falha em vez de carregar para sempre", async ({
+  page,
+}) => {
+  // Antes ficava "A carregar sinopse…" indefinidamente: o `catch` engolia a
+  // falha e a página prometia uma coisa que já não vinha.
+  await semear(page, {
+    filmes: [{ key: "f-off", name: "Filme Offline", tmdbId: 778, watchedAt: "2024-01-01T00:00:00.000Z" }],
+  });
+  await page.route(/\/api\/tmdb\/movie\/778$/, (r) => r.abort("connectionfailed"));
+
+  await page.goto("/movies/f-off");
+  await expect(page.getByText("Não deu para trazer a sinopse")).toBeVisible();
+  await expect(page.getByText("A carregar sinopse…")).toHaveCount(0);
+});

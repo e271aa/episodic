@@ -37,6 +37,15 @@ export default function MoviePage() {
   const [movie, setMovie] = useState<StoredMovie | null | undefined>(undefined);
   const [details, setDetails] = useState<TmdbMovieDetails | null>(null);
   const [aProcurar, setAProcurar] = useState(false);
+  /**
+   * O detalhe não veio e já não vem.
+   *
+   * O `catch` em baixo engolia a falha em silêncio e a página ficava a dizer
+   * "A carregar sinopse…" **para sempre** — medido com a rede cortada. Um
+   * estado de carregamento sem estado terminal de falha é uma promessa que
+   * nunca se cumpre.
+   */
+  const [detalheFalhou, setDetalheFalhou] = useState(false);
 
   useEffect(() => {
     void (async () => {
@@ -72,7 +81,9 @@ export default function MoviePage() {
             setMovie((m) => (m ? { ...m, posterPath: full.poster_path } : m));
           }
         } catch {
-          // sem ligação ou filme removido do TMDB — fica só com os dados locais
+          // sem ligação ou filme removido do TMDB — fica só com os dados locais,
+          // mas a página tem de o DIZER em vez de fingir que ainda está a vir
+          setDetalheFalhou(true);
         }
       }
     })();
@@ -218,6 +229,10 @@ export default function MoviePage() {
             <p className="text-base leading-relaxed text-dim">{details.overview}</p>
           ) : aProcurar ? (
             <p className="text-[15px] text-dim">A procurar na TMDB…</p>
+          ) : detalheFalhou ? (
+            <p className="text-[15px] text-dim">
+              Não deu para trazer a sinopse — sem ligação à internet.
+            </p>
           ) : movie.tmdbId ? (
             <p className="text-[15px] text-dim">A carregar sinopse…</p>
           ) : (

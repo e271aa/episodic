@@ -66,17 +66,30 @@ export default function StreamingBadges({
   variant?: "inline" | "action";
 }) {
   const [data, setData] = useState<StreamingAvailability | null | undefined>(undefined);
+  /**
+   * Não conseguir perguntar não é o mesmo que não haver.
+   *
+   * Sem isto, o pedido falhado caía no mesmo `null` da resposta vazia e a app
+   * afirmava "sem serviços em Portugal" com a rede em baixo — a mesma mentira
+   * que já se tinha corrigido para o caso de não haver id, no mesmo ficheiro.
+   * Medido com a rede cortada.
+   */
+  const [falhou, setFalhou] = useState(false);
   const [aberto, setAberto] = useState(false);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => {
+      setFalhou(false);
       if (!tmdbId) {
         setData(null);
         return;
       }
       void getStreamingAvailability(kind, tmdbId)
         .then(setData)
-        .catch(() => setData(null));
+        .catch(() => {
+          setFalhou(true);
+          setData(null);
+        });
     });
     return () => cancelAnimationFrame(raf);
   }, [kind, tmdbId]);
@@ -97,6 +110,10 @@ export default function StreamingBadges({
               <p className="text-[15px] text-dim">A verificar…</p>
             ) : data && data.streaming.length > 0 ? (
               <Badges data={data} />
+            ) : falhou ? (
+              <p className="text-[15px] text-dim">
+                Não deu para verificar — sem ligação à internet.
+              </p>
             ) : !tmdbId ? (
               // Não é a mesma coisa que "não há", e dizer "não há" era mentira:
               // 69 das 74 séries da biblioteca chegaram aqui sem id do TMDB —
@@ -125,9 +142,11 @@ export default function StreamingBadges({
   if (!data || data.streaming.length === 0) {
     return (
       <p className="mt-4 text-[15px] text-dim">
-        {tmdbId
-          ? "Sem serviços de streaming em Portugal."
-          : "Ainda não identifiquei este filme no catálogo."}
+        {falhou
+          ? "Não deu para verificar onde ver — sem ligação à internet."
+          : tmdbId
+            ? "Sem serviços de streaming em Portugal."
+            : "Ainda não identifiquei este filme no catálogo."}
       </p>
     );
   }
