@@ -65,6 +65,16 @@ test("quem está a meio de uma série NÃO é acusado de se ter esquecido", asyn
   // Confundir isto com esquecimento seria pior do que o problema original.
   await serieCom(page, tmdb, [13, 51], [{ temporada: 2, de: 26, ate: 51 }]);
 
+  // Âncora primeiro: só depois de as temporadas do fornecedor chegarem é que
+  // a ausência do aviso quer dizer alguma coisa. Sem isto, o `toHaveCount(0)`
+  // passava de imediato — e passava na mesma com a inferência partida, que é
+  // exatamente o que este teste existe para apanhar. Apanhado ao vê-lo
+  // "passar" com o bug reposto.
+  await expect(page.getByTestId("season-2")).toHaveAttribute(
+    "aria-label",
+    /Temporada 2, 25 de 51 vistos/,
+  );
+
   await expect(page.getByTestId("aviso-buracos")).toHaveCount(0);
   await expect(page.getByText("26 por ver")).toBeVisible();
   await expect(page.getByText(/por marcar/)).toHaveCount(0);
