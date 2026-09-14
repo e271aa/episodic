@@ -15,6 +15,7 @@ import {
 import { enrichShow, getEpisodesOfSeason, getSeasons, type MetaEpisode } from "@/lib/metadata";
 import { findNextUnwatched, formatEpCode } from "@/lib/watchnext";
 import { contarEpisodios, encontrarBuracos } from "@/lib/buracos";
+import { agruparEpisodios } from "@/lib/episodeRuns";
 import { pushUndo } from "@/lib/undo";
 import ProgressRing from "@/components/ProgressRing";
 import AddToListButton from "@/components/AddToListButton";
@@ -22,7 +23,69 @@ import StreamingBadges from "@/components/StreamingBadges";
 import Poster from "@/components/Poster";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import { Bone, CardsBone, DetailHeaderBone } from "@/components/Skeleton";
-import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
+import { ArrowLeftIcon, CheckIcon, ChevronDownIcon } from "@/components/icons";
+
+/**
+ * Uma linha de episódio, repetida em dois sítios: sozinha na lista, e dentro
+ * de uma corrida aberta. Visto e por ver distinguem-se sem depender só do
+ * círculo de 26px — a linha toda de um episódio visto fica mais apagada, a
+ * de um por ver fica a negrito. Antes as duas liam-se igual a um metro de
+ * distância, numa lista de 51 linhas quase idênticas.
+ */
+function EpisodeRow({
+  season,
+  epNumber,
+  metaEp,
+  isSeen,
+  isPulsing,
+  accent,
+  onToggle,
+}: {
+  season: number;
+  epNumber: number;
+  metaEp: MetaEpisode | undefined;
+  isSeen: boolean;
+  isPulsing: boolean;
+  accent: string;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      data-testid={`ep-${season}-${epNumber}`}
+      className={`flex h-[52px] w-full cursor-pointer items-center gap-3 rounded-lg px-2 text-left transition-colors hover:bg-raised ${
+        isSeen ? "opacity-60" : ""
+      }`}
+    >
+      <span className="ep-code w-[34px] shrink-0 text-[13px] text-faint">
+        E{String(epNumber).padStart(2, "0")}
+      </span>
+      <span
+        aria-hidden
+        className={`relative flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors ${
+          isPulsing ? "check-pop check-ring" : ""
+        }`}
+        style={
+          isSeen
+            ? { borderColor: accent, background: accent, color: "var(--color-tube)" }
+            : { borderColor: "var(--color-line)", color: "transparent" }
+        }
+      >
+        ✓
+      </span>
+      <span className="min-w-0 flex-1">
+        <span
+          className={`block truncate text-base ${isSeen ? "text-dim" : "font-medium text-ink"}`}
+        >
+          {metaEp?.name ?? `Episódio ${epNumber}`}
+        </span>
+        {metaEp?.airDate && (
+          <span className="ep-code block text-xs text-faint">{metaEp.airDate}</span>
+        )}
+      </span>
+    </button>
+  );
+}
 
 interface SeasonView {
   /** posição na lista (1, 2, 3…) — a numeração que o TV Time assume e que
@@ -77,6 +140,11 @@ export default function ShowPage() {
   const [episodesBySeason, setEpisodesBySeason] = useState<Map<number, MetaEpisode[]>>(
     new Map(),
   );
+  // Corridas de episódios vistos que o utilizador abriu à mão — chave
+  // "temporada-início-fim". Fecha-se sozinha ao trocar de temporada por
+  // omissão; não há razão para lembrar uma corrida aberta de uma série
+  // diferente da que se está a ver agora.
+  const [corridasAbertas, setCorridasAbertas] = useState<Set<string>>(new Set());
   const [providerMissing, setProviderMissing] = useState(false);
   const [nextUp, setNextUp] = useState<MetaEpisode | null | undefined>(undefined);
   const [tab, setTab] = useState<Tab>("episodios");
@@ -203,10 +271,20 @@ export default function ShowPage() {
   const toggleSeason = useCallback(
     async (season: SeasonView) => {
       setOpenSeason((cur) => (cur === season.number ? null : season.number));
+      setCorridasAbertas(new Set());
       await loadSeasonEpisodes(season);
     },
     [loadSeasonEpisodes],
   );
+
+  const toggleCorrida = useCallback((chave: string) => {
+    setCorridasAbertas((cur) => {
+      const seguinte = new Set(cur);
+      if (seguinte.has(chave)) seguinte.delete(chave);
+      else seguinte.add(chave);
+      return seguinte;
+    });
+  }, []);
 
   const toggleEpisode = useCallback(
     async (season: number, episode: number) => {
@@ -252,6 +330,23 @@ export default function ShowPage() {
     () => encontrarBuracos(seasons, (t, e) => watched.has(episodeKey(uuid, t, e))),
     [seasons, watched, uuid],
   );
+
+  const openSeasonView = useMemo(
+    () => seasons.find((s) => s.number === openSeason) ?? null,
+    [seasons, openSeason],
+  );
+
+  /**
+   * Colapsa as corridas de episódios vistos da temporada aberta. Ver
+   * `lib/episodeRuns.ts` — é o que faz o Naruto T2 passar de 51 linhas
+   * (3609px, 5,5 ecrãs) para uma que cabe num ecrã.
+   */
+  const blocosEpisodios = useMemo(() => {
+    if (!openSeasonView) return [];
+    return agruparEpisodios(openSeasonView.episodeCount, (ep) =>
+      watched.has(episodeKey(uuid, openSeasonView.number, ep)),
+    );
+  }, [openSeasonView, watched, uuid]);
 
   /**
    * Marca de uma vez os episódios que ficaram por marcar **atrás** do ponto
@@ -674,70 +769,114 @@ export default function ShowPage() {
                 </div>
 
                 {(() => {
-                  const season = seasons.find((s) => s.number === openSeason);
+                  const season = openSeasonView;
                   if (!season) return null;
                   const seen = seasonWatchedCount.get(season.number) ?? 0;
                   const complete = season.episodeCount > 0 && seen >= season.episodeCount;
                   const episodes = episodesBySeason.get(season.number);
                   return (
                     <div className="mt-4">
-                      <div className="flex items-center justify-between gap-3">
-                        <p className="font-display text-[15px] font-semibold">
-                          {season.name}
-                        </p>
-                        {!complete && season.episodeCount > 0 && (
-                          <button
-                            onClick={() => void markSeasonAll(season)}
-                            className="cursor-pointer text-xs font-semibold text-ink hover:underline"
-                          >
-                            Marcar temporada como vista
-                          </button>
-                        )}
+                      {/* Fixo ao rolar: à 3ª linha já se tinha perdido de
+                          vista em que temporada se estava, numa lista que
+                          agora pode ter dezenas de linhas por baixo. O
+                          respiro do topo repete o da barra do estado do
+                          telemóvel — aqui é que fica flush com o topo do
+                          ecrã, o herói é que normalmente o cobre. */}
+                      <div className="sticky top-0 z-10 -mx-4 bg-tube px-4 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
+                        <div className="flex items-center justify-between gap-3">
+                          <p className="font-display text-[15px] font-semibold">
+                            {season.name}
+                          </p>
+                          {!complete && season.episodeCount > 0 && (
+                            <button
+                              onClick={() => void markSeasonAll(season)}
+                              className="cursor-pointer text-xs font-semibold text-ink hover:underline"
+                            >
+                              Marcar temporada como vista
+                            </button>
+                          )}
+                        </div>
                       </div>
-                      <div className="mt-2 flex flex-col">
-                        {Array.from({ length: season.episodeCount }, (_, i) => i + 1).map(
-                          (epNumber) => {
-                            const metaEp = episodes?.find((e) => e.episode === epNumber);
-                            const key = episodeKey(uuid, season.number, epNumber);
-                            const isSeen = watched.has(key);
-                            const isPulsing = pulseEp === key;
+                      <div className="flex flex-col">
+                        {blocosEpisodios.map((bloco) => {
+                          if (bloco.tipo === "unico") {
+                            const metaEp = episodes?.find((e) => e.episode === bloco.episodio);
+                            const key = episodeKey(uuid, season.number, bloco.episodio);
                             return (
-                              <button
-                                key={epNumber}
-                                onClick={() => void toggleEpisode(season.number, epNumber)}
-                                className="flex h-[52px] w-full cursor-pointer items-center gap-3 rounded-lg px-2 text-left transition-colors hover:bg-raised"
-                                data-testid={`ep-${season.number}-${epNumber}`}
-                              >
-                                <span className="ep-code w-[34px] shrink-0 text-[13px] text-faint">
-                                  E{String(epNumber).padStart(2, "0")}
-                                </span>
-                                <span
-                                  aria-hidden
-                                  className={`relative flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors ${
-                                    isPulsing ? "check-pop check-ring" : ""
-                                  }`}
-                                  style={
-                                    isSeen
-                                      ? { borderColor: accent, background: accent, color: "var(--color-tube)" }
-                                      : { borderColor: "var(--color-line)", color: "transparent" }
-                                  }
-                                >
-                                  ✓
-                                </span>
-                                <span className="min-w-0 flex-1">
-                                  <span className="block truncate text-base">
-                                    {metaEp?.name ?? `Episódio ${epNumber}`}
-                                  </span>
-                                  {metaEp?.airDate && (
-                                    <span className="ep-code block text-xs text-faint">
-                                      {metaEp.airDate}
-                                    </span>
-                                  )}
-                                </span>
-                              </button>
+                              <EpisodeRow
+                                key={bloco.episodio}
+                                season={season.number}
+                                epNumber={bloco.episodio}
+                                metaEp={metaEp}
+                                isSeen={watched.has(key)}
+                                isPulsing={pulseEp === key}
+                                accent={accent}
+                                onToggle={() => void toggleEpisode(season.number, bloco.episodio)}
+                              />
                             );
-                          },
-                        )}
+                          }
+
+                          const chave = `${season.number}-${bloco.inicio}-${bloco.fim}`;
+                          const contagem = bloco.fim - bloco.inicio + 1;
+                          const codigo = `E${String(bloco.inicio).padStart(2, "0")}–E${String(bloco.fim).padStart(2, "0")}`;
+
+                          if (corridasAbertas.has(chave)) {
+                            return (
+                              <div key={chave}>
+                                <button
+                                  onClick={() => toggleCorrida(chave)}
+                                  className="flex h-9 w-full cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-xs font-semibold text-faint hover:bg-raised"
+                                >
+                                  <ChevronDownIcon className="h-3.5 w-3.5 rotate-180" />
+                                  Fechar {codigo}
+                                </button>
+                                {Array.from(
+                                  { length: contagem },
+                                  (_, i) => bloco.inicio + i,
+                                ).map((epNumber) => {
+                                  const metaEp = episodes?.find((e) => e.episode === epNumber);
+                                  const key = episodeKey(uuid, season.number, epNumber);
+                                  return (
+                                    <EpisodeRow
+                                      key={epNumber}
+                                      season={season.number}
+                                      epNumber={epNumber}
+                                      metaEp={metaEp}
+                                      isSeen={watched.has(key)}
+                                      isPulsing={pulseEp === key}
+                                      accent={accent}
+                                      onToggle={() => void toggleEpisode(season.number, epNumber)}
+                                    />
+                                  );
+                                })}
+                              </div>
+                            );
+                          }
+
+                          return (
+                            <button
+                              key={chave}
+                              onClick={() => toggleCorrida(chave)}
+                              data-testid={`corrida-${chave}`}
+                              className="flex h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-2 text-left text-dim transition-colors hover:bg-raised"
+                            >
+                              <span className="ep-code w-[70px] shrink-0 text-[12px] text-faint">
+                                {codigo}
+                              </span>
+                              <span
+                                aria-hidden
+                                className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+                                style={{ background: accent, color: "var(--color-tube)" }}
+                              >
+                                ✓
+                              </span>
+                              <span className="flex-1 text-[14px]">
+                                {contagem} episódios vistos
+                              </span>
+                              <ChevronDownIcon className="h-4 w-4 shrink-0 text-faint" />
+                            </button>
+                          );
+                        })}
                       </div>
                     </div>
                   );
