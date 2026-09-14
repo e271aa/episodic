@@ -1,7 +1,14 @@
 "use client";
 
 type Segment = "series" | "filmes";
-type SeriesFilter = "tudo" | "a-ver" | "completas" | "para-ver" | "arquivadas" | "parei";
+type SeriesFilter =
+  | "tudo"
+  | "a-ver"
+  | "por-comecar"
+  | "completas"
+  | "para-ver"
+  | "arquivadas"
+  | "parei";
 
 /**
  * Vazio com saída. Um ecrã que só diz "não há nada" deixa o utilizador

@@ -31,10 +31,17 @@ import LibraryEmptyState from "@/components/LibraryEmptyState";
 import LibraryControls from "@/components/LibraryControls";
 import SheetPanel from "@/components/SheetPanel";
 import { PosterGridBone, TitleBone } from "@/components/Skeleton";
-import { SearchIcon } from "@/components/icons";
+import { ChevronDownIcon, SearchIcon } from "@/components/icons";
 
 type Segment = "series" | "filmes";
-type SeriesFilter = "tudo" | "a-ver" | "completas" | "para-ver" | "arquivadas" | "parei";
+type SeriesFilter =
+  | "tudo"
+  | "a-ver"
+  | "por-comecar"
+  | "completas"
+  | "para-ver"
+  | "arquivadas"
+  | "parei";
 type MovieFilter = "vistos" | "para-ver" | "todos";
 /** Filmes não têm "estado" como as séries — o eixo útil é quando saíram */
 type MovieSort = "vistos" | "recentes" | "antigos" | "az";
@@ -80,15 +87,34 @@ const CLASSE_GRELHA: Record<Densidade, string> = {
 
 /** A ordem por que as secções de estado aparecem, e a cor de cada uma. As
  *  cores são as mesmas da barra de progresso do cartaz: verde = a andar,
- *  roxo = acabou. Cor com significado, não decoração. */
-const ESTADOS = ["A ver", "Completas", "Para ver", "Já não sigo", "Arquivadas"];
+ *  roxo = acabou. Cor com significado, não decoração.
+ *
+ *  A ordem é a da atenção que cada uma pede, e mudou por medição: com
+ *  "Completas" em segundo lugar, 9377px dos 12311px da Biblioteca (76%)
+ *  eram séries já acabadas, e tudo o que vinha depois — o que ainda não
+ *  começou, o que se deixou a meio — ficava atrás de catorze ecrãs de
+ *  arquivo. Primeiro o que se está a ver, depois o que espera, e só então
+ *  o que já acabou. */
+const ESTADOS = [
+  "A ver",
+  "Por começar",
+  "Para ver",
+  "Completas",
+  "Já não sigo",
+  "Arquivadas",
+];
 const COR_ESTADO: Record<string, string> = {
   "A ver": "#37c837",
+  "Por começar": "#e6c832",
   Completas: "#d24bd2",
   "Para ver": "#3fd2c8",
   "Já não sigo": "#8a8880",
   Arquivadas: "#8a8880",
 };
+
+/** A partir de quantas séries é que a secção das completas se dobra. Abaixo
+ *  disto, o botão de abrir custa mais do que a lista que esconde. */
+const DOBRAR_A_PARTIR_DE = 12;
 
 // Sobe quando a forma de escolher o filme no TMDB muda: obriga a rever os
 // filmes já enriquecidos uma vez, em vez de deixar os erros antigos fossilizados.
@@ -115,7 +141,10 @@ function LibraryContent() {
   const segment: Segment = params.get("tipo") === "filmes" ? "filmes" : "series";
   const rawFiltro = params.get("filtro") as SeriesFilter | null;
   const filter: SeriesFilter =
-    rawFiltro && ["a-ver", "completas", "para-ver", "arquivadas", "parei"].includes(rawFiltro)
+    rawFiltro &&
+    ["a-ver", "por-comecar", "completas", "para-ver", "arquivadas", "parei"].includes(
+      rawFiltro,
+    )
       ? rawFiltro
       : "tudo";
   const movieFilter: MovieFilter =
@@ -163,6 +192,18 @@ function LibraryContent() {
     DENSIDADES,
   );
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
+  /**
+   * As completas dobradas. É `usePref` e não estado local pela mesma razão
+   * que a densidade: quem as fechou não as quer abertas outra vez ao voltar
+   * de uma série. Reordenar não chegava — 57 séries acabadas são catorze
+   * ecrãs de rolagem entre o que interessa e o resto, estejam em que
+   * posição estiverem.
+   */
+  const [completas, setCompletas] = usePref<"dobradas" | "abertas">(
+    "biblioteca-completas",
+    "dobradas",
+    ["dobradas", "abertas"],
+  );
   // Pesquisa remota é secundária: só corre quando o utilizador a pede
   const [remote, setRemote] = useState<MetaSearchResult[] | null>(null);
   const [remoteMovies, setRemoteMovies] = useState<MetaMovieResult[] | null>(null);
@@ -217,7 +258,15 @@ function LibraryContent() {
       s.totalEpisodes != null && s.watchedCount >= s.totalEpisodes;
     let list = shows;
     if (filter === "a-ver") {
-      list = list.filter((s) => s.followed && !s.archived && !complete(s));
+      // Sem as que ainda não começaram: têm balde próprio, e a conta da
+      // pastilha tem de dizer o mesmo que a banda da secção.
+      list = list.filter(
+        (s) => s.followed && !s.archived && !complete(s) && s.watchedCount > 0,
+      );
+    } else if (filter === "por-comecar") {
+      list = list.filter(
+        (s) => s.followed && !s.archived && !complete(s) && s.watchedCount === 0,
+      );
     } else if (filter === "completas") {
       list = list.filter((s) => complete(s));
     } else if (filter === "para-ver") {
@@ -291,7 +340,12 @@ function LibraryContent() {
       s.totalEpisodes != null && s.watchedCount >= s.totalEpisodes;
     return {
       tudo: shows?.length ?? 0,
-      "a-ver": shows?.filter((s) => s.followed && !s.archived && !complete(s)).length ?? 0,
+      "a-ver":
+        shows?.filter((s) => s.followed && !s.archived && !complete(s) && s.watchedCount > 0)
+          .length ?? 0,
+      "por-comecar":
+        shows?.filter((s) => s.followed && !s.archived && !complete(s) && s.watchedCount === 0)
+          .length ?? 0,
       completas: shows?.filter(complete).length ?? 0,
       "para-ver": shows?.filter((s) => s.inWatchlist && !s.followed).length ?? 0,
       arquivadas: shows?.filter((s) => s.archived).length ?? 0,
@@ -358,13 +412,18 @@ function LibraryContent() {
   // estreia dá décadas. A pesquisar não se agrupa — são poucos resultados e
   // as bandas só atrapalhavam.
   /** O estado da série, para as secções da grelha. É o agrupamento por
-   *  omissão: sem filtro aplicado, "o que estou a ver" e "o que já acabei"
-   *  são as duas perguntas que a Biblioteca responde. */
+   *  omissão: sem filtro aplicado, "o que estou a ver", "o que ainda não
+   *  comecei" e "o que já acabei" são as perguntas que a Biblioteca responde.
+   *
+   *  "Por começar" saiu de dentro do "A ver": uma série seguida com zero
+   *  episódios marcados não está a ser vista, está à espera — e ficava
+   *  escondida no meio das que estão mesmo a andar (medido: 17 no balde,
+   *  5 delas sem nada visto). */
   const estadoLabel = (s: ShowWithProgress): string => {
     if (s.archived) return "Arquivadas";
     if (!s.followed) return s.inWatchlist ? "Para ver" : "Já não sigo";
     if (s.totalEpisodes && s.watchedCount >= s.totalEpisodes) return "Completas";
-    return "A ver";
+    return s.watchedCount === 0 ? "Por começar" : "A ver";
   };
 
   const showGroups = useMemo(
@@ -400,6 +459,7 @@ function LibraryContent() {
   const FILTERS: { id: SeriesFilter; label: string }[] = [
     { id: "tudo", label: "Tudo" },
     { id: "a-ver", label: "A ver" },
+    { id: "por-comecar", label: "Por começar" },
     { id: "completas", label: "Completas" },
     { id: "para-ver", label: "Para ver" },
     { id: "arquivadas", label: "Arquivadas" },
@@ -421,20 +481,48 @@ function LibraryContent() {
         segment === "series" ? (
           showGroups ? (
             <div data-testid="library-grid">
-              {showGroups.map((g) => (
-                <section key={g.label}>
-                  <StickySectionHeader
-                    label={g.label}
-                    count={g.items.length}
-                    color={COR_ESTADO[g.label]}
-                  />
-                  <div className={CLASSE_GRELHA[densidade]}>
-                    {g.items.map((s, i) => (
-                      <ShowPoster key={s.uuid} show={s} index={i} densidade={densidade} />
-                    ))}
-                  </div>
-                </section>
-              ))}
+              {showGroups.map((g) => {
+                const dobravel =
+                  g.label === "Completas" && g.items.length >= DOBRAR_A_PARTIR_DE;
+                const dobrada = dobravel && completas === "dobradas";
+                return (
+                  <section key={g.label}>
+                    <StickySectionHeader
+                      label={g.label}
+                      count={g.items.length}
+                      color={COR_ESTADO[g.label]}
+                    />
+                    {dobravel && (
+                      <button
+                        onClick={() =>
+                          setCompletas(dobrada ? "abertas" : "dobradas")
+                        }
+                        aria-expanded={!dobrada}
+                        data-testid="dobrar-completas"
+                        className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-1 text-left text-[15px] text-dim transition-colors hover:bg-raised"
+                      >
+                        <span className="flex-1">
+                          {dobrada
+                            ? `Ver as ${g.items.length} que já acabaste`
+                            : "Esconder as que já acabaste"}
+                        </span>
+                        <ChevronDownIcon
+                          className={`h-4 w-4 shrink-0 text-faint transition-transform ${
+                            dobrada ? "" : "rotate-180"
+                          }`}
+                        />
+                      </button>
+                    )}
+                    {!dobrada && (
+                      <div className={CLASSE_GRELHA[densidade]}>
+                        {g.items.map((s, i) => (
+                          <ShowPoster key={s.uuid} show={s} index={i} densidade={densidade} />
+                        ))}
+                      </div>
+                    )}
+                  </section>
+                );
+              })}
             </div>
           ) : (
             <div className={`mt-3 ${CLASSE_GRELHA[densidade]}`} data-testid="library-grid">
