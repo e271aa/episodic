@@ -156,9 +156,26 @@ export default function ShowPage() {
   const sweepTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const [pulseNext, setPulseNext] = useState(false);
   const pulseTimeout = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  /**
+   * A pastilha da temporada aberta. Com seis ou mais, a faixa rola de lado e
+   * abrir a última deixava-a fora do ecrã: a lista de episódios aparecia por
+   * baixo sem se ver de qual temporada era.
+   */
+  const chipAberto = useRef<HTMLButtonElement | null>(null);
 
   useEffect(() => () => clearTimeout(pulseTimeout.current), []);
   useEffect(() => () => clearTimeout(sweepTimeout.current), []);
+
+  // Só de lado: `block: "nearest"` para não puxar a página verticalmente
+  // por baixo dos pés de quem acabou de tocar.
+  useEffect(() => {
+    if (openSeason === null) return;
+    chipAberto.current?.scrollIntoView({
+      behavior: "smooth",
+      block: "nearest",
+      inline: "center",
+    });
+  }, [openSeason]);
 
   // Recarrega o mapa de vistos e recalcula qual o próximo episódio por ver.
   const syncWatched = useCallback(
@@ -536,7 +553,11 @@ export default function ShowPage() {
           para fora e a página inteira rolava de lado. Medido: documento a
           406px num ecrã de 390. Os blocos a seguir trazem o seu próprio
           `px-4`; este é de bordo a bordo por natureza. */}
-      <div className="relative h-[420px] overflow-hidden bg-panel">
+      {/* A altura era 420px fixos, e num ecrã de 664px isso é 63% de arte
+          antes de uma única informação — medido. `min(52vh, 420px)` mantém
+          os 420 nos telemóveis grandes e encolhe nos pequenos, que é onde
+          o problema existia. */}
+      <div className="relative h-[min(52vh,420px)] overflow-hidden bg-panel">
         {backdropPath ? (
           <Poster
             path={backdropPath}
@@ -552,9 +573,19 @@ export default function ShowPage() {
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-tube via-tube/75 via-45% to-transparent" />
         <div className="pointer-events-none absolute inset-x-0 top-0 h-28 bg-gradient-to-b from-tube/70 to-transparent" />
-        {/* barra de estado — a mesma cor da barra de progresso, não a SMPTE:
-            aqui diz "como está esta série", não "isto é o Episodic" */}
-        <div className="absolute inset-x-0 top-0 h-[3px]" style={{ background: accent }} />
+        {/* Barra de estado e de progresso, na fronteira entre a arte e o
+            conteúdo. Estava no topo, encostada ao entalhe e por cima da
+            parte mais clara do backdrop, onde não se via; e dizia só "como
+            está esta série" (a cor), nunca "onde vou nela". Agora a cor
+            continua a dizer o estado e o **preenchimento** diz o progresso:
+            198/220 lia-se em texto mono de 13px e mais nada. */}
+        <div className="absolute inset-x-0 bottom-0 h-[3px] bg-line">
+          <div
+            className="h-full transition-[width] duration-[320ms] ease-out"
+            style={{ width: `${percent ?? 0}%`, background: accent }}
+            data-testid="heroi-progresso"
+          />
+        </div>
 
         <BotaoVoltar
           label="Voltar às séries"
@@ -646,14 +677,24 @@ export default function ShowPage() {
         {/* Ação principal — a decisão nº 1 na página de série. Sem episódio
             por marcar não há ação nenhuma a propor: o cabeçalho já disse "Em
             dia" a par do título, repetir num cartão por baixo era a mesma
-            frase duas vezes na mesma página. */}
+            frase duas vezes na mesma página.
+
+            Com buracos por marcar deixa de ser a principal: eram dois blocos
+            brancos iguais empilhados, os dois a pedir o toque com o mesmo
+            peso, e a página tem uma decisão nº 1 de cada vez. Quem tem 22
+            esquecidos atrás arruma-os primeiro — foi essa a ordem decidida
+            na Fase 1, e o desenho passa a dizer o mesmo que a ordem. */}
         {nextUp === undefined ? (
           <Bone className="mt-4 h-14 w-full rounded-2xl" />
         ) : nextUp ? (
           <button
             onClick={() => void markNext()}
             data-testid="mark-next"
-            className="mt-4 flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-left text-tube transition hover:brightness-110 active:scale-[0.99]"
+            className={`mt-4 flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left transition active:scale-[0.99] ${
+              buracos.total > 0
+                ? "border border-line text-ink hover:border-ink/40 hover:bg-raised"
+                : "bg-ink text-tube hover:brightness-110"
+            }`}
           >
             <CheckIcon className={`h-6 w-6 shrink-0 ${pulseNext ? "check-pop" : ""}`} />
             <span className="min-w-0 flex-1">
@@ -673,11 +714,26 @@ export default function ShowPage() {
               ["sobre", "Sobre"],
               ["estatisticas", "Estatísticas"],
             ] as const
-          ).map(([id, label]) => (
+          ).map(([id, label], i, todos) => (
             <button
               key={id}
               role="tab"
+              id={`tab-${id}`}
               aria-selected={tab === id}
+              aria-controls={`painel-${id}`}
+              // Um `role="tab"` sem isto é meio padrão: o leitor de ecrã
+              // anuncia "separador" e depois o teclado percorre-os um a um
+              // como se fossem botões soltos. Setas andam entre eles, e só
+              // o ativo é que entra na ordem do Tab (WAI-ARIA).
+              tabIndex={tab === id ? 0 : -1}
+              onKeyDown={(e) => {
+                const delta = e.key === "ArrowRight" ? 1 : e.key === "ArrowLeft" ? -1 : 0;
+                if (!delta) return;
+                e.preventDefault();
+                const proximo = todos[(i + delta + todos.length) % todos.length][0];
+                setTab(proximo);
+                document.getElementById(`tab-${proximo}`)?.focus();
+              }}
               onClick={() => setTab(id)}
               data-testid={`tab-${id}`}
               className={`-mb-px flex min-h-11 cursor-pointer items-center border-b-2 px-3 text-[15px] transition-colors ${
@@ -692,7 +748,7 @@ export default function ShowPage() {
         </div>
 
         {tab === "episodios" && (
-          <section className="mt-4">
+          <section className="mt-4" id="painel-episodios" role="tabpanel" aria-labelledby="tab-episodios">
             {providerMissing && (
               <p className="mb-3 rounded-lg border border-line bg-raised p-3 text-xs text-dim">
                 Não foi possível obter a lista completa de episódios (série não mapeada
@@ -713,7 +769,7 @@ export default function ShowPage() {
                 <div
                   className={
                     seasons.length > 5
-                      ? "-mx-4 flex gap-2 overflow-x-auto px-4 pb-1"
+                      ? "-mx-4 flex snap-x snap-mandatory gap-2 overflow-x-auto px-4 pb-1"
                       : "flex gap-2"
                   }
                 >
@@ -735,7 +791,10 @@ export default function ShowPage() {
                           `Temporada ${season.number}, ${seen} de ${season.episodeCount} vistos` +
                           (temBuraco ? ", com episódios por marcar mais atrás" : "")
                         }
-                        className={`relative h-[72px] shrink-0 cursor-pointer overflow-hidden rounded-xl border transition-colors ${
+                        ref={(el) => {
+                          if (selected) chipAberto.current = el;
+                        }}
+                        className={`relative h-[72px] shrink-0 cursor-pointer snap-start overflow-hidden rounded-xl border transition-colors ${
                           seasons.length > 5 ? "w-16" : "flex-1"
                         } ${
                           selected
@@ -743,11 +802,6 @@ export default function ShowPage() {
                             : "border-line bg-panel hover:border-ink/25"
                         } ${sweepSeason === season.number ? "season-sweep" : ""}`}
                       >
-                        <span
-                          aria-hidden
-                          className="absolute inset-x-0 top-0 h-[3px]"
-                          style={{ background: cor }}
-                        />
                         {temBuraco && (
                           <span
                             aria-hidden
@@ -762,6 +816,34 @@ export default function ShowPage() {
                           <span className="ep-code text-[11px] text-faint">
                             {seen}/{season.episodeCount}
                           </span>
+                        </span>
+                        {/* O quanto da temporada já foi visto, em largura.
+                            `29/51` e `50/50` desenhavam-se iguais — o mesmo
+                            retângulo, a mesma pastilha — e a diferença ficava
+                            num texto de 11px. Com o preenchimento, a faixa
+                            toda passa a ler-se de relance como a forma do
+                            percurso pela série.
+
+                            Uma barra só, em baixo: havia outra igual em cima
+                            a dizer o estado pela cor, e numa temporada
+                            completa as duas ficavam idênticas — o chip com
+                            uma moldura verde em cima e em baixo, que se lê
+                            como caixa e não como informação. A cor aqui diz
+                            o estado, a largura diz o progresso. */}
+                        <span
+                          aria-hidden
+                          className="absolute inset-x-0 bottom-0 h-[3px] bg-line"
+                        >
+                          <span
+                            className="block h-full transition-[width] duration-[320ms] ease-out"
+                            style={{
+                              width:
+                                season.episodeCount > 0
+                                  ? `${Math.min(100, (seen / season.episodeCount) * 100)}%`
+                                  : "0%",
+                              background: cor,
+                            }}
+                          />
                         </span>
                       </button>
                     );
@@ -887,7 +969,7 @@ export default function ShowPage() {
         )}
 
         {tab === "sobre" && (
-          <section className="mt-4 space-y-4">
+          <section className="mt-4 space-y-4" id="painel-sobre" role="tabpanel" aria-labelledby="tab-sobre">
             {show.overview ? (
               <p className="text-base leading-relaxed text-dim">{show.overview}</p>
             ) : (
@@ -944,7 +1026,7 @@ export default function ShowPage() {
         )}
 
         {tab === "estatisticas" && (
-          <section className="mt-4">
+          <section className="mt-4" id="painel-estatisticas" role="tabpanel" aria-labelledby="tab-estatisticas">
             <div className="flex items-center gap-4 rounded-2xl border border-line bg-panel p-4">
               {percent !== null ? (
                 <ProgressRing percent={percent} size={72} stroke={6} color={accent} />
