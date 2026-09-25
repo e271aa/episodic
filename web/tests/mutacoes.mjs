@@ -226,47 +226,7 @@ const MUTACOES = [
     de: "  atuais.add(uuid);\n  await kvSet(CHAVE_A_VER, [...atuais]);",
     para: "  await kvSet(CHAVE_A_VER, [...atuais]);",
   },
-];
-
-const filtro = process.argv[2];
-const alvo = filtro ? MUTACOES.filter((m) => m.nome.includes(filtro)) : MUTACOES;
-if (alvo.length === 0) {
-  console.error(`Nenhuma mutação com "${filtro}".`);
-  process.exit(1);
-}
-
-if (execSync("git status --porcelain", { encoding: "utf8" }).trim()) {
-  console.error("Há alterações por commitar — o guião mexe nos ficheiros e repõe-nos no fim.");
-  process.exit(1);
-}
-
-function correrSuite() {
-  try {
-    execFileSync("npx", ["playwright", "test", "--reporter=line"], {
-      encoding: "utf8",
-      stdio: "pipe",
-    });
-    return { verde: true, falhas: [], invalida: false };
-  } catch (erro) {
-    const saida = `${erro.stdout ?? ""}${erro.stderr ?? ""}`;
-    // Uma mutação que não compila não repôs bug nenhum — só partiu o build.
-    // Contá-la como "apanhada" foi exatamente o erro da primeira corrida da
-    // Ronda 12: dois ✓ sem um único teste a falhar.
-    if (/Failed to type check|webServer was not able to start|Failed to compile/.test(saida)) {
-      return { verde: false, falhas: [], invalida: true };
-    }
-    const falhas = [
-      ...new Set(
-        [...saida.matchAll(/^\s*\d+\) \[iphone\] › (\S+?):\d+:\d+ › (.+?)$/gm)].map(
-          (m) => `${m[1].replace("tests/", "")} › ${m[2].trim()}`,
-        ),
-      ),
-    ];
-    return { verde: false, falhas, invalida: falhas.length === 0 };
-  }
-}
-
-const resultados = [  // ── Ronda 12, Fase 2: o portão ─────────────────────────────
+  // ── Ronda 12, Fase 2: o portão ─────────────────────────────
   {
     nome: "r12-portao/sync-substitui",
     descricao: "sincronizar volta a substituir a série local pela da cloud",
@@ -324,6 +284,46 @@ const resultados = [  // ── Ronda 12, Fase 2: o portão ──────�
     para: "",
   },
 ];
+
+const filtro = process.argv[2];
+const alvo = filtro ? MUTACOES.filter((m) => m.nome.includes(filtro)) : MUTACOES;
+if (alvo.length === 0) {
+  console.error(`Nenhuma mutação com "${filtro}".`);
+  process.exit(1);
+}
+
+if (execSync("git status --porcelain", { encoding: "utf8" }).trim()) {
+  console.error("Há alterações por commitar — o guião mexe nos ficheiros e repõe-nos no fim.");
+  process.exit(1);
+}
+
+function correrSuite() {
+  try {
+    execFileSync("npx", ["playwright", "test", "--reporter=line"], {
+      encoding: "utf8",
+      stdio: "pipe",
+    });
+    return { verde: true, falhas: [], invalida: false };
+  } catch (erro) {
+    const saida = `${erro.stdout ?? ""}${erro.stderr ?? ""}`;
+    // Uma mutação que não compila não repôs bug nenhum — só partiu o build.
+    // Contá-la como "apanhada" foi exatamente o erro da primeira corrida da
+    // Ronda 12: dois ✓ sem um único teste a falhar.
+    if (/Failed to type check|webServer was not able to start|Failed to compile/.test(saida)) {
+      return { verde: false, falhas: [], invalida: true };
+    }
+    const falhas = [
+      ...new Set(
+        [...saida.matchAll(/^\s*\d+\) \[iphone\] › (\S+?):\d+:\d+ › (.+?)$/gm)].map(
+          (m) => `${m[1].replace("tests/", "")} › ${m[2].trim()}`,
+        ),
+      ),
+    ];
+    return { verde: false, falhas, invalida: falhas.length === 0 };
+  }
+}
+
+const resultados = [];
 for (const m of alvo) {
   const original = readFileSync(m.ficheiro, "utf8");
   if (!original.includes(m.de)) {
