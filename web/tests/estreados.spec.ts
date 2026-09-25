@@ -64,6 +64,11 @@ test("uma série em dia não diz 'por ver' por causa de uma temporada anunciada"
         uuid: "s-1",
         name: "Serie Em Dia",
         tvmazeId: TVMAZE,
+        // Com id da TMDB e campos preenchidos, o enriquecimento automático não
+        // corre — e é ele que, sem isto, acertava o total por outro caminho.
+        // O teste passava com a correção do total tirada (apanhado pelo guião
+        // de mutações: sobreviveu).
+        tmdbId: 9999,
         numeracao: "tvmaze",
         // o total antigo, com os anunciados lá dentro
         totalEpisodes: 6,

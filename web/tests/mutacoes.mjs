@@ -135,14 +135,17 @@ const MUTACOES = [
     descricao: "a pesquisa deixa de reconhecer o filme que já tens (volta a duplicá-lo)",
     ficheiro: EXISTENTE,
     de: "}): Promise<StoredMovie | null> {\n  const direto",
-    para: "}): Promise<StoredMovie | null> {\n  if (procura) return null;\n  const direto",
+    // uma condição que o TypeScript não consegue dar como sempre verdadeira:
+    // `if (procura)` tornava o resto da função inalcançável, o build falhava,
+    // e o guião contava isso como bug apanhado
+    para: "}): Promise<StoredMovie | null> {\n  if (procura.tmdbId !== -1) return null;\n  const direto",
   },
   {
     nome: "r12/serie-reconhecida",
     descricao: "a pesquisa deixa de reconhecer a série que já tens (volta a duplicá-la)",
     ficheiro: EXISTENTE,
     de: "}): Promise<StoredShow | null> {\n  for (const chave of [",
-    para: "}): Promise<StoredShow | null> {\n  if (procura) return null;\n  for (const chave of [",
+    para: "}): Promise<StoredShow | null> {\n  if (procura.nomes.length >= 0) return null;\n  for (const chave of [",
   },
   {
     nome: "r12/nome-portugues-na-pesquisa-local",
@@ -241,9 +244,15 @@ function correrSuite() {
       encoding: "utf8",
       stdio: "pipe",
     });
-    return { verde: true, falhas: [] };
+    return { verde: true, falhas: [], invalida: false };
   } catch (erro) {
     const saida = `${erro.stdout ?? ""}${erro.stderr ?? ""}`;
+    // Uma mutação que não compila não repôs bug nenhum — só partiu o build.
+    // Contá-la como "apanhada" foi exatamente o erro da primeira corrida da
+    // Ronda 12: dois ✓ sem um único teste a falhar.
+    if (/Failed to type check|webServer was not able to start|Failed to compile/.test(saida)) {
+      return { verde: false, falhas: [], invalida: true };
+    }
     const falhas = [
       ...new Set(
         [...saida.matchAll(/^\s*\d+\) \[iphone\] › (\S+?):\d+:\d+ › (.+?)$/gm)].map(
@@ -251,7 +260,7 @@ function correrSuite() {
         ),
       ),
     ];
-    return { verde: false, falhas };
+    return { verde: false, falhas, invalida: falhas.length === 0 };
   }
 }
 
@@ -265,25 +274,35 @@ for (const m of alvo) {
   }
   writeFileSync(m.ficheiro, original.replace(m.de, m.para));
   process.stdout.write(`· ${m.nome} … `);
-  const { verde, falhas } = correrSuite();
+  const { verde, falhas, invalida } = correrSuite();
   writeFileSync(m.ficheiro, original);
-  resultados.push({ ...m, sobreviveu: verde, falhas });
-  console.log(verde ? "SOBREVIVEU (ninguém deu o alarme)" : `apanhada por ${falhas.length}`);
+  resultados.push({ ...m, sobreviveu: verde, falhas, invalida });
+  console.log(
+    invalida
+      ? "INVÁLIDA (não compilou, ou falhou sem teste nenhum — não prova nada)"
+      : verde
+        ? "SOBREVIVEU (ninguém deu o alarme)"
+        : `apanhada por ${falhas.length}`,
+  );
 }
 
 console.log("\n─── Rede de segurança ───\n");
 for (const r of resultados) {
-  console.log(`${r.sobreviveu ? "✖" : "✓"} ${r.nome} — ${r.descricao}`);
+  console.log(`${r.sobreviveu ? "✖" : r.invalida ? "?" : "✓"} ${r.nome} — ${r.descricao}`);
   for (const f of r.falhas.slice(0, 3)) console.log(`    ${f}`);
   if (r.falhas.length > 3) console.log(`    …e mais ${r.falhas.length - 3}`);
 }
 
 const sobreviventes = resultados.filter((r) => r.sobreviveu);
-console.log(
-  `\n${resultados.length - sobreviventes.length}/${resultados.length} bugs apanhados.`,
-);
+const invalidas = resultados.filter((r) => r.invalida);
+const apanhadas = resultados.length - sobreviventes.length - invalidas.length;
+console.log(`\n${apanhadas}/${resultados.length} bugs apanhados.`);
 if (sobreviventes.length > 0) {
   console.log("Buracos na rede:");
   for (const s of sobreviventes) console.log(`  · ${s.nome} — ${s.descricao}`);
-  process.exit(1);
 }
+if (invalidas.length > 0) {
+  console.log("Mutações inválidas (corrige a mutação, não o código):");
+  for (const s of invalidas) console.log(`  · ${s.nome} — ${s.descricao}`);
+}
+if (sobreviventes.length > 0 || invalidas.length > 0) process.exit(1);
