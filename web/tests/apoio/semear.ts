@@ -35,6 +35,8 @@ export interface EpisodioVisto {
   season: number;
   episode: number;
   watchedAt?: string;
+  /** false = data da marcação, não do visto (import em massa, "vi tudo") */
+  dateIsExact?: boolean;
 }
 
 export interface FilmeSemeado {
@@ -99,7 +101,7 @@ function registos(semente: Semente): Registos {
       season: v.season,
       episode: v.episode,
       watchedAt: v.watchedAt ?? ONTEM,
-      dateIsExact: true,
+      dateIsExact: v.dateIsExact ?? true,
     })),
     movies: (semente.filmes ?? []).map((f) => ({
       key: f.key,

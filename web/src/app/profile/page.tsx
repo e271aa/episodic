@@ -227,6 +227,15 @@ export default function ProfilePage() {
             href="/import"
             fim="→"
           />
+          {/* Duas coisas diferentes, de propósito em linhas separadas: o que
+              só tu sabes (se viste uma série) e o que a app sabe que está
+              mal (repetidos, episódios contados duas vezes). */}
+          <PanelRow
+            titulo="Rever a biblioteca"
+            detalhe="Séries atrás do que já estreou — só tu sabes se as viste"
+            href="/rever"
+            fim="→"
+          />
           <IntegrityCheck />
           {/* O vermelho só acende quando a destruição está mesmo a um toque.
               Em repouso é uma linha como as outras — a app tem um único
