@@ -276,7 +276,10 @@ function LibraryContent() {
     } else if (filter === "parei") {
       list = list.filter((s) => !s.followed && !s.inWatchlist);
     }
-    if (q) list = list.filter((s) => norm(s.name).includes(q));
+    // o nome do TV Time e os da TMDB — procurar "Ruptura Total" tem de
+    // encontrar o "Breaking Bad" que já lá está
+    if (q)
+      list = list.filter((s) => [s.name, ...(s.tmdbAliases ?? [])].some((n) => norm(n).includes(q)));
     const sorted = [...list];
     if (seriesSort === "vistos") {
       sorted.sort((a, b) => b.lastWatchedAt.localeCompare(a.lastWatchedAt));
@@ -317,7 +320,8 @@ function LibraryContent() {
         return year >= decade && year < decade + 10;
       });
     }
-    if (q) list = list.filter((m) => norm(m.name).includes(q));
+    if (q)
+      list = list.filter((m) => [m.name, ...(m.aliases ?? [])].some((n) => norm(n).includes(q)));
     const sorted = [...list];
     if (movieSort === "vistos") {
       // sem data de visto (para ver), cai para a data em que adicionaste

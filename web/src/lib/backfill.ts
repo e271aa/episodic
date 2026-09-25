@@ -1,5 +1,6 @@
 "use client";
 
+import { juntarNomes } from "./existente";
 import {
   kvGet,
   kvSet,
@@ -239,7 +240,10 @@ export async function backfillMovies(
     const tratar = async (movie: StoredMovie) => {
       const patch = await enrichMovie(movie, rever);
       if (!patch) return false;
-      await updateMovie(movie.key, patch);
+      await updateMovie(movie.key, {
+        ...patch,
+        aliases: juntarNomes(movie.aliases, patch.aliases),
+      });
       return true;
     };
 

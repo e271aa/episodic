@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import { getMovie, putMovie, updateMovie, type StoredMovie } from "@/lib/db";
+import { juntarNomes } from "@/lib/existente";
 import { getMovieDetails, type TmdbMovieDetails } from "@/lib/tmdb";
 import { enrichMovie } from "@/lib/metadata";
 import { pushUndo } from "@/lib/undo";
@@ -64,9 +65,10 @@ export default function MoviePage() {
         const patch = await enrichMovie(stored, true);
         setAProcurar(false);
         if (patch) {
-          await updateMovie(key, patch);
+          const comNomes = { ...patch, aliases: juntarNomes(stored.aliases, patch.aliases) };
+          await updateMovie(key, comNomes);
           tmdbId = patch.tmdbId;
-          setMovie((m) => (m ? { ...m, ...patch } : m));
+          setMovie((m) => (m ? { ...m, ...comNomes } : m));
         }
       }
 

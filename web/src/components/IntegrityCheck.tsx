@@ -4,11 +4,14 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   applyRepair,
+  findDuplicateMovies,
   findDuplicateShows,
+  mergeDuplicateMovies,
   getRepairBackup,
   planRepair,
   removeDuplicateShows,
   undoRepair,
+  type DuplicateMovie,
   type DuplicateShow,
   type RepairPlan,
 } from "@/lib/repair";
@@ -27,6 +30,7 @@ export default function IntegrityCheck() {
   const [estado, setEstado] = useState<string | null>(null);
   const [podeReverter, setPodeReverter] = useState<number>(0);
   const [duplicados, setDuplicados] = useState<DuplicateShow[] | null>(null);
+  const [filmesRepetidos, setFilmesRepetidos] = useState<DuplicateMovie[] | null>(null);
 
   useEffect(() => {
     void getRepairBackup().then((b) => setPodeReverter(b?.episodes.length ?? 0));
@@ -37,7 +41,9 @@ export default function IntegrityCheck() {
     setEstado(null);
     setProgress({ done: 0, total: 0 });
     setDuplicados(null);
+    setFilmesRepetidos(null);
     void findDuplicateShows().then(setDuplicados).catch(() => setDuplicados([]));
+    void findDuplicateMovies().then(setFilmesRepetidos).catch(() => setFilmesRepetidos([]));
     void planRepair((done, total) => setProgress({ done, total }))
       .then((p) => {
         setPlan(p);
@@ -82,19 +88,35 @@ export default function IntegrityCheck() {
       .catch(() => setEstado("Não foi possível remover as repetidas."));
   }, [duplicados]);
 
+  const juntarFilmes = useCallback(() => {
+    if (!filmesRepetidos || filmesRepetidos.length === 0) return;
+    setEstado(null);
+    void mergeDuplicateMovies(filmesRepetidos)
+      .then((n) => {
+        setEstado(`${n} ${n === 1 ? "cópia de filme juntada" : "cópias de filmes juntadas"} ao original.`);
+        setFilmesRepetidos([]);
+      })
+      .catch(() => setEstado("Não foi possível juntar os filmes repetidos."));
+  }, [filmesRepetidos]);
+
   const seguras = plan?.repairs.filter((r) => r.safe) ?? [];
   const duvidosas = plan?.repairs.filter((r) => !r.safe) ?? [];
   const totalSeguro = seguras.reduce((n, r) => n + r.extras.length, 0);
 
   // Nada de resultados ainda e nada por repor: a verificação é uma linha
   // como as outras. O relatório só ocupa espaço depois de haver relatório.
-  const emRepouso = plan === null && duplicados === null && estado === null && podeReverter === 0;
+  const emRepouso =
+    plan === null &&
+    duplicados === null &&
+    filmesRepetidos === null &&
+    estado === null &&
+    podeReverter === 0;
 
   if (emRepouso) {
     return (
       <PanelRow
         titulo="Verificar biblioteca"
-        detalhe="Procura séries repetidas e episódios contados duas vezes"
+        detalhe="Procura séries e filmes repetidos, e episódios contados duas vezes"
         onClick={verificar}
         fim={
           progress !== null ? (
@@ -151,11 +173,13 @@ export default function IntegrityCheck() {
           </p>
           <p className="mt-1 text-xs text-dim">
             A mesma série ficou duas vezes na biblioteca — uma com o teu
-            histórico, outra vazia, adicionada pelo Explorar. Sai a vazia.
+            histórico, outra vazia, criada pelo Explorar ou pela pesquisa. Sai
+            a vazia; os nomes e as listas dela passam para a que fica.
           </p>
           <ul className="mt-2 flex flex-col gap-1">
             {duplicados.map((d) => (
               <li key={d.dropUuid} className="ep-code text-xs text-faint">
+                {d.dropName !== d.keepName ? `${d.dropName} = ` : ""}
                 {d.keepName} · fica a que tem {d.keepWatched} episódios
               </li>
             ))}
@@ -169,7 +193,41 @@ export default function IntegrityCheck() {
         </div>
       )}
 
-      {plan && plan.repairs.length === 0 && duplicados?.length === 0 && (
+      {filmesRepetidos && filmesRepetidos.length > 0 && (
+        <div className="mt-4 rounded-xl border border-line bg-raised p-3" data-testid="filmes-repetidos">
+          <p className="ep-code text-sm text-ink">
+            {filmesRepetidos.length}{" "}
+            {filmesRepetidos.length === 1 ? "filme repetido" : "filmes repetidos"}
+          </p>
+          <p className="mt-1 text-xs text-dim">
+            O mesmo filme ficou duas vezes — normalmente um em “para ver” e
+            outro marcado como visto pela pesquisa. Juntam-se num só, com a
+            data de visto, e sai de “para ver”.
+          </p>
+          <ul className="mt-2 flex flex-col gap-1">
+            {filmesRepetidos.map((g) => (
+              <li key={g.keepKey} className="ep-code text-xs text-faint">
+                {g.keepName}
+                {g.dropNames.some((n) => n !== g.keepName)
+                  ? ` = ${g.dropNames.filter((n) => n !== g.keepName).join(", ")}`
+                  : ""}{" "}
+                · {g.watchedAt ? `fica visto a ${g.watchedAt.slice(0, 10)}` : "fica para ver"}
+              </li>
+            ))}
+          </ul>
+          <button
+            onClick={juntarFilmes}
+            className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full bg-ink px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95"
+          >
+            Juntar {filmesRepetidos.length === 1 ? "o filme" : `os ${filmesRepetidos.length} filmes`}
+          </button>
+        </div>
+      )}
+
+      {plan &&
+        plan.repairs.length === 0 &&
+        duplicados?.length === 0 &&
+        filmesRepetidos?.length === 0 && (
         <p className="mt-3 text-[15px] text-dim">
           Nada a corrigir em {plan.checked} séries.
         </p>

@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback } from "react";
-import { getMovie, getMovies, getShows, putMovie, putShow, updateShow } from "@/lib/db";
+import { putMovie, putShow, updateShow } from "@/lib/db";
 import { dismiss, undismiss } from "@/lib/dismissed";
-import { normalizeTitle } from "@/lib/names";
+import { filmeExistente, juntarNomes, serieExistente } from "@/lib/existente";
 import { pushUndo } from "@/lib/undo";
 import type { DiscoverItem } from "@/lib/tmdb";
 
@@ -15,24 +15,22 @@ import type { DiscoverItem } from "@/lib/tmdb";
  * precisa de ser, e não é. Procurar só por `getShow("tmdb-<id>")` — que é o
  * óbvio — foi o que pôs o Arrow e o Prison Break duas vezes na biblioteca:
  * a série importada do TV Time tem o uuid do TV Time, nunca `tmdb-<id>`, e
- * por isso nunca era encontrada. As três formas de procurar abaixo (uuid, id
- * TMDB, e qualquer um dos dois títulos) são todas necessárias, cada uma por
- * um motivo diferente que já aconteceu.
+ * por isso nunca era encontrada. As formas de procurar (chave, id, e qualquer
+ * um dos títulos) são todas necessárias, cada uma por um motivo diferente que
+ * já aconteceu — e vivem em `existente.ts`, partilhadas com a pesquisa da
+ * Biblioteca. Estavam escritas só aqui, e a pesquisa repetiu o mesmo bug
+ * dois meses depois (Ronda 12).
  */
 export function useExploreAcoes() {
   const guardar = useCallback(async (item: DiscoverItem) => {
-    // Os dois títulos: a TMDB responde em pt-PT e a biblioteca guarda o nome
-    // como o TV Time o exportou. O "Prison Break" dele é "Prison Break: Fuga
-    // da Prisão" na TMDB — só o original bate certo.
-    const nomes = new Set([normalizeTitle(item.name)]);
-    if (item.originalName) nomes.add(normalizeTitle(item.originalName));
+    const nomes = [item.name, item.originalName];
 
     if (item.kind === "movie") {
-      const existente =
-        (await getMovie(`tmdb-${item.tmdbId}`)) ??
-        (await getMovies()).find(
-          (m) => m.tmdbId === item.tmdbId || nomes.has(normalizeTitle(m.name)),
-        );
+      const existente = await filmeExistente({
+        tmdbId: item.tmdbId,
+        nomes,
+        ano: item.year ? Number(item.year) : null,
+      });
       if (existente) return; // já lá está — nada a fazer, nada a anular
       await putMovie({
         key: `tmdb-${item.tmdbId}`,
@@ -43,6 +41,7 @@ export function useExploreAcoes() {
         addedAt: new Date().toISOString(),
         tmdbId: item.tmdbId,
         posterPath: item.posterPath,
+        aliases: juntarNomes(nomes),
       });
       pushUndo({
         label: "Guardado para ver",
@@ -55,13 +54,7 @@ export function useExploreAcoes() {
       return;
     }
 
-    const existente = (await getShows()).find(
-      (s) =>
-        s.uuid === `tmdb-${item.tmdbId}` ||
-        (s.tmdbId != null && s.tmdbId === item.tmdbId) ||
-        nomes.has(normalizeTitle(s.name)) ||
-        (s.tmdbAliases ?? []).some((a) => nomes.has(normalizeTitle(a))),
-    );
+    const existente = await serieExistente({ tmdbId: item.tmdbId, nomes });
 
     if (existente) {
       // Já a segues ou já está arquivada? Então não é "para ver" — deixa-a
@@ -85,6 +78,7 @@ export function useExploreAcoes() {
       tvdbId: null,
       tmdbId: item.tmdbId,
       tvmazeId: null,
+      tmdbAliases: juntarNomes(nomes),
       posterPath: item.posterPath,
       backdropPath: item.backdropPath,
       overview: item.overview,

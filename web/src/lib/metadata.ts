@@ -22,6 +22,9 @@ export interface MetaSearchResult {
   provider: "tmdb" | "tvmaze";
   providerId: number;
   name: string;
+  /** o título original, quando o fornecedor o dá — serve para reconhecer o
+   *  que já tens, que veio do TV Time com esse nome e não com o português */
+  originalName: string | null;
   year: string | null;
   posterUrl: string | null;
   overview: string | null;
@@ -333,7 +336,12 @@ function pickBestMovie(
 export async function enrichMovie(
   movie: { key: string; name: string; releaseDate?: string | null },
   refresh = false,
-): Promise<{ tmdbId: number; posterPath: string | null; releaseDate?: string | null } | null> {
+): Promise<{
+  tmdbId: number;
+  posterPath: string | null;
+  releaseDate?: string | null;
+  aliases: string[];
+} | null> {
   if (!(await hasTmdb())) return null;
   if (!refresh && (await enrichFailedRecently(`movie:${movie.key}`))) return null;
   try {
@@ -367,6 +375,9 @@ export async function enrichMovie(
     return {
       tmdbId: hit.id,
       posterPath: hit.poster_path,
+      // os dois títulos que a TMDB dá (o português e o original) — antes
+      // eram lidos para escolher o filme e deitados fora
+      aliases: [hit.title, hit.original_title].filter((t): t is string => Boolean(t)),
       // O TV Time nem sempre trazia a estreia — sem isto, o ano do filme
       // ficava preso ao dia em que o marcaste como visto, para sempre
       // (é o que fazia as décadas do filtro saírem todas erradas).
@@ -478,6 +489,7 @@ export async function searchShows(query: string): Promise<MetaSearchResult[]> {
         provider: "tmdb" as const,
         providerId: show.id,
         name: show.name,
+        originalName: show.original_name ?? null,
         year: show.first_air_date?.slice(0, 4) ?? null,
         posterUrl: tmdb.imageUrl(show.poster_path, "w185"),
         backdropUrl: tmdb.imageUrl(show.backdrop_path, "w780"),
@@ -491,6 +503,7 @@ export async function searchShows(query: string): Promise<MetaSearchResult[]> {
     provider: "tvmaze" as const,
     providerId: show.id,
     name: show.name,
+    originalName: null,
     year: show.premiered?.slice(0, 4) ?? null,
     posterUrl: show.image?.medium ?? null,
     backdropUrl: show.image?.original ?? null,
@@ -501,6 +514,7 @@ export async function searchShows(query: string): Promise<MetaSearchResult[]> {
 export interface MetaMovieResult {
   tmdbId: number;
   name: string;
+  originalName: string | null;
   year: string | null;
   posterPath: string | null;
   posterUrl: string | null;
@@ -518,6 +532,7 @@ export async function searchMovies(query: string): Promise<MetaMovieResult[]> {
   return results.map((movie) => ({
     tmdbId: movie.id,
     name: movie.title,
+    originalName: movie.original_title ?? null,
     year: movie.release_date?.slice(0, 4) || null,
     posterPath: movie.poster_path,
     posterUrl: tmdb.imageUrl(movie.poster_path, "w185"),

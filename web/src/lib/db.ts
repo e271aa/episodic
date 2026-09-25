@@ -85,6 +85,15 @@ export interface StoredMovie {
   // enriquecimento local (a cloud só guarda nome+datas; posters recalculam-se)
   tmdbId?: number | null;
   posterPath?: string | null;
+  /**
+   * Outros títulos do mesmo filme — o português e o original da TMDB.
+   *
+   * O nome guardado vem do TV Time, quase sempre em inglês. Sem isto, procurar
+   * "Os Condenados de Shawshank" dizia "0 filmes na biblioteca" com o filme lá
+   * dentro — e era isso que empurrava para a pesquisa no catálogo, onde se
+   * criava a cópia (Ronda 12).
+   */
+  aliases?: string[];
 }
 
 export interface ImportMeta {
@@ -674,4 +683,32 @@ export async function removeFromList(
   if (!list) return;
   list.items = list.items.filter((i) => !(i.kind === kind && i.refId === refId));
   await database.put("lists", list);
+}
+
+/**
+ * Faz as listas apontarem para `para` em vez de `de`. Serve para juntar
+ * duplicados: a cópia que sai pode estar numa lista tua, e sem isto essa
+ * lista ficava com um item a apontar para nada. Se a lista já tiver os dois,
+ * fica só um.
+ */
+export async function reapontarListas(
+  kind: ListItem["kind"],
+  de: string,
+  para: string,
+): Promise<void> {
+  const database = await db();
+  const listas = await database.getAll("lists");
+  for (const lista of listas) {
+    if (!lista.items.some((i) => i.kind === kind && i.refId === de)) continue;
+    const vistos = new Set<string>();
+    const items = lista.items
+      .map((i) => (i.kind === kind && i.refId === de ? { ...i, refId: para } : i))
+      .filter((i) => {
+        const chave = `${i.kind}:${i.refId}`;
+        if (vistos.has(chave)) return false;
+        vistos.add(chave);
+        return true;
+      });
+    await database.put("lists", { ...lista, items });
+  }
 }

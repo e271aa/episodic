@@ -1,32 +1,72 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { getShow, putShow, updateShow } from "@/lib/db";
+import { useCallback, useEffect, useState } from "react";
+import Link from "next/link";
+import { putShow, updateShow, type StoredShow } from "@/lib/db";
+import { juntarNomes, serieExistente } from "@/lib/existente";
 import type { MetaSearchResult } from "@/lib/metadata";
 import Poster from "@/components/Poster";
 import { CheckIcon, TvIcon } from "@/components/icons";
 
 type FollowState = "idle" | "following" | "done";
 
-/** Resultado da pesquisa remota de séries, na Biblioteca. */
+function estadoDa(serie: StoredShow): string {
+  if (serie.archived) return "Arquivada na tua biblioteca";
+  if (serie.followed) return "Já a segues";
+  if (serie.inWatchlist) return "Já está na tua lista para ver";
+  return "Já está na tua biblioteca";
+}
+
+/**
+ * Resultado da pesquisa remota de séries, na Biblioteca.
+ *
+ * Se a série já lá estiver, o cartão leva até ela em vez de oferecer
+ * "Seguir". Antes procurava só pela chave `tmdb-<id>`: uma série importada
+ * do TV Time (outra chave, nome em inglês) aparecia como nova, e "Seguir"
+ * criava uma segunda cópia vazia — que ia parar a "Por começar" enquanto a
+ * verdadeira estava nas completas (Ronda 12).
+ */
 export default function ShowResultCard({ result }: { result: MetaSearchResult }) {
   const [state, setState] = useState<FollowState>("idle");
   const [inWatchlist, setInWatchlist] = useState(false);
-  const uuid = `${result.provider}-${result.providerId}`;
+  /** undefined = ainda a ver; null = não está na biblioteca */
+  const [existente, setExistente] = useState<StoredShow | null | undefined>(undefined);
+  const procura = {
+    tmdbId: result.provider === "tmdb" ? result.providerId : null,
+    tvmazeId: result.provider === "tvmaze" ? result.providerId : null,
+    nomes: [result.name, result.originalName],
+  };
+
+  useEffect(() => {
+    let vivo = true;
+    void serieExistente(procura).then((s) => {
+      if (vivo) setExistente(s);
+    });
+    return () => {
+      vivo = false;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [result.provider, result.providerId]);
 
   const add = useCallback(
     async (followed: boolean) => {
       setState("following");
-      const existing = await getShow(uuid);
-      if (existing) {
-        await updateShow(uuid, { followed, inWatchlist: !followed });
+      const ja = await serieExistente(procura);
+      if (ja) {
+        await updateShow(ja.uuid, {
+          followed,
+          inWatchlist: !followed,
+          archived: false,
+          tmdbAliases: juntarNomes(ja.tmdbAliases, result.name, result.originalName),
+        });
       } else {
         await putShow({
-          uuid,
+          uuid: `${result.provider}-${result.providerId}`,
           name: result.name,
           tvdbId: null,
-          tmdbId: result.provider === "tmdb" ? result.providerId : null,
-          tvmazeId: result.provider === "tvmaze" ? result.providerId : null,
+          tmdbId: procura.tmdbId,
+          tvmazeId: procura.tvmazeId,
+          tmdbAliases: juntarNomes(result.name, result.originalName),
           posterPath: result.posterUrl,
           backdropPath: result.backdropUrl,
           overview: result.overview,
@@ -40,7 +80,8 @@ export default function ShowResultCard({ result }: { result: MetaSearchResult })
       setInWatchlist(!followed);
       setState("done");
     },
-    [result, uuid],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [result],
   );
 
   return (
@@ -62,7 +103,19 @@ export default function ShowResultCard({ result }: { result: MetaSearchResult })
           )}
         </p>
         <p className="mt-1 line-clamp-2 text-[15px] text-dim">{result.overview}</p>
-        {state === "done" ? (
+        {existente && state === "idle" ? (
+          <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1">
+            <p className="text-[15px] text-dim" data-testid="serie-ja-existe">
+              {estadoDa(existente)}
+            </p>
+            <Link
+              href={`/series/${existente.uuid}`}
+              className="flex min-h-11 cursor-pointer items-center text-[15px] font-semibold text-ink hover:underline"
+            >
+              Abrir →
+            </Link>
+          </div>
+        ) : state === "done" ? (
           <button
             disabled
             className="mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-4 text-[15px] font-semibold text-dim"
@@ -74,7 +127,7 @@ export default function ShowResultCard({ result }: { result: MetaSearchResult })
           <div className="mt-2 flex gap-2">
             <button
               onClick={() => void add(true)}
-              disabled={state !== "idle"}
+              disabled={state !== "idle" || existente === undefined}
               className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
             >
               {state === "following" && (
@@ -84,7 +137,7 @@ export default function ShowResultCard({ result }: { result: MetaSearchResult })
             </button>
             <button
               onClick={() => void add(false)}
-              disabled={state !== "idle"}
+              disabled={state !== "idle" || existente === undefined}
               className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[15px] font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
             >
               Para ver
