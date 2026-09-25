@@ -104,6 +104,23 @@ create table if not exists public.watched_movies (
 alter table public.watched_movies alter column watched_at drop not null;
 alter table public.watched_movies alter column watched_at drop default;
 
+-- Ronda 12: o que até aqui só o telemóvel sabia (ver ronda12-sync-completo.sql)
+alter table public.shows add column if not exists numeracao text;
+alter table public.shows add column if not exists tmdb_aliases text[];
+alter table public.watched_movies add column if not exists tmdb_id integer;
+alter table public.watched_movies add column if not exists release_date text;
+alter table public.watched_movies add column if not exists added_at timestamptz;
+alter table public.watched_movies add column if not exists poster_path text;
+alter table public.watched_movies add column if not exists aliases text[];
+
+create table if not exists public.user_kv (
+  user_id    uuid not null references auth.users (id) on delete cascade,
+  key        text not null,
+  value      jsonb not null,
+  updated_at timestamptz not null default now(),
+  primary key (user_id, key)
+);
+
 -- ─────────────────────────────────────────────────────────────
 -- Row Level Security: cada utilizador só acede às suas linhas
 -- ─────────────────────────────────────────────────────────────
@@ -111,6 +128,7 @@ alter table public.profiles         enable row level security;
 alter table public.shows            enable row level security;
 alter table public.watched_episodes enable row level security;
 alter table public.watched_movies   enable row level security;
+alter table public.user_kv          enable row level security;
 
 -- profiles: o dono lê e edita o seu perfil
 drop policy if exists "own profile" on public.profiles;
@@ -128,6 +146,10 @@ create policy "own watched episodes" on public.watched_episodes
 
 drop policy if exists "own watched movies" on public.watched_movies;
 create policy "own watched movies" on public.watched_movies
+  for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "own kv" on public.user_kv;
+create policy "own kv" on public.user_kv
   for all using (auth.uid() = user_id) with check (auth.uid() = user_id);
 
 -- ─────────────────────────────────────────────────────────────

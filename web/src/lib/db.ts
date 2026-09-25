@@ -156,18 +156,52 @@ export interface MovieOp extends OutboxCommon {
  * de volta. Era exatamente o que ia acontecer às cópias duplicadas.
  */
 export interface ShowOp extends OutboxCommon {
-  kind: "show-deleted";
+  /**
+   * `show-upserted` faltava: seguir, arquivar, o id da TMDB, o total, a
+   * numeração — nada disto subia sozinho, só com "Sincronizar agora". Uma
+   * série adicionada na app e nunca sincronizada à mão não existia na cloud,
+   * e numa instalação nova os episódios dela ficavam sem série (Ronda 12).
+   * Partilha a chave com `show-deleted`: fica a última intenção.
+   */
+  kind: "show-deleted" | "show-upserted";
   showUuid: string;
 }
 
-export type OutboxOp = EpisodeOp | MovieOp | ShowOp;
+/** Uma das chaves de `CHAVES_NA_NUVEM` mudou — sobe o valor atual. */
+export interface KvOp extends OutboxCommon {
+  kind: "kv-upserted";
+  chave: ChaveNaNuvem;
+}
+
+export type OutboxOp = EpisodeOp | MovieOp | ShowOp | KvOp;
+
+/**
+ * O que, fora de séries, episódios e filmes, tem de sobreviver a uma
+ * instalação nova: as listas (não havia tabela para elas — perdiam-se
+ * inteiras), as horas do import, e as respostas que já deste.
+ */
+export const CHAVES_NA_NUVEM = [
+  "listas",
+  "import-meta",
+  "rever:a-ver",
+  "explorar:dispensados",
+] as const;
+export type ChaveNaNuvem = (typeof CHAVES_NA_NUVEM)[number];
+
+function vaiParaANuvem(chave: string): chave is ChaveNaNuvem {
+  return (CHAVES_NA_NUVEM as readonly string[]).includes(chave);
+}
 
 export function isMovieOp(op: OutboxOp): op is MovieOp {
   return op.kind === "movie-watched" || op.kind === "movie-unwatched";
 }
 
 export function isShowOp(op: OutboxOp): op is ShowOp {
-  return op.kind === "show-deleted";
+  return op.kind === "show-deleted" || op.kind === "show-upserted";
+}
+
+export function isKvOp(op: OutboxOp): op is KvOp {
+  return op.kind === "kv-upserted";
 }
 
 interface TvlogDB extends DBSchema {
@@ -343,7 +377,11 @@ export async function importExport(data: TvTimeExport): Promise<void> {
     totalMoviesRuntimeSec: data.stats.totalMoviesRuntimeSec,
   };
   void tx.objectStore("kv").put(meta, "import-meta");
+  // O import escreve direto, sem fila: a próxima sincronização envia tudo
+  // (ver `garantirEsquema` no autosync)
+  void tx.objectStore("kv").delete("cloud:esquema");
   await tx.done;
+  await enfileirarKv("import-meta");
 }
 
 // Importações feitas na versão anterior da app guardavam um blob único em kv.
@@ -370,23 +408,21 @@ export async function getShows(): Promise<StoredShow[]> {
  * Funde dados vindos da cloud no armazém local (upsert, sem apagar nada).
  * Semântica de união: um episódio presente na cloud OU no local fica visto.
  */
+/**
+ * Grava o que veio da cloud, JÁ JUNTO com o que havia cá (ver `linhas.ts`).
+ * Substituía cada série pela da cloud — e como a cloud não tinha a
+ * numeração, cada "Sincronizar agora" apagava-a no telemóvel.
+ */
 export async function mergeFromCloud(
   shows: StoredShow[],
   watched: WatchedEpisode[],
   movies: StoredMovie[],
 ): Promise<void> {
   const database = await db();
-  // Filmes: a cloud não guarda enriquecimento (poster/tmdbId) — preserva o
-  // que já existe localmente para não refazer pesquisas TMDB a cada pull
-  const existingMovies = new Map(
-    (await database.getAll("movies")).map((m) => [m.key, m]),
-  );
   const tx = database.transaction(["shows", "watched", "movies"], "readwrite");
   for (const show of shows) void tx.objectStore("shows").put(show);
   for (const ep of watched) void tx.objectStore("watched").put(ep);
-  for (const movie of movies) {
-    void tx.objectStore("movies").put({ ...existingMovies.get(movie.key), ...movie });
-  }
+  for (const movie of movies) void tx.objectStore("movies").put(movie);
   await tx.done;
 }
 
@@ -398,6 +434,16 @@ export async function getShow(uuid: string): Promise<StoredShow | null> {
 export async function putShow(show: StoredShow): Promise<void> {
   const database = await db();
   await database.put("shows", show);
+  await enfileirarSerie(show.uuid);
+}
+
+async function enfileirarSerie(uuid: string): Promise<void> {
+  await enqueueOp({
+    key: `show:${uuid}`,
+    kind: "show-upserted",
+    showUuid: uuid,
+    at: new Date().toISOString(),
+  });
 }
 
 export async function updateShow(
@@ -409,6 +455,7 @@ export async function updateShow(
   if (!current) return null;
   const next = { ...current, ...patch, uuid };
   await database.put("shows", next);
+  await enfileirarSerie(uuid);
   return next;
 }
 
@@ -656,7 +703,19 @@ export async function updateMovie(
   const database = await db();
   const current = await database.get("movies", key);
   if (!current) return;
-  await database.put("movies", { ...current, ...patch, key });
+  const next = { ...current, ...patch, key };
+  await database.put("movies", next);
+  // o enriquecimento (id, capa, estreia, nomes) também sobe — antes só o
+  // telemóvel o sabia, e uma instalação nova refazia-o pesquisando pelo nome
+  await enqueueOp({
+    key: `movie:${key}`,
+    kind: "movie-watched",
+    movieKey: key,
+    name: next.name,
+    dateIsExact: next.dateIsExact,
+    watchedAt: next.watchedAt,
+    at: new Date().toISOString(),
+  });
 }
 
 export async function getImportMeta(): Promise<ImportMeta | null> {
@@ -673,6 +732,17 @@ export async function kvGet<T>(key: string): Promise<T | null> {
 export async function kvSet(key: string, value: unknown): Promise<void> {
   const database = await db();
   await database.put("kv", value, key);
+  if (vaiParaANuvem(key)) await enfileirarKv(key);
+}
+
+/** Para gravar o que veio da cloud sem o mandar outra vez para lá. */
+export async function kvSetDaNuvem(key: string, value: unknown): Promise<void> {
+  const database = await db();
+  await database.put("kv", value, key);
+}
+
+async function enfileirarKv(chave: ChaveNaNuvem): Promise<void> {
+  await enqueueOp({ key: `kv:${chave}`, kind: "kv-upserted", chave, at: new Date().toISOString() });
 }
 
 export async function clearAllData(): Promise<void> {
@@ -712,6 +782,7 @@ export async function createList(name: string): Promise<CustomList> {
     items: [],
   };
   await database.put("lists", list);
+  await enfileirarKv("listas");
   return list;
 }
 
@@ -720,11 +791,13 @@ export async function renameList(id: string, name: string): Promise<void> {
   const list = await database.get("lists", id);
   if (!list) return;
   await database.put("lists", { ...list, name });
+  await enfileirarKv("listas");
 }
 
 export async function deleteList(id: string): Promise<void> {
   const database = await db();
   await database.delete("lists", id);
+  await enfileirarKv("listas");
 }
 
 export async function addToList(
@@ -737,6 +810,7 @@ export async function addToList(
   if (!list || list.items.some((i) => i.kind === kind && i.refId === refId)) return;
   list.items.push({ kind, refId, addedAt: new Date().toISOString() });
   await database.put("lists", list);
+  await enfileirarKv("listas");
 }
 
 /**
@@ -747,6 +821,15 @@ export async function addToList(
 export async function restoreList(list: CustomList): Promise<void> {
   const database = await db();
   await database.put("lists", list);
+  await enfileirarKv("listas");
+}
+
+/** As listas que vieram da cloud (instalação nova) — sem voltar a subi-las. */
+export async function gravarListasDaNuvem(listas: CustomList[]): Promise<void> {
+  const database = await db();
+  const tx = database.transaction("lists", "readwrite");
+  for (const lista of listas) void tx.objectStore("lists").put(lista);
+  await tx.done;
 }
 
 export async function removeFromList(
@@ -759,6 +842,7 @@ export async function removeFromList(
   if (!list) return;
   list.items = list.items.filter((i) => !(i.kind === kind && i.refId === refId));
   await database.put("lists", list);
+  await enfileirarKv("listas");
 }
 
 /**
@@ -786,5 +870,6 @@ export async function reapontarListas(
         return true;
       });
     await database.put("lists", { ...lista, items });
+    await enfileirarKv("listas");
   }
 }

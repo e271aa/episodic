@@ -7,6 +7,7 @@ import { kvGet, kvSet, type StoredMovie } from "@/lib/db";
 import type { ShowWithProgress } from "@/lib/shows";
 import { recursoFilmes, recursoSeries, useFilmes, useSeries } from "@/lib/cache";
 import { backfillMovies, backfillShows } from "@/lib/backfill";
+import { curarNumeracao } from "@/lib/numeracao";
 import { usePref } from "@/lib/prefs";
 import {
   searchMovies,
@@ -223,6 +224,10 @@ function LibraryContent() {
     if (!shows || !movies || enriching.current) return;
     enriching.current = true;
     void (async () => {
+      // Primeiro a numeração: é a única destas coisas que, errada, muda o
+      // que as tuas marcações querem dizer (ver lib/numeracao.ts)
+      if ((await curarNumeracao()) > 0) void recursoSeries.revalidar();
+
       // As séries também se completam aqui, não só no "A seguir": quem entra
       // direto na Biblioteca — que é onde as capas se veem todas de uma vez —
       // não disparava enriquecimento nenhum, e ficava à espera de uma visita

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { getShows, kvGet, kvSet } from "@/lib/db";
 import { getUser, pullAndMerge, type PullProgress } from "@/lib/cloud";
 import { isCloudConfigured } from "@/lib/supabase";
+import { curarNumeracao } from "@/lib/numeracao";
 
 /** Marca que este dispositivo já trouxe a biblioteca da cloud pelo menos uma vez. */
 const DONE_KEY = "cloud:primeiro-pull";
@@ -45,6 +46,9 @@ export default function FirstSync() {
     });
     try {
       await pullAndMerge((p) => setEstado({ fase: "a-trazer", p }));
+      // o que veio de uma cloud antiga pode vir sem numeração — antes de a
+      // app ler uma única temporada, devolve-a às séries que a perderam
+      await curarNumeracao().catch(() => 0);
       await kvSet(DONE_KEY, true);
       // recarrega para os ecrãs lerem o IndexedDB já cheio
       window.location.reload();

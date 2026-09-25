@@ -150,6 +150,11 @@ export async function planRepair(
     done += 1;
     const watched = await getWatchedForShow(show.uuid);
     if (watched.length === 0) continue;
+    // Numeração em dúvida (perdida numa sincronização antiga, e os dois
+    // fornecedores aceitam as marcações): o que parece "a mais" pode ser só
+    // lido pela divisão errada. Aqui a resposta serve para APAGAR — não se
+    // arrisca. Ver lib/numeracao.ts.
+    if (!show.numeracao && show.tmdbId && show.tvmazeId != null) continue;
     const porPosicao = await providerByPosition(show);
     if (!porPosicao) continue;
     const r = analyse(show, watched, porPosicao);

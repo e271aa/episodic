@@ -2,15 +2,33 @@
 // (a app funciona sempre offline); a cloud é backup + sync entre dispositivos.
 import { supabase } from "./supabase";
 import {
-  episodeKey,
-  getMovies,
+  CHAVES_NA_NUVEM,
   getAllWatched,
+  getLists,
+  getMovies,
   getShows,
+  gravarListasDaNuvem,
+  kvGet,
+  kvSetDaNuvem,
   mergeFromCloud,
-  type StoredMovie,
-  type StoredShow,
-  type WatchedEpisode,
+  type CustomList,
 } from "./db";
+import {
+  juntarEpisodio,
+  juntarFilme,
+  juntarKv,
+  juntarSerie,
+  movieToRow,
+  rowToMovie,
+  rowToShow,
+  rowToWatched,
+  showToRow,
+  watchedToRow,
+  type KvRow,
+  type MovieRow,
+  type ShowRow,
+  type WatchedRow,
+} from "./linhas";
 import type { User } from "@supabase/supabase-js";
 
 // ── Autenticação ──────────────────────────────────────────────
@@ -93,133 +111,9 @@ export function onAuthChange(cb: (user: User | null) => void): () => void {
 
 // ── Mapeamento local ⇄ linhas da base de dados ────────────────
 
-function showToRow(s: StoredShow, userId: string) {
-  return {
-    user_id: userId,
-    uuid: s.uuid,
-    name: s.name,
-    tvdb_id: s.tvdbId,
-    tmdb_id: s.tmdbId,
-    tvmaze_id: s.tvmazeId ?? null,
-    poster_path: s.posterPath,
-    backdrop_path: s.backdropPath,
-    overview: s.overview,
-    total_episodes: s.totalEpisodes,
-    first_aired: s.firstAired ?? null,
-    status: s.status ?? null,
-    genres: s.genres ?? null,
-    imdb_id: s.imdbId ?? null,
-    followed: s.followed,
-    in_watchlist: s.inWatchlist,
-    archived: s.archived,
-    added_at: s.addedAt,
-    updated_at: new Date().toISOString(),
-  };
-}
-
-interface ShowRow {
-  uuid: string;
-  name: string;
-  tvdb_id: number | null;
-  tmdb_id: number | null;
-  tvmaze_id: number | null;
-  poster_path: string | null;
-  backdrop_path: string | null;
-  overview: string | null;
-  total_episodes: number | null;
-  first_aired: string | null;
-  status: string | null;
-  genres: string[] | null;
-  imdb_id: string | null;
-  followed: boolean;
-  in_watchlist: boolean;
-  archived: boolean;
-  added_at: string;
-}
-
-function rowToShow(r: ShowRow): StoredShow {
-  return {
-    uuid: r.uuid,
-    name: r.name,
-    tvdbId: r.tvdb_id,
-    tmdbId: r.tmdb_id,
-    tvmazeId: r.tvmaze_id,
-    posterPath: r.poster_path,
-    backdropPath: r.backdrop_path,
-    overview: r.overview,
-    totalEpisodes: r.total_episodes,
-    firstAired: r.first_aired,
-    status: r.status,
-    genres: r.genres,
-    imdbId: r.imdb_id,
-    followed: r.followed,
-    inWatchlist: r.in_watchlist,
-    archived: r.archived,
-    addedAt: r.added_at,
-  };
-}
-
-function watchedToRow(w: WatchedEpisode, userId: string) {
-  return {
-    user_id: userId,
-    show_uuid: w.showUuid,
-    season: w.season,
-    episode: w.episode,
-    watched_at: w.watchedAt,
-    date_is_exact: w.dateIsExact,
-    updated_at: new Date().toISOString(),
-  };
-}
-
-interface WatchedRow {
-  show_uuid: string;
-  season: number;
-  episode: number;
-  watched_at: string;
-  date_is_exact: boolean;
-}
-
-function rowToWatched(r: WatchedRow): WatchedEpisode {
-  return {
-    id: episodeKey(r.show_uuid, r.season, r.episode),
-    showUuid: r.show_uuid,
-    season: r.season,
-    episode: r.episode,
-    watchedAt: r.watched_at,
-    dateIsExact: r.date_is_exact,
-  };
-}
-
-function movieToRow(m: StoredMovie, userId: string) {
-  return {
-    user_id: userId,
-    key: m.key,
-    name: m.name,
-    watched_at: m.watchedAt,
-    date_is_exact: m.dateIsExact,
-    updated_at: new Date().toISOString(),
-  };
-}
-
-interface MovieRow {
-  key: string;
-  name: string;
-  watched_at: string | null;
-  date_is_exact: boolean;
-}
-
-function rowToMovie(r: MovieRow): StoredMovie {
-  return {
-    key: r.key,
-    name: r.name,
-    watchedAt: r.watched_at,
-    dateIsExact: r.date_is_exact,
-  };
-}
-
 // Upserts grandes vão em lotes para não estourar limites de payload
 async function upsertChunked(
-  table: "shows" | "watched_episodes" | "watched_movies",
+  table: "shows" | "watched_episodes" | "watched_movies" | "user_kv",
   rows: Record<string, unknown>[],
 ): Promise<void> {
   if (!supabase || rows.length === 0) return;
@@ -251,6 +145,15 @@ export async function pushAll(userId: string): Promise<Pick<SyncResult, "pushedS
   await upsertChunked("shows", shows.map((s) => showToRow(s, userId)));
   await upsertChunked("watched_episodes", watched.map((w) => watchedToRow(w, userId)));
   await upsertChunked("watched_movies", movies.map((m) => movieToRow(m, userId)));
+  // as listas e o resto que não é série/episódio/filme (ver CHAVES_NA_NUVEM)
+  const kv: Record<string, unknown>[] = [];
+  for (const chave of CHAVES_NA_NUVEM) {
+    const valor = chave === "listas" ? await getLists() : await kvGet(chave);
+    if (valor !== null) {
+      kv.push({ user_id: userId, key: chave, value: valor, updated_at: new Date().toISOString() });
+    }
+  }
+  await upsertChunked("user_kv", kv);
   return {
     pushedShows: shows.length,
     pushedEpisodes: watched.length,
@@ -312,16 +215,57 @@ export async function pullAndMerge(
 
   progress.merging = true;
   report();
+
+  // Juntar, não substituir: a cloud sem a numeração de uma série quer dizer
+  // "não sei", e substituir apagava-a no telemóvel (ver linhas.ts)
+  const [locaisS, locaisW, locaisM] = await Promise.all([
+    getShows(),
+    getAllWatched(),
+    getMovies(),
+  ]);
+  const porUuid = new Map(locaisS.map((s) => [s.uuid, s]));
+  const porEpisodio = new Map(locaisW.map((w) => [w.id, w]));
+  const porChave = new Map(locaisM.map((m) => [m.key, m]));
   await mergeFromCloud(
-    showRows.map(rowToShow),
-    watchedRows.map(rowToWatched),
-    movieRows.map(rowToMovie),
+    showRows.map((r) => juntarSerie(porUuid.get(r.uuid), rowToShow(r))),
+    watchedRows.map((r) => {
+      const w = rowToWatched(r);
+      return juntarEpisodio(porEpisodio.get(w.id), w);
+    }),
+    movieRows.map((r) => juntarFilme(porChave.get(r.key), rowToMovie(r))),
   );
+  await trazerKv();
   return {
     pulledShows: showRows.length,
     pulledEpisodes: watchedRows.length,
     pulledMovies: movieRows.length,
   };
+}
+
+/**
+ * As listas e o resto: a cloud é um cofre, não um espelho — só entra o que o
+ * telemóvel não tem. Se a tabela ainda não existir (falta a migração), não é
+ * razão para falhar o resto do pull.
+ */
+async function trazerKv(): Promise<void> {
+  let linhas: KvRow[];
+  try {
+    linhas = await fetchAll<KvRow>("user_kv");
+  } catch {
+    return;
+  }
+  for (const { key, value } of linhas) {
+    if (!(CHAVES_NA_NUVEM as readonly string[]).includes(key)) continue;
+    if (key === "listas") {
+      const locais = await getLists();
+      const juntas = juntarKv(locais, value as CustomList[]);
+      if (juntas !== locais) await gravarListasDaNuvem(juntas);
+    } else {
+      const local = await kvGet(key);
+      const junto = juntarKv(local, value);
+      if (junto !== local) await kvSetDaNuvem(key, junto);
+    }
+  }
 }
 
 /** Sincronização completa: envia o local e traz o remoto (união dos dois). */

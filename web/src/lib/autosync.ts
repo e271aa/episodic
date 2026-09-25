@@ -11,14 +11,22 @@ import { supabase } from "./supabase";
 import {
   clearOutboxKeys,
   countOutbox,
+  getLists,
+  getMovie,
   getOutbox,
+  getShow,
+  isKvOp,
   isMovieOp,
   isShowOp,
+  kvGet,
+  kvSet,
   type EpisodeOp,
+  type KvOp,
   type MovieOp,
   type ShowOp,
 } from "./db";
-import { getUser } from "./cloud";
+import { getUser, pushAll } from "./cloud";
+import { movieToRow, showToRow } from "./linhas";
 
 export type SyncState = "idle" | "pending" | "syncing" | "offline" | "error";
 
@@ -80,10 +88,15 @@ export async function flushOutbox(): Promise<void> {
     const epDelete: EpisodeOp[] = [];
     const movieUpsert: MovieOp[] = [];
     const movieDelete: MovieOp[] = [];
+    const showUpsert: ShowOp[] = [];
     const showDelete: ShowOp[] = [];
+    const kvUpsert: KvOp[] = [];
     for (const op of ops) {
-      if (isShowOp(op)) {
-        showDelete.push(op);
+      if (isKvOp(op)) {
+        kvUpsert.push(op);
+      } else if (isShowOp(op)) {
+        if (op.kind === "show-upserted") showUpsert.push(op);
+        else showDelete.push(op);
       } else if (isMovieOp(op)) {
         if (op.kind === "movie-watched") movieUpsert.push(op);
         else movieDelete.push(op);
@@ -111,18 +124,51 @@ export async function flushOutbox(): Promise<void> {
       if (!error) done.push(...epUpsert.map((op) => op.key));
     }
 
+    // Séries e filmes sobem com o estado ATUAL, lido agora — a operação só
+    // diz "mudou". Assim sobe tudo o que a app sabe (numeração, ids, capa,
+    // nomes), e não só os campos que calharam estar na operação.
+    if (showUpsert.length > 0) {
+      const atuais = await Promise.all(showUpsert.map((op) => getShow(op.showUuid)));
+      const linhas = atuais.filter((s) => s !== null).map((s) => showToRow(s, user.id));
+      const { error } = linhas.length
+        ? await supabase.from("shows").upsert(linhas)
+        : { error: null };
+      if (!error) done.push(...showUpsert.map((op) => op.key));
+    }
+
     if (movieUpsert.length > 0) {
+      const atuais = await Promise.all(movieUpsert.map((op) => getMovie(op.movieKey)));
       const { error } = await supabase.from("watched_movies").upsert(
-        movieUpsert.map((op) => ({
-          user_id: user.id,
-          key: op.movieKey,
-          name: op.name,
-          watched_at: op.watchedAt,
-          date_is_exact: op.dateIsExact,
-          updated_at: new Date().toISOString(),
-        })),
+        movieUpsert.map((op, i) => {
+          const atual = atuais[i];
+          return atual
+            ? movieToRow(atual, user.id)
+            : {
+                user_id: user.id,
+                key: op.movieKey,
+                name: op.name,
+                watched_at: op.watchedAt,
+                date_is_exact: op.dateIsExact,
+                updated_at: new Date().toISOString(),
+              };
+        }),
       );
       if (!error) done.push(...movieUpsert.map((op) => op.key));
+    }
+
+    for (const op of kvUpsert) {
+      const valor = op.chave === "listas" ? await getLists() : await kvGet(op.chave);
+      if (valor === null) {
+        done.push(op.key);
+        continue;
+      }
+      const { error } = await supabase.from("user_kv").upsert({
+        user_id: user.id,
+        key: op.chave,
+        value: valor,
+        updated_at: new Date().toISOString(),
+      });
+      if (!error) done.push(op.key);
     }
 
     // Apagar é feito um a um: o Supabase não tem "delete where (a,b,c) in (…)"
@@ -187,14 +233,46 @@ export function scheduleFlush(): void {
  * Liga o sync automático: envia o que ficou pendente de sessões anteriores e
  * reage a voltar a ter rede ou a app voltar a primeiro plano.
  */
+/**
+ * Uma vez por dispositivo (e outra vez depois de um import): envia a
+ * biblioteca inteira com o esquema de agora.
+ *
+ * O que já estava na cloud foi enviado sem numeração, sem listas, sem os
+ * dados dos filmes — e a fila só leva o que muda daqui para a frente. Sem
+ * isto, uma série em que nunca mais se tocasse ficava na cloud para sempre
+ * como estava, e uma instalação nova continuava a perdê-la.
+ *
+ * Se a cloud ainda não tiver as colunas novas (falta correr
+ * `ronda12-sync-completo.sql`), o envio falha e tenta-se de novo mais tarde;
+ * nada se perde, fica tudo no telemóvel.
+ */
+const ESQUEMA = 2;
+let aGarantir = false;
+
+async function garantirEsquema(): Promise<void> {
+  if (aGarantir || !supabase) return;
+  if ((await kvGet<number>("cloud:esquema")) === ESQUEMA) return;
+  const user = await getUser();
+  if (!user) return;
+  aGarantir = true;
+  try {
+    await pushAll(user.id);
+    await kvSet("cloud:esquema", ESQUEMA);
+  } catch {
+    // a cloud ainda não aceita o esquema novo — fica para a próxima
+  } finally {
+    aGarantir = false;
+  }
+}
+
 export function startAutoSync(): void {
   if (started || typeof window === "undefined" || !supabase) return;
   started = true;
 
-  void flushOutbox();
+  void flushOutbox().then(garantirEsquema);
   window.addEventListener("online", () => void flushOutbox());
   window.addEventListener("offline", () => void setState("offline"));
   document.addEventListener("visibilitychange", () => {
-    if (document.visibilityState === "visible") void flushOutbox();
+    if (document.visibilityState === "visible") void flushOutbox().then(garantirEsquema);
   });
 }
