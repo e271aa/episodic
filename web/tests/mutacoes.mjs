@@ -232,7 +232,7 @@ const MUTACOES = [
     descricao: "sincronizar volta a substituir a série local pela da cloud",
     ficheiro: LINHAS,
     de: "  if (!local) return nuvem;\n  const saber",
-    para: "  if (local || !local) return nuvem;\n  const saber",
+    para: "  if (!local || nuvem.uuid.length >= 0) return nuvem;\n  const saber",
   },
   {
     nome: "r12-portao/numeracao-nao-sobe",
