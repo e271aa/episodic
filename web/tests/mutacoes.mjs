@@ -31,6 +31,8 @@ const DB = "src/lib/db.ts";
 const STATS = "src/lib/advancedStats.ts";
 const REVER = "src/lib/rever.ts";
 const REVER_PAGINA = "src/app/rever/page.tsx";
+const LINHAS = "src/lib/linhas.ts";
+const NUMERACAO = "src/lib/numeracao.ts";
 
 /**
  * `de` tem de existir tal e qual no ficheiro — se deixar de existir, a
@@ -264,7 +266,64 @@ function correrSuite() {
   }
 }
 
-const resultados = [];
+const resultados = [  // ── Ronda 12, Fase 2: o portão ─────────────────────────────
+  {
+    nome: "r12-portao/sync-substitui",
+    descricao: "sincronizar volta a substituir a série local pela da cloud",
+    ficheiro: LINHAS,
+    de: "  if (!local) return nuvem;\n  const saber",
+    para: "  if (local || !local) return nuvem;\n  const saber",
+  },
+  {
+    nome: "r12-portao/numeracao-nao-sobe",
+    descricao: "a numeração deixa de ir para a cloud",
+    ficheiro: LINHAS,
+    de: "    numeracao: s.numeracao ?? null,",
+    para: "    numeracao: null,",
+  },
+  {
+    nome: "r12-portao/filme-meio-na-cloud",
+    descricao: "o id da TMDB dos filmes deixa de ir para a cloud",
+    ficheiro: LINHAS,
+    de: "    tmdb_id: m.tmdbId ?? null,",
+    para: "    tmdb_id: null,",
+  },
+  {
+    nome: "r12-portao/serie-fora-da-fila",
+    descricao: "mudar uma série volta a não entrar na fila da cloud",
+    ficheiro: DB,
+    de: "  await database.put(\"shows\", next);\n  await enfileirarSerie(uuid);",
+    para: "  await database.put(\"shows\", next);",
+  },
+  {
+    nome: "r12-portao/listas-fora-da-fila",
+    descricao: "mexer numa lista volta a não entrar na fila da cloud",
+    ficheiro: DB,
+    de: "  list.items = list.items.filter((i) => !(i.kind === kind && i.refId === refId));\n  await database.put(\"lists\", list);\n  await enfileirarKv(\"listas\");",
+    para: "  list.items = list.items.filter((i) => !(i.kind === kind && i.refId === refId));\n  await database.put(\"lists\", list);",
+  },
+  {
+    nome: "r12-portao/cura-desligada",
+    descricao: "a numeração perdida deixa de ser recuperada",
+    ficheiro: NUMERACAO,
+    de: "  if (aCorrer || !(await hasTmdb())) return 0;",
+    para: "  if (aCorrer || (await hasTmdb())) return 0;",
+  },
+  {
+    nome: "r12-portao/enriquecimento-congela-a-errada",
+    descricao: "o enriquecimento volta a congelar a numeração pela regra antiga",
+    ficheiro: METADATA,
+    de: "    const ambigua = !show.numeracao && show.tmdbId && show.tvmazeId != null;",
+    para: "    const ambigua = false;",
+  },
+  {
+    nome: "r12-portao/reparacao-apaga-ambiguas",
+    descricao: "a verificação volta a oferecer apagar marcações de séries em dúvida",
+    ficheiro: REPAIR,
+    de: "    if (!show.numeracao && show.tmdbId && show.tvmazeId != null) continue;",
+    para: "",
+  },
+];
 for (const m of alvo) {
   const original = readFileSync(m.ficheiro, "utf8");
   if (!original.includes(m.de)) {
