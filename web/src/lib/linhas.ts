@@ -1,6 +1,5 @@
 import {
   episodeKey,
-  type CustomList,
   type StoredMovie,
   type StoredShow,
   type WatchedEpisode,

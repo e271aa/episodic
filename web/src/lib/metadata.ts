@@ -245,7 +245,14 @@ export async function enrichShow(
      * novo — uma escrita só, sem nenhum instante pelo meio em que a série
      * tenha id do TMDB e numeração por declarar.
      */
-    const numeracao = show.numeracao ?? fonteDaNumeracao(show) ?? undefined;
+    //
+    // Com os DOIS ids e sem numeração não se congela nada: é o estado de uma
+    // série que a perdeu numa sincronização antiga (Ronda 12), e a regra
+    // antiga — "tem id da TMDB, é TMDB" — congelava precisamente a errada nas
+    // séries em que as duas divisões diferem. Quem decide essas é o
+    // `curarNumeracao`, pelas marcações.
+    const ambigua = !show.numeracao && show.tmdbId && show.tvmazeId != null;
+    const numeracao = show.numeracao ?? (ambigua ? undefined : fonteDaNumeracao(show)) ?? undefined;
 
     // Fusão: para o que se vê (capa, sinopse, géneros) o TMDB manda e a
     // TVmaze preenche o que faltar.

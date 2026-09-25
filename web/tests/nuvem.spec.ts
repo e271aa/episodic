@@ -66,7 +66,9 @@ const FILME: Required<StoredMovie> = {
 
 /** O que a cloud devolve: a linha enviada, menos o que só serve para escrever. */
 function pelaNuvem<T>(linha: Record<string, unknown>): T {
-  const { user_id: _u, updated_at: _a, ...resto } = linha;
+  const resto = { ...linha };
+  delete resto.user_id;
+  delete resto.updated_at;
   return resto as T;
 }
 
