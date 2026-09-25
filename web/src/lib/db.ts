@@ -132,6 +132,12 @@ export interface EpisodeOp extends OutboxCommon {
   season: number;
   episode: number;
   watchedAt: string;
+  /**
+   * Subia sempre como exata. Um episódio marcado por inferência ("vi tudo",
+   * os buracos) tem a data de hoje só porque tem de ter alguma — e voltava da
+   * cloud a dizer que tinha sido visto hoje, com certeza. Ausente = exata.
+   */
+  dateIsExact?: boolean;
 }
 
 export interface MovieOp extends OutboxCommon {
@@ -477,6 +483,76 @@ export async function markWatched(
     watchedAt,
     at: new Date().toISOString(),
   });
+}
+
+/**
+ * Marca muitos episódios de uma vez, numa só escrita.
+ *
+ * Existe para o "vi tudo" e para os buracos: marcar os 465 episódios do
+ * Grey's Anatomy um a um eram mais de 900 escritas no telemóvel. E marca-os
+ * com `exata: false` — sabes que os viste, não sabes quando, e sem isto as
+ * estatísticas diziam que tinhas visto 465 episódios hoje.
+ */
+export async function markWatchedMany(
+  showUuid: string,
+  episodios: { season: number; episode: number }[],
+  { exata }: { exata: boolean },
+): Promise<void> {
+  if (episodios.length === 0) return;
+  const database = await db();
+  const agora = new Date().toISOString();
+  const tx = database.transaction(["watched", "outbox"], "readwrite");
+  for (const { season, episode } of episodios) {
+    void tx.objectStore("watched").put({
+      id: episodeKey(showUuid, season, episode),
+      showUuid,
+      season,
+      episode,
+      watchedAt: agora,
+      dateIsExact: exata,
+    });
+    void tx.objectStore("outbox").put({
+      key: `ep:${episodeKey(showUuid, season, episode)}`,
+      kind: "episode-watched",
+      showUuid,
+      season,
+      episode,
+      watchedAt: agora,
+      dateIsExact: exata,
+      at: agora,
+    } satisfies EpisodeOp);
+  }
+  await tx.done;
+  if (typeof window !== "undefined") {
+    void import("./autosync").then((m) => m.scheduleFlush());
+  }
+}
+
+/** O inverso, para o anular de uma marcação em lote. */
+export async function unmarkWatchedMany(
+  showUuid: string,
+  episodios: { season: number; episode: number }[],
+): Promise<void> {
+  if (episodios.length === 0) return;
+  const database = await db();
+  const agora = new Date().toISOString();
+  const tx = database.transaction(["watched", "outbox"], "readwrite");
+  for (const { season, episode } of episodios) {
+    void tx.objectStore("watched").delete(episodeKey(showUuid, season, episode));
+    void tx.objectStore("outbox").put({
+      key: `ep:${episodeKey(showUuid, season, episode)}`,
+      kind: "episode-unwatched",
+      showUuid,
+      season,
+      episode,
+      watchedAt: agora,
+      at: agora,
+    } satisfies EpisodeOp);
+  }
+  await tx.done;
+  if (typeof window !== "undefined") {
+    void import("./autosync").then((m) => m.scheduleFlush());
+  }
 }
 
 export async function unmarkWatched(

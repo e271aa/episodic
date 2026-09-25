@@ -79,6 +79,11 @@ export interface Catalogo {
    * TVmaze não é reparticionada quando ganha um id do TMDB.
    */
   tvmaze: Record<number, number[]>;
+  /**
+   * Quantos dos ÚLTIMOS episódios de cada série da TVmaze ainda não estrearam
+   * (data em 2099). Sem entrada, todos estrearam em 2020.
+   */
+  tvmazeFuturos: Record<number, number>;
 }
 
 export function catalogoVazio(): Catalogo {
@@ -91,6 +96,7 @@ export function catalogoVazio(): Catalogo {
     ondeVer: {},
     porTvdb: {},
     tvmaze: {},
+    tvmazeFuturos: {},
   };
 }
 
@@ -239,8 +245,9 @@ export async function interceptarTmdb(page: Page, catalogo: Catalogo): Promise<v
       });
     }
     const episodios = /\/shows\/(\d+)\/episodes/.exec(url);
-    const porTemporada = episodios ? catalogo.tvmaze[Number(episodios[1])] : undefined;
-    const corpo = porTemporada
+    const idSerie = episodios ? Number(episodios[1]) : NaN;
+    const porTemporada = episodios ? catalogo.tvmaze[idSerie] : undefined;
+    const lista = porTemporada
       ? porTemporada.flatMap((quantos, i) =>
           Array.from({ length: quantos }, (_, j) => ({
             id: (i + 1) * 1000 + j,
@@ -251,6 +258,10 @@ export async function interceptarTmdb(page: Page, catalogo: Catalogo): Promise<v
           })),
         )
       : [];
+    const futuros = catalogo.tvmazeFuturos[idSerie] ?? 0;
+    const corpo = lista.map((ep, i) =>
+      i >= lista.length - futuros ? { ...ep, airdate: "2099-01-01" } : ep,
+    );
     return rota.fulfill({
       status: 200,
       contentType: "application/json",

@@ -29,7 +29,14 @@ export interface TmdbSeasonSummary {
 }
 
 export interface TmdbShowDetails extends TmdbShowLite {
+  /** conta também os episódios anunciados — ver `lib/estreados.ts` */
   number_of_episodes: number;
+  /** o último episódio já emitido; `null` se ainda não estreou nada */
+  last_episode_to_air?: {
+    season_number: number;
+    episode_number: number;
+    air_date: string | null;
+  } | null;
   number_of_seasons: number;
   seasons: TmdbSeasonSummary[];
   status: string;

@@ -145,6 +145,8 @@ export async function loadProfileStats(): Promise<ProfileStats> {
   // atividade por ano + primeiro ano de registo
   const yearCount = new Map<number, number>();
   for (const ep of watched) {
+    // só o que tem data certa — ver o mesmo filtro em advancedStats.ts
+    if (ep.dateIsExact === false) continue;
     const year = Number(ep.watchedAt.slice(0, 4));
     if (Number.isFinite(year)) yearCount.set(year, (yearCount.get(year) ?? 0) + 1);
   }

@@ -40,6 +40,12 @@ export function computeAdvancedStats(
 ): AdvancedStats {
   const showName = new Map(shows.map((s) => [s.uuid, s.name]));
 
+  // Tudo aqui é sobre QUANDO — e um episódio sem data certa não sabe quando.
+  // Os do TV Time marcados em massa ficavam com o dia da marcação: o 14 de
+  // junho de 2015 tinha 98 episódios, o 28 de junho de 2024 tinha 87 —
+  // maratonas que nunca aconteceram. Continuam nos totais; aqui não entram.
+  watched = watched.filter((ep) => ep.dateIsExact !== false);
+
   // agrupa por dia
   const byDay = new Map<string, WatchedEpisode[]>();
   for (const ep of watched) {

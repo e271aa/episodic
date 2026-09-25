@@ -104,7 +104,7 @@ export async function flushOutbox(): Promise<void> {
           season: op.season,
           episode: op.episode,
           watched_at: op.watchedAt,
-          date_is_exact: true,
+          date_is_exact: op.dateIsExact ?? true,
           updated_at: new Date().toISOString(),
         })),
       );

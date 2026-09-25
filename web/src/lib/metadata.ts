@@ -3,11 +3,19 @@
 //  - TVmaze caso contrário (grátis, sem chave — o predefinido)
 import type { StoredShow } from "./db";
 import * as tmdb from "./tmdb";
+import { estreadosTmdb, estreadosTvmaze, somaEstreados } from "./estreados";
 import * as tvmaze from "./tvmaze";
 
 export interface MetaSeason {
   number: number;
+  /** todos os que o fornecedor lista, incluindo os anunciados */
   episodeCount: number;
+  /**
+   * Os que já estrearam — é isto que conta para "por ver", para "completa" e
+   * para "marcar temporada". O `episodeCount` fica para quem precisa da
+   * estrutura inteira: o calendário "a estrear" e a reparação de numerações.
+   */
+  estreados: number;
   name: string;
 }
 
@@ -144,7 +152,10 @@ export async function enrichShow(
           posterPath: details.poster_path,
           backdropPath: details.backdrop_path,
           overview: details.overview || null,
-          totalEpisodes: details.number_of_episodes || null,
+          totalEpisodes:
+            somaEstreados(
+              estreadosTmdb(details.seasons ?? [], details.last_episode_to_air),
+            ) || null,
           firstAired: details.first_air_date || null,
           status: details.status || null,
           genres: details.genres?.map((g) => g.name) ?? null,
@@ -176,7 +187,9 @@ export async function enrichShow(
           posterPath: mazeShow.image?.original ?? mazeShow.image?.medium ?? null,
           backdropPath: mazeShow.image?.original ?? null,
           overview: tvmaze.stripHtml(mazeShow.summary),
-          totalEpisodes: episodes.length || null,
+          totalEpisodes:
+            somaEstreados(estreadosTvmaze(episodes, new Date().toISOString().slice(0, 10))) ||
+            null,
           firstAired: mazeShow.premiered ?? null,
           status: mazeShow.status ?? null,
           genres: mazeShow.genres.length > 0 ? mazeShow.genres : null,
@@ -200,7 +213,10 @@ export async function enrichShow(
           posterPath: details.poster_path,
           backdropPath: details.backdrop_path,
           overview: details.overview || null,
-          totalEpisodes: details.number_of_episodes || null,
+          totalEpisodes:
+            somaEstreados(
+              estreadosTmdb(details.seasons ?? [], details.last_episode_to_air),
+            ) || null,
           firstAired: details.first_air_date || null,
           status: details.status || null,
           genres: details.genres?.map((g) => g.name) ?? null,
@@ -415,29 +431,29 @@ export async function getSeasons(show: StoredShow): Promise<MetaSeason[] | null>
   try {
     if (fonte === "tmdb" && show.tmdbId && (await hasTmdb())) {
       const details = await tmdb.getShowDetails(show.tmdbId);
+      const contagens = estreadosTmdb(details.seasons, details.last_episode_to_air);
       return details.seasons
         .filter((s) => s.season_number > 0)
         .sort((a, b) => a.season_number - b.season_number)
         .map((s) => ({
           number: s.season_number,
           episodeCount: s.episode_count,
+          estreados: contagens.get(s.season_number)?.estreados ?? s.episode_count,
           name: s.name,
         }));
     }
     if (fonte === "tvmaze" && show.tvmazeId != null) {
       const episodes = await tvmaze.getEpisodes(show.tvmazeId);
-      const counts = new Map<number, number>();
-      for (const ep of episodes) {
-        counts.set(ep.season, (counts.get(ep.season) ?? 0) + 1);
-      }
+      const contagens = estreadosTvmaze(episodes, new Date().toISOString().slice(0, 10));
       // O nome usa a posição (1ª, 2ª…), não o número literal do fornecedor —
       // alguns animes longos são indexados por ano de emissão (2007, 2008…)
       // e "Temporada 2007" confundiria mais do que ajudaria
-      return [...counts.entries()]
+      return [...contagens.entries()]
         .sort((a, b) => a[0] - b[0])
-        .map(([number, episodeCount], i) => ({
+        .map(([number, c], i) => ({
           number,
-          episodeCount,
+          episodeCount: c.listados,
+          estreados: c.estreados,
           name: `Temporada ${i + 1}`,
         }));
     }

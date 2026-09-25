@@ -7,7 +7,9 @@ import {
   getShow,
   getWatchedForShow,
   markWatched,
+  markWatchedMany,
   unmarkWatched,
+  unmarkWatchedMany,
   updateShow,
   type StoredShow,
   type WatchedEpisode,
@@ -95,7 +97,15 @@ interface SeasonView {
   /** número real a pedir ao fornecedor (TMDB/TVmaze) — só para buscar dados */
   providerNumber: number;
   name: string;
+  /**
+   * Os que já estrearam. Contava os anunciados também, e uma série em dia
+   * passava a "10 por ver" no dia em que a temporada seguinte era anunciada.
+   * Tudo neste ecrã que diz "completa", "por ver" ou "marcar temporada" lê
+   * daqui (Ronda 12).
+   */
   episodeCount: number;
+  /** anunciados, ainda por estrear — mostram-se, não se contam */
+  anunciados: number;
   fromProvider: boolean;
 }
 
@@ -240,13 +250,19 @@ export default function ShowPage() {
             number: i + 1,
             providerNumber: s.number,
             name: s.name,
-            episodeCount: s.episodeCount,
+            episodeCount: s.estreados,
+            anunciados: s.episodeCount - s.estreados,
             fromProvider: true,
           })),
         );
-        if (!atual.totalEpisodes) {
-          const total = providerSeasons.reduce((sum, s) => sum + s.episodeCount, 0);
-          await updateShow(uuid, { totalEpisodes: total || null });
+        // O total guardado é o que a Biblioteca e o "A seguir" leem. Só se
+        // escrevia quando faltava, e ficava para sempre com o valor de quando
+        // a série foi importada — nem os episódios novos entravam, nem os
+        // anunciados saíam. Abrir a série é o momento em que se sabe.
+        const total = providerSeasons.reduce((sum, s) => sum + s.estreados, 0) || null;
+        if (total !== atual.totalEpisodes) {
+          const atualizada = await updateShow(uuid, { totalEpisodes: total });
+          if (atualizada) setShow(atualizada);
         }
         return;
       }
@@ -265,6 +281,7 @@ export default function ShowPage() {
             providerNumber: number, // sem fornecedor, é sempre a mesma numeração
             name: `Temporada ${number}`,
             episodeCount: count,
+            anunciados: 0,
             fromProvider: false,
           })),
       );
@@ -375,20 +392,19 @@ export default function ShowPage() {
    */
   const marcarBuracos = useCallback(async () => {
     if (!show || buracos.total === 0) return;
-    const marcados: { temporada: number; episodio: number }[] = [];
-    for (const t of buracos.porTemporada) {
-      for (const e of t.episodios) {
-        await markWatched(uuid, t.temporada, e);
-        marcados.push({ temporada: t.temporada, episodio: e });
-      }
-    }
-    await syncWatched(show);
+    const marcados = buracos.porTemporada.flatMap((t) =>
+      t.episodios.map((e) => ({ season: t.temporada, episode: e })),
+    );
     if (marcados.length === 0) return;
+    // Sem data certa: sabes que os viste, não quando. Com a data de hoje, as
+    // estatísticas contavam-nos todos como vistos hoje (Ronda 12).
+    await markWatchedMany(uuid, marcados, { exata: false });
+    await syncWatched(show);
     pushUndo({
       label: `${contarEpisodios(marcados.length)} marcados`,
       detail: show.name,
       undo: async () => {
-        for (const m of marcados) await unmarkWatched(uuid, m.temporada, m.episodio);
+        await unmarkWatchedMany(uuid, marcados);
         await syncWatched(show);
       },
     });
@@ -788,8 +804,10 @@ export default function ShowPage() {
                         data-testid={`season-${season.number}`}
                         aria-pressed={selected}
                         aria-label={
-                          `Temporada ${season.number}, ${seen} de ${season.episodeCount} vistos` +
-                          (temBuraco ? ", com episódios por marcar mais atrás" : "")
+                          season.episodeCount === 0
+                            ? `Temporada ${season.number}, ainda não estreou`
+                            : `Temporada ${season.number}, ${seen} de ${season.episodeCount} vistos` +
+                              (temBuraco ? ", com episódios por marcar mais atrás" : "")
                         }
                         ref={(el) => {
                           if (selected) chipAberto.current = el;
@@ -814,7 +832,7 @@ export default function ShowPage() {
                             {season.number}
                           </span>
                           <span className="ep-code text-[11px] text-faint">
-                            {seen}/{season.episodeCount}
+                            {season.episodeCount === 0 ? "breve" : `${seen}/${season.episodeCount}`}
                           </span>
                         </span>
                         {/* O quanto da temporada já foi visto, em largura.
@@ -957,6 +975,37 @@ export default function ShowPage() {
                               </span>
                               <ChevronDownIcon className="h-4 w-4 shrink-0 text-faint" />
                             </button>
+                          );
+                        })}
+                        {/* Anunciados: mostram-se, com a data, mas não se
+                            marcam nem contam — ninguém viu um episódio que
+                            ainda não estreou. */}
+                        {Array.from(
+                          { length: season.anunciados },
+                          (_, i) => season.episodeCount + i + 1,
+                        ).map((epNumber) => {
+                          const metaEp = episodes?.find((e) => e.episode === epNumber);
+                          return (
+                            <div
+                              key={epNumber}
+                              data-testid={`anunciado-${season.number}-${epNumber}`}
+                              className="flex h-[52px] items-center gap-3 px-2 text-faint"
+                            >
+                              <span className="ep-code w-[34px] shrink-0 text-[13px]">
+                                E{String(epNumber).padStart(2, "0")}
+                              </span>
+                              <span className="h-[26px] w-[26px] shrink-0 rounded-full border-2 border-dashed border-line" aria-hidden />
+                              <span className="min-w-0 flex-1">
+                                <span className="block truncate text-base">
+                                  {metaEp?.name ?? `Episódio ${epNumber}`}
+                                </span>
+                                <span className="ep-code block text-xs">
+                                  {metaEp?.airDate
+                                    ? `estreia a ${new Date(metaEp.airDate).toLocaleDateString("pt-PT", { day: "numeric", month: "short" })}`
+                                    : "por estrear"}
+                                </span>
+                              </span>
+                            </div>
                           );
                         })}
                       </div>
