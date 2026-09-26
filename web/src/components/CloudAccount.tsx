@@ -5,6 +5,8 @@ import { isCloudConfigured } from "@/lib/supabase";
 import SectionHeader from "@/components/SectionHeader";
 import { Panel, PanelRow } from "@/components/Panel";
 import {
+  contarNaNuvem,
+  contarNoTelemovel,
   getUser,
   onAuthChange,
   pullAndMerge,
@@ -12,6 +14,7 @@ import {
   signOut,
   syncNow,
 } from "@/lib/cloud";
+import { compararComNuvem, type LinhaDaProva } from "@/lib/linhas";
 import { onSyncStateChange, type SyncState } from "@/lib/autosync";
 import type { User } from "@supabase/supabase-js";
 
@@ -125,6 +128,27 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
     }
   }, [user, onSynced]);
 
+  /**
+   * A prova da Fase 2: uma instalação nova recuperava tudo? Compara o que
+   * está aqui com o que está na cloud. Faz o que a janela privada fazia, mas
+   * no próprio telemóvel, e repete-se quando se quiser.
+   */
+  const [prova, setProva] = useState<
+    | { fase: "a-contar" }
+    | { fase: "feita"; linhas: LinhaDaProva[]; tudoCerto: boolean; faltaSql: boolean }
+    | { fase: "erro"; mensagem: string }
+    | null
+  >(null);
+  const verificarCopia = useCallback(async () => {
+    setProva({ fase: "a-contar" });
+    try {
+      const [local, nuvem] = await Promise.all([contarNoTelemovel(), contarNaNuvem()]);
+      setProva({ fase: "feita", ...compararComNuvem(local, nuvem) });
+    } catch (e) {
+      setProva({ fase: "erro", mensagem: e instanceof Error ? e.message : String(e) });
+    }
+  }, []);
+
   const handleSignOut = useCallback(async () => {
     await signOut();
     autoPulled.current = false;
@@ -202,6 +226,62 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
               </button>
             </div>
           </form>
+
+          <PanelRow
+            titulo="Verificar a cópia na cloud"
+            detalhe="Se reinstalasses a app hoje, recuperavas tudo?"
+            onClick={() => void verificarCopia()}
+            fim={
+              prova?.fase === "a-contar" ? (
+                <span className="spinner h-4 w-4 rounded-full border-2 border-dim/30 border-t-dim" />
+              ) : (
+                "→"
+              )
+            }
+          />
+          {prova?.fase === "feita" && (
+            <div className="px-5 pb-4" data-testid="prova-nuvem">
+              <table className="w-full text-[15px]">
+                <thead>
+                  <tr className="text-left text-xs text-faint">
+                    <th className="py-1 font-normal"></th>
+                    <th className="py-1 text-right font-normal">aqui</th>
+                    <th className="py-1 text-right font-normal">cloud</th>
+                    <th className="w-6"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {prova.linhas.map((l) => (
+                    <tr key={l.nome} className="border-t border-line">
+                      <td className="py-1.5 text-dim">{l.nome}</td>
+                      <td className="ep-code py-1.5 text-right">{l.local}</td>
+                      <td className="ep-code py-1.5 text-right">{l.nuvem ?? "—"}</td>
+                      <td className="py-1.5 text-right" aria-label={l.certo ? "igual" : "diferente"}>
+                        {l.certo ? "✓" : "✗"}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              <p
+                className={`mt-3 text-[15px] ${prova.tudoCerto ? "text-ink" : "text-danger"}`}
+                data-testid="prova-veredicto"
+              >
+                {prova.faltaSql
+                  ? "A cloud ainda não guarda a numeração nem as listas — falta correr o SQL da Ronda 12 no Supabase."
+                  : prova.tudoCerto
+                    ? "Uma instalação nova recuperava tudo."
+                    : autoSync.pending > 0
+                      ? `Há ${autoSync.pending} alterações ainda por enviar — espera que a sincronização termine e verifica outra vez.`
+                      : "A cloud não tem o mesmo que o telemóvel — não reinstales a app ainda."}
+              </p>
+            </div>
+          )}
+          {prova?.fase === "erro" && (
+            <p className="px-5 pb-4 text-[15px] text-danger">
+              Não deu para verificar: {prova.mensagem}
+            </p>
+          )}
 
           <PanelRow titulo="Terminar sessão" onClick={() => void handleSignOut()} />
         </Panel>

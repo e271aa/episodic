@@ -1,6 +1,7 @@
 import { test, expect } from "./apoio/base";
 import type { StoredMovie, StoredShow, WatchedEpisode } from "../src/lib/db";
 import {
+  compararComNuvem,
   juntarEpisodio,
   juntarFilme,
   juntarKv,
@@ -154,4 +155,20 @@ test("a numeração perdida volta pela divisão em que as marcações encaixam",
   expect(escolherNumeracao(friends.tvmaze, friends.tmdb, [{ season: 1, episode: 3 }])).toBeNull();
   // nenhuma aceita: também não
   expect(escolherNumeracao([10], [10], [{ season: 2, episode: 1 }])).toBeNull();
+});
+
+test("a prova: uma instalação nova recuperava tudo só se a cloud tiver o mesmo", () => {
+  const aqui = { series: 74, episodios: 3345, filmes: 180, listas: 3, seriesComNumeracao: 69 };
+
+  expect(compararComNuvem(aqui, { ...aqui }).tudoCerto).toBe(true);
+
+  // a cloud de antes do SQL: sem a coluna da numeração
+  const semSql = compararComNuvem(aqui, { ...aqui, listas: 0, seriesComNumeracao: null });
+  expect(semSql.faltaSql).toBe(true);
+  expect(semSql.tudoCerto).toBe(false);
+
+  // a cloud com MAIS também é diferença: o que apagaste aqui voltava
+  const aMais = compararComNuvem(aqui, { ...aqui, episodios: 3350 });
+  expect(aMais.tudoCerto).toBe(false);
+  expect(aMais.linhas.find((l) => l.nome === "Episódios vistos")?.certo).toBe(false);
 });

@@ -235,3 +235,51 @@ export function juntarKv<T>(local: T | null | undefined, nuvem: T): T {
   if (Array.isArray(local) && local.length === 0) return nuvem;
   return local;
 }
+
+// ── A prova: o que está na cloud chega para uma instalação nova? ──────────
+
+export interface Contagem {
+  series: number;
+  episodios: number;
+  filmes: number;
+  listas: number;
+  /** `null` na cloud = a coluna ainda não existe (falta o SQL da Ronda 12) */
+  seriesComNumeracao: number | null;
+}
+
+export interface LinhaDaProva {
+  nome: string;
+  local: number;
+  nuvem: number | null;
+  certo: boolean;
+}
+
+/**
+ * Compara o telemóvel com a cloud. É a prova que a Fase 2 pedia — "uma
+ * instalação nova recupera a biblioteca inteira?" — sem precisar de uma
+ * janela privada: se a cloud tem o mesmo que o telemóvel, com a numeração,
+ * a instalação nova recebe o mesmo (a conversão de volta está provada nos
+ * testes de `linhas.ts`).
+ *
+ * A cloud com MAIS também é diferença: seriam coisas que apagaste aqui e
+ * voltariam numa instalação nova.
+ */
+export function compararComNuvem(
+  local: Contagem,
+  nuvem: Contagem,
+): { linhas: LinhaDaProva[]; tudoCerto: boolean; faltaSql: boolean } {
+  const linhas: LinhaDaProva[] = [
+    { nome: "Séries", local: local.series, nuvem: nuvem.series, certo: false },
+    { nome: "Episódios vistos", local: local.episodios, nuvem: nuvem.episodios, certo: false },
+    { nome: "Filmes", local: local.filmes, nuvem: nuvem.filmes, certo: false },
+    { nome: "Listas", local: local.listas, nuvem: nuvem.listas, certo: false },
+    {
+      nome: "Séries com numeração",
+      local: local.seriesComNumeracao ?? 0,
+      nuvem: nuvem.seriesComNumeracao,
+      certo: false,
+    },
+  ].map((l) => ({ ...l, certo: l.nuvem === l.local }));
+  const faltaSql = nuvem.seriesComNumeracao === null;
+  return { linhas, tudoCerto: !faltaSql && linhas.every((l) => l.certo), faltaSql };
+}

@@ -24,6 +24,7 @@ import {
   rowToWatched,
   showToRow,
   watchedToRow,
+  type Contagem,
   type KvRow,
   type MovieRow,
   type ShowRow,
@@ -266,6 +267,55 @@ async function trazerKv(): Promise<void> {
       if (junto !== local) await kvSetDaNuvem(key, junto);
     }
   }
+}
+
+/** Quantas linhas tem esta tabela para este utilizador — só o número. */
+async function contar(table: "shows" | "watched_episodes" | "watched_movies"): Promise<number> {
+  if (!supabase) return 0;
+  const { count, error } = await supabase.from(table).select("*", { count: "exact", head: true });
+  if (error) throw new Error(`${table}: ${error.message}`);
+  return count ?? 0;
+}
+
+/**
+ * O que a cloud tem, em números. A numeração e as listas vêm a `null`/0 se a
+ * cloud ainda não tiver as colunas e a tabela novas — e isso não é um erro,
+ * é a resposta: falta correr o SQL.
+ */
+export async function contarNaNuvem(): Promise<Contagem> {
+  const [series, episodios, filmes] = await Promise.all([
+    contar("shows"),
+    contar("watched_episodes"),
+    contar("watched_movies"),
+  ]);
+  let seriesComNumeracao: number | null = null;
+  let listas = 0;
+  if (supabase) {
+    const num = await supabase
+      .from("shows")
+      .select("uuid", { count: "exact", head: true })
+      .not("numeracao", "is", null);
+    if (!num.error) seriesComNumeracao = num.count ?? 0;
+    const kv = await supabase.from("user_kv").select("value").eq("key", "listas").maybeSingle();
+    if (!kv.error && Array.isArray(kv.data?.value)) listas = kv.data.value.length;
+  }
+  return { series, episodios, filmes, listas, seriesComNumeracao };
+}
+
+export async function contarNoTelemovel(): Promise<Contagem> {
+  const [shows, watched, movies, lists] = await Promise.all([
+    getShows(),
+    getAllWatched(),
+    getMovies(),
+    getLists(),
+  ]);
+  return {
+    series: shows.length,
+    episodios: watched.length,
+    filmes: movies.length,
+    listas: lists.length,
+    seriesComNumeracao: shows.filter((s) => s.numeracao).length,
+  };
 }
 
 /** Sincronização completa: envia o local e traz o remoto (união dos dois). */
