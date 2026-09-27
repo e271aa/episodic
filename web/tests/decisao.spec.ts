@@ -1,6 +1,7 @@
 import { test, expect } from "./apoio/base";
 import { semear } from "./apoio/semear";
 import { serieCompleta } from "./apoio/tmdb";
+import { tapadoPelaDock } from "./apoio/geometria";
 
 /**
  * Ronda 12, Fase 5 — "decisão e palavras". A crítica da Fase 4 (AUDITORIA.md)
@@ -164,4 +165,63 @@ test("'A seguir' é só a fila: seguir uma série diz 'Seguida', e a Biblioteca 
 
   await page.goto("/profile");
   await expect(page.getByText(/séries · 3 seguidas/)).toBeVisible();
+});
+
+// ── #3 · o primeiro uso de um amigo ──────────────────────────
+
+test("sem nada na app, a primeira ação é procurar uma série, e a dock não a tapa", async ({
+  page,
+}) => {
+  // Ronda 12, Fase 4: a ação principal pedia um ZIP do TV Time (que os
+  // amigos nunca tiveram), meio tapada pela dock; "Explorar séries" levava à
+  // Biblioteca vazia.
+  await semear(page, {});
+  await page.goto("/series");
+
+  const procurar = page.getByRole("link", { name: "Procurar uma série" });
+  await expect(procurar).toBeVisible();
+  await expect(procurar).toHaveAttribute("href", "/explorar?procurar=1");
+  expect(await tapadoPelaDock(page, 'main a[href="/explorar?procurar=1"]')).toBe(false);
+  // importar continua lá, mas como segunda
+  await expect(page.getByRole("link", { name: /Importar/ })).toHaveAttribute("href", "/import");
+  await expect(page.locator('main a[href="/library"]')).toHaveCount(0);
+});
+
+test("seguir uma série na pesquisa do Explorar põe-na na fila", async ({ page, tmdb }) => {
+  // Os cartões do Explorar só tinham "Para ver" — e uma série "para ver" não
+  // entra na fila, por isso a casa ficava em "Estás em dia" para sempre.
+  tmdb.multi = [
+    {
+      id: 700,
+      media_type: "tv",
+      name: "Serie Nova",
+      original_name: "Serie Nova",
+      first_air_date: "2021-01-01",
+      poster_path: "/cartaz.jpg",
+      overview: "",
+    },
+  ];
+  Object.assign(tmdb.series, serieCompleta(700, "Serie Nova", [3]).series);
+  Object.assign(tmdb.episodios, serieCompleta(700, "Serie Nova", [3]).episodios);
+  await semear(page, {});
+
+  await page.goto("/explorar?procurar=1");
+  await page.locator('input[type="search"]').fill("serie nova");
+  await page.getByRole("button", { name: "Seguir" }).click();
+  await expect(page.getByText("Seguida", { exact: true })).toBeVisible();
+
+  await page.goto("/series");
+  await expect(page.getByText("S01·E01").first()).toBeVisible();
+  await expect(page.getByText("Estás em dia")).toHaveCount(0);
+});
+
+test("só com séries para ver, a casa não diz 'Estás em dia'", async ({ page }) => {
+  await semear(page, {
+    series: [
+      { uuid: "s-guardada", name: "Guardada", tmdbId: 901, followed: false, inWatchlist: true },
+    ],
+  });
+  await page.goto("/series");
+  await expect(page.getByText("Ainda não segues nenhuma série")).toBeVisible();
+  await expect(page.getByText("Estás em dia")).toHaveCount(0);
 });

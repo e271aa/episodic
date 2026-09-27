@@ -1,6 +1,6 @@
-import type { Page } from "@playwright/test";
 import { test, expect } from "./apoio/base";
 import { semear } from "./apoio/semear";
+import { tapadoPelaDock } from "./apoio/geometria";
 
 /**
  * Ronda 5 — o que só se vê com a app na mão.
@@ -11,19 +11,6 @@ import { semear } from "./apoio/semear";
 
 const HOJE = new Date().toISOString();
 
-/** A dock flutua sobre tudo, com um degradê de 110px por cima do conteúdo. */
-async function tapadoPelaDock(page: Page, seletor: string): Promise<boolean> {
-  return page.evaluate((sel: string) => {
-    const alvo = document.querySelector(sel);
-    if (!alvo) throw new Error(`sem elemento para ${sel}`);
-    const caixa = alvo.getBoundingClientRect();
-    const emCima = document.elementFromPoint(
-      caixa.left + caixa.width / 2,
-      caixa.top + caixa.height / 2,
-    );
-    return !(emCima === alvo || alvo.contains(emCima));
-  }, seletor);
-}
 
 test("os botões do Pôr em dia ficam por cima da dock, não por baixo", async ({ page }) => {
   await semear(page, {

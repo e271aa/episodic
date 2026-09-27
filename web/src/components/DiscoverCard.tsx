@@ -5,17 +5,23 @@ import Poster from "@/components/Poster";
 import { CheckIcon } from "@/components/icons";
 import type { DiscoverItem } from "@/lib/tmdb";
 
-type Estado = "idle" | "a-guardar" | "guardado" | "dispensado";
+type Estado = "idle" | "a-guardar" | "guardado" | "seguida" | "dispensado";
 
 /**
  * Um cartaz do Explorar. Duas ações, ambas de um toque: guardar para ver
  * depois, ou dispensar para nunca mais aparecer.
+ *
+ * Com `onFollow` (as séries de uma pesquisa), as ações são outras: quem
+ * procura um título pelo nome normalmente já o está a ver — "Seguir" põe-no
+ * na fila, "Para ver" guarda-o para um dia. Dispensar o que se acabou de
+ * procurar não faz sentido, por isso o ✕ sai.
  */
 export default function DiscoverCard({
   item,
   index,
   onSave,
   onDismiss,
+  onFollow,
   mostrarTipo = false,
   fluida = false,
 }: {
@@ -23,6 +29,7 @@ export default function DiscoverCard({
   index: number;
   onSave: (item: DiscoverItem) => Promise<void>;
   onDismiss: (item: DiscoverItem) => Promise<void>;
+  onFollow?: (item: DiscoverItem) => Promise<void>;
   /** a pesquisa mistura séries e filmes — sem isto não se sabe qual é qual */
   mostrarTipo?: boolean;
   /** numa faixa que rola, o cartaz tem largura fixa; num mosaico, acompanha
@@ -37,6 +44,13 @@ export default function DiscoverCard({
     setEstado("a-guardar");
     await onSave(item);
     setEstado("guardado");
+  };
+
+  const seguir = async () => {
+    if (!onFollow) return;
+    setEstado("a-guardar");
+    await onFollow(item);
+    setEstado("seguida");
   };
 
   const dispensar = async () => {
@@ -60,11 +74,11 @@ export default function DiscoverCard({
           sizes="144px"
           className="object-cover"
         />
-        {estado === "guardado" && (
+        {(estado === "guardado" || estado === "seguida") && (
           <div className="absolute inset-0 flex items-center justify-center bg-tube/75">
             <span className="flex items-center gap-1.5 rounded-full bg-ink px-3 py-1.5 text-xs font-semibold text-tube">
               <CheckIcon className="check-pop h-3.5 w-3.5" />
-              Para ver
+              {estado === "seguida" ? "Seguida" : "Para ver"}
             </span>
           </div>
         )}
@@ -77,7 +91,24 @@ export default function DiscoverCard({
           .join(" · ")}
       </p>
 
-      {estado === "idle" && (
+      {estado === "idle" && onFollow && (
+        <div className="mt-1.5 flex flex-col">
+          <button
+            onClick={() => void seguir()}
+            className="flex min-h-11 cursor-pointer items-center justify-center rounded-full border border-line text-xs font-semibold text-ink transition hover:border-ink active:scale-95"
+          >
+            Seguir
+          </button>
+          <button
+            onClick={() => void guardar()}
+            className="flex min-h-11 cursor-pointer items-center justify-center text-xs font-semibold text-dim transition hover:text-ink active:scale-95"
+          >
+            Para ver
+          </button>
+        </div>
+      )}
+
+      {estado === "idle" && !onFollow && (
         <div className="mt-1.5 flex gap-1.5">
           <button
             onClick={() => void guardar()}

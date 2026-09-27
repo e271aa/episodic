@@ -23,7 +23,7 @@ import WatchNextCard from "@/components/WatchNextCard";
 import TonightHero from "@/components/TonightHero";
 import Poster from "@/components/Poster";
 import SectionHeader from "@/components/SectionHeader";
-import { CheckIcon } from "@/components/icons";
+import { CheckIcon, SearchIcon } from "@/components/icons";
 import { Bone, CardsBone, TitleBone } from "@/components/Skeleton";
 
 // Preenche o id TMDB em falta, uma vez só. Sem ele, o Explorar volta a
@@ -264,26 +264,29 @@ export default function SeriesPage() {
   }
 
   if (shows.length === 0) {
-    // Primeira utilização — o ecrã vazio é o onboarding.
+    // Primeira utilização — o ecrã vazio é o onboarding. Começava por
+    // "importa o ZIP do TV Time", que os amigos nunca tiveram (Ronda 12,
+    // Fase 4): o primeiro passo é o que toda a gente pode fazer, e importar
+    // fica como segunda porta, para quem vem de lá.
     const steps = [
       {
         n: "01",
-        title: "Traz o teu histórico",
-        text: "Importa o ZIP do TV Time — ou salta este passo e começa do zero.",
+        title: "Procura o que andas a ver",
+        text: "Toca em Seguir e a série entra na tua fila.",
       },
       {
         n: "02",
-        title: "Segue as tuas séries",
-        text: "Pesquisa no Explorar e segue o que andas a ver.",
-      },
-      {
-        n: "03",
         title: "Marca à medida que vês",
         text: "A fila “A seguir” diz-te sempre qual é o próximo episódio.",
       },
+      {
+        n: "03",
+        title: "Guarda o resto para depois",
+        text: "O que queres ver um dia fica em “Para ver”, fora da fila.",
+      },
     ];
     return (
-      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-16">
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 pt-16 pb-[calc(var(--dock-h)+2rem)]">
         <div className="text-center">
           <p className="ep-code text-sm tracking-[0.3em] text-dim">EPISODIC</p>
           <h1 className="mt-3 font-display text-3xl font-bold">
@@ -308,18 +311,18 @@ export default function SeriesPage() {
           ))}
         </ol>
 
-        <div className="mt-10 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        <div className="mt-10 flex flex-col items-center gap-2">
           <Link
-            href="/import"
-            className="cursor-pointer rounded-full bg-ink px-6 py-3 font-semibold text-tube transition hover:brightness-110 active:scale-95"
+            href="/explorar?procurar=1"
+            className="flex min-h-12 cursor-pointer items-center rounded-full bg-ink px-6 font-semibold text-tube transition hover:brightness-110 active:scale-95"
           >
-            Importar do TV Time
+            Procurar uma série
           </Link>
           <Link
-            href="/library"
-            className="cursor-pointer rounded-full border border-line px-6 py-3 font-semibold text-ink transition hover:bg-raised active:scale-95"
+            href="/import"
+            className="flex min-h-11 cursor-pointer items-center px-3 text-[15px] text-dim transition hover:text-ink"
           >
-            Explorar séries
+            Vens do TV Time? Importar o histórico
           </Link>
         </div>
       </main>
@@ -414,20 +417,46 @@ export default function SeriesPage() {
           <h1 className="mt-1 font-display text-3xl font-bold">Séries</h1>
           <div className="ep-card mt-6 flex items-center gap-3 p-4">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-raised text-ink">
-              <CheckIcon className="h-5 w-5" />
+              {watching.length === 0 ? (
+                <SearchIcon className="h-5 w-5" />
+              ) : (
+                <CheckIcon className="h-5 w-5" />
+              )}
             </span>
-            <div className="min-w-0 flex-1">
-              <p className="text-[15px] font-medium">Estás em dia</p>
-              <p className="text-xs text-dim">
-                Nenhum episódio por ver nas séries que segues.
-              </p>
-            </div>
-            <Link
-              href="/library"
-              className="-mr-2 inline-flex min-h-11 shrink-0 cursor-pointer items-center px-2 text-[15px] font-semibold text-ink hover:underline"
-            >
-              Biblioteca
-            </Link>
+            {/* Sem nenhuma série seguida, "estás em dia" era falso: não há
+                nada na fila porque nada entrou nela. Quem só guardou
+                séries em "Para ver" ficava aqui sem saber porquê. */}
+            {watching.length === 0 ? (
+              <>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-medium">Ainda não segues nenhuma série</p>
+                  <p className="text-xs text-dim">
+                    Segue uma e ela entra aqui. O que está em “Para ver” fica fora da fila.
+                  </p>
+                </div>
+                <Link
+                  href="/explorar?procurar=1"
+                  className="-mr-2 inline-flex min-h-11 shrink-0 cursor-pointer items-center px-2 text-[15px] font-semibold text-ink hover:underline"
+                >
+                  Procurar
+                </Link>
+              </>
+            ) : (
+              <>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[15px] font-medium">Estás em dia</p>
+                  <p className="text-xs text-dim">
+                    Nenhum episódio por ver nas séries que segues.
+                  </p>
+                </div>
+                <Link
+                  href="/library"
+                  className="-mr-2 inline-flex min-h-11 shrink-0 cursor-pointer items-center px-2 text-[15px] font-semibold text-ink hover:underline"
+                >
+                  Biblioteca
+                </Link>
+              </>
+            )}
           </div>
         </>
       ) : (

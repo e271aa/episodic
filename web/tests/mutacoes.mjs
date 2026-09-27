@@ -36,6 +36,8 @@ const NUMERACAO = "src/lib/numeracao.ts";
 const HEROI = "src/components/TonightHero.tsx";
 const EM_DIA = "src/app/em-dia/page.tsx";
 const RESULTADO_SERIE = "src/components/ShowResultCard.tsx";
+const CASA = "src/app/series/page.tsx";
+const EXPLORAR = "src/app/explorar/page.tsx";
 
 /**
  * `de` tem de existir tal e qual no ficheiro — se deixar de existir, a
@@ -342,6 +344,34 @@ const MUTACOES = [
     ficheiro: BIBLIOTECA,
     de: '    return s.watchedCount === 0 ? "Por começar" : "Em curso";',
     para: '    return s.watchedCount === 0 ? "Por começar" : "A ver";',
+  },
+  {
+    nome: "r12-fase5/casa-vazia-pede-zip",
+    descricao: "a casa vazia volta a ter \"importar do TV Time\" como primeira ação",
+    ficheiro: CASA,
+    de: '            href="/explorar?procurar=1"\n            className="flex min-h-12',
+    para: '            href="/import"\n            className="flex min-h-12',
+  },
+  {
+    nome: "r12-fase5/casa-vazia-sob-a-dock",
+    descricao: "a casa vazia volta a não reservar o espaço da dock",
+    ficheiro: CASA,
+    de: "px-4 pt-16 pb-[calc(var(--dock-h)+2rem)]",
+    para: "px-4 py-16",
+  },
+  {
+    nome: "r12-fase5/explorar-sem-seguir",
+    descricao: "a pesquisa do Explorar volta a só saber guardar \"para ver\"",
+    ficheiro: EXPLORAR,
+    de: "          onSeguir={searching ? seguir : undefined}",
+    para: "          onSeguir={undefined}",
+  },
+  {
+    nome: "r12-fase5/sem-seguidas-em-dia",
+    descricao: "sem nenhuma série seguida, a casa volta a dizer \"Estás em dia\"",
+    ficheiro: CASA,
+    de: "            {watching.length === 0 ? (\n              <>",
+    para: "            {watching.length < 0 ? (\n              <>",
   },
 ];
 

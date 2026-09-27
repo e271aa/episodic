@@ -207,12 +207,15 @@ function Grelha({
   sections,
   onGuardar,
   onDispensar,
+  onSeguir,
   mostrarTipo = false,
   disposicao = "faixa",
 }: {
   sections: ExploreSection[];
   onGuardar: (item: DiscoverItem) => Promise<void>;
   onDispensar: (item: DiscoverItem) => Promise<void>;
+  /** só na pesquisa: as séries ganham "Seguir" (ver DiscoverCard) */
+  onSeguir?: (item: DiscoverItem) => Promise<void>;
   /** a pesquisa mistura séries e filmes — sem isto não se sabe qual é qual */
   mostrarTipo?: boolean;
   /**
@@ -258,6 +261,7 @@ function Grelha({
                 index={i}
                 onSave={onGuardar}
                 onDismiss={onDispensar}
+                onFollow={item.kind === "tv" ? onSeguir : undefined}
                 mostrarTipo={mostrarTipo}
                 fluida={disposicao === "mosaico"}
               />
@@ -269,9 +273,9 @@ function Grelha({
   );
 }
 
-function ExplorarContent({ kind }: { kind: Kind }) {
+function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) {
   const router = useRouter();
-  const { guardar, naoInteressa } = useExploreAcoes();
+  const { guardar, seguir, naoInteressa } = useExploreAcoes();
 
   const [data, setData] = useState<ExploreData | null>(null);
   const [erro, setErro] = useState<string | null>(null);
@@ -279,7 +283,9 @@ function ExplorarContent({ kind }: { kind: Kind }) {
   // toque, e a escolha fica guardada entre visitas.
   const [modo, setModo] = usePref<Modo>("explorar-modo", "grelha", MODOS);
   const [catalogoAberto, setCatalogoAberto] = useState(false);
-  const [pesquisaAberta, setPesquisaAberta] = useState(false);
+  // `?procurar=1` chega da casa vazia ("Procurar uma série"): abre já com o
+  // campo à espera, em vez de mais um toque na lupa.
+  const [pesquisaAberta, setPesquisaAberta] = useState(procurar);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [searchState, setSearchState] = useState<{ query: string; items: DiscoverItem[] } | null>(
@@ -494,7 +500,9 @@ function ExplorarContent({ kind }: { kind: Kind }) {
                 : "A TMDB não está configurada nesta instalação."}
           </p>
         </div>
-      ) : modo === "cartoes" ? (
+      ) : modo === "cartoes" && !searching ? (
+        // A pesquisa é sempre em mosaico: quem procura um título já sabe o
+        // que quer, e é aí que as séries têm "Seguir".
         <Baralho
           key={termo}
           chave={`${kind}:${termo}`}
@@ -508,6 +516,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
           sections={sections}
           onGuardar={guardar}
           onDispensar={naoInteressa}
+          onSeguir={searching ? seguir : undefined}
           mostrarTipo={searching}
           disposicao={searching ? "mosaico" : "faixa"}
         />
@@ -519,7 +528,7 @@ function ExplorarContent({ kind }: { kind: Kind }) {
 function ExplorarSwitcher() {
   const params = useSearchParams();
   const kind: Kind = params.get("tipo") === "filmes" ? "movie" : "tv";
-  return <ExplorarContent key={kind} kind={kind} />;
+  return <ExplorarContent key={kind} kind={kind} procurar={params.has("procurar")} />;
 }
 
 export default function ExplorarPage() {

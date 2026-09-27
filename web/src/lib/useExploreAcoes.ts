@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback } from "react";
-import { putMovie, putShow, updateShow } from "@/lib/db";
+import { deleteShow, putMovie, putShow, updateShow } from "@/lib/db";
 import { dismiss, undismiss } from "@/lib/dismissed";
 import { filmeExistente, juntarNomes, serieExistente } from "@/lib/existente";
 import { pushUndo } from "@/lib/undo";
@@ -97,6 +97,61 @@ export function useExploreAcoes() {
     });
   }, []);
 
+  /**
+   * Seguir a partir da pesquisa: a série entra na fila. Os cartões do
+   * Explorar só sabiam guardar "para ver" — e uma série "para ver" não entra
+   * na fila, por isso quem começava do zero (os amigos) ficava com a casa a
+   * dizer "Estás em dia" sem ter visto nada (Ronda 12, Fase 4).
+   */
+  const seguir = useCallback(async (item: DiscoverItem) => {
+    const nomes = [item.name, item.originalName];
+    const existente = await serieExistente({ tmdbId: item.tmdbId, nomes });
+
+    if (existente) {
+      if (existente.followed && !existente.archived) return;
+      const antes = {
+        followed: existente.followed,
+        inWatchlist: existente.inWatchlist,
+        archived: existente.archived,
+      };
+      await updateShow(existente.uuid, { followed: true, inWatchlist: false, archived: false });
+      pushUndo({
+        label: "Série seguida",
+        detail: item.name,
+        undo: async () => {
+          await updateShow(existente.uuid, antes);
+        },
+      });
+      return;
+    }
+
+    const uuid = `tmdb-${item.tmdbId}`;
+    await putShow({
+      uuid,
+      name: item.name,
+      tvdbId: null,
+      tmdbId: item.tmdbId,
+      tvmazeId: null,
+      tmdbAliases: juntarNomes(nomes),
+      posterPath: item.posterPath,
+      backdropPath: item.backdropPath,
+      overview: item.overview,
+      totalEpisodes: null,
+      followed: true,
+      inWatchlist: false,
+      archived: false,
+      addedAt: new Date().toISOString(),
+    });
+    pushUndo({
+      label: "Série seguida",
+      detail: item.name,
+      // acabada de criar e sem nada marcado: anular é como se nunca tivesse entrado
+      undo: async () => {
+        await deleteShow(uuid);
+      },
+    });
+  }, []);
+
   const naoInteressa = useCallback(async (item: DiscoverItem) => {
     await dismiss(item.kind, item.tmdbId);
     pushUndo({
@@ -108,5 +163,5 @@ export function useExploreAcoes() {
     });
   }, []);
 
-  return { guardar, naoInteressa };
+  return { guardar, seguir, naoInteressa };
 }
