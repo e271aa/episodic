@@ -314,6 +314,20 @@ const MUTACOES = [
     de: '    next.set("filtro", f);',
     para: '    if (f === "continuar") next.delete("filtro");\n    else next.set("filtro", f);',
   },
+  {
+    nome: "r12-fase5/rever-vi-tudo-recomendado",
+    descricao: "a ação preenchida do Rever volta a marcar tudo, não só o que a prova cobre",
+    ficheiro: REVER_PAGINA,
+    de: '  const prova = atual?.padrao === "buracos" ? atual.paraTras : null;',
+    para: '  const prova = atual?.padrao === "buracos" ? atual.porMarcar : null;',
+  },
+  {
+    nome: "r12-fase5/rever-pergunta-com-resposta",
+    descricao: "sem prova nenhuma, o Rever volta a recomendar marcar tudo",
+    ficheiro: REVER_PAGINA,
+    de: '  const prova = atual?.padrao === "buracos" ? atual.paraTras : null;',
+    para: '  const prova = atual ? (atual.padrao === "buracos" ? atual.paraTras : atual.porMarcar) : null;',
+  },
 ];
 
 const filtro = process.argv[2];

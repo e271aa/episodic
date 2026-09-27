@@ -60,6 +60,9 @@ export default function ReverPage() {
   }, []);
 
   const atual = series?.[indice] ?? null;
+  /** o que a prova cobre (os buracos para trás), ou nada quando não há prova */
+  const prova = atual?.padrao === "buracos" ? atual.paraTras : null;
+  const alemDaProva = prova ? atual!.porMarcar.filter((e) => !prova.some((t) => t.season === e.season && t.episode === e.episode)) : [];
 
   /**
    * Cada resposta: aplica, avança, e deixa anular — anular volta a mostrar
@@ -194,26 +197,34 @@ export default function ReverPage() {
               {porque(atual)}
             </p>
 
+            {/* Só a prova ganha a pílula branca (Ronda 12, Fase 4): com
+                buracos para trás, é marcar esses; sem prova nenhuma (parou
+                no fim de uma temporada, ou a meio), é uma pergunta e nenhuma
+                resposta vem recomendada. O "vi tudo" diz sempre o que junta
+                para além da prova. */}
             <div className="mt-4 flex flex-col gap-2">
-              <button
-                onClick={() => void marcar(atual.porMarcar, `${contarEpisodios(atual.porMarcar.length)} marcados`)}
-                disabled={aCorrer}
-                className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
-              >
-                <CheckIcon className="h-4 w-4" />
-                Vi tudo · marca {atual.porMarcar.length === 1 ? "o episódio" : `os ${atual.porMarcar.length}`}
-              </button>
-              {/* Com buracos para trás E episódios por ver à frente, "vi
-                  tudo" diria mais do que sabes. Esta marca só os de trás. */}
-              {atual.padrao === "buracos" && atual.paraTras.length < atual.porMarcar.length && (
+              {prova && (
+                <button
+                  onClick={() => void marcar(prova, `${contarEpisodios(prova.length)} marcados`)}
+                  disabled={aCorrer}
+                  className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
+                >
+                  <CheckIcon className="h-4 w-4" />
+                  Marcar {prova.length === 1 ? "o episódio" : `os ${prova.length}`}
+                  {alemDaProva.length > 0 && " de trás"}
+                </button>
+              )}
+              {(!prova || alemDaProva.length > 0) && (
                 <button
                   onClick={() =>
-                    void marcar(atual.paraTras, `${contarEpisodios(atual.paraTras.length)} marcados`)
+                    void marcar(atual.porMarcar, `${contarEpisodios(atual.porMarcar.length)} marcados`)
                   }
                   disabled={aCorrer}
                   className="flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line px-4 text-[15px] font-semibold text-ink transition hover:border-ink/40 hover:bg-raised active:scale-[0.99] disabled:opacity-50"
                 >
-                  Só os de trás · {atual.paraTras.length}
+                  {prova
+                    ? `Vi tudo · também ${alemDaProva.length === 1 ? "o" : `os ${alemDaProva.length}`} da ${temporadasDe(alemDaProva)}`
+                    : `Vi tudo · marca ${atual.porMarcar.length === 1 ? "o episódio" : `os ${atual.porMarcar.length}`}`}
                 </button>
               )}
               <button
@@ -229,27 +240,31 @@ export default function ReverPage() {
               >
                 Ainda estou a ver
               </button>
-              <button
-                onClick={() =>
-                  void responder(
-                    () => arquivar(atual.show.uuid, true),
-                    () => arquivar(atual.show.uuid, false),
-                    "Arquivada",
-                  )
-                }
-                disabled={aCorrer}
-                className="flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full px-4 text-[15px] font-semibold text-dim transition hover:text-ink active:scale-[0.99] disabled:opacity-50"
-              >
-                Deixei de ver — arquivar
-              </button>
             </div>
           </div>
-          <button
-            onClick={() => setIndice(indice + 1)}
-            className="mx-auto mt-3 flex min-h-11 cursor-pointer items-center px-3 text-[15px] text-faint hover:text-ink"
-          >
-            Decidir depois
-          </button>
+          {/* Arquivar e adiar não são respostas à pergunta do cartão — são
+              saídas dele. Numa linha discreta, fora da pilha de botões. */}
+          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4">
+            <button
+              onClick={() =>
+                void responder(
+                  () => arquivar(atual.show.uuid, true),
+                  () => arquivar(atual.show.uuid, false),
+                  "Arquivada",
+                )
+              }
+              disabled={aCorrer}
+              className="flex min-h-11 cursor-pointer items-center px-3 text-[15px] text-dim transition hover:text-ink disabled:opacity-50"
+            >
+              Deixei de ver — arquivar
+            </button>
+            <button
+              onClick={() => setIndice(indice + 1)}
+              className="flex min-h-11 cursor-pointer items-center px-3 text-[15px] text-dim hover:text-ink"
+            >
+              Decidir depois
+            </button>
+          </div>
         </section>
       )}
     </main>

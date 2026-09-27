@@ -91,7 +91,7 @@ test("com buracos para trás e episódios à frente, 'só os de trás' não diz 
   await page.goto("/rever");
   await expect(page.getByTestId("rever-cartao")).toContainText("Buracos E Frente");
 
-  await page.getByRole("button", { name: "Só os de trás · 2" }).click();
+  await page.getByRole("button", { name: "Marcar os 2 de trás" }).click();
   await expect(page.getByTestId("rever-cartao")).toContainText("2 de 4");
 
   const marcados = await lerVistos(page, "s-mista");
@@ -112,7 +112,7 @@ test("as três respostas fazem o que dizem, e tudo se anula", async ({ page, tmd
 
   // Vi tudo
   await expect(cartao).toContainText("Tem Buracos");
-  await page.getByRole("button", { name: /Vi tudo · marca os 2/ }).click();
+  await page.getByRole("button", { name: "Marcar os 2" }).click();
   await expect(cartao).toContainText("Parou Na Fronteira");
   expect(await lerVistos(page, "s-buracos")).toHaveLength(4);
 
@@ -120,7 +120,7 @@ test("as três respostas fazem o que dizem, e tudo se anula", async ({ page, tmd
   await page.getByRole("button", { name: "Anular" }).click();
   await expect(cartao).toContainText("Tem Buracos");
   expect(await lerVistos(page, "s-buracos")).toHaveLength(2);
-  await page.getByRole("button", { name: /Vi tudo · marca os 2/ }).click();
+  await page.getByRole("button", { name: "Marcar os 2" }).click();
 
   // Deixei de ver
   await expect(cartao).toContainText("Parou Na Fronteira");
@@ -141,4 +141,44 @@ test("as três respostas fazem o que dizem, e tudo se anula", async ({ page, tmd
   await page.goto("/rever");
   await expect(page.getByTestId("rever-cartao")).toContainText("1 de 1");
   await expect(page.getByTestId("rever-cartao")).toContainText("Buracos E Frente");
+});
+
+/** Preenchido = a pílula branca, a ação que o ecrã recomenda. */
+async function preenchido(botao: import("@playwright/test").Locator) {
+  return botao.evaluate((b) => getComputedStyle(b).backgroundColor !== "rgba(0, 0, 0, 0)");
+}
+
+test("a ação recomendada só marca o que a prova cobre", async ({ page, tmdb }) => {
+  // Ronda 12, Fase 4: o botão preenchido era "Vi tudo · marca os 35" quando
+  // a prova (os buracos para trás) cobria 7 — os outros 28 eram uma
+  // temporada inteira por começar. A app decidia em vez de propor.
+  await semearBiblioteca(page, tmdb);
+  await page.goto("/rever");
+  const cartao = page.getByTestId("rever-cartao");
+
+  // Buracos para trás E episódios à frente: recomenda só os de trás, e o
+  // "vi tudo" diz o que junta de mais
+  await expect(cartao).toContainText("Buracos E Frente");
+  const deTras = cartao.getByRole("button", { name: "Marcar os 2 de trás" });
+  const viTudo = cartao.getByRole("button", { name: /^Vi tudo/ });
+  expect(await preenchido(deTras)).toBe(true);
+  await expect(viTudo).toContainText("também os 2 da T3");
+  expect(await preenchido(viTudo)).toBe(false);
+
+  // Todos os que faltam estão para trás: a prova cobre tudo, uma ação só
+  await page.getByRole("button", { name: "Decidir depois" }).click();
+  await expect(cartao).toContainText("Tem Buracos");
+  expect(await preenchido(cartao.getByRole("button", { name: "Marcar os 2" }))).toBe(true);
+  await expect(cartao.getByRole("button", { name: /^Vi tudo/ })).toHaveCount(0);
+
+  // Parou no fim de uma temporada: não há prova nenhuma — é uma pergunta,
+  // e nenhuma resposta vem recomendada
+  await page.getByRole("button", { name: "Marcar os 2" }).click();
+  await expect(cartao).toContainText("Parou Na Fronteira");
+  for (const b of await cartao.getByRole("button").all()) expect(await preenchido(b)).toBe(false);
+
+  // Cinco saídas eram de mais: arquivar e adiar vivem numa linha discreta
+  const arquivar = await page.getByRole("button", { name: "Deixei de ver — arquivar" }).boundingBox();
+  const depois = await page.getByRole("button", { name: "Decidir depois" }).boundingBox();
+  expect(Math.abs(arquivar!.y - depois!.y)).toBeLessThan(4);
 });
