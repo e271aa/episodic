@@ -663,7 +663,9 @@ const MUTACOES = [
     descricao: "as Listas deixam de ser um separador da Biblioteca",
     ficheiro: LIBRARY_PAGINA,
     de: '  const segment: Segment = tipo === "filmes" || tipo === "listas" ? tipo : "series";',
-    para: '  const segment: Segment = tipo === "filmes" ? tipo : "series";',
+    // o `as Segment` impede o TypeScript de estreitar o tipo — sem ele a
+    // mutação não compilava (comparar com "listas" deixava de fazer sentido)
+    para: '  const segment = (tipo === "filmes" ? "filmes" : "series") as Segment;',
   },
   {
     nome: "r12-fase5b3/listas-rota-sem-desvio",
