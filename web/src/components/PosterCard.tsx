@@ -151,12 +151,15 @@ export default function PosterCard({
         >
           {name}
         </div>
+        {/* As primeiras 2 decidem o LCP da página — sem prioridade, carregavam
+            em `lazy` como todas as outras (Ronda 12, Fase 4, achado #16). */}
         <Poster
           path={posterPath}
           alt={name}
           fill
           sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
           className="object-cover transition duration-300 group-hover:scale-105"
+          priority={index !== undefined && index < 2}
         />
         {progress !== null && (
           <>

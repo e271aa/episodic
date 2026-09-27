@@ -46,6 +46,14 @@ const POSTER_CARD = "src/components/PosterCard.tsx";
 const LIBRARY = "src/app/library/page.tsx";
 const IMPORT_PAGINA = "src/app/import/page.tsx";
 const ESTATISTICAS = "src/app/estatisticas/page.tsx";
+const PROFILE_PAGINA = "src/app/profile/page.tsx";
+const LIBRARY_PAGINA = "src/app/library/page.tsx";
+const EXPLORAR_PAGINA = "src/app/explorar/page.tsx";
+const EM_DIA_PAGINA = "src/app/em-dia/page.tsx";
+const LOGIN = "src/app/login/page.tsx";
+const POSTER_CARD_2 = "src/components/PosterCard.tsx";
+const DISCOVER_CARD = "src/components/DiscoverCard.tsx";
+const MANIFEST = "src/app/manifest.ts";
 
 /**
  * `de` tem de existir tal e qual no ficheiro — se deixar de existir, a
@@ -450,6 +458,69 @@ const MUTACOES = [
     ficheiro: IMPORT_PAGINA,
     de: "Arrasta o ZIP para aqui, ou toca para escolher",
     para: "Arrasta o ZIP para aqui, ou clica para escolher",
+  },
+  {
+    nome: "r12-fase5b/scroll-fantasma-explorar",
+    descricao: "o Explorar volta a ter 82px de scroll fantasma",
+    ficheiro: EXPLORAR_PAGINA,
+    de: 'className="tela-cheia page-enter',
+    para: 'className="page-enter',
+  },
+  {
+    nome: "r12-fase5b/scroll-fantasma-em-dia",
+    descricao: "o Pôr em dia volta a ter 82px de scroll fantasma",
+    ficheiro: EM_DIA_PAGINA,
+    de: 'className="tela-cheia mx-auto',
+    para: 'className="mx-auto',
+  },
+  {
+    nome: "r12-fase5b/scroll-fantasma-login",
+    descricao: "o Entrar volta a ter 82px de scroll fantasma",
+    ficheiro: LOGIN,
+    de: '<main className="tela-cheia flex flex-col items-center justify-center px-6 text-center">',
+    para: '<main className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">',
+  },
+  {
+    nome: "r12-fase5b/biblioteca-sem-h1",
+    descricao: "a Biblioteca volta a não ter <h1>",
+    ficheiro: LIBRARY_PAGINA,
+    de: '<h1 className="sr-only">Biblioteca</h1>',
+    para: "",
+  },
+  {
+    nome: "r12-fase5b/perfil-sem-h1",
+    descricao: "o Perfil volta a não ter <h1>",
+    ficheiro: PROFILE_PAGINA,
+    de: '<h1 className="sr-only">Perfil</h1>',
+    para: "",
+  },
+  {
+    nome: "r12-fase5b/explorar-sem-h1",
+    descricao: "o Explorar volta a não ter <h1>",
+    ficheiro: EXPLORAR_PAGINA,
+    de: '<h1 className="sr-only">{kind === "tv" ? "Explorar séries" : "Explorar filmes"}</h1>',
+    para: "",
+  },
+  {
+    nome: "r12-fase5b/biblioteca-lcp-lazy",
+    descricao: "as primeiras capas da Biblioteca voltam a carregar em lazy",
+    ficheiro: POSTER_CARD_2,
+    de: "priority={index !== undefined && index < 2}",
+    para: "priority={false}",
+  },
+  {
+    nome: "r12-fase5b/explorar-lcp-lazy",
+    descricao: "as primeiras capas do Explorar voltam a carregar em lazy",
+    ficheiro: DISCOVER_CARD,
+    de: "priority={index < 2}",
+    para: "priority={false}",
+  },
+  {
+    nome: "r12-fase5b/manifest-cor-v1",
+    descricao: "o manifest volta à cor de tema da v1",
+    ficheiro: MANIFEST,
+    de: '"#101014"',
+    para: '"#0b0e14"',
   },
 ];
 

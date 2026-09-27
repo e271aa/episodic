@@ -490,6 +490,9 @@ function LibraryContent() {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-5 pt-10 pb-[calc(var(--dock-h)+5.5rem)]">
+      {/* Sem título visível de propósito (ver #12 na Fase 5b.3) — mas um
+          leitor de ecrã precisa de saber onde está. */}
+      <h1 className="sr-only">Biblioteca</h1>
 
       {loading ? (
         <PosterGridBone count={9} />

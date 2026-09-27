@@ -351,10 +351,11 @@ function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) 
   const totalItens = sections.reduce((n, s) => n + s.items.length, 0);
 
   return (
-    <main
-      className="page-enter mx-auto flex w-full max-w-md flex-col overflow-hidden pt-[max(0.25rem,env(safe-area-inset-top))]"
-      style={{ height: "100dvh" }}
-    >
+    <main className="tela-cheia page-enter mx-auto flex w-full max-w-md flex-col overflow-hidden pt-[max(0.25rem,env(safe-area-inset-top))]">
+      {/* Sem título visível — "Séries ▾"/"Filmes ▾" é um botão, não um
+          título, e não pode ser um <h1> (muda com um toque). O leitor de
+          ecrã precisa de saber em qual dos dois catálogos está. */}
+      <h1 className="sr-only">{kind === "tv" ? "Explorar séries" : "Explorar filmes"}</h1>
       {/* O respiro do topo tem de contar com `safe-area-inset-top`: este
           ecrã é o único (com o "Pôr em dia") que define a própria altura
           em `100dvh` — o resto da app vive dentro do `<body>`, que nunca

@@ -67,12 +67,14 @@ export default function DiscoverCard({
         <div className="absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display text-xs font-bold text-dim">
           {item.name}
         </div>
+        {/* As primeiras 2 decidem o LCP da página (Ronda 12, Fase 4, achado #16). */}
         <Poster
           path={item.posterPath}
           alt={item.name}
           fill
           sizes="144px"
           className="object-cover"
+          priority={index < 2}
         />
         {(estado === "guardado" || estado === "seguida") && (
           <div className="absolute inset-0 flex items-center justify-center bg-tube/75">

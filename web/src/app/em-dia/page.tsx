@@ -170,10 +170,7 @@ function EmDiaContent() {
   const saida = primeiroComConteudo(buckets);
 
   return (
-    <main
-      className="mx-auto flex w-full max-w-md flex-col overflow-hidden px-4 pt-[max(0.5rem,env(safe-area-inset-top))]"
-      style={{ height: "100dvh" }}
-    >
+    <main className="tela-cheia mx-auto flex w-full max-w-md flex-col overflow-hidden px-4 pt-[max(0.5rem,env(safe-area-inset-top))]">
       <div className="flex shrink-0 items-center gap-2">
         <BotaoVoltar
           label="Voltar às séries"

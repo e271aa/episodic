@@ -269,3 +269,68 @@ test("o import não usa vocabulário de computador ('clica', 'browser')", async 
   await expect(page.getByText("clica")).toHaveCount(0);
   await expect(page.getByText(/toca/i)).toBeVisible();
 });
+
+// ── #16 (Fase 5b.1) · <h1> em falta ──────────────────────────
+
+test("Biblioteca, Explorar e Perfil têm um h1, mesmo sem título visível", async ({
+  page,
+}) => {
+  // Nenhum dos três tinha <h1> — a Biblioteca e o Perfil iam direto ao
+  // conteúdo, o Explorar só tinha um botão de trocar de catálogo como
+  // "título" visual (Ronda 12, Fase 4, achado #16).
+  await semear(page, { series: [{ uuid: "s-1", name: "Serie Um" }] });
+
+  await page.goto("/library");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Biblioteca");
+
+  await page.goto("/explorar");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Explorar séries");
+
+  await page.goto("/profile");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Perfil");
+});
+
+// ── LCP: as primeiras capas da grelha não ficam em lazy ──────
+
+test("as primeiras capas da Biblioteca e do Explorar não têm loading=lazy", async ({
+  page,
+  tmdb,
+}) => {
+  // Medido na Fase 4 (AUDITORIA.md, achado #16): a capa que decide o LCP da
+  // página carregava em `lazy`, como todas as outras da grelha.
+  const series = Array.from({ length: 8 }, (_, i) => ({
+    uuid: `s-${i}`,
+    name: `Serie ${i}`,
+    posterPath: "/cartaz.jpg",
+    totalEpisodes: 1,
+  }));
+  await semear(page, { series, vistos: series.map((s) => ({ showUuid: s.uuid, season: 1, episode: 1 })) });
+  await page.goto("/library");
+  const capas = page.locator('[data-testid="library-grid"] img');
+  await capas.first().waitFor();
+  expect(await capas.nth(0).getAttribute("loading")).not.toBe("lazy");
+  expect(await capas.nth(6).getAttribute("loading")).toBe("lazy");
+
+  tmdb.tendencias = Array.from({ length: 8 }, (_, i) => ({
+    id: 900 + i,
+    name: `Sugestao ${i}`,
+    poster_path: "/cartaz.jpg",
+    backdrop_path: null,
+    overview: "",
+    first_air_date: "2021-01-01",
+    vote_average: 7,
+  }));
+  await page.goto("/explorar");
+  const cartazes = page.locator("main img");
+  await cartazes.first().waitFor();
+  expect(await cartazes.nth(0).getAttribute("loading")).not.toBe("lazy");
+});
+
+// ── manifest: a cor de tema da v1 ────────────────────────────
+
+test("o manifest usa a cor do tubo desligado da v2, não a da v1", async ({ page }) => {
+  const resposta = await page.request.get("/manifest.webmanifest");
+  const manifest = await resposta.json();
+  expect(manifest.theme_color).toBe("#101014");
+  expect(manifest.background_color).toBe("#101014");
+});

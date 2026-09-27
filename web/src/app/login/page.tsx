@@ -67,7 +67,7 @@ function LoginForm() {
 
   if (!isCloudConfigured()) {
     return (
-      <main className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">
+      <main className="tela-cheia flex flex-col items-center justify-center px-6 text-center">
         <p className="font-display text-lg font-bold">Cloud não configurada</p>
         <p className="mt-2 max-w-xs text-[15px] text-dim">
           A app está a correr só em modo local. Não há conta para iniciar sessão.
@@ -77,7 +77,7 @@ function LoginForm() {
   }
 
   return (
-    <main className="flex min-h-dvh flex-col justify-center px-5">
+    <main className="tela-cheia flex flex-col justify-center px-5">
       <div className="mx-auto w-full max-w-sm">
         <div className="bars mx-auto h-14 w-14 rounded-2xl" aria-hidden />
         <h1 className="mt-5 text-center font-display text-3xl font-bold [font-stretch:110%]">
@@ -230,7 +230,7 @@ export default function LoginPage() {
   return (
     <Suspense
       fallback={
-        <main className="flex min-h-dvh items-center justify-center">
+        <main className="tela-cheia flex items-center justify-center">
           <div className="bars h-14 w-14 animate-pulse rounded-2xl" aria-hidden />
         </main>
       }

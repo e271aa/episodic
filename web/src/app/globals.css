@@ -70,6 +70,16 @@ body {
   background: var(--bars);
 }
 
+/* Para os ecrãs que definem a própria altura em 100dvh (Explorar, Pôr em
+   dia, Entrar): cancela o respiro que o layout raiz reserva por baixo de
+   TODO o conteúdo (`--dock-h + 0.5rem`, em layout.tsx) — sem isto, um ecrã
+   que já reserva a sua própria altura fica com esse respiro a mais, e o
+   documento cresce 82px além da janela (Ronda 12, Fase 4, achado #16). */
+.tela-cheia {
+  height: 100dvh;
+  margin-bottom: calc(-1 * (var(--dock-h) + 0.5rem));
+}
+
 /* Cartão base reutilizável — profundidade consistente em toda a app */
 .ep-card {
   border-radius: 1.25rem;

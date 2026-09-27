@@ -61,6 +61,7 @@ export default function ProfilePage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
+      <h1 className="sr-only">Perfil</h1>
       {/* Quem és — antes de quanto viste */}
       <ProfileCard />
 
