@@ -209,9 +209,11 @@ As sete barras do cartão de teste, na ordem da mira, com os papéis que têm:
 - **Magenta de sinal** (smpte-magenta): em dia, e a série terminou.
 - **Ciano de sinal** (smpte-cyan): episódios por marcar para trás (os
   "buracos").
-- **Cinza, amarelo, vermelho e azul de sinal**: completam a mira no fio SMPTE
-  e dão a cor estável a cada cabeçalho de secção (escolhida a partir do
-  título, sempre a mesma).
+- **Cinza, amarelo, vermelho e azul de sinal**: completam a mira no fio SMPTE.
+- **Cabeçalhos de secção:** a cor sai do título, sempre a mesma para a mesma
+  secção — mas hoje entre **seis** barras, incluindo o verde, o ciano e o
+  magenta, que já significam estados. É uma contradição com a Bars Rule,
+  medida na Fase 4 da Ronda 12 (AUDITORIA.md), por resolver.
 - A meio de uma série, o estado é o próprio branco-projetor.
 
 ### Danger
