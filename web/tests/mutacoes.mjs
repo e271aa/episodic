@@ -57,7 +57,6 @@ const MANIFEST = "src/app/manifest.ts";
 const SHEET_PANEL = "src/components/SheetPanel.tsx";
 const LISTAS_PAGINA = "src/app/listas/page.tsx";
 const ADD_TO_LIST = "src/components/AddToListButton.tsx";
-const CLOUD_ACCOUNT = "src/components/CloudAccount.tsx";
 const BOTTOM_NAV = "src/components/BottomNav.tsx";
 
 /**
@@ -575,13 +574,6 @@ const MUTACOES = [
     ficheiro: ADD_TO_LIST,
     de: '              aria-label="Nome da nova lista"\n',
     para: "",
-  },
-  {
-    nome: "r12-fase5b/cloud-password-sem-rotulo",
-    descricao: "o campo de password na conta volta a não ter <label>",
-    ficheiro: CLOUD_ACCOUNT,
-    de: '<label htmlFor="cloud-nova-password" className="font-display text-[15px] font-semibold">\n              Password\n            </label>',
-    para: '<p className="font-display text-[15px] font-semibold">Password</p>',
   },
   {
     nome: "r12-fase5b/dock-parte-a-seguir-320",

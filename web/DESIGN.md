@@ -209,11 +209,15 @@ As sete barras do cartão de teste, na ordem da mira, com os papéis que têm:
 - **Magenta de sinal** (smpte-magenta): em dia, e a série terminou.
 - **Ciano de sinal** (smpte-cyan): episódios por marcar para trás (os
   "buracos").
-- **Cinza, amarelo, vermelho e azul de sinal**: completam a mira no fio SMPTE.
+- **Cinza, amarelo, vermelho e azul de sinal**: completam a mira no fio SMPTE
+  e são as únicas que marcam um cabeçalho de secção — nunca o verde, o ciano
+  ou o magenta, que já significam estados.
 - **Cabeçalhos de secção:** a cor sai do título, sempre a mesma para a mesma
-  secção — mas hoje entre **seis** barras, incluindo o verde, o ciano e o
-  magenta, que já significam estados. É uma contradição com a Bars Rule,
-  medida na Fase 4 da Ronda 12 (AUDITORIA.md), por resolver.
+  secção, sorteada só entre as 4 neutras. Até à Fase 5b da Ronda 12 sorteava
+  entre as sete, o que contradizia a Bars Rule — corrigido, e a Biblioteca
+  segue a mesma regra: "Em curso" é o branco-projetor (é o estado "a meio",
+  sem sinal), "Completas" é o magenta (o mesmo da barra de progresso de uma
+  série terminada), o resto é cinza neutro.
 - A meio de uma série, o estado é o próprio branco-projetor.
 
 ### Danger
@@ -401,9 +405,9 @@ com um círculo tracejado, e não se podem marcar.
 
 ### Don't:
 - **Don't** usar o âmbar (`#ffaa33`) nem o fundo azul-noite (`#0b0e14`) da
-  v1. Ainda restam três sítios por limpar: o ícone da app (`icon.svg` e
-  `apple-icon.png`, ainda o triângulo âmbar), as cores do `manifest` e o
-  brilho do `ep-card-hover`.
+  v1. O `manifest` e o brilho do `ep-card-hover` já foram limpos (Fase 5b da
+  Ronda 12); resta um sítio: o ícone da app (`icon.svg` e `apple-icon.png`,
+  ainda o triângulo âmbar) — liga à Fase 2b, o nome novo.
 - **Don't** criar um quarto vermelho. Hoje há três quase iguais — perigo
   (`#e5484d`), o vermelho SMPTE (`#e6483c`) e o "não" do baralho
   (`#e8564a`) —, e o último devia ser um dos dois primeiros.
