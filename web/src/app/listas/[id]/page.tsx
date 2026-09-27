@@ -179,6 +179,7 @@ export default function ListaPage() {
           >
             <input
               autoFocus
+              aria-label="Nome da lista"
               value={name}
               onChange={(e) => setName(e.target.value)}
               className="min-h-11 flex-1 rounded-full border border-line bg-panel px-4 text-lg font-bold outline-none focus:border-ink"
@@ -191,12 +192,18 @@ export default function ListaPage() {
             </button>
           </form>
         ) : (
-          <h1
-            onClick={comecarAEditar}
-            className="cursor-pointer font-display text-2xl font-bold [font-stretch:110%]"
-            title="Toca para renomear"
-          >
-            {list.name}
+          // O título renomeia-se ao toque — por isso é um botão dentro do
+          // <h1>, não um <h1> com onClick, que o teclado e o VoiceOver não
+          // alcançavam (Ronda 12, Fase 4).
+          <h1 className="font-display text-2xl font-bold [font-stretch:110%]">
+            <button
+              onClick={comecarAEditar}
+              aria-label={`Renomear a lista ${list.name}`}
+              title="Toca para renomear"
+              className="cursor-pointer text-left"
+            >
+              {list.name}
+            </button>
           </h1>
         )}
       </div>
@@ -231,10 +238,14 @@ export default function ListaPage() {
                   </div>
                   <p className="mt-1.5 truncate text-[15px] font-medium">{item.name}</p>
                 </Link>
+                {/* Visível num ecrã tátil; só com rato é que espera pelo
+                    hover. Estava sempre a `opacity-0` — no telemóvel nunca se
+                    via, e um toque no canto da capa apagava o item (Ronda 12,
+                    Fase 4). */}
                 <button
                   onClick={() => void handleRemoveItem(item)}
                   aria-label={`Remover ${item.name} da lista`}
-                  className="tap-44 absolute right-1.5 top-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white opacity-0 backdrop-blur transition-opacity active:scale-90 group-hover:opacity-100"
+                  className="tap-44 absolute right-1.5 top-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-opacity active:scale-90 focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:opacity-0"
                 >
                   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden>
                     <path

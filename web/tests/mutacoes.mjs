@@ -38,6 +38,8 @@ const EM_DIA = "src/app/em-dia/page.tsx";
 const RESULTADO_SERIE = "src/components/ShowResultCard.tsx";
 const CASA = "src/app/series/page.tsx";
 const EXPLORAR = "src/app/explorar/page.tsx";
+const LISTA = "src/app/listas/[id]/page.tsx";
+const AVISO = "src/components/UndoToast.tsx";
 
 /**
  * `de` tem de existir tal e qual no ficheiro — se deixar de existir, a
@@ -365,6 +367,27 @@ const MUTACOES = [
     ficheiro: CASA,
     de: "            {watching.length === 0 ? (\n              <>",
     para: "            {watching.length < 0 ? (\n              <>",
+  },
+  {
+    nome: "r12-fase5/remover-invisivel",
+    descricao: "o botão de remover da lista volta a só aparecer com hover",
+    ficheiro: LISTA,
+    de: "group-hover:opacity-100 [@media(hover:hover)]:opacity-0\"",
+    para: "group-hover:opacity-100 opacity-0\"",
+  },
+  {
+    nome: "r12-fase5/aviso-mudo",
+    descricao: "o aviso de anular volta a não ser anunciado",
+    ficheiro: AVISO,
+    de: '      role="status"\n      aria-live="polite"\n',
+    para: "",
+  },
+  {
+    nome: "r12-fase5/campo-sem-nome",
+    descricao: "o campo de renomear a lista volta a não ter nome",
+    ficheiro: LISTA,
+    de: '              aria-label="Nome da lista"\n',
+    para: "",
   },
 ];
 
