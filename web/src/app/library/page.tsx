@@ -86,9 +86,13 @@ const CLASSE_GRELHA: Record<Densidade, string> = {
   lista: "flex flex-col",
 };
 
-/** A ordem por que as secções de estado aparecem, e a cor de cada uma. As
- *  cores são as mesmas da barra de progresso do cartaz: verde = a andar,
- *  roxo = acabou. Cor com significado, não decoração.
+/** A ordem por que as secções de estado aparecem, e a cor de cada uma.
+ *  "Em curso" é o próprio branco-projetor — a mesma regra da barra de
+ *  progresso: a meio de ver não tem cor, só progresso. "Completas" usa o
+ *  magenta de sinal, a mesma cor da barra quando uma série terminada está em
+ *  dia. O resto não tem sinal: cinza neutro (Ronda 12, Fase 5b — a versão
+ *  anterior deste comentário dizia "verde = a andar", que contradizia o que
+ *  o código fazia; medido na Fase 4).
  *
  *  A ordem é a da atenção que cada uma pede, e mudou por medição: com
  *  "Completas" em segundo lugar, 9377px dos 12311px da Biblioteca (76%)
@@ -104,13 +108,14 @@ const ESTADOS = [
   "Já não sigo",
   "Arquivadas",
 ];
+const CINZA = "#8a8880";
 const COR_ESTADO: Record<string, string> = {
-  "Em curso": "#37c837",
+  "Em curso": "var(--color-ink)",
   "Por começar": "#e6c832",
   Completas: "#d24bd2",
-  "Para ver": "#3fd2c8",
-  "Já não sigo": "#8a8880",
-  Arquivadas: "#8a8880",
+  "Para ver": CINZA,
+  "Já não sigo": CINZA,
+  Arquivadas: CINZA,
 };
 
 /** A partir de quantas séries é que a secção das completas se dobra. Abaixo

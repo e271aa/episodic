@@ -11,6 +11,7 @@ import SectionHeader from "@/components/SectionHeader";
 import { Panel, PanelRow } from "@/components/Panel";
 import { Bone } from "@/components/Skeleton";
 import IntegrityCheck from "@/components/IntegrityCheck";
+import { porExtenso } from "@/lib/datas";
 
 // Mesmo formato do TV Time: "2 meses · 25 dias · 7 horas"
 function splitHours(totalHours: number) {
@@ -223,7 +224,7 @@ export default function ProfilePage() {
             titulo="Importar do TV Time"
             detalhe={
               stats.importedAt
-                ? `Última importação a ${stats.importedAt.slice(0, 10)}`
+                ? `Última importação a ${porExtenso(stats.importedAt)}`
                 : "Traz o histórico do export GDPR"
             }
             href="/import"

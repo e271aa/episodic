@@ -118,7 +118,7 @@ export default function ImportPage() {
       <h1 className="font-display text-2xl font-bold">Importar do TV Time</h1>
       <p className="mt-2 text-[15px] text-dim">
         Envia o ZIP do export GDPR (gdpr.tvtime.com) — ou os CSVs extraídos. Tudo é
-        processado aqui no teu browser; nada é enviado para servidores.
+        processado aqui no teu aparelho; nada é enviado para servidores.
       </p>
 
       <label
@@ -131,7 +131,7 @@ export default function ImportPage() {
       >
         <TvIcon className="h-10 w-10 text-faint" />
         <span className="mt-3 font-medium">
-          Arrasta o ZIP para aqui, ou clica para escolher
+          Arrasta o ZIP para aqui, ou toca para escolher
         </span>
         <span className="ep-code mt-1 text-xs text-faint">.zip ou .csv</span>
         <input

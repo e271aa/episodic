@@ -22,6 +22,7 @@ export interface SerieSemeada {
   posterPath?: string | null;
   totalEpisodes?: number | null;
   status?: string | null;
+  genres?: string[] | null;
   /** qual dos fornecedores define a numeração — ver `StoredShow.numeracao` */
   numeracao?: "tmdb" | "tvmaze";
   followed?: boolean;
@@ -89,6 +90,7 @@ function registos(semente: Semente): Registos {
       overview: null,
       totalEpisodes: s.totalEpisodes ?? null,
       status: s.status ?? "Ended",
+      genres: s.genres ?? null,
       ...(s.numeracao ? { numeracao: s.numeracao } : {}),
       followed: s.followed ?? true,
       inWatchlist: s.inWatchlist ?? false,

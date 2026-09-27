@@ -26,6 +26,8 @@ import Poster from "@/components/Poster";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import { Bone, CardsBone, DetailHeaderBone } from "@/components/Skeleton";
 import { ArrowLeftIcon, CheckIcon, ChevronDownIcon } from "@/components/icons";
+import { curta } from "@/lib/datas";
+import { translateGenre } from "@/lib/stats";
 
 /**
  * Uma linha de episódio, repetida em dois sítios: sozinha na lista, e dentro
@@ -532,7 +534,11 @@ export default function ShowPage() {
   }
 
   const year = show.firstAired?.slice(0, 4);
-  const genreBits = show.genres?.slice(0, 2).join(" · ").toUpperCase();
+  const genreBits = show.genres
+    ?.slice(0, 2)
+    .map(translateGenre)
+    .join(" · ")
+    .toUpperCase();
   const showComplete =
     show.totalEpisodes != null && watchedCount >= show.totalEpisodes;
   const accent = stateColor(showComplete, show.status);
@@ -1001,7 +1007,7 @@ export default function ShowPage() {
                                 </span>
                                 <span className="ep-code block text-xs">
                                   {metaEp?.airDate
-                                    ? `estreia a ${new Date(metaEp.airDate).toLocaleDateString("pt-PT", { day: "numeric", month: "short" })}`
+                                    ? `estreia a ${curta(metaEp.airDate)}`
                                     : "por estrear"}
                                 </span>
                               </span>
@@ -1054,7 +1060,7 @@ export default function ShowPage() {
                         key={g}
                         className="rounded-full bg-raised px-2.5 py-0.5 text-xs text-dim"
                       >
-                        {g}
+                        {translateGenre(g)}
                       </span>
                     ))}
                   </dd>

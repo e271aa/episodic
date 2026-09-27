@@ -77,7 +77,7 @@ const GENRE_PT: Record<string, string> = {
   Legal: "Jurídico",
 };
 
-function translateGenre(name: string): string {
+export function translateGenre(name: string): string {
   return GENRE_PT[name] ?? name;
 }
 

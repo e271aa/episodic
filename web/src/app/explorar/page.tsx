@@ -22,6 +22,7 @@ import {
 import { isCloudConfigured } from "@/lib/supabase";
 import { searchMulti, type DiscoverItem } from "@/lib/tmdb";
 import DiscoverCard from "@/components/DiscoverCard";
+import { sectionColor } from "@/components/SectionHeader";
 import DiscoverSwipeCard, { type DeckItem } from "@/components/DiscoverSwipeCard";
 import SwipeCoach, { EXPLORAR_COACH_KEY } from "@/components/SwipeCoach";
 import ViewModeToggle, { MODOS, type Modo } from "@/components/ViewModeToggle";
@@ -38,13 +39,6 @@ import {
 import { Bone, PosterRowBone, TitleBone } from "@/components/Skeleton";
 
 type Kind = "tv" | "movie";
-
-const BAR_COLORS = ["#3fd2c8", "#e6c832", "#d24bd2", "#37c837", "#3c46e6", "#e6483c"];
-function barColor(seed: string) {
-  let n = 0;
-  for (let i = 0; i < seed.length; i++) n = (n + seed.charCodeAt(i)) % BAR_COLORS.length;
-  return BAR_COLORS[n];
-}
 
 /**
  * Por sessão, não por sempre — fora do componente para sobreviver a uma
@@ -239,7 +233,7 @@ function Grelha({
               <span
                 aria-hidden
                 className="h-3.5 w-[3px] shrink-0 rounded-full"
-                style={{ backgroundColor: barColor(section.title) }}
+                style={{ backgroundColor: sectionColor(section.title) }}
               />
               {section.title}
             </h2>

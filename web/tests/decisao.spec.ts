@@ -225,3 +225,47 @@ test("só com séries para ver, a casa não diz 'Estás em dia'", async ({ page 
   await expect(page.getByText("Ainda não segues nenhuma série")).toBeVisible();
   await expect(page.getByText("Estás em dia")).toHaveCount(0);
 });
+
+// ── #15 (Fase 5b.1) · géneros, plurais e vocabulário ─────────
+
+test("os géneros da série aparecem em pt-PT, não como veio do fornecedor", async ({
+  page,
+}) => {
+  // "Sci-Fi & Fantasy" ficava por traduzir no detalhe, mesmo com o mapa já
+  // a existir em lib/stats.ts (Ronda 12, Fase 4, achado #15).
+  await semear(page, {
+    series: [
+      {
+        uuid: "s-1",
+        name: "Serie Um",
+        totalEpisodes: 10,
+        genres: ["Sci-Fi & Fantasy", "Action & Adventure"],
+      },
+    ],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1 }],
+  });
+  await page.goto("/series/s-1");
+  await expect(page.getByText("Sci-Fi & Fantasy")).toHaveCount(0);
+  await expect(page.getByText("Ficção & Fantasia")).toBeVisible();
+  await expect(page.getByText("Ação & Aventura")).toBeVisible();
+});
+
+test("'Melhor maratona' com um episódio não diz '1 episódios'", async ({ page }) => {
+  const dia = new Date().toISOString().slice(0, 10);
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Serie Um", totalEpisodes: 1 }],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1, watchedAt: `${dia}T20:00:00.000Z` }],
+  });
+  await page.goto("/estatisticas");
+  await expect(page.getByText("1 episódios")).toHaveCount(0);
+  await expect(page.getByText("Melhor maratona")).toBeVisible();
+  await expect(page.getByText("episódio", { exact: true })).toBeVisible();
+});
+
+test("o import não usa vocabulário de computador ('clica', 'browser')", async ({ page }) => {
+  await semear(page, {});
+  await page.goto("/import");
+  await expect(page.getByText("browser")).toHaveCount(0);
+  await expect(page.getByText("clica")).toHaveCount(0);
+  await expect(page.getByText(/toca/i)).toBeVisible();
+});

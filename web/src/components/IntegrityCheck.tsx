@@ -16,6 +16,7 @@ import {
   type RepairPlan,
 } from "@/lib/repair";
 import { PanelRow } from "@/components/Panel";
+import { porExtenso } from "@/lib/datas";
 
 /**
  * Verificação e reparação de episódios duplicados por numerações diferentes
@@ -211,7 +212,7 @@ export default function IntegrityCheck() {
                 {g.dropNames.some((n) => n !== g.keepName)
                   ? ` = ${g.dropNames.filter((n) => n !== g.keepName).join(", ")}`
                   : ""}{" "}
-                · {g.watchedAt ? `fica visto a ${g.watchedAt.slice(0, 10)}` : "fica para ver"}
+                · {g.watchedAt ? `fica visto a ${porExtenso(g.watchedAt)}` : "fica para ver"}
               </li>
             ))}
           </ul>

@@ -9,6 +9,7 @@ import { ClapperboardIcon } from "@/components/icons";
 import Poster from "@/components/Poster";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import { ListRowsBone } from "@/components/Skeleton";
+import { comDiaDaSemana } from "@/lib/datas";
 
 function relativeDay(airDate: string): string {
   const today = new Date().toISOString().slice(0, 10);
@@ -18,11 +19,7 @@ function relativeDay(airDate: string): string {
   if (diffDays === 0) return "Hoje";
   if (diffDays === 1) return "Amanhã";
   if (diffDays < 7) return `Em ${diffDays} dias`;
-  return new Date(airDate).toLocaleDateString("pt-PT", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-  });
+  return comDiaDaSemana(airDate);
 }
 
 export default function EstrearPage() {

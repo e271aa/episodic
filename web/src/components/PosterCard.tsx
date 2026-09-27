@@ -162,13 +162,11 @@ export default function PosterCard({
           <>
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-black/60 to-transparent" />
             <div className="absolute inset-x-0 bottom-0 h-1 bg-black/50">
+              {/* Sem brilho: a cor já tem significado (Bars Rule), o halo à
+                  volta dela é só decoração a mais (Ronda 12, Fase 5b). */}
               <div
                 className="h-full transition-[width] duration-[240ms] ease-out"
-                style={{
-                  width: `${progress}%`,
-                  background: barColor ?? undefined,
-                  boxShadow: barColor ? `0 0 6px ${barColor}b3` : undefined,
-                }}
+                style={{ width: `${progress}%`, background: barColor ?? undefined }}
               />
             </div>
           </>

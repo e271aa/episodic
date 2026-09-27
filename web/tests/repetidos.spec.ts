@@ -62,7 +62,7 @@ test("um filme em 'para ver' e a cópia vista pela pesquisa juntam-se num só, v
   const aviso = page.getByTestId("filmes-repetidos");
   await expect(aviso).toContainText("1 filme repetido");
   await expect(aviso).toContainText("The Shawshank Redemption = Os Condenados de Shawshank");
-  await expect(aviso).toContainText("fica visto a 2026-09-20");
+  await expect(aviso).toContainText("fica visto a 20 de setembro de 2026");
   await page.getByRole("button", { name: "Juntar o filme" }).click();
   await expect(page.getByText("1 cópia de filme juntada ao original.")).toBeVisible();
 

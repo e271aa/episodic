@@ -5,22 +5,8 @@ import Link from "next/link";
 import { loadAdvancedStats, type AdvancedStats } from "@/lib/advancedStats";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import { CardsBone, TitleBone } from "@/components/Skeleton";
-
-function formatDate(iso: string): string {
-  return new Date(iso).toLocaleDateString("pt-PT", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  });
-}
-
-function formatMonth(yyyyMm: string): string {
-  const [year, month] = yyyyMm.split("-").map(Number);
-  return new Date(year, month - 1, 1).toLocaleDateString("pt-PT", {
-    month: "long",
-    year: "numeric",
-  });
-}
+import { porExtenso, porMes } from "@/lib/datas";
+import { contarEpisodios } from "@/lib/buracos";
 
 export default function EstatisticasPage() {
   const [stats, setStats] = useState<AdvancedStats | null>(null);
@@ -110,9 +96,12 @@ export default function EstatisticasPage() {
             Melhor maratona
           </h2>
           <p className="ep-code mt-2 text-3xl font-bold text-ink">
-            {stats.bestBinge.count} <span className="text-lg font-normal text-dim">episódios</span>
+            {stats.bestBinge.count}{" "}
+            <span className="text-lg font-normal text-dim">
+              {stats.bestBinge.count === 1 ? "episódio" : "episódios"}
+            </span>
           </p>
-          <p className="mt-1 text-[15px] text-dim">{formatDate(stats.bestBinge.date)}</p>
+          <p className="mt-1 text-[15px] text-dim">{porExtenso(stats.bestBinge.date)}</p>
           {stats.bestBinge.topShow && (
             <p className="mt-2 text-xs text-faint">
               A maior parte foi de{" "}
@@ -133,7 +122,7 @@ export default function EstatisticasPage() {
             <span className="text-lg font-normal text-dim">dias seguidos</span>
           </p>
           <p className="mt-1 text-[15px] text-dim">
-            {formatDate(stats.longestStreak.from)} → {formatDate(stats.longestStreak.to)}
+            {porExtenso(stats.longestStreak.from)} → {porExtenso(stats.longestStreak.to)}
           </p>
         </section>
       )}
@@ -162,9 +151,9 @@ export default function EstatisticasPage() {
             Mês mais ativo de sempre
           </h2>
           <p className="mt-2 font-display text-xl font-bold text-ink first-letter:uppercase">
-            {formatMonth(stats.busiestMonth.month)}
+            {porMes(stats.busiestMonth.month)}
           </p>
-          <p className="text-[15px] text-dim">{stats.busiestMonth.count} episódios</p>
+          <p className="text-[15px] text-dim">{contarEpisodios(stats.busiestMonth.count)}</p>
         </section>
       )}
 
@@ -178,7 +167,7 @@ export default function EstatisticasPage() {
             <span className="text-lg font-normal text-dim">séries no mesmo dia</span>
           </p>
           <p className="mt-1 text-[15px] text-dim">
-            {formatDate(stats.distinctShowsWatchedInADay.date)}
+            {porExtenso(stats.distinctShowsWatchedInADay.date)}
           </p>
         </section>
       )}

@@ -40,6 +40,12 @@ const CASA = "src/app/series/page.tsx";
 const EXPLORAR = "src/app/explorar/page.tsx";
 const LISTA = "src/app/listas/[id]/page.tsx";
 const AVISO = "src/components/UndoToast.tsx";
+const SECTION_HEADER = "src/components/SectionHeader.tsx";
+const CSS = "src/app/globals.css";
+const POSTER_CARD = "src/components/PosterCard.tsx";
+const LIBRARY = "src/app/library/page.tsx";
+const IMPORT_PAGINA = "src/app/import/page.tsx";
+const ESTATISTICAS = "src/app/estatisticas/page.tsx";
 
 /**
  * `de` tem de existir tal e qual no ficheiro — se deixar de existir, a
@@ -388,6 +394,62 @@ const MUTACOES = [
     ficheiro: LISTA,
     de: '              aria-label="Nome da lista"\n',
     para: "",
+  },
+  {
+    nome: "r12-fase5b/cabecalhos-6-cores",
+    descricao: "os cabeçalhos de secção voltam a sortear entre as 6 cores, incluindo estados",
+    ficheiro: SECTION_HEADER,
+    de: 'const BAR_COLORS = ["#c8c8c8", "#e6c832", "#e6483c", "#3c46e6"];',
+    para: 'const BAR_COLORS = ["#c8c8c8", "#e6c832", "#d24bd2", "#37c837", "#3c46e6", "#e6483c"];',
+  },
+  {
+    nome: "r12-fase5b/hover-ambar-volta",
+    descricao: "o hover de um cartão volta a acender o âmbar da v1",
+    ficheiro: CSS,
+    de: '.ep-card-hover:hover {\n  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 28px -10px rgba(0, 0, 0, 0.55);\n}',
+    para: '.ep-card-hover:hover {\n  border-color: rgba(255, 170, 51, 0.35);\n  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 28px -10px rgba(0, 0, 0, 0.55);\n}',
+  },
+  {
+    nome: "r12-fase5b/brilho-volta",
+    descricao: "a barra de progresso da grelha volta a ter o brilho decorativo",
+    ficheiro: POSTER_CARD,
+    de: 'style={{ width: `${progress}%`, background: barColor ?? undefined }}',
+    para: 'style={{ width: `${progress}%`, background: barColor ?? undefined, boxShadow: barColor ? `0 0 6px ${barColor}b3` : undefined }}',
+  },
+  {
+    nome: "r12-fase5b/em-curso-verde",
+    descricao: "'Em curso' na Biblioteca volta a ser verde em vez do branco-projetor",
+    ficheiro: LIBRARY,
+    de: '"Em curso": "var(--color-ink)",',
+    para: '"Em curso": "#37c837",',
+  },
+  {
+    nome: "r12-fase5b/data-importacao-crua",
+    descricao: "a data da última importação volta a aparecer em ISO cru",
+    ficheiro: "src/app/profile/page.tsx",
+    de: "`Última importação a ${porExtenso(stats.importedAt)}`",
+    para: "`Última importação a ${stats.importedAt.slice(0, 10)}`",
+  },
+  {
+    nome: "r12-fase5b/genero-por-traduzir",
+    descricao: "os géneros do detalhe voltam a aparecer em inglês",
+    ficheiro: DETALHE,
+    de: ".map(translateGenre)\n    .join",
+    para: ".join",
+  },
+  {
+    nome: "r12-fase5b/maratona-1-episodios",
+    descricao: "'Melhor maratona' com 1 volta a dizer 'episódios'",
+    ficheiro: ESTATISTICAS,
+    de: '{stats.bestBinge.count === 1 ? "episódio" : "episódios"}',
+    para: '"episódios"',
+  },
+  {
+    nome: "r12-fase5b/import-vocabulario-de-computador",
+    descricao: "o import volta a dizer 'clica' em vez de 'toca'",
+    ficheiro: IMPORT_PAGINA,
+    de: "Arrasta o ZIP para aqui, ou toca para escolher",
+    para: "Arrasta o ZIP para aqui, ou clica para escolher",
   },
 ];
 

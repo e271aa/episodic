@@ -5,10 +5,12 @@ import type { ReactNode } from "react";
  * partir do título — a mesma secção fica sempre com a mesma cor, entre
  * sessões e entre ecrãs.
  *
- * Cor com significado ("de onde veio isto"), não decoração: é a mesma regra
- * que já governa a barra de progresso dos cartazes.
+ * Só as 4 barras neutras (cinza, amarelo, vermelho, azul): verde, ciano e
+ * magenta já têm significado próprio (em dia, buracos, terminada) e um
+ * cabeçalho sorteado entre as sete contradizia a Bars Rule — medido na
+ * Fase 4 da Ronda 12 (AUDITORIA.md), decidido pelo Ruben a 27-09.
  */
-const BAR_COLORS = ["#3fd2c8", "#e6c832", "#d24bd2", "#37c837", "#3c46e6", "#e6483c"];
+const BAR_COLORS = ["#c8c8c8", "#e6c832", "#e6483c", "#3c46e6"];
 
 export function sectionColor(seed: string): string {
   let n = 0;

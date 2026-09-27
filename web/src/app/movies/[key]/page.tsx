@@ -13,6 +13,7 @@ import StreamingBadges from "@/components/StreamingBadges";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import { Bone, DetailHeaderBone } from "@/components/Skeleton";
 import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
+import { porExtenso } from "@/lib/datas";
 
 /**
  * `dateIsExact` false = só sabemos o ano (registos em massa do TV Time, ou
@@ -20,10 +21,7 @@ import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
  * "1 de julho de 2024" nesses casos seria inventar um dia que ninguém disse.
  */
 function formatWatchedDate(iso: string, exact: boolean): string {
-  const d = new Date(iso);
-  return exact
-    ? d.toLocaleDateString("pt-PT", { day: "numeric", month: "long", year: "numeric" })
-    : `${d.getFullYear()}`;
+  return exact ? porExtenso(iso) : `${new Date(iso).getFullYear()}`;
 }
 
 function formatRuntime(minutes: number | null): string | null {
