@@ -714,13 +714,13 @@ function LibraryContent() {
                   onClick={() => setParams({ filtro: f.id === "tudo" ? null : f.id })}
                   className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
                     filter === f.id
-                      ? "border-ink bg-ink text-tube"
+                      ? "border-ink/60 bg-raised text-ink"
                       : "border-line text-dim hover:border-ink hover:text-ink"
                   }`}
                 >
                   {f.label}
                   <span
-                    className={`ep-code text-xs ${filter === f.id ? "opacity-70" : "text-faint"}`}
+                    className={`ep-code text-xs ${filter === f.id ? "text-dim" : "text-faint"}`}
                   >
                     {counts[f.id]}
                   </span>
@@ -735,7 +735,7 @@ function LibraryContent() {
                   onClick={() => setParams({ ordem: o.id === "vistos" ? null : o.id })}
                   className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
                     seriesSort === o.id
-                      ? "border-ink bg-ink text-tube"
+                      ? "border-ink/60 bg-raised text-ink"
                       : "border-line text-dim hover:border-ink hover:text-ink"
                   }`}
                 >
@@ -756,13 +756,13 @@ function LibraryContent() {
                   onClick={() => setParams({ filtro: f.id === "vistos" ? null : f.id })}
                   className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
                     movieFilter === f.id
-                      ? "border-ink bg-ink text-tube"
+                      ? "border-ink/60 bg-raised text-ink"
                       : "border-line text-dim hover:border-ink hover:text-ink"
                   }`}
                 >
                   {f.label}
                   <span
-                    className={`ep-code text-xs ${movieFilter === f.id ? "opacity-70" : "text-faint"}`}
+                    className={`ep-code text-xs ${movieFilter === f.id ? "text-dim" : "text-faint"}`}
                   >
                     {movieCounts[f.id]}
                   </span>
@@ -777,7 +777,7 @@ function LibraryContent() {
                   onClick={() => setParams({ ordem: o.id === "vistos" ? null : o.id })}
                   className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
                     movieSort === o.id
-                      ? "border-ink bg-ink text-tube"
+                      ? "border-ink/60 bg-raised text-ink"
                       : "border-line text-dim hover:border-ink hover:text-ink"
                   }`}
                 >
@@ -793,7 +793,7 @@ function LibraryContent() {
                     onClick={() => setParams({ decada: null })}
                     className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
                       decade === null
-                        ? "border-ink bg-ink text-tube"
+                        ? "border-ink/60 bg-raised text-ink"
                         : "border-line text-dim hover:border-ink hover:text-ink"
                     }`}
                   >
@@ -805,7 +805,7 @@ function LibraryContent() {
                       onClick={() => setParams({ decada: d === decade ? null : String(d) })}
                       className={`ep-code min-h-11 cursor-pointer rounded-full border px-3.5 text-sm transition active:scale-95 ${
                         decade === d
-                          ? "border-ink bg-ink text-tube"
+                          ? "border-ink/60 bg-raised text-ink"
                           : "border-line text-dim hover:border-ink hover:text-ink"
                       }`}
                     >
@@ -831,7 +831,7 @@ function LibraryContent() {
               aria-pressed={densidade === d}
               className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
                 densidade === d
-                  ? "border-ink bg-ink text-tube"
+                  ? "border-ink/60 bg-raised text-ink"
                   : "border-line text-dim hover:border-ink hover:text-ink"
               }`}
             >

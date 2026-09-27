@@ -74,11 +74,11 @@ export default function LibraryControls({
             onClick={() => onSegment(id)}
             aria-pressed={segment === id}
             className={`flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-[0.9375rem] font-semibold transition ${
-              segment === id ? "bg-ink text-tube" : "text-dim hover:text-ink"
+              segment === id ? "bg-ink/[0.14] text-ink" : "text-dim hover:text-ink"
             }`}
           >
             {label}
-            <span className={`ep-code text-xs ${segment === id ? "opacity-70" : "text-faint"}`}>
+            <span className={`ep-code text-xs ${segment === id ? "text-dim" : "text-faint"}`}>
               {total}
             </span>
           </button>

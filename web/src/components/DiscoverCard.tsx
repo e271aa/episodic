@@ -114,7 +114,7 @@ export default function DiscoverCard({
         <div className="mt-1.5 flex gap-1.5">
           <button
             onClick={() => void guardar()}
-            className="flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full bg-ink text-xs font-semibold text-tube transition hover:brightness-110 active:scale-95"
+            className="flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full border border-line text-xs font-semibold text-ink transition hover:border-ink active:scale-95"
           >
             Para ver
           </button>

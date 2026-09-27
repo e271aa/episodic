@@ -193,12 +193,12 @@ function EmDiaContent() {
               aria-pressed={isActive}
               className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-[0.9375rem] font-medium transition active:scale-95 ${
                 isActive
-                  ? "border-ink bg-ink text-tube"
+                  ? "border-ink/60 bg-raised text-ink"
                   : "border-line text-dim hover:border-ink hover:text-ink"
               }`}
             >
               {f.label}
-              <span className={`ep-code text-xs ${isActive ? "opacity-70" : "text-faint"}`}>
+              <span className={`ep-code text-xs ${isActive ? "text-dim" : "text-faint"}`}>
                 {count}
               </span>
             </button>

@@ -59,6 +59,7 @@ const LISTAS_PAGINA = "src/app/listas/page.tsx";
 const ADD_TO_LIST = "src/components/AddToListButton.tsx";
 const BOTTOM_NAV = "src/components/BottomNav.tsx";
 const CABECALHO = "src/components/CabecalhoEcra.tsx";
+const CONTROLOS_BIBLIOTECA = "src/components/LibraryControls.tsx";
 
 /**
  * `de` tem de existir tal e qual no ficheiro — se deixar de existir, a
@@ -611,6 +612,27 @@ const MUTACOES = [
     ficheiro: CABECALHO,
     de: '        <ArrowLeftIcon className="h-5 w-5" />',
     para: "        {voltar}",
+  },
+  {
+    nome: "r12-fase5b3/para-ver-volta-a-branco",
+    descricao: "o 'Para ver' do Explorar volta a ser uma pílula branca",
+    ficheiro: DISCOVER_CARD,
+    de: "rounded-full border border-line text-xs font-semibold text-ink transition hover:border-ink active:scale-95",
+    para: "rounded-full bg-ink text-xs font-semibold text-tube transition hover:brightness-110 active:scale-95",
+  },
+  {
+    nome: "r12-fase5b3/separador-volta-a-branco",
+    descricao: "o separador ativo da Biblioteca volta a ser branco, por cima da dock",
+    ficheiro: CONTROLOS_BIBLIOTECA,
+    de: 'segment === id ? "bg-ink/[0.14] text-ink" : "text-dim hover:text-ink"',
+    para: 'segment === id ? "bg-ink text-tube" : "text-dim hover:text-ink"',
+  },
+  {
+    nome: "r12-fase5b3/escolha-volta-a-branco",
+    descricao: "uma escolha no Pôr em dia volta a ser uma pílula branca",
+    ficheiro: EM_DIA_PAGINA,
+    de: '? "border-ink/60 bg-raised text-ink"',
+    para: '? "border-ink bg-ink text-tube"',
   },
 ];
 
