@@ -276,11 +276,13 @@ export default function ProfilePage() {
               </div>
             </div>
           ) : (
+            // Sem `perigo`: em repouso é uma linha como as outras — o
+            // vermelho só acende no painel de confirmação, acima
+            // (Ronda 12, Fase 4, achado #17).
             <PanelRow
               titulo="Apagar dados locais"
               detalhe="Limpa esta cópia — a da cloud, se tiveres sessão, fica"
               onClick={() => setConfirmClear(true)}
-              perigo
             />
           )}
         </Panel>

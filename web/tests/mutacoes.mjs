@@ -460,25 +460,11 @@ const MUTACOES = [
     para: "Arrasta o ZIP para aqui, ou clica para escolher",
   },
   {
-    nome: "r12-fase5b/scroll-fantasma-explorar",
-    descricao: "o Explorar volta a ter 82px de scroll fantasma",
-    ficheiro: EXPLORAR_PAGINA,
-    de: 'className="tela-cheia page-enter',
-    para: 'className="page-enter',
-  },
-  {
-    nome: "r12-fase5b/scroll-fantasma-em-dia",
-    descricao: "o Pôr em dia volta a ter 82px de scroll fantasma",
-    ficheiro: EM_DIA_PAGINA,
-    de: 'className="tela-cheia mx-auto',
-    para: 'className="mx-auto',
-  },
-  {
-    nome: "r12-fase5b/scroll-fantasma-login",
-    descricao: "o Entrar volta a ter 82px de scroll fantasma",
-    ficheiro: LOGIN,
-    de: '<main className="tela-cheia flex flex-col items-center justify-center px-6 text-center">',
-    para: '<main className="flex min-h-dvh flex-col items-center justify-center px-6 text-center">',
+    nome: "r12-fase5b/scroll-fantasma-margem-cancelada",
+    descricao: "a .tela-cheia volta a não cancelar o respiro da dock — os 82px voltam nos três ecrãs",
+    ficheiro: CSS,
+    de: "  height: 100dvh;\n  margin-bottom: calc(-1 * (var(--dock-h) + 0.5rem));\n}",
+    para: "  height: 100dvh;\n}",
   },
   {
     nome: "r12-fase5b/biblioteca-sem-h1",
@@ -521,6 +507,20 @@ const MUTACOES = [
     ficheiro: MANIFEST,
     de: '"#101014"',
     para: '"#0b0e14"',
+  },
+  {
+    nome: "r12-fase5b/apagar-lista-vermelho-sempre",
+    descricao: "'Apagar lista' volta a ficar vermelho em repouso",
+    ficheiro: LISTA,
+    de: '            : "border-line text-dim hover:border-ink hover:text-ink"',
+    para: '            : "border-danger/40 text-danger hover:bg-danger/10"',
+  },
+  {
+    nome: "r12-fase5b/apagar-dados-vermelho-sempre",
+    descricao: "'Apagar dados locais' volta a ficar vermelho em repouso",
+    ficheiro: PROFILE_PAGINA,
+    de: '              detalhe="Limpa esta cópia — a da cloud, se tiveres sessão, fica"\n              onClick={() => setConfirmClear(true)}\n            />',
+    para: '              detalhe="Limpa esta cópia — a da cloud, se tiveres sessão, fica"\n              onClick={() => setConfirmClear(true)}\n              perigo\n            />',
   },
 ];
 

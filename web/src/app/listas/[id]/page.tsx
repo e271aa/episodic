@@ -262,9 +262,16 @@ export default function ListaPage() {
         </div>
       )}
 
+      {/* O vermelho só acende quando a destruição está mesmo a um toque —
+          a mesma regra do "Apagar dados locais" no Perfil (Ronda 12, Fase 4,
+          achado #17). Em repouso é uma linha como as outras. */}
       <button
         onClick={() => void handleDelete()}
-        className="mt-10 cursor-pointer rounded-2xl border border-danger/40 px-4 py-3 text-[15px] font-medium text-danger transition-colors hover:bg-danger/10"
+        className={`mt-10 cursor-pointer rounded-2xl border px-4 py-3 text-[15px] font-medium transition-colors ${
+          confirmDelete
+            ? "border-danger/40 text-danger hover:bg-danger/10"
+            : "border-line text-dim hover:border-ink hover:text-ink"
+        }`}
       >
         {confirmDelete ? "Tens a certeza? Toca outra vez para apagar" : "Apagar lista"}
       </button>

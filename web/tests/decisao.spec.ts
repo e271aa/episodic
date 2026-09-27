@@ -334,3 +334,41 @@ test("o manifest usa a cor do tubo desligado da v2, não a da v1", async ({ page
   expect(manifest.theme_color).toBe("#101014");
   expect(manifest.background_color).toBe("#101014");
 });
+
+// ── #17 (Fase 5b.1) · o vermelho de perigo só ao confirmar ──
+
+function ehCorDoTexto(cor: string) {
+  // #e5484d
+  return cor === "rgb(229, 72, 77)";
+}
+
+test("'Apagar lista' só fica vermelho depois do primeiro toque", async ({ page }) => {
+  await semear(page, { listas: [{ id: "l-1", name: "Uma lista" }] });
+  await page.goto("/listas/l-1");
+  const botao = page.getByRole("button", { name: "Apagar lista" });
+  const corAntes = await botao.evaluate((el) => getComputedStyle(el).color);
+  expect(ehCorDoTexto(corAntes)).toBe(false);
+
+  await botao.click();
+  const depois = page.getByRole("button", { name: /Tens a certeza/ });
+  // a cor transita (transition-colors) — ler já a seguir apanha um valor a
+  // meio caminho, a mesma avaria já vista no hover do #9
+  await expect
+    .poll(async () => ehCorDoTexto(await depois.evaluate((el) => getComputedStyle(el).color)))
+    .toBe(true);
+});
+
+test("'Apagar dados locais' só fica vermelho depois do primeiro toque", async ({ page }) => {
+  await semear(page, {});
+  await page.goto("/profile");
+  const linha = page.getByText("Apagar dados locais");
+  await expect(linha).toBeVisible();
+  const corAntes = await linha.evaluate((el) => getComputedStyle(el).color);
+  expect(ehCorDoTexto(corAntes)).toBe(false);
+
+  await linha.click();
+  const corDepois = await page
+    .getByText("Apagar tudo o que está neste dispositivo?")
+    .evaluate((el) => getComputedStyle(el).color);
+  expect(ehCorDoTexto(corDepois)).toBe(true);
+});
