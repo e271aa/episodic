@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { CompassIcon, LibraryIcon, TvIcon, UserIcon } from "@/components/icons";
@@ -13,8 +14,32 @@ const TABS = [
   { href: "/profile", label: "Perfil", Icon: UserIcon },
 ] as const;
 
+/**
+ * Sem origem conhecida (a app aberta direto num ecrã interior), a que
+ * separador pertence cada rota.
+ */
+function separadorDaRota(pathname: string): string {
+  if (pathname.startsWith("/movies") || pathname.startsWith("/listas")) return "/library";
+  if (pathname.startsWith("/rever") || pathname.startsWith("/estatisticas")) return "/profile";
+  if (pathname.startsWith("/import")) return "/profile";
+  if (pathname.startsWith("/explorar")) return "/explorar";
+  if (pathname.startsWith("/library")) return "/library";
+  if (pathname.startsWith("/profile")) return "/profile";
+  return "/series";
+}
+
 export default function BottomNav() {
   const pathname = usePathname();
+
+  // A dock acende o separador de onde se veio, não o "tipo" do ecrã: uma
+  // série aberta a partir da Biblioteca acendia "A seguir" (Ronda 12, Fase
+  // 4, achado #10). A dock vive no layout e não se desmonta ao navegar, por
+  // isso lembra-se do último separador visitado; a regra fixa por rota só
+  // entra quando não há origem nenhuma.
+  const raiz = TABS.find((t) => t.href === pathname)?.href ?? null;
+  const [origem, setOrigem] = useState<string | null>(raiz);
+  if (raiz !== null && raiz !== origem) setOrigem(raiz);
+  const ativo = raiz ?? origem ?? separadorDaRota(pathname);
 
   // No login não há para onde navegar — a dock só confundiria.
   if (pathname === "/login") return null;
@@ -31,10 +56,7 @@ export default function BottomNav() {
       />
       <div className="flex items-center gap-1 rounded-full border border-line bg-panel/90 p-1.5 shadow-[0_8px_28px_-8px_rgba(0,0,0,0.6)] backdrop-blur-lg">
         {TABS.map(({ href, label, Icon }) => {
-          const active =
-            pathname === href ||
-            pathname.startsWith(href + "/") ||
-            (href === "/library" && pathname.startsWith("/movies"));
+          const active = href === ativo;
           return (
             <Link
               key={href}

@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { loadAdvancedStats, type AdvancedStats } from "@/lib/advancedStats";
-import BotaoVoltar from "@/components/BotaoVoltar";
+import CabecalhoEcra from "@/components/CabecalhoEcra";
 import { CardsBone, TitleBone } from "@/components/Skeleton";
 import { porExtenso, porMes } from "@/lib/datas";
 import { contarEpisodios } from "@/lib/buracos";
@@ -35,16 +35,7 @@ export default function EstatisticasPage() {
   if (totalMarcado === 0) {
     return (
       <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
-        <div className="flex items-center justify-between">
-          <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Estatísticas</h1>
-          <BotaoVoltar
-            label="Voltar ao perfil"
-            fallback="/profile"
-            className="-mr-2 inline-flex min-h-11 items-center px-2 text-[0.9375rem] text-dim hover:text-ink hover:underline"
-          >
-            Perfil
-          </BotaoVoltar>
-        </div>
+        <CabecalhoEcra titulo="Estatísticas" voltar="Voltar ao perfil" fallback="/profile" />
         <div className="mt-16 flex flex-col items-center px-6 text-center">
           <span className="bars mb-4 h-11 w-11 rounded-full opacity-40" aria-hidden />
           <p className="font-display font-semibold">Ainda não há nada para contar</p>
@@ -67,16 +58,7 @@ export default function EstatisticasPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Estatísticas</h1>
-        <BotaoVoltar
-          label="Voltar ao perfil"
-          fallback="/profile"
-          className="-mr-2 inline-flex min-h-11 items-center px-2 text-[0.9375rem] text-dim hover:text-ink hover:underline"
-        >
-          Perfil
-        </BotaoVoltar>
-      </div>
+      <CabecalhoEcra titulo="Estatísticas" voltar="Voltar ao perfil" fallback="/profile" />
 
       {stats.currentStreak > 1 && (
         <div className="ep-card mt-6 flex items-center gap-3 p-4">

@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import BotaoVoltar from "@/components/BotaoVoltar";
+import CabecalhoEcra from "@/components/CabecalhoEcra";
 import Poster from "@/components/Poster";
 import { CheckIcon, TvIcon } from "@/components/icons";
 import { contarEpisodios } from "@/lib/buracos";
@@ -109,18 +109,7 @@ export default function ReverPage() {
 
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
-      <div className="flex items-center justify-between">
-        <h1 className="font-display text-2xl font-bold [font-stretch:110%]">
-          Rever a biblioteca
-        </h1>
-        <BotaoVoltar
-          label="Voltar ao perfil"
-          fallback="/profile"
-          className="-mr-2 inline-flex min-h-11 items-center px-2 text-[0.9375rem] text-dim hover:text-ink hover:underline"
-        >
-          Perfil
-        </BotaoVoltar>
-      </div>
+      <CabecalhoEcra titulo="Rever a biblioteca" voltar="Voltar ao perfil" fallback="/profile" />
       <p className="mt-1 text-[0.9375rem] text-dim">
         Séries com menos marcado do que o que já estreou. A app não sabe se as
         viste — tu sabes. Uma de cada vez, e tudo se anula.

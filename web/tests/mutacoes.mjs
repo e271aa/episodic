@@ -58,6 +58,7 @@ const SHEET_PANEL = "src/components/SheetPanel.tsx";
 const LISTAS_PAGINA = "src/app/listas/page.tsx";
 const ADD_TO_LIST = "src/components/AddToListButton.tsx";
 const BOTTOM_NAV = "src/components/BottomNav.tsx";
+const CABECALHO = "src/components/CabecalhoEcra.tsx";
 
 /**
  * `de` tem de existir tal e qual no ficheiro — se deixar de existir, a
@@ -595,6 +596,21 @@ const MUTACOES = [
     ficheiro: POSTER_CARD,
     de: '<p className="mt-1.5 truncate text-[0.9375rem] font-semibold">',
     para: '<p className="mt-1.5 truncate text-[15px] font-semibold">',
+  },
+  // ── Ronda 12, Fase 5b.3: decisões de desenho ───────────────
+  {
+    nome: "r12-fase5b3/dock-acende-pelo-tipo",
+    descricao: "a dock volta a acender pelo tipo do ecrã, não pela origem",
+    ficheiro: BOTTOM_NAV,
+    de: "  const ativo = raiz ?? origem ?? separadorDaRota(pathname);",
+    para: "  const ativo = raiz ?? separadorDaRota(pathname) ?? origem;",
+  },
+  {
+    nome: "r12-fase5b3/recuar-volta-a-texto",
+    descricao: "recuar volta a ser um texto em vez do círculo com seta",
+    ficheiro: CABECALHO,
+    de: '        <ArrowLeftIcon className="h-5 w-5" />',
+    para: "        {voltar}",
   },
 ];
 

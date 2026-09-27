@@ -4,6 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import BotaoVoltar from "@/components/BotaoVoltar";
+import CabecalhoEcra from "@/components/CabecalhoEcra";
 import {
   addToList,
   deleteList,
@@ -160,18 +161,13 @@ export default function ListaPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
-      <BotaoVoltar
-        label="Voltar às listas"
+      <CabecalhoEcra
+        voltar="Voltar às listas"
         fallback="/listas"
-        className="-mr-2 inline-flex min-h-11 items-center px-2 text-[0.9375rem] text-dim hover:text-ink hover:underline"
-      >
-        ← Listas
-      </BotaoVoltar>
-
-      <div className="mt-2 flex items-center justify-between gap-3">
-        {editingName ? (
+        titulo={
+          editingName ? (
           <form
-            className="flex flex-1 gap-2"
+            className="flex min-w-0 flex-1 gap-2"
             onSubmit={(e) => {
               e.preventDefault();
               void handleRename();
@@ -182,7 +178,7 @@ export default function ListaPage() {
               aria-label="Nome da lista"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="min-h-11 flex-1 rounded-full border border-line bg-panel px-4 text-lg font-bold outline-none focus:border-ink"
+              className="min-h-11 min-w-0 flex-1 rounded-full border border-line bg-panel px-4 text-lg font-bold outline-none focus:border-ink"
             />
             <button
               type="submit"
@@ -195,7 +191,7 @@ export default function ListaPage() {
           // O título renomeia-se ao toque — por isso é um botão dentro do
           // <h1>, não um <h1> com onClick, que o teclado e o VoiceOver não
           // alcançavam (Ronda 12, Fase 4).
-          <h1 className="font-display text-2xl font-bold [font-stretch:110%]">
+          <h1 className="min-w-0 font-display text-2xl font-bold [font-stretch:110%]">
             <button
               onClick={comecarAEditar}
               aria-label={`Renomear a lista ${list.name}`}
@@ -205,8 +201,9 @@ export default function ListaPage() {
               {list.name}
             </button>
           </h1>
-        )}
-      </div>
+          )
+        }
+      />
       <p className="ep-code mt-1 text-xs text-dim">
         {items.length} {items.length === 1 ? "item" : "itens"}
       </p>
