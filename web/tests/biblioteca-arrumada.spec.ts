@@ -43,7 +43,7 @@ test("o que precisa de atenção vem primeiro; as acabadas vão para o fim", asy
   await semear(page, biblioteca(57, 12, 5));
   await page.goto("/library");
 
-  await expect(seccoes(page)).toHaveText([/A ver12/, /Por começar5/, /Completas57/]);
+  await expect(seccoes(page)).toHaveText([/Em curso12/, /Por começar5/, /Completas57/]);
 });
 
 test("uma série seguida sem nada visto não conta como 'a ver'", async ({ page }) => {
@@ -52,9 +52,9 @@ test("uma série seguida sem nada visto não conta como 'a ver'", async ({ page 
 
   // A secção e a pastilha do filtro têm de dizer o mesmo número — foi por
   // dizerem coisas diferentes sobre os mesmos episódios que a Fase 1 existiu.
-  await expect(seccoes(page)).toHaveText([/A ver3/, /Por começar4/]);
+  await expect(seccoes(page)).toHaveText([/Em curso3/, /Por começar4/]);
   await page.getByRole("button", { name: "Filtros" }).click();
-  await expect(page.getByRole("button", { name: "A ver 3" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Em curso 3" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Por começar 4" })).toBeVisible();
 });
 
@@ -86,7 +86,7 @@ test("com poucas completas não aparece botão nenhum para dobrar", async ({ pag
   await semear(page, biblioteca(4, 3, 0));
   await page.goto("/library");
 
-  await expect(seccoes(page)).toHaveText([/A ver3/, /Completas4/]);
+  await expect(seccoes(page)).toHaveText([/Em curso3/, /Completas4/]);
   await expect(page.locator('a[href="/series/c-0"]')).toBeVisible();
   await expect(page.getByTestId("dobrar-completas")).toHaveCount(0);
 });

@@ -70,8 +70,27 @@ biblioteca, Verificar biblioteca, Importar do TV Time, Entrar.
 - Nada de dados reais do Ruben no repositório (o export do TV Time fica
   fora do git)
 
-**Vocabulário da app:** "Marcar visto", "A seguir", "Por começar", "Para
-ver", "Arquivadas", "Em dia"; códigos de episódio no formato `S04·E01`.
+**Vocabulário da app** — uma palavra, um sentido (glossário fixado a
+27-09-2026, depois de a crítica da Ronda 12 encontrar "A seguir" com três
+sentidos e "em dia" usado ao contrário):
+
+- **A seguir** — só a fila: o separador da casa e o próximo episódio de cada
+  série. Nunca o estado de uma série
+- **Seguir · seguida(s)** — acompanhar uma série: entra na fila ("✓ Seguida";
+  "15 seguidas" no Perfil)
+- **Para ver** — a lista do que queres ver um dia, séries e filmes. Não entra
+  na fila
+- **Em curso** — seguida e começada, com episódios estreados por ver
+- **Por começar** — seguida, sem nenhum episódio visto
+- **Completas** — tudo o que já estreou está visto
+- **Retomar** — seguida, mas parada há mais de 30 dias
+- **Já não sigo · Arquivadas** — fora da fila; as arquivadas ficam só na
+  Biblioteca
+- **Pôr em dia** — o modo de decidir, um a um, os episódios por ver. **Em
+  dia** quer dizer *sem nada por ver* — nunca o contrário
+- **Por ver / por marcar** — "por ver" é o que ainda não viste; "por marcar"
+  é o que viste e não marcaste (os buracos). É a distinção central do produto
+- **Marcar visto**; códigos de episódio `S04·E01`; temporadas `T4`
 
 **Por decidir:**
 - **O nome.** "Episodic" é provisório; a procura de um nome novo está em

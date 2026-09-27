@@ -97,7 +97,7 @@ const CLASSE_GRELHA: Record<Densidade, string> = {
  *  arquivo. Primeiro o que se está a ver, depois o que espera, e só então
  *  o que já acabou. */
 const ESTADOS = [
-  "A ver",
+  "Em curso",
   "Por começar",
   "Para ver",
   "Completas",
@@ -105,7 +105,7 @@ const ESTADOS = [
   "Arquivadas",
 ];
 const COR_ESTADO: Record<string, string> = {
-  "A ver": "#37c837",
+  "Em curso": "#37c837",
   "Por começar": "#e6c832",
   Completas: "#d24bd2",
   "Para ver": "#3fd2c8",
@@ -432,7 +432,9 @@ function LibraryContent() {
     if (s.archived) return "Arquivadas";
     if (!s.followed) return s.inWatchlist ? "Para ver" : "Já não sigo";
     if (s.totalEpisodes && s.watchedCount >= s.totalEpisodes) return "Completas";
-    return s.watchedCount === 0 ? "Por começar" : "A ver";
+    // "Em curso" e não "A ver": ao lado de "Para ver" liam-se quase iguais
+    // (Ronda 12, Fase 5 — palavra escolhida pelo Ruben).
+    return s.watchedCount === 0 ? "Por começar" : "Em curso";
   };
 
   const showGroups = useMemo(
@@ -467,7 +469,7 @@ function LibraryContent() {
 
   const FILTERS: { id: SeriesFilter; label: string }[] = [
     { id: "tudo", label: "Tudo" },
-    { id: "a-ver", label: "A ver" },
+    { id: "a-ver", label: "Em curso" },
     { id: "por-comecar", label: "Por começar" },
     { id: "completas", label: "Completas" },
     { id: "para-ver", label: "Para ver" },

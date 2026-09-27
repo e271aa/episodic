@@ -136,7 +136,9 @@ export default function ProfilePage() {
         <div className="flex items-stretch p-5">
           <div className="flex-1">
             <p className="ep-code text-2xl font-bold text-ink">{stats.shows}</p>
-            <p className="text-xs text-dim">séries · {stats.following} a seguir</p>
+            <p className="text-xs text-dim">
+              séries · {stats.following} {stats.following === 1 ? "seguida" : "seguidas"}
+            </p>
           </div>
           <div className="w-px shrink-0 bg-line" aria-hidden />
           <div className="flex-1 pl-5">

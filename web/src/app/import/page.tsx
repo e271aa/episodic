@@ -165,9 +165,9 @@ export default function ImportPage() {
           <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[15px]">
             <dt className="text-dim">Séries</dt>
             <dd className="ep-code" data-testid="summary-shows">{preview.shows.length}</dd>
-            <dt className="text-dim">— a seguir</dt>
+            <dt className="text-dim">— seguidas</dt>
             <dd className="ep-code">{followed}</dd>
-            <dt className="text-dim">— na watchlist</dt>
+            <dt className="text-dim">— para ver</dt>
             <dd className="ep-code">{watchlist}</dd>
             <dt className="text-dim">Episódios vistos</dt>
             <dd className="ep-code" data-testid="summary-episodes">{preview.episodes.length}</dd>

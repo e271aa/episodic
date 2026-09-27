@@ -115,3 +115,53 @@ test("marcar em 'Por começar' não salta a série seguinte", async ({ page }) =
   for (const nome of ["Serie A", "Serie B", "Serie C"])
     expect(decididas.some((t) => t.includes(nome))).toBe(true);
 });
+
+// ── #6 · o vocabulário ───────────────────────────────────────
+
+test("'A seguir' é só a fila: seguir uma série diz 'Seguida', e a Biblioteca diz 'Em curso'", async ({
+  page,
+  tmdb,
+}) => {
+  // Ronda 12, Fase 4: "A seguir" queria dizer a fila (a dock), o estado
+  // depois de tocar "Seguir" e "15 a seguir" no Perfil; "A VER" e "PARA VER"
+  // eram secções vizinhas. Palavras escolhidas pelo Ruben a 27-09.
+  tmdb.multi = [
+    {
+      id: 700,
+      media_type: "tv",
+      name: "Serie Nova",
+      original_name: "Serie Nova",
+      first_air_date: "2021-01-01",
+      poster_path: null,
+      overview: "",
+    },
+  ];
+  Object.assign(tmdb.series, serieCompleta(700, "Serie Nova", [3]).series);
+  Object.assign(tmdb.episodios, serieCompleta(700, "Serie Nova", [3]).episodios);
+  await semear(page, {
+    // Com id próprio: sem ele, o enriquecimento da Biblioteca procura-as por
+    // nome, e a TMDB falsa responde "Serie Nova" a qualquer pesquisa.
+    series: [
+      { uuid: "s-andar", name: "Serie A Andar", tmdbId: 901, totalEpisodes: 10 },
+      { uuid: "s-espera", name: "Serie A Espera", tmdbId: 902, totalEpisodes: 10 },
+    ],
+    vistos: [{ showUuid: "s-andar", season: 1, episode: 1 }],
+  });
+
+  await page.goto("/library");
+  await expect(page.locator('[data-testid="library-grid"] section div.sticky').first()).toHaveText(
+    /^Em curso/,
+  );
+
+  await page.getByRole("button", { name: "Procurar na biblioteca" }).click();
+  await page.locator('input[type="search"]').fill("serie nova");
+  await page.getByRole("button", { name: "Ver resultados" }).click();
+  await page.getByTestId("remote-search-button").click();
+  await page.getByRole("button", { name: "Seguir" }).click();
+  await expect(page.getByRole("button", { name: "Seguida" })).toBeVisible();
+  // "A seguir" fica só para a fila — nunca dentro do conteúdo da pesquisa
+  await expect(page.locator("main").getByText("A seguir", { exact: true })).toHaveCount(0);
+
+  await page.goto("/profile");
+  await expect(page.getByText(/séries · 3 seguidas/)).toBeVisible();
+});

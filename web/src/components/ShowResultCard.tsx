@@ -121,7 +121,8 @@ export default function ShowResultCard({ result }: { result: MetaSearchResult })
             className="mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-4 text-[15px] font-semibold text-dim"
           >
             <CheckIcon className="check-pop h-3.5 w-3.5" />
-            {inWatchlist ? "Na lista para ver" : "A seguir"}
+            {/* "A seguir" é só a fila (a dock) — Ronda 12, Fase 5 */}
+            {inWatchlist ? "Na lista para ver" : "Seguida"}
           </button>
         ) : (
           <div className="mt-2 flex gap-2">

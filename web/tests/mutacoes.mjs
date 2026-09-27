@@ -35,6 +35,7 @@ const LINHAS = "src/lib/linhas.ts";
 const NUMERACAO = "src/lib/numeracao.ts";
 const HEROI = "src/components/TonightHero.tsx";
 const EM_DIA = "src/app/em-dia/page.tsx";
+const RESULTADO_SERIE = "src/components/ShowResultCard.tsx";
 
 /**
  * `de` tem de existir tal e qual no ficheiro — se deixar de existir, a
@@ -327,6 +328,20 @@ const MUTACOES = [
     ficheiro: REVER_PAGINA,
     de: '  const prova = atual?.padrao === "buracos" ? atual.paraTras : null;',
     para: '  const prova = atual ? (atual.padrao === "buracos" ? atual.paraTras : atual.porMarcar) : null;',
+  },
+  {
+    nome: "r12-fase5/seguir-diz-a-seguir",
+    descricao: "seguir uma série volta a dizer \"A seguir\", a palavra da fila",
+    ficheiro: RESULTADO_SERIE,
+    de: '            {inWatchlist ? "Na lista para ver" : "Seguida"}',
+    para: '            {inWatchlist ? "Na lista para ver" : "A seguir"}',
+  },
+  {
+    nome: "r12-fase5/biblioteca-a-ver",
+    descricao: "a secção das séries começadas volta a chamar-se \"A ver\", ao lado de \"Para ver\"",
+    ficheiro: BIBLIOTECA,
+    de: '    return s.watchedCount === 0 ? "Por começar" : "Em curso";',
+    para: '    return s.watchedCount === 0 ? "Por começar" : "A ver";',
   },
 ];
 
