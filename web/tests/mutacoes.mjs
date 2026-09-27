@@ -54,6 +54,11 @@ const LOGIN = "src/app/login/page.tsx";
 const POSTER_CARD_2 = "src/components/PosterCard.tsx";
 const DISCOVER_CARD = "src/components/DiscoverCard.tsx";
 const MANIFEST = "src/app/manifest.ts";
+const SHEET_PANEL = "src/components/SheetPanel.tsx";
+const LISTAS_PAGINA = "src/app/listas/page.tsx";
+const ADD_TO_LIST = "src/components/AddToListButton.tsx";
+const CLOUD_ACCOUNT = "src/components/CloudAccount.tsx";
+const BOTTOM_NAV = "src/components/BottomNav.tsx";
 
 /**
  * `de` tem de existir tal e qual no ficheiro — se deixar de existir, a
@@ -521,6 +526,69 @@ const MUTACOES = [
     ficheiro: PROFILE_PAGINA,
     de: '              detalhe="Limpa esta cópia — a da cloud, se tiveres sessão, fica"\n              onClick={() => setConfirmClear(true)}\n            />',
     para: '              detalhe="Limpa esta cópia — a da cloud, se tiveres sessão, fica"\n              onClick={() => setConfirmClear(true)}\n              perigo\n            />',
+  },
+  {
+    nome: "r12-fase5b/anular-desaparece-com-movimento-reduzido",
+    descricao: "com movimento reduzido, a contagem do anular volta a desaparecer de imediato",
+    ficheiro: CSS,
+    de: "  *:not(.undo-drain),\n  *:not(.undo-drain)::before,\n  *:not(.undo-drain)::after {",
+    para: "  *,\n  *::before,\n  *::after {",
+  },
+  {
+    nome: "r12-fase5b/listas-transborda-320",
+    descricao: "/listas volta a transbordar a 320px",
+    ficheiro: LISTAS_PAGINA,
+    de: '"min-h-11 min-w-0 flex-1',
+    para: '"min-h-11 flex-1',
+  },
+  {
+    nome: "r12-fase5b/folha-sem-gestao-de-foco",
+    descricao: "abrir uma folha volta a não mover o foco para dentro",
+    ficheiro: SHEET_PANEL,
+    de: "    antesDeAbrir.current = document.activeElement as HTMLElement | null;\n    painelRef.current?.focus();",
+    para: "    antesDeAbrir.current = document.activeElement as HTMLElement | null;",
+  },
+  {
+    nome: "r12-fase5b/listas-campo-sem-rotulo",
+    descricao: "o campo de nova lista volta a não ter aria-label",
+    ficheiro: LISTAS_PAGINA,
+    de: '          aria-label="Nome da nova lista"\n',
+    para: "",
+  },
+  {
+    nome: "r12-fase5b/biblioteca-pesquisa-sem-rotulo",
+    descricao: "a pesquisa da Biblioteca volta a não ter aria-label",
+    ficheiro: LIBRARY_PAGINA,
+    de: '            aria-label="Procurar na biblioteca"\n',
+    para: "",
+  },
+  {
+    nome: "r12-fase5b/explorar-pesquisa-sem-rotulo",
+    descricao: "a pesquisa do Explorar volta a não ter aria-label",
+    ficheiro: EXPLORAR_PAGINA,
+    de: '                aria-label={kind === "tv" ? "Procurar uma série" : "Procurar um filme"}\n',
+    para: "",
+  },
+  {
+    nome: "r12-fase5b/add-to-list-campo-sem-rotulo",
+    descricao: "o campo de nova lista no detalhe volta a não ter aria-label",
+    ficheiro: ADD_TO_LIST,
+    de: '              aria-label="Nome da nova lista"\n',
+    para: "",
+  },
+  {
+    nome: "r12-fase5b/cloud-password-sem-rotulo",
+    descricao: "o campo de password na conta volta a não ter <label>",
+    ficheiro: CLOUD_ACCOUNT,
+    de: '<label htmlFor="cloud-nova-password" className="font-display text-[15px] font-semibold">\n              Password\n            </label>',
+    para: '<p className="font-display text-[15px] font-semibold">Password</p>',
+  },
+  {
+    nome: "r12-fase5b/dock-parte-a-seguir-320",
+    descricao: "a dock volta a partir 'A seguir' em duas linhas a 320px",
+    ficheiro: BOTTOM_NAV,
+    de: '<span className={active ? "whitespace-nowrap" : "hidden sm:inline"}>',
+    para: '<span className={active ? "" : "hidden sm:inline"}>',
   },
 ];
 

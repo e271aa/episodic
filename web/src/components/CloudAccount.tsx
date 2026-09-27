@@ -203,12 +203,15 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
               void handleSetPassword();
             }}
           >
-            <p className="font-display text-[15px] font-semibold">Password</p>
+            <label htmlFor="cloud-nova-password" className="font-display text-[15px] font-semibold">
+              Password
+            </label>
             <p className="mt-0.5 text-xs text-dim">
               Para entrares noutros dispositivos sem esperar por emails.
             </p>
             <div className="mt-2.5 flex gap-2">
               <input
+                id="cloud-nova-password"
                 type="password"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}

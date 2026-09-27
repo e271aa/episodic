@@ -330,10 +330,14 @@ input:focus-visible,
   animation: undo-in 200ms cubic-bezier(0.34, 1.36, 0.64, 1) both;
 }
 
+/* `.undo-drain` fica de fora: não é decoração, é a própria contagem do
+   tempo para anular ("o tempo tem de estar à vista", acima). Zerá-la fazia
+   a barra encolher para nada quase de imediato — parecia que a janela de
+   anular já tinha fechado (Ronda 12, Fase 4, achado #13). */
 @media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
+  *:not(.undo-drain),
+  *:not(.undo-drain)::before,
+  *:not(.undo-drain)::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;

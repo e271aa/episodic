@@ -51,10 +51,11 @@ export default function ListasPage() {
       >
         <input
           type="text"
+          aria-label="Nome da nova lista"
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nome da nova lista…"
-          className="min-h-11 flex-1 rounded-full border border-line bg-panel px-5 text-base outline-none transition-colors focus:border-ink"
+          className="min-h-11 min-w-0 flex-1 rounded-full border border-line bg-panel px-5 text-base outline-none transition-colors focus:border-ink"
         />
         <button
           type="submit"

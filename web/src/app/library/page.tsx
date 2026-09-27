@@ -675,6 +675,7 @@ function LibraryContent() {
           <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
           <input
             type="search"
+            aria-label="Procurar na biblioteca"
             autoFocus
             value={query}
             onChange={(e) => handleQueryChange(e.target.value)}

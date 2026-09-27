@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { CloseIcon } from "@/components/icons";
 
@@ -39,6 +39,44 @@ export default function SheetPanel({
     return () => window.removeEventListener("keydown", onKey);
   }, [aberto, onFechar]);
 
+  const painelRef = useRef<HTMLDivElement>(null);
+  const antesDeAbrir = useRef<HTMLElement | null>(null);
+
+  // Gestão de foco: sem isto, um teclado ou o VoiceOver ficava no botão por
+  // trás do véu, e fechar não devolvia o foco a lado nenhum (Ronda 12, Fase
+  // 4, achado #13). Guarda quem tinha o foco, move-o para o painel ao abrir,
+  // devolve-o ao fechar.
+  useEffect(() => {
+    if (!aberto) return;
+    antesDeAbrir.current = document.activeElement as HTMLElement | null;
+    painelRef.current?.focus();
+    return () => antesDeAbrir.current?.focus();
+  }, [aberto]);
+
+  // Tab não sai do painel enquanto ele está aberto — o resto da página está
+  // atrás de um véu que fecha ao toque, não é um sítio para onde navegar.
+  useEffect(() => {
+    if (!aberto) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== "Tab" || !painelRef.current) return;
+      const focaveis = painelRef.current.querySelectorAll<HTMLElement>(
+        'button, a[href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+      );
+      if (focaveis.length === 0) return;
+      const primeiro = focaveis[0];
+      const ultimo = focaveis[focaveis.length - 1];
+      if (e.shiftKey && document.activeElement === primeiro) {
+        e.preventDefault();
+        ultimo.focus();
+      } else if (!e.shiftKey && document.activeElement === ultimo) {
+        e.preventDefault();
+        primeiro.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [aberto]);
+
   // O portal só pode montar no cliente: no servidor não há `document`.
   const noCliente = useSyncExternalStore(
     () => () => {},
@@ -57,7 +95,11 @@ export default function SheetPanel({
         onClick={onFechar}
         className="absolute inset-0 cursor-default bg-tube/70 backdrop-blur-sm"
       />
-      <div className="page-enter absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-3xl border-t border-line bg-panel pb-[calc(var(--dock-h)+1rem)]">
+      <div
+        ref={painelRef}
+        tabIndex={-1}
+        className="page-enter absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-3xl border-t border-line bg-panel pb-[calc(var(--dock-h)+1rem)] outline-none"
+      >
         <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-panel px-5 py-4">
           <p className="font-display text-[17px] font-bold [font-stretch:105%]">{titulo}</p>
           <button

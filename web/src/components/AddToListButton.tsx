@@ -132,6 +132,7 @@ export default function AddToListButton({
             }}
           >
             <input
+              aria-label="Nome da nova lista"
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Nova lista…"

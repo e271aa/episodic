@@ -372,3 +372,132 @@ test("'Apagar dados locais' só fica vermelho depois do primeiro toque", async (
     .evaluate((el) => getComputedStyle(el).color);
   expect(ehCorDoTexto(corDepois)).toBe(true);
 });
+
+// ── #13 (Fase 5b.1) · movimento reduzido não apaga o anular ─
+
+test("com movimento reduzido, a contagem do anular continua visível", async ({
+  page,
+}) => {
+  // O `@media (prefers-reduced-motion)` global zerava TODAS as animações,
+  // incluindo a barra que mostra quanto tempo falta para anular — que não é
+  // decoração, é a própria funcionalidade (Ronda 12, Fase 4, achado #13).
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await semear(page, { listas: [{ id: "l-1", name: "Uma lista" }] });
+  await page.goto("/listas");
+  await page.getByRole("link", { name: "Uma lista" }).click();
+  await page.getByRole("button", { name: /Apagar lista/ }).click();
+  await page.getByRole("button", { name: /Tens a certeza/ }).click();
+  // "attached", não "visible": com a avaria, a barra encolhe (scaleX(0))
+  // quase de imediato e deixa de contar como visível — o que é a própria
+  // avaria, não um problema do teste.
+  const barra = page.locator(".undo-drain");
+  await barra.waitFor({ state: "attached" });
+  // getComputedStyle devolve segundos ("7s"), não milissegundos — comparar a
+  // string literal "0.01ms" passava sempre, o que escondeu esta avaria
+  const segundos = await barra.evaluate((el) =>
+    parseFloat(getComputedStyle(el).animationDuration),
+  );
+  expect(segundos).toBeGreaterThan(1);
+});
+
+// ── #13 (Fase 5b.1) · /listas transborda a 320px ────────────
+
+test("/listas não transborda a 320px", async ({ page }) => {
+  // O campo "Nome da nova lista…" era flex-1 sem min-w-0: recusava-se a
+  // encolher abaixo do seu conteúdo e empurrava a página para o lado
+  // (Ronda 12, Fase 4, achado #13).
+  await page.setViewportSize({ width: 320, height: 700 });
+  await semear(page, {});
+  await page.goto("/listas");
+  await page.getByPlaceholder("Nome da nova lista…").waitFor();
+  const larguras = await page.evaluate(() => ({
+    doc: document.documentElement.scrollWidth,
+    janela: innerWidth,
+  }));
+  expect(larguras.doc).toBeLessThanOrEqual(larguras.janela);
+});
+
+// ── #13 (Fase 5b.1) · foco nas folhas ────────────────────────
+
+test("abrir uma folha move o foco para dentro; fechar devolve-o ao botão", async ({
+  page,
+}) => {
+  // Sem gestão de foco: abrir "Filtros e ordenação" deixava o foco no botão
+  // por trás do véu, e fechar não o devolvia a lado nenhum (Ronda 12, Fase
+  // 4, achado #13).
+  await semear(page, { series: [{ uuid: "s-1", name: "Serie Um" }] });
+  await page.goto("/library");
+  // Ativado pelo teclado (foco + Enter), não por clique: no WebKit um
+  // clique de rato não deixa o <button> focado, e é o caso de quem usa
+  // teclado que este teste prova.
+  const gatilho = page.getByRole("button", { name: "Filtros e ordenação" });
+  await gatilho.focus();
+  await gatilho.press("Enter");
+
+  await expect(page.getByRole("dialog")).toBeVisible();
+  const dentro = await page.evaluate(() =>
+    document.querySelector('[role="dialog"]')?.contains(document.activeElement),
+  );
+  expect(dentro).toBe(true);
+
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(gatilho).toBeFocused();
+});
+
+// ── #13 (Fase 5b.1) · campos só com placeholder ──────────────
+
+/**
+ * `getByRole(..., { name })` também encontra pelo `placeholder` — a
+ * computação do nome acessível usa-o como último recurso. Isso escondia a
+ * avaria: um campo só com placeholder já "passa" nesse tipo de busca, mas
+ * não tem `aria-label` nem `<label>` a sério. Aqui verifica-se isso mesmo.
+ */
+async function temRotuloAsSerio(loc: import("@playwright/test").Locator) {
+  return loc.evaluate((el) => {
+    const input = el as HTMLInputElement;
+    return !!input.getAttribute("aria-label") || input.labels!.length > 0;
+  });
+}
+
+test("os campos de texto têm um rótulo a sério, não só placeholder", async ({
+  page,
+}) => {
+  // Cinco campos tinham só `placeholder` — sem `aria-label` nem `<label>`
+  // (Ronda 12, Fase 4, achado #13).
+  await semear(page, { listas: [{ id: "l-1", name: "Uma lista" }] });
+
+  await page.goto("/listas");
+  expect(await temRotuloAsSerio(page.getByPlaceholder("Nome da nova lista…"))).toBe(true);
+
+  await page.goto("/library");
+  await page.getByRole("button", { name: "Procurar na biblioteca" }).click();
+  expect(await temRotuloAsSerio(page.getByPlaceholder("Procurar na biblioteca…"))).toBe(true);
+
+  await page.goto("/explorar?procurar=1");
+  expect(await temRotuloAsSerio(page.getByPlaceholder("Procurar uma série…"))).toBe(true);
+});
+
+test("criar uma lista a partir do detalhe de uma série tem um rótulo a sério", async ({
+  page,
+}) => {
+  await semear(page, { series: [{ uuid: "s-1", name: "Serie Um", totalEpisodes: 3 }] });
+  await page.goto("/series/s-1");
+  await page.getByRole("button", { name: "Lista" }).click();
+  expect(await temRotuloAsSerio(page.getByPlaceholder("Nova lista…"))).toBe(true);
+});
+
+// ── Novo (Fase 5b.1) · a dock parte "A seguir" a 320px ──────
+
+test("a dock não parte o rótulo do separador ativo a 320px", async ({ page }) => {
+  await semear(page, {});
+  await page.setViewportSize({ width: 320, height: 700 });
+  await page.goto("/series");
+  const ativo = page.locator('nav a[href="/series"]');
+  await ativo.waitFor();
+  const altura = (await ativo.boundingBox())!.height;
+  // uma pílula de um alvo de toque só, não duas linhas de texto
+  expect(altura).toBeLessThan(50);
+  const doc = await page.evaluate(() => document.documentElement.scrollWidth);
+  expect(doc).toBeLessThanOrEqual(320);
+});

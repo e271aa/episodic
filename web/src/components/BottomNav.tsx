@@ -45,7 +45,12 @@ export default function BottomNav() {
               }`}
             >
               <Icon className="h-[18px] w-[18px] shrink-0" />
-              <span className={active ? "" : "hidden sm:inline"}>{label}</span>
+              {/* whitespace-nowrap: a 320px, "A seguir" quebrava em duas
+                  linhas e a pílula do separador ativo crescia para 61px
+                  (Ronda 12, Fase 4, achado novo). */}
+              <span className={active ? "whitespace-nowrap" : "hidden sm:inline"}>
+                {label}
+              </span>
             </Link>
           );
         })}

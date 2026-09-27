@@ -388,6 +388,7 @@ function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) 
                 ref={inputRef}
                 autoFocus
                 type="search"
+                aria-label={kind === "tv" ? "Procurar uma série" : "Procurar um filme"}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 placeholder={kind === "tv" ? "Procurar uma série…" : "Procurar um filme…"}
