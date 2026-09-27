@@ -64,7 +64,9 @@ test("com a raiz do documento maior, o corpo de texto cresce com ela", async ({
   // a raiz — é um valor absoluto. Depois: `text-[0.9375rem]` cresce com ela.
   await semear(page, { series: [{ uuid: "s-1", name: "Serie Um", totalEpisodes: 5 }] });
   await page.goto("/library");
-  const alvo = page.getByText("Serie Um").first();
+  // um <p>, não a `<div>` sem capa que também mostra o nome — sem isto o
+  // teste podia acertar sempre no elemento errado e nunca apanhar nada
+  const alvo = page.locator("p", { hasText: "Serie Um" }).first();
   await alvo.waitFor();
   const antes = await alvo.evaluate((el) => parseFloat(getComputedStyle(el).fontSize));
 
@@ -83,7 +85,7 @@ test("à raiz de hoje (16px), o tamanho do texto não muda um pixel", async ({
   // o valor tem de bater certo com o antigo `text-[15px]`.
   await semear(page, { series: [{ uuid: "s-1", name: "Serie Um", totalEpisodes: 5 }] });
   await page.goto("/library");
-  const alvo = page.getByText("Serie Um").first();
+  const alvo = page.locator("p", { hasText: "Serie Um" }).first();
   await alvo.waitFor();
   const tamanho = await alvo.evaluate((el) => getComputedStyle(el).fontSize);
   expect(tamanho).toBe("15px");
