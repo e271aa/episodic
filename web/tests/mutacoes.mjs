@@ -33,6 +33,8 @@ const REVER = "src/lib/rever.ts";
 const REVER_PAGINA = "src/app/rever/page.tsx";
 const LINHAS = "src/lib/linhas.ts";
 const NUMERACAO = "src/lib/numeracao.ts";
+const HEROI = "src/components/TonightHero.tsx";
+const EM_DIA = "src/app/em-dia/page.tsx";
 
 /**
  * `de` tem de existir tal e qual no ficheiro — se deixar de existir, a
@@ -282,6 +284,35 @@ const MUTACOES = [
     ficheiro: REPAIR,
     de: "    if (!show.numeracao && show.tmdbId && show.tvmazeId != null) continue;",
     para: "",
+  },
+  // ── Ronda 12, Fase 5: decisão e palavras ───────────────────
+  {
+    nome: "r12-fase5/pilula-em-dia",
+    descricao: "a pílula volta a dizer \"10 em dia\" quando há 10 séries por ver",
+    ficheiro: HEROI,
+    de: '            Pôr em dia\n            <span className="ep-code text-dim">{seriesPorVer}</span>',
+    para: "            {seriesPorVer} em dia",
+  },
+  {
+    nome: "r12-fase5/em-dia-abre-vazio",
+    descricao: "o Pôr em dia volta a abrir sempre em \"Continuar\", mesmo vazio",
+    ficheiro: EM_DIA,
+    de: "  if (porOmissao === null && buckets) setPorOmissao(primeiroComConteudo(buckets));",
+    para: '  if (porOmissao === null && buckets) setPorOmissao("continuar");',
+  },
+  {
+    nome: "r12-fase5/filtro-vazio-sem-saida",
+    descricao: "o filtro vazio deixa de apontar para o filtro com conteúdo",
+    ficheiro: EM_DIA,
+    de: "  const saida = primeiroComConteudo(buckets);",
+    para: "  const saida: Filter = filter;",
+  },
+  {
+    nome: "r12-fase5/continuar-fora-do-url",
+    descricao: "escolher \"Continuar\" volta a não ficar no URL",
+    ficheiro: EM_DIA,
+    de: '    next.set("filtro", f);',
+    para: '    if (f === "continuar") next.delete("filtro");\n    else next.set("filtro", f);',
   },
 ];
 

@@ -17,6 +17,18 @@ import { Bone, TitleBone } from "@/components/Skeleton";
 type Filter = "continuar" | "retomar" | "comecar" | "todas";
 const FILTER_IDS = new Set<Filter>(["continuar", "retomar", "comecar", "todas"]);
 
+/**
+ * Sem filtro no URL, abre no primeiro que tem alguma coisa. Abria sempre em
+ * "Continuar" — e quem só tinha séries paradas tocava em "Pôr em dia" para
+ * ver "Nada para pôr em dia aqui" com um visto (Ronda 12, Fase 4).
+ */
+function primeiroComConteudo(b: { active: unknown[]; stale: unknown[]; notStarted: unknown[] }): Filter {
+  if (b.active.length > 0) return "continuar";
+  if (b.stale.length > 0) return "retomar";
+  if (b.notStarted.length > 0) return "comecar";
+  return "continuar";
+}
+
 const FILTERS: { id: Filter; label: string }[] = [
   { id: "continuar", label: "Continuar" },
   { id: "retomar", label: "Retomar" },
@@ -42,7 +54,8 @@ function EmDiaContent() {
   // "Continuar". Medido antes da correção: filtro em memória perdia-se a
   // cada visita nova à página.
   const rawFilter = params.get("filtro");
-  const filter: Filter = rawFilter && FILTER_IDS.has(rawFilter as Filter) ? (rawFilter as Filter) : "continuar";
+  const pedido: Filter | null =
+    rawFilter && FILTER_IDS.has(rawFilter as Filter) ? (rawFilter as Filter) : null;
 
   const shows = useSeries();
   const [nextUp, setNextUp] = useState<NextUpMap | null>(null);
@@ -58,6 +71,12 @@ function EmDiaContent() {
     if (!shows || !nextUp) return null;
     return classifyQueue(shows, nextUp, now);
   }, [shows, nextUp, now]);
+
+  // Decidido uma vez, quando a fila chega: se a série marcada mudasse de
+  // grupo a meio, o filtro por omissão não pode mudar debaixo do cursor.
+  const [porOmissao, setPorOmissao] = useState<Filter | null>(null);
+  if (porOmissao === null && buckets) setPorOmissao(primeiroComConteudo(buckets));
+  const filter: Filter = pedido ?? porOmissao ?? "continuar";
 
   const stack: StackItem[] = useMemo(() => {
     if (!buckets || !nextUp) return [];
@@ -82,10 +101,11 @@ function EmDiaContent() {
 
   // Muda de filtro → recomeça a pilha desse filtro do início
   const changeFilter = (f: Filter) => {
+    // Sempre no URL, "Continuar" incluído: sem filtro, o ecrã escolhe o
+    // primeiro com conteúdo, e isso não é necessariamente o que se tocou.
     const next = new URLSearchParams(params);
-    if (f === "continuar") next.delete("filtro");
-    else next.set("filtro", f);
-    router.replace(next.size > 0 ? `/em-dia?${next}` : "/em-dia", { scroll: false });
+    next.set("filtro", f);
+    router.replace(`/em-dia?${next}`, { scroll: false });
     setCursor(0);
     setDecided(0);
   };
@@ -139,6 +159,15 @@ function EmDiaContent() {
     buckets.stale.length === 0 &&
     buckets.notStarted.length === 0;
   const finished = cursor >= total && total > 0;
+  const contar = (f: Filter) =>
+    f === "continuar"
+      ? buckets.active.length
+      : f === "retomar"
+        ? buckets.stale.length
+        : f === "comecar"
+          ? buckets.notStarted.length
+          : buckets.active.length + buckets.stale.length + buckets.notStarted.length;
+  const saida = primeiroComConteudo(buckets);
 
   return (
     <main
@@ -158,19 +187,13 @@ function EmDiaContent() {
 
       <div className="mt-4 flex shrink-0 gap-2 overflow-x-auto pb-1">
         {FILTERS.map((f) => {
-          const count =
-            f.id === "continuar"
-              ? buckets.active.length
-              : f.id === "retomar"
-                ? buckets.stale.length
-                : f.id === "comecar"
-                  ? buckets.notStarted.length
-                  : buckets.active.length + buckets.stale.length + buckets.notStarted.length;
+          const count = contar(f.id);
           const isActive = filter === f.id;
           return (
             <button
               key={f.id}
               onClick={() => changeFilter(f.id)}
+              aria-pressed={isActive}
               className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-[15px] font-medium transition active:scale-95 ${
                 isActive
                   ? "border-ink bg-ink text-tube"
@@ -187,20 +210,27 @@ function EmDiaContent() {
       </div>
 
       {total === 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <CheckIcon className="h-10 w-10 text-faint" />
-          {/* "Experimenta outro acima" só serve quando há outro com alguma
-              coisa. Com os quatro filtros a zero, mandava procurar onde não
-              havia nada — um beco. */}
-          <p className="mt-4 font-display font-semibold">
-            {todosVazios ? "Estás em dia com tudo" : "Nada para pôr em dia aqui"}
-          </p>
-          <p className="mt-1 max-w-xs text-[15px] text-dim">
-            {todosVazios
-              ? "Não há episódios à espera em nenhuma das séries que segues."
-              : "Este filtro está vazio — experimenta outro acima."}
-          </p>
-        </div>
+        todosVazios ? (
+          <div className="flex flex-1 flex-col items-center justify-center text-center">
+            <CheckIcon className="h-10 w-10 text-faint" />
+            <p className="mt-4 font-display font-semibold">Estás em dia com tudo</p>
+            <p className="mt-1 max-w-xs text-[15px] text-dim">
+              Não há episódios à espera em nenhuma das séries que segues.
+            </p>
+          </div>
+        ) : (
+          // Um filtro vazio não é "estar em dia": sem o visto, e com a saída
+          // à mão — mandava "experimentar outro acima", fora do polegar.
+          <div className="flex flex-1 flex-col items-center justify-center text-center">
+            <p className="font-display font-semibold">Nada para pôr em dia aqui</p>
+            <button
+              onClick={() => changeFilter(saida)}
+              className="mt-6 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95"
+            >
+              Ver {FILTERS.find((f) => f.id === saida)!.label} · {contar(saida)}
+            </button>
+          </div>
+        )
       ) : finished ? (
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <CheckIcon className="h-10 w-10 text-faint" />

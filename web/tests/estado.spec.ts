@@ -57,17 +57,19 @@ test("o filtro do Pôr em dia fica no URL e aguenta uma recarga", async ({ page 
   });
 
   await page.goto("/em-dia");
-  // Vista há 60 dias: não está em "Continuar", está em "Retomar".
+  // Vista há 60 dias: não está em "Continuar", está em "Retomar" — e sem
+  // filtro no URL o ecrã abre no primeiro com conteúdo.
+  await expect(page.getByText("Serie Parada").first()).toBeVisible();
+
+  await page.getByRole("button", { name: /^Continuar/ }).click();
+  await expect(page).toHaveURL(/\/em-dia\?filtro=continuar$/);
   await expect(page.getByText("Nada para pôr em dia aqui")).toBeVisible();
 
-  await page.getByRole("button", { name: /^Retomar/ }).click();
-  await expect(page).toHaveURL(/\/em-dia\?filtro=retomar$/);
-  await expect(page.getByText("Serie Parada").first()).toBeVisible();
-
   // Estar no URL é o que faz o filtro sobreviver a tudo — a recarregar, a
-  // partilhar o link, e a recuar de um episódio marcado.
+  // partilhar o link, e a recuar de um episódio marcado. Aqui prova mais: o
+  // filtro escolhido ganha ao que o ecrã escolheria sozinho.
   await page.reload();
-  await expect(page.getByText("Serie Parada").first()).toBeVisible();
+  await expect(page.getByText("Nada para pôr em dia aqui")).toBeVisible();
 });
 
 test("a posição do baralho do Explorar não se perde ao espreitar outro separador", async ({

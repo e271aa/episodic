@@ -441,7 +441,7 @@ export default function SeriesPage() {
             episode={nextUp.get(heroShow.uuid)!.episode}
             watchedCount={heroShow.watchedCount}
             totalEpisodes={heroShow.totalEpisodes}
-            emDia={queue.length}
+            seriesPorVer={queue.length}
             eyebrow={
               heroKind === "a-seguir"
                 ? "Esta noite"

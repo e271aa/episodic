@@ -19,8 +19,12 @@ export interface TonightHeroProps {
   /** episódios vistos / total, para a barra de progresso */
   watchedCount?: number;
   totalEpisodes?: number | null;
-  /** quantos episódios há para pôr em dia — a pílula de entrada no modo foco */
-  emDia?: number;
+  /**
+   * Quantas SÉRIES têm episódios por ver — a pílula de entrada no "Pôr em
+   * dia". Dizia "10 em dia", que é o contrário: "em dia" é não ter nada por
+   * ver (Ronda 12, Fase 4).
+   */
+  seriesPorVer?: number;
   onCheck: (season: number, episode: number) => Promise<void>;
 }
 
@@ -41,7 +45,7 @@ export default function TonightHero({
   eyebrow = "Esta noite",
   watchedCount,
   totalEpisodes,
-  emDia = 0,
+  seriesPorVer = 0,
   onCheck,
 }: TonightHeroProps) {
   const [checking, setChecking] = useState(false);
@@ -103,13 +107,15 @@ export default function TonightHero({
         <span className="ep-code text-[13px] text-dim">
           {dia} · {hora}
         </span>
-        {emDia > 0 && (
+        {seriesPorVer > 0 && (
           <Link
             href="/em-dia"
+            aria-label={`Pôr em dia: ${seriesPorVer} ${seriesPorVer === 1 ? "série" : "séries"} com episódios por ver`}
             className="flex min-h-11 items-center gap-2 rounded-full border border-line bg-tube/60 px-3 text-[13px] font-semibold text-ink backdrop-blur transition active:scale-95"
           >
             <span className="bars h-4 w-4 shrink-0 rounded-full" aria-hidden />
-            {emDia} em dia
+            Pôr em dia
+            <span className="ep-code text-dim">{seriesPorVer}</span>
           </Link>
         )}
       </div>
