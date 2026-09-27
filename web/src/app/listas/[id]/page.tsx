@@ -163,7 +163,7 @@ export default function ListaPage() {
       <BotaoVoltar
         label="Voltar às listas"
         fallback="/listas"
-        className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline"
+        className="-mr-2 inline-flex min-h-11 items-center px-2 text-[0.9375rem] text-dim hover:text-ink hover:underline"
       >
         ← Listas
       </BotaoVoltar>
@@ -186,7 +186,7 @@ export default function ListaPage() {
             />
             <button
               type="submit"
-              className="min-h-11 cursor-pointer rounded-full bg-ink px-4 text-[15px] font-semibold text-tube"
+              className="min-h-11 cursor-pointer rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-tube"
             >
               Guardar
             </button>
@@ -212,7 +212,7 @@ export default function ListaPage() {
       </p>
 
       {items.length === 0 ? (
-        <p className="mt-10 text-center text-[15px] text-dim">
+        <p className="mt-10 text-center text-[0.9375rem] text-dim">
           Sem itens ainda — adiciona séries e filmes a partir da página de cada um.
         </p>
       ) : (
@@ -231,12 +231,12 @@ export default function ListaPage() {
                         className="object-cover"
                       />
                     ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-raised p-2 text-center font-display text-[15px] font-bold text-dim">
+                      <div className="flex h-full w-full items-center justify-center bg-raised p-2 text-center font-display text-[0.9375rem] font-bold text-dim">
                         {item.name}
                       </div>
                     )}
                   </div>
-                  <p className="mt-1.5 truncate text-[15px] font-medium">{item.name}</p>
+                  <p className="mt-1.5 truncate text-[0.9375rem] font-medium">{item.name}</p>
                 </Link>
                 {/* Visível num ecrã tátil; só com rato é que espera pelo
                     hover. Estava sempre a `opacity-0` — no telemóvel nunca se
@@ -267,7 +267,7 @@ export default function ListaPage() {
           achado #17). Em repouso é uma linha como as outras. */}
       <button
         onClick={() => void handleDelete()}
-        className={`mt-10 cursor-pointer rounded-2xl border px-4 py-3 text-[15px] font-medium transition-colors ${
+        className={`mt-10 cursor-pointer rounded-2xl border px-4 py-3 text-[0.9375rem] font-medium transition-colors ${
           confirmDelete
             ? "border-danger/40 text-danger hover:bg-danger/10"
             : "border-line text-dim hover:border-ink hover:text-ink"

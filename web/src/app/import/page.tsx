@@ -116,7 +116,7 @@ export default function ImportPage() {
        acompanham a área segura do aparelho. */
     <main className="mx-auto max-w-xl px-4 pt-10 pb-[calc(var(--dock-h)+7rem)]">
       <h1 className="font-display text-2xl font-bold">Importar do TV Time</h1>
-      <p className="mt-2 text-[15px] text-dim">
+      <p className="mt-2 text-[0.9375rem] text-dim">
         Envia o ZIP do export GDPR (gdpr.tvtime.com) — ou os CSVs extraídos. Tudo é
         processado aqui no teu aparelho; nada é enviado para servidores.
       </p>
@@ -147,14 +147,14 @@ export default function ImportPage() {
       </label>
 
       {busy && !preview && (
-        <div className="mt-4 flex items-center gap-2 text-[15px] text-dim">
+        <div className="mt-4 flex items-center gap-2 text-[0.9375rem] text-dim">
           <span className="spinner h-4 w-4 shrink-0 rounded-full border-2 border-line border-t-ink" />
           A processar…
         </div>
       )}
 
       {error && (
-        <div className="page-enter mt-4 rounded-lg border border-danger/30 bg-danger/10 p-4 text-[15px] text-danger">
+        <div className="page-enter mt-4 rounded-lg border border-danger/30 bg-danger/10 p-4 text-[0.9375rem] text-danger">
           {error}
         </div>
       )}
@@ -162,7 +162,7 @@ export default function ImportPage() {
       {preview && (
         <div className="page-enter mt-6 rounded-2xl border border-line bg-panel p-5">
           <h2 className="font-display font-semibold">Resumo do export</h2>
-          <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[15px]">
+          <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[0.9375rem]">
             <dt className="text-dim">Séries</dt>
             <dd className="ep-code" data-testid="summary-shows">{preview.shows.length}</dd>
             <dt className="text-dim">— seguidas</dt>

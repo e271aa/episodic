@@ -61,7 +61,7 @@ function EpisodeRow({
         isSeen ? "opacity-60" : ""
       }`}
     >
-      <span className="ep-code w-[34px] shrink-0 text-[13px] text-faint">
+      <span className="ep-code w-[34px] shrink-0 text-[0.8125rem] text-faint">
         E{String(epNumber).padStart(2, "0")}
       </span>
       <span
@@ -624,9 +624,9 @@ export default function ShowPage() {
               className="h-[14px] w-[3px] shrink-0 rounded-full"
               style={{ background: accent }}
             />
-            <p className="ep-code text-[13px] text-dim">{label}</p>
+            <p className="ep-code text-[0.8125rem] text-dim">{label}</p>
           </div>
-          <h1 className="mt-1.5 font-display text-[36px] font-bold leading-[1] text-ink [font-stretch:110%]">
+          <h1 className="mt-1.5 font-display text-[2.25rem] font-bold leading-[1] text-ink [font-stretch:110%]">
             {show.name}
           </h1>
           {metaLine && <p className="ep-code mt-2 text-sm text-dim">{metaLine}</p>}
@@ -643,7 +643,7 @@ export default function ShowPage() {
             refId={uuid}
             label="Lista"
             wrapperClassName="relative flex-1"
-            className="flex h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line bg-raised/60 text-[15px] font-medium text-ink backdrop-blur transition active:scale-95"
+            className="flex h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line bg-raised/60 text-[0.9375rem] font-medium text-ink backdrop-blur transition active:scale-95"
           />
           <StreamingBadges kind="tv" tmdbId={show.tmdbId} variant="action" />
         </div>
@@ -653,7 +653,7 @@ export default function ShowPage() {
         {!show.followed && (
           <button
             onClick={() => void toggleWatchlist()}
-            className={`mt-2.5 flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border px-4 text-[15px] font-medium transition active:scale-95 ${
+            className={`mt-2.5 flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border px-4 text-[0.9375rem] font-medium transition active:scale-95 ${
               show.inWatchlist
                 ? "border-ink bg-ink text-tube"
                 : "border-line text-dim hover:border-ink hover:text-ink"
@@ -676,10 +676,10 @@ export default function ShowPage() {
             className="page-enter mt-4 rounded-2xl border border-line bg-raised/60 p-4"
             data-testid="aviso-buracos"
           >
-            <p className="font-display text-[15px] font-semibold text-ink">
+            <p className="font-display text-[0.9375rem] font-semibold text-ink">
               {contarEpisodios(buracos.total)} por marcar mais atrás
             </p>
-            <p className="mt-1 text-[15px] text-dim">
+            <p className="mt-1 text-[0.9375rem] text-dim">
               {buracos.porTemporada
                 .map((t) => `T${t.temporada}: ${t.episodios.length}`)
                 .join(" · ")}
@@ -688,7 +688,7 @@ export default function ShowPage() {
             <button
               onClick={() => void marcarBuracos()}
               data-testid="marcar-buracos"
-              className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-ink text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-[0.99]"
+              className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-ink text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-[0.99]"
             >
               <CheckIcon className="h-4 w-4" />
               Marcar {buracos.total === 1 ? "o episódio" : `os ${buracos.total}`}
@@ -720,7 +720,7 @@ export default function ShowPage() {
           >
             <CheckIcon className={`h-6 w-6 shrink-0 ${pulseNext ? "check-pop" : ""}`} />
             <span className="min-w-0 flex-1">
-              <span className="block text-[15px] font-semibold">Marcar próximo episódio</span>
+              <span className="block text-[0.9375rem] font-semibold">Marcar próximo episódio</span>
               <span className="ep-code block truncate text-xs opacity-80">
                 {formatEpCode(nextUp.season, nextUp.episode)} · {nextUp.name}
               </span>
@@ -758,7 +758,7 @@ export default function ShowPage() {
               }}
               onClick={() => setTab(id)}
               data-testid={`tab-${id}`}
-              className={`-mb-px flex min-h-11 cursor-pointer items-center border-b-2 px-3 text-[15px] transition-colors ${
+              className={`-mb-px flex min-h-11 cursor-pointer items-center border-b-2 px-3 text-[0.9375rem] transition-colors ${
                 tab === id
                   ? "border-ink font-semibold text-ink"
                   : "border-transparent text-dim hover:text-ink"
@@ -779,7 +779,7 @@ export default function ShowPage() {
             )}
 
             {seasons.length === 0 ? (
-              <p className="text-[15px] text-dim">Sem informação de temporadas.</p>
+              <p className="text-[0.9375rem] text-dim">Sem informação de temporadas.</p>
             ) : (
               <>
                 {/* Temporadas como faixas: cinco toques em vez de uma lista de
@@ -834,10 +834,10 @@ export default function ShowPage() {
                           />
                         )}
                         <span className="flex h-full flex-col items-center justify-center gap-0.5">
-                          <span className="ep-code text-[15px] font-semibold text-ink">
+                          <span className="ep-code text-[0.9375rem] font-semibold text-ink">
                             {season.number}
                           </span>
-                          <span className="ep-code text-[11px] text-faint">
+                          <span className="ep-code text-[0.6875rem] text-faint">
                             {season.episodeCount === 0 ? "breve" : `${seen}/${season.episodeCount}`}
                           </span>
                         </span>
@@ -890,7 +890,7 @@ export default function ShowPage() {
                           ecrã, o herói é que normalmente o cobre. */}
                       <div className="sticky top-0 z-10 -mx-4 bg-tube px-4 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">
                         <div className="flex items-center justify-between gap-3">
-                          <p className="font-display text-[15px] font-semibold">
+                          <p className="font-display text-[0.9375rem] font-semibold">
                             {season.name}
                           </p>
                           {!complete && season.episodeCount > 0 && (
@@ -966,17 +966,17 @@ export default function ShowPage() {
                               data-testid={`corrida-${chave}`}
                               className="flex h-11 w-full cursor-pointer items-center gap-3 rounded-lg px-2 text-left text-dim transition-colors hover:bg-raised"
                             >
-                              <span className="ep-code w-[70px] shrink-0 text-[12px] text-faint">
+                              <span className="ep-code w-[70px] shrink-0 text-[0.75rem] text-faint">
                                 {codigo}
                               </span>
                               <span
                                 aria-hidden
-                                className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full text-[10px] font-bold"
+                                className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full text-[0.6875rem] font-bold"
                                 style={{ background: accent, color: "var(--color-tube)" }}
                               >
                                 ✓
                               </span>
-                              <span className="flex-1 text-[14px]">
+                              <span className="flex-1 text-[0.9375rem]">
                                 {contagem} episódios vistos
                               </span>
                               <ChevronDownIcon className="h-4 w-4 shrink-0 text-faint" />
@@ -997,7 +997,7 @@ export default function ShowPage() {
                               data-testid={`anunciado-${season.number}-${epNumber}`}
                               className="flex h-[52px] items-center gap-3 px-2 text-faint"
                             >
-                              <span className="ep-code w-[34px] shrink-0 text-[13px]">
+                              <span className="ep-code w-[34px] shrink-0 text-[0.8125rem]">
                                 E{String(epNumber).padStart(2, "0")}
                               </span>
                               <span className="h-[26px] w-[26px] shrink-0 rounded-full border-2 border-dashed border-line" aria-hidden />
@@ -1028,9 +1028,9 @@ export default function ShowPage() {
             {show.overview ? (
               <p className="text-base leading-relaxed text-dim">{show.overview}</p>
             ) : (
-              <p className="text-[15px] text-dim">Sem sinopse disponível.</p>
+              <p className="text-[0.9375rem] text-dim">Sem sinopse disponível.</p>
             )}
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[15px]">
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-3 text-[0.9375rem]">
               {show.firstAired && (
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-faint">Estreia</dt>
@@ -1072,7 +1072,7 @@ export default function ShowPage() {
                 href={`https://www.imdb.com/title/${show.imdbId}/`}
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex min-h-11 cursor-pointer items-center text-[15px] text-ink hover:underline"
+                className="inline-flex min-h-11 cursor-pointer items-center text-[0.9375rem] text-ink hover:underline"
               >
                 Ver no IMDb ↗
               </a>
@@ -1095,7 +1095,7 @@ export default function ShowPage() {
                   {watchedCount}
                   {show.totalEpisodes ? ` / ${show.totalEpisodes}` : ""}
                 </p>
-                <p className="text-[15px] text-dim">episódios vistos</p>
+                <p className="text-[0.9375rem] text-dim">episódios vistos</p>
                 {activity && (
                   <p className="ep-code mt-1 text-xs text-faint">
                     {activity.first === activity.last
@@ -1106,7 +1106,7 @@ export default function ShowPage() {
               </div>
             </div>
 
-            <h3 className="mt-6 font-display text-[15px] font-semibold text-dim">
+            <h3 className="mt-6 font-display text-[0.9375rem] font-semibold text-dim">
               Progresso por temporada
             </h3>
             <div className="mt-3 space-y-2.5">

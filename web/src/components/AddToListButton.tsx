@@ -24,7 +24,7 @@ export interface AddToListButtonProps {
 }
 
 const TRIGGER_DEFAULT =
-  "flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[15px] font-medium text-dim transition hover:bg-raised hover:text-ink";
+  "flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[0.9375rem] font-medium text-dim transition hover:bg-raised hover:text-ink";
 
 // Botão + painel para juntar esta série/filme a uma ou mais listas
 // personalizadas — usado nas páginas de detalhe.
@@ -99,7 +99,7 @@ export default function AddToListButton({
                 <li key={list.id}>
                   <button
                     onClick={() => void toggle(list)}
-                    className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-[15px] hover:bg-raised"
+                    className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-[0.9375rem] hover:bg-raised"
                   >
                     <span
                       className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${

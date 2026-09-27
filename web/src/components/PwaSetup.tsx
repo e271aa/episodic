@@ -67,7 +67,7 @@ export default function PwaSetup() {
             />
           </svg>
         </div>
-        <div className="min-w-0 flex-1 text-[15px]">
+        <div className="min-w-0 flex-1 text-[0.9375rem]">
           <p className="font-medium">Instala o Episodic no teu iPhone</p>
           <p className="mt-0.5 text-dim">
             Toca em <span className="text-ink">Partilhar</span> e depois em{" "}

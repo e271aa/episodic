@@ -40,7 +40,7 @@ export default function EstatisticasPage() {
           <BotaoVoltar
             label="Voltar ao perfil"
             fallback="/profile"
-            className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline"
+            className="-mr-2 inline-flex min-h-11 items-center px-2 text-[0.9375rem] text-dim hover:text-ink hover:underline"
           >
             Perfil
           </BotaoVoltar>
@@ -48,13 +48,13 @@ export default function EstatisticasPage() {
         <div className="mt-16 flex flex-col items-center px-6 text-center">
           <span className="bars mb-4 h-11 w-11 rounded-full opacity-40" aria-hidden />
           <p className="font-display font-semibold">Ainda não há nada para contar</p>
-          <p className="mt-1 max-w-xs text-[15px] text-dim">
+          <p className="mt-1 max-w-xs text-[0.9375rem] text-dim">
             Estas contas saem dos episódios que marcares — maratonas, sequências,
             o dia da semana em que vês mais.
           </p>
           <Link
             href="/series"
-            className="mt-6 flex min-h-11 cursor-pointer items-center rounded-full bg-ink px-6 text-[15px] font-semibold text-tube transition hover:brightness-110"
+            className="mt-6 flex min-h-11 cursor-pointer items-center rounded-full bg-ink px-6 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110"
           >
             Marcar o primeiro
           </Link>
@@ -72,7 +72,7 @@ export default function EstatisticasPage() {
         <BotaoVoltar
           label="Voltar ao perfil"
           fallback="/profile"
-          className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline"
+          className="-mr-2 inline-flex min-h-11 items-center px-2 text-[0.9375rem] text-dim hover:text-ink hover:underline"
         >
           Perfil
         </BotaoVoltar>
@@ -101,7 +101,7 @@ export default function EstatisticasPage() {
               {stats.bestBinge.count === 1 ? "episódio" : "episódios"}
             </span>
           </p>
-          <p className="mt-1 text-[15px] text-dim">{porExtenso(stats.bestBinge.date)}</p>
+          <p className="mt-1 text-[0.9375rem] text-dim">{porExtenso(stats.bestBinge.date)}</p>
           {stats.bestBinge.topShow && (
             <p className="mt-2 text-xs text-faint">
               A maior parte foi de{" "}
@@ -121,7 +121,7 @@ export default function EstatisticasPage() {
             {stats.longestStreak.days}{" "}
             <span className="text-lg font-normal text-dim">dias seguidos</span>
           </p>
-          <p className="mt-1 text-[15px] text-dim">
+          <p className="mt-1 text-[0.9375rem] text-dim">
             {porExtenso(stats.longestStreak.from)} → {porExtenso(stats.longestStreak.to)}
           </p>
         </section>
@@ -134,12 +134,12 @@ export default function EstatisticasPage() {
         <div className="mt-4 flex items-end justify-between gap-2">
           {stats.perWeekday.map((w) => (
             <div key={w.weekday} className="flex flex-1 flex-col items-center gap-1.5">
-              <span className="ep-code text-[10px] text-faint">{w.count}</span>
+              <span className="ep-code text-[0.6875rem] text-faint">{w.count}</span>
               <div
                 className="w-full rounded-t-sm bg-ink/80"
                 style={{ height: `${Math.max(4, (w.count / maxWeekday) * 80)}px` }}
               />
-              <span className="ep-code text-[10px] text-faint">{w.label}</span>
+              <span className="ep-code text-[0.6875rem] text-faint">{w.label}</span>
             </div>
           ))}
         </div>
@@ -153,7 +153,7 @@ export default function EstatisticasPage() {
           <p className="mt-2 font-display text-xl font-bold text-ink first-letter:uppercase">
             {porMes(stats.busiestMonth.month)}
           </p>
-          <p className="text-[15px] text-dim">{contarEpisodios(stats.busiestMonth.count)}</p>
+          <p className="text-[0.9375rem] text-dim">{contarEpisodios(stats.busiestMonth.count)}</p>
         </section>
       )}
 
@@ -166,7 +166,7 @@ export default function EstatisticasPage() {
             {stats.distinctShowsWatchedInADay.count}{" "}
             <span className="text-lg font-normal text-dim">séries no mesmo dia</span>
           </p>
-          <p className="mt-1 text-[15px] text-dim">
+          <p className="mt-1 text-[0.9375rem] text-dim">
             {porExtenso(stats.distinctShowsWatchedInADay.date)}
           </p>
         </section>

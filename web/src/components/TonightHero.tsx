@@ -104,14 +104,14 @@ export default function TonightHero({
 
       {/* Barra de cima: quando é, e a entrada para o modo de foco */}
       <div className="relative flex items-center justify-between px-5 pt-4">
-        <span className="ep-code text-[13px] text-dim">
+        <span className="ep-code text-[0.8125rem] text-dim">
           {dia} · {hora}
         </span>
         {seriesPorVer > 0 && (
           <Link
             href="/em-dia"
             aria-label={`Pôr em dia: ${seriesPorVer} ${seriesPorVer === 1 ? "série" : "séries"} com episódios por ver`}
-            className="flex min-h-11 items-center gap-2 rounded-full border border-line bg-tube/60 px-3 text-[13px] font-semibold text-ink backdrop-blur transition active:scale-95"
+            className="flex min-h-11 items-center gap-2 rounded-full border border-line bg-tube/60 px-3 text-[0.8125rem] font-semibold text-ink backdrop-blur transition active:scale-95"
           >
             <span className="bars h-4 w-4 shrink-0 rounded-full" aria-hidden />
             Pôr em dia
@@ -129,22 +129,22 @@ export default function TonightHero({
             alarga a área de toque e a margem negativa devolve o espaço ao
             layout — cresce o que o dedo apanha, não muda o que se vê. */}
         <Link href={`/series/${showUuid}`} className="mt-2 -my-1 block py-1">
-          <h1 className="font-display text-[40px] font-bold leading-[0.98] tracking-[-0.015em] text-ink [font-stretch:110%]">
+          <h1 className="font-display text-[2.25rem] font-bold leading-[0.98] tracking-[-0.015em] text-ink [font-stretch:110%]">
             {showName}
           </h1>
         </Link>
 
         <div className="mt-3 flex items-center gap-2">
-          <span className="ep-code rounded-md bg-ink px-[7px] py-0.5 text-[15px] font-bold text-tube">
+          <span className="ep-code rounded-md bg-ink px-[7px] py-0.5 text-[0.9375rem] font-bold text-tube">
             {formatEpCode(episode.season, episode.episode)}
           </span>
           {episode.airDate && (
-            <span className="ep-code text-[15px] text-faint">
+            <span className="ep-code text-[0.9375rem] text-faint">
               {episode.airDate.slice(0, 4)}
             </span>
           )}
         </div>
-        <p className="mt-2 text-[17px] font-medium text-ink">{episode.name}</p>
+        <p className="mt-2 text-[0.9375rem] font-medium text-ink">{episode.name}</p>
 
         {progresso !== null && (
           <div className="mt-3 flex items-center gap-2.5">
@@ -154,7 +154,7 @@ export default function TonightHero({
                 style={{ width: `${progresso}%` }}
               />
             </div>
-            <span className="ep-code shrink-0 text-[13px] text-dim">
+            <span className="ep-code shrink-0 text-[0.8125rem] text-dim">
               {watchedCount}/{totalEpisodes}
             </span>
           </div>
@@ -163,7 +163,7 @@ export default function TonightHero({
         <button
           onClick={() => void handleCheck()}
           disabled={checking}
-          className="mt-5 flex h-[60px] w-full cursor-pointer items-center justify-center gap-2.5 rounded-full bg-ink text-[18px] font-semibold text-tube transition active:scale-[0.98] disabled:opacity-60"
+          className="mt-5 flex h-[60px] w-full cursor-pointer items-center justify-center gap-2.5 rounded-full bg-ink text-[0.9375rem] font-semibold text-tube transition active:scale-[0.98] disabled:opacity-60"
         >
           {checking ? (
             <span className="spinner h-5 w-5 rounded-full border-2 border-tube/30 border-t-tube" />

@@ -116,12 +116,12 @@ export default function ReverPage() {
         <BotaoVoltar
           label="Voltar ao perfil"
           fallback="/profile"
-          className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline"
+          className="-mr-2 inline-flex min-h-11 items-center px-2 text-[0.9375rem] text-dim hover:text-ink hover:underline"
         >
           Perfil
         </BotaoVoltar>
       </div>
-      <p className="mt-1 text-[15px] text-dim">
+      <p className="mt-1 text-[0.9375rem] text-dim">
         Séries com menos marcado do que o que já estreou. A app não sabe se as
         viste — tu sabes. Uma de cada vez, e tudo se anula.
       </p>
@@ -129,7 +129,7 @@ export default function ReverPage() {
       {series === null ? (
         <div className="mt-10 flex flex-col items-center text-center" data-testid="rever-a-carregar">
           <span className="spinner h-6 w-6 rounded-full border-2 border-line border-t-ink" />
-          <p className="mt-4 text-[15px] text-dim">
+          <p className="mt-4 text-[0.9375rem] text-dim">
             A comparar com o que já estreou
             {progresso && progresso.total > 0
               ? ` · ${progresso.feitas}/${progresso.total}`
@@ -140,7 +140,7 @@ export default function ReverPage() {
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <CheckIcon className="h-12 w-12 text-faint" />
           <p className="mt-4 max-w-sm font-display font-semibold">Nada para rever</p>
-          <p className="mt-2 max-w-sm text-[15px] text-dim">
+          <p className="mt-2 max-w-sm text-[0.9375rem] text-dim">
             Tudo o que tens marcado bate certo com o que já estreou.
           </p>
         </div>
@@ -148,7 +148,7 @@ export default function ReverPage() {
         <div className="flex flex-1 flex-col items-center justify-center text-center" data-testid="rever-fim">
           <CheckIcon className="check-pop h-12 w-12 text-ink" />
           <p className="mt-4 max-w-sm font-display font-semibold">Biblioteca revista</p>
-          <p className="mt-2 max-w-sm text-[15px] text-dim">
+          <p className="mt-2 max-w-sm text-[0.9375rem] text-dim">
             {arrumadas === 1 ? "1 série arrumada" : `${arrumadas} séries arrumadas`}
             {arrumadas < series.length
               ? ` · ${series.length - arrumadas} ficaram para depois`
@@ -157,7 +157,7 @@ export default function ReverPage() {
           </p>
           <Link
             href="/library"
-            className="mt-6 flex min-h-11 items-center rounded-full border border-line px-5 text-[15px] font-semibold text-ink transition hover:border-ink active:scale-95"
+            className="mt-6 flex min-h-11 items-center rounded-full border border-line px-5 text-[0.9375rem] font-semibold text-ink transition hover:border-ink active:scale-95"
           >
             Ir para a Biblioteca
           </Link>
@@ -193,7 +193,7 @@ export default function ReverPage() {
                 </p>
               </div>
             </div>
-            <p className="mt-4 text-[15px] text-ink" data-testid="rever-porque">
+            <p className="mt-4 text-[0.9375rem] text-ink" data-testid="rever-porque">
               {porque(atual)}
             </p>
 
@@ -207,7 +207,7 @@ export default function ReverPage() {
                 <button
                   onClick={() => void marcar(prova, `${contarEpisodios(prova.length)} marcados`)}
                   disabled={aCorrer}
-                  className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
+                  className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
                 >
                   <CheckIcon className="h-4 w-4" />
                   Marcar {prova.length === 1 ? "o episódio" : `os ${prova.length}`}
@@ -220,7 +220,7 @@ export default function ReverPage() {
                     void marcar(atual.porMarcar, `${contarEpisodios(atual.porMarcar.length)} marcados`)
                   }
                   disabled={aCorrer}
-                  className="flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line px-4 text-[15px] font-semibold text-ink transition hover:border-ink/40 hover:bg-raised active:scale-[0.99] disabled:opacity-50"
+                  className="flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-ink transition hover:border-ink/40 hover:bg-raised active:scale-[0.99] disabled:opacity-50"
                 >
                   {prova
                     ? `Vi tudo · também ${alemDaProva.length === 1 ? "o" : `os ${alemDaProva.length}`} da ${temporadasDe(alemDaProva)}`
@@ -236,7 +236,7 @@ export default function ReverPage() {
                   )
                 }
                 disabled={aCorrer}
-                className="flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line px-4 text-[15px] font-semibold text-ink transition hover:border-ink/40 hover:bg-raised active:scale-[0.99] disabled:opacity-50"
+                className="flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-ink transition hover:border-ink/40 hover:bg-raised active:scale-[0.99] disabled:opacity-50"
               >
                 Ainda estou a ver
               </button>
@@ -254,13 +254,13 @@ export default function ReverPage() {
                 )
               }
               disabled={aCorrer}
-              className="flex min-h-11 cursor-pointer items-center px-3 text-[15px] text-dim transition hover:text-ink disabled:opacity-50"
+              className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim transition hover:text-ink disabled:opacity-50"
             >
               Deixei de ver — arquivar
             </button>
             <button
               onClick={() => setIndice(indice + 1)}
-              className="flex min-h-11 cursor-pointer items-center px-3 text-[15px] text-dim hover:text-ink"
+              className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim hover:text-ink"
             >
               Decidir depois
             </button>

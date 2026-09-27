@@ -112,7 +112,7 @@ export default function ProfileCard() {
 
         <button
           onClick={() => setAEditar(true)}
-          className="mt-4 min-h-11 w-full cursor-pointer rounded-full border border-line text-[15px] font-semibold text-dim transition hover:border-ink hover:text-ink"
+          className="mt-4 min-h-11 w-full cursor-pointer rounded-full border border-line text-[0.9375rem] font-semibold text-dim transition hover:border-ink hover:text-ink"
         >
           Editar perfil
         </button>
@@ -238,7 +238,7 @@ function EditorPerfil({
           <h2 className="font-display text-xl font-bold">Editar perfil</h2>
           <button
             onClick={onFechar}
-            className="min-h-11 cursor-pointer text-[15px] text-dim transition hover:text-ink"
+            className="min-h-11 cursor-pointer text-[0.9375rem] text-dim transition hover:text-ink"
           >
             Cancelar
           </button>
@@ -267,7 +267,7 @@ function EditorPerfil({
           <button
             onClick={() => ficheiro.current?.click()}
             disabled={aGuardar}
-            className="mt-1.5 min-h-11 w-full cursor-pointer rounded-2xl border border-line text-[15px] font-semibold text-dim transition hover:border-ink hover:text-ink disabled:opacity-50"
+            className="mt-1.5 min-h-11 w-full cursor-pointer rounded-2xl border border-line text-[0.9375rem] font-semibold text-dim transition hover:border-ink hover:text-ink disabled:opacity-50"
           >
             {perfil.avatarUrl ? "Trocar foto" : "Escolher foto"}
           </button>
@@ -302,7 +302,7 @@ function EditorPerfil({
                 ))}
               </div>
             ) : elenco.length === 0 ? (
-              <p className="mt-1.5 text-[15px] text-dim">
+              <p className="mt-1.5 text-[0.9375rem] text-dim">
                 Não foi possível carregar o elenco desta série.
               </p>
             ) : (
@@ -342,8 +342,8 @@ function EditorPerfil({
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 truncate text-[11px] font-medium">{c.character}</p>
-                      <p className="ep-code truncate text-[10px] text-faint">{c.actorName}</p>
+                      <p className="mt-1 truncate text-[0.6875rem] font-medium">{c.character}</p>
+                      <p className="ep-code truncate text-[0.6875rem] text-faint">{c.actorName}</p>
                     </button>
                   );
                 })}
@@ -353,7 +353,7 @@ function EditorPerfil({
         )}
 
         {erro && (
-          <p className="page-enter mt-4 text-[15px] text-danger" role="alert">
+          <p className="page-enter mt-4 text-[0.9375rem] text-danger" role="alert">
             {erro}
           </p>
         )}

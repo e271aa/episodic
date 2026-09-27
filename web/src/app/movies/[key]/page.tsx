@@ -183,7 +183,7 @@ export default function MoviePage() {
             // aqui lia-se como "sem capa", quando na verdade está a chegar.
             <Bone className="h-36 w-24 shrink-0 rounded-xl shadow-lg" />
           ) : (
-            <div className="flex h-36 w-24 shrink-0 items-center justify-center rounded-xl bg-raised p-2 text-center font-display text-[15px] font-bold text-dim shadow-lg">
+            <div className="flex h-36 w-24 shrink-0 items-center justify-center rounded-xl bg-raised p-2 text-center font-display text-[0.9375rem] font-bold text-dim shadow-lg">
               {movie.name}
             </div>
           )}
@@ -208,7 +208,7 @@ export default function MoviePage() {
             className="mt-4 flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-left text-tube transition hover:brightness-110 active:scale-[0.99]"
           >
             <CheckIcon className="h-6 w-6 shrink-0" />
-            <span className="text-[15px] font-semibold">Marcar como visto</span>
+            <span className="text-[0.9375rem] font-semibold">Marcar como visto</span>
           </button>
         )}
 
@@ -228,15 +228,15 @@ export default function MoviePage() {
           {details?.overview ? (
             <p className="text-base leading-relaxed text-dim">{details.overview}</p>
           ) : aProcurar ? (
-            <p className="text-[15px] text-dim">A procurar na TMDB…</p>
+            <p className="text-[0.9375rem] text-dim">A procurar na TMDB…</p>
           ) : detalheFalhou ? (
-            <p className="text-[15px] text-dim">
+            <p className="text-[0.9375rem] text-dim">
               Não deu para trazer a sinopse — sem ligação à internet.
             </p>
           ) : movie.tmdbId ? (
-            <p className="text-[15px] text-dim">A carregar sinopse…</p>
+            <p className="text-[0.9375rem] text-dim">A carregar sinopse…</p>
           ) : (
-            <p className="text-[15px] text-dim">
+            <p className="text-[0.9375rem] text-dim">
               Sem sinopse disponível — este filme não foi encontrado na TMDB.
             </p>
           )}
@@ -247,7 +247,7 @@ export default function MoviePage() {
             href={`https://www.themoviedb.org/movie/${movie.tmdbId}`}
             target="_blank"
             rel="noreferrer"
-            className="mt-4 inline-flex min-h-11 cursor-pointer items-center text-[15px] text-ink hover:underline"
+            className="mt-4 inline-flex min-h-11 cursor-pointer items-center text-[0.9375rem] text-ink hover:underline"
           >
             Ver na TMDB ↗
           </a>

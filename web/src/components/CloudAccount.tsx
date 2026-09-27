@@ -203,7 +203,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
               void handleSetPassword();
             }}
           >
-            <label htmlFor="cloud-nova-password" className="font-display text-[15px] font-semibold">
+            <label htmlFor="cloud-nova-password" className="font-display text-[0.9375rem] font-semibold">
               Password
             </label>
             <p className="mt-0.5 text-xs text-dim">
@@ -223,7 +223,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
               <button
                 type="submit"
                 disabled={status === "verifying" || newPassword.length < 8}
-                className="min-h-11 shrink-0 cursor-pointer rounded-full border border-line px-5 text-[15px] font-medium text-dim transition hover:bg-raised disabled:opacity-50"
+                className="min-h-11 shrink-0 cursor-pointer rounded-full border border-line px-5 text-[0.9375rem] font-medium text-dim transition hover:bg-raised disabled:opacity-50"
               >
                 Guardar
               </button>
@@ -244,7 +244,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
           />
           {prova?.fase === "feita" && (
             <div className="px-5 pb-4" data-testid="prova-nuvem">
-              <table className="w-full text-[15px]">
+              <table className="w-full text-[0.9375rem]">
                 <thead>
                   <tr className="text-left text-xs text-faint">
                     <th className="py-1 font-normal"></th>
@@ -267,7 +267,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
                 </tbody>
               </table>
               <p
-                className={`mt-3 text-[15px] ${prova.tudoCerto ? "text-ink" : "text-danger"}`}
+                className={`mt-3 text-[0.9375rem] ${prova.tudoCerto ? "text-ink" : "text-danger"}`}
                 data-testid="prova-veredicto"
               >
                 {prova.faltaSql
@@ -281,7 +281,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
             </div>
           )}
           {prova?.fase === "erro" && (
-            <p className="px-5 pb-4 text-[15px] text-danger">
+            <p className="px-5 pb-4 text-[0.9375rem] text-danger">
               Não deu para verificar: {prova.mensagem}
             </p>
           )}

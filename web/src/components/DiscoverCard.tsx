@@ -86,7 +86,7 @@ export default function DiscoverCard({
         )}
       </div>
 
-      <p className="mt-1.5 truncate text-[17px] font-semibold">{item.name}</p>
+      <p className="mt-1.5 truncate text-[0.9375rem] font-semibold">{item.name}</p>
       <p className="ep-code truncate text-xs text-dim">
         {[mostrarTipo ? (item.kind === "movie" ? "Filme" : "Série") : null, item.year]
           .filter(Boolean)

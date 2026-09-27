@@ -101,7 +101,7 @@ export default function SheetPanel({
         className="page-enter absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-3xl border-t border-line bg-panel pb-[calc(var(--dock-h)+1rem)] outline-none"
       >
         <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-panel px-5 py-4">
-          <p className="font-display text-[17px] font-bold [font-stretch:105%]">{titulo}</p>
+          <p className="font-display text-[0.9375rem] font-bold [font-stretch:105%]">{titulo}</p>
           <button
             onClick={onFechar}
             aria-label="Fechar"

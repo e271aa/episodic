@@ -129,11 +129,11 @@ export default function MovieResultCard({
             <span className="ep-code ml-2 text-sm text-faint">{result.year}</span>
           )}
         </p>
-        <p className="mt-1 line-clamp-2 text-[15px] text-dim">{result.overview}</p>
+        <p className="mt-1 line-clamp-2 text-[0.9375rem] text-dim">{result.overview}</p>
         {existente?.watchedAt ? (
           // já visto — seja de antes, seja deste toque
           <p
-            className="mt-2 flex min-h-11 items-center gap-1.5 text-[15px] font-semibold text-dim"
+            className="mt-2 flex min-h-11 items-center gap-1.5 text-[0.9375rem] font-semibold text-dim"
             data-testid="filme-ja-visto"
           >
             <CheckIcon className={`h-3.5 w-3.5 ${state === "done" ? "check-pop" : ""}`} />
@@ -142,7 +142,7 @@ export default function MovieResultCard({
         ) : state === "done" ? (
           <button
             disabled
-            className="mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-4 text-[15px] font-semibold text-dim"
+            className="mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-raised px-4 text-[0.9375rem] font-semibold text-dim"
           >
             <CheckIcon className="check-pop h-3.5 w-3.5" />
             Na biblioteca
@@ -150,7 +150,7 @@ export default function MovieResultCard({
         ) : (
           <>
             {existente && (
-              <p className="mt-2 text-[15px] text-dim" data-testid="filme-ja-para-ver">
+              <p className="mt-2 text-[0.9375rem] text-dim" data-testid="filme-ja-para-ver">
                 Já está na tua lista para ver.
               </p>
             )}
@@ -158,7 +158,7 @@ export default function MovieResultCard({
               <button
                 onClick={() => void add(true)}
                 disabled={state !== "idle" || existente === undefined}
-                className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+                className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
               >
                 {state === "following" && (
                   <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-tube/30 border-t-tube" />
@@ -169,7 +169,7 @@ export default function MovieResultCard({
                 <button
                   onClick={() => void add(false)}
                   disabled={state !== "idle" || existente === undefined}
-                  className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[15px] font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
+                  className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
                 >
                   Para ver
                 </button>

@@ -59,7 +59,7 @@ export default function SwipeCoach({
       data-testid="swipe-coach"
     >
       <p className="font-display text-lg font-bold [font-stretch:105%]">{titulo}</p>
-      <p className="mt-1 max-w-[15rem] text-[15px] text-dim">{detalhe}</p>
+      <p className="mt-1 max-w-[15rem] text-[0.9375rem] text-dim">{detalhe}</p>
 
       <div className="mt-6 grid w-full max-w-xs grid-cols-2 gap-3">
         {[esquerda, direita].map((lado) => (
@@ -67,7 +67,7 @@ export default function SwipeCoach({
             <span className="text-2xl" aria-hidden>
               {lado.seta}
             </span>
-            <p className="mt-1 font-display text-[15px] font-bold uppercase [font-stretch:80%]">
+            <p className="mt-1 font-display text-[0.9375rem] font-bold uppercase [font-stretch:80%]">
               {lado.titulo}
             </p>
             <p className="mt-0.5 text-xs text-dim">{lado.detalhe}</p>
@@ -78,7 +78,7 @@ export default function SwipeCoach({
       <p className="mt-5 text-xs text-faint">
         Também dá pelos botões em baixo, ou pelas setas do teclado.
       </p>
-      <span className="mt-5 rounded-full bg-ink px-6 py-2.5 text-[15px] font-semibold text-tube">
+      <span className="mt-5 rounded-full bg-ink px-6 py-2.5 text-[0.9375rem] font-semibold text-tube">
         Percebi
       </span>
     </div>

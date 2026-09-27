@@ -57,8 +57,8 @@ export default function WatchNextCard({
           <p className="ep-code text-xs text-dim">
             {formatEpCode(episode.season, episode.episode)}
           </p>
-          <p className="mt-0.5 truncate text-[17px] font-semibold">{showName}</p>
-          <p className="truncate text-[15px] text-dim">{episode.name}</p>
+          <p className="mt-0.5 truncate text-[0.9375rem] font-semibold">{showName}</p>
+          <p className="truncate text-[0.9375rem] text-dim">{episode.name}</p>
         </div>
       </Link>
 

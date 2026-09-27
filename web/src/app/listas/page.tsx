@@ -33,12 +33,12 @@ export default function ListasPage() {
         <BotaoVoltar
           label="Voltar à biblioteca"
           fallback="/library"
-          className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline"
+          className="-mr-2 inline-flex min-h-11 items-center px-2 text-[0.9375rem] text-dim hover:text-ink hover:underline"
         >
           Biblioteca
         </BotaoVoltar>
       </div>
-      <p className="mt-1 text-[15px] text-dim">
+      <p className="mt-1 text-[0.9375rem] text-dim">
         Junta séries e filmes como quiseres — maratonas, favoritos, o que for.
       </p>
 
@@ -60,7 +60,7 @@ export default function ListasPage() {
         <button
           type="submit"
           disabled={creating || !name.trim()}
-          className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-ink px-5 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+          className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-ink px-5 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
         >
           Criar
         </button>
@@ -75,7 +75,7 @@ export default function ListasPage() {
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <LibraryIcon className="h-12 w-12 text-faint" />
           <p className="mt-4 max-w-sm font-display font-semibold">Ainda sem listas</p>
-          <p className="mt-2 max-w-sm text-[15px] text-dim">
+          <p className="mt-2 max-w-sm text-[0.9375rem] text-dim">
             Cria a primeira acima — depois adiciona séries e filmes a partir da
             página de cada um.
           </p>

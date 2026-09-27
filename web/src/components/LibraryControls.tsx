@@ -73,7 +73,7 @@ export default function LibraryControls({
             key={id}
             onClick={() => onSegment(id)}
             aria-pressed={segment === id}
-            className={`flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-[15px] font-semibold transition ${
+            className={`flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-[0.9375rem] font-semibold transition ${
               segment === id ? "bg-ink text-tube" : "text-dim hover:text-ink"
             }`}
           >

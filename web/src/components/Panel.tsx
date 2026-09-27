@@ -61,7 +61,7 @@ export function PanelRow({
     <>
       <span className="min-w-0 flex-1">
         <span
-          className={`block font-display text-[15px] font-semibold ${
+          className={`block font-display text-[0.9375rem] font-semibold ${
             perigo ? "text-danger" : "text-ink"
           }`}
         >

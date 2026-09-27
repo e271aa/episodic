@@ -173,7 +173,7 @@ export default function DiscoverSwipeCard({
                 style={{ width: `${(posicao / Math.max(total, 1)) * 100}%` }}
               />
             </div>
-            <div className="ep-code pointer-events-none absolute right-4 top-4 rounded-full border border-line bg-tube/70 px-2.5 py-1 text-[11px] text-dim">
+            <div className="ep-code pointer-events-none absolute right-4 top-4 rounded-full border border-line bg-tube/70 px-2.5 py-1 text-[0.6875rem] text-dim">
               {posicao} / {total}
             </div>
           </>
@@ -216,7 +216,7 @@ export default function DiscoverSwipeCard({
         >
           {/* De onde veio isto — sem as filas lado a lado é a única pista do
               porquê. A barrinha de cor liga o cartão à secção de origem. */}
-          <p className="flex max-w-full items-center gap-2 self-start truncate rounded-full border border-line bg-raised/80 py-1 pl-2 pr-3 font-display text-[11px] font-semibold uppercase tracking-[0.16em] text-ink [font-stretch:80%]">
+          <p className="flex max-w-full items-center gap-2 self-start truncate rounded-full border border-line bg-raised/80 py-1 pl-2 pr-3 font-display text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink [font-stretch:80%]">
             <span
               aria-hidden
               className="h-[3px] w-5 shrink-0 rounded-full"
@@ -248,7 +248,7 @@ export default function DiscoverSwipeCard({
 
           {item.overview && (
             <p
-              className={`mt-2 text-sm text-dim ${bordo ? "line-clamp-3 text-[15px]" : "line-clamp-2"}`}
+              className={`mt-2 text-sm text-dim ${bordo ? "line-clamp-3 text-[0.9375rem]" : "line-clamp-2"}`}
             >
               {item.overview}
             </p>

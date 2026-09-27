@@ -40,7 +40,7 @@ export default function BottomNav() {
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-[15px] font-medium transition-colors active:scale-95 ${
+              className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-[0.9375rem] font-medium transition-colors active:scale-95 ${
                 active ? "bg-ink text-tube" : "text-dim hover:text-ink"
               }`}
             >

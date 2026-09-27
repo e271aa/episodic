@@ -518,7 +518,7 @@ function LibraryContent() {
                         }
                         aria-expanded={!dobrada}
                         data-testid="dobrar-completas"
-                        className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-1 text-left text-[15px] text-dim transition-colors hover:bg-raised"
+                        className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-1 text-left text-[0.9375rem] text-dim transition-colors hover:bg-raised"
                       >
                         <span className="flex-1">
                           {dobrada
@@ -598,7 +598,7 @@ function LibraryContent() {
             <button
               onClick={() => void searchRemote()}
               disabled={remoteBusy}
-              className={`flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full text-[15px] font-semibold transition active:scale-95 disabled:opacity-50 ${
+              className={`flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full text-[0.9375rem] font-semibold transition active:scale-95 disabled:opacity-50 ${
                 // sem nada na biblioteca, adicionar é a ação óbvia — deixa de
                 // ser um botão discreto no fundo da página
                 showing === 0
@@ -623,7 +623,7 @@ function LibraryContent() {
               />
               <div className="mt-3 flex flex-col gap-3" data-testid="search-results">
                 {searched.length === 0 && !remoteError && (
-                  <p className="text-center text-[15px] text-dim">
+                  <p className="text-center text-[0.9375rem] text-dim">
                     Sem resultados. Tenta o nome original
                     {segment === "series" ? " da série" : " do filme"}.
                   </p>
@@ -646,7 +646,7 @@ function LibraryContent() {
             </>
           )}
           {remoteError && (
-            <p className="page-enter mt-3 text-center text-[15px] text-danger">{remoteError}</p>
+            <p className="page-enter mt-3 text-center text-[0.9375rem] text-danger">{remoteError}</p>
           )}
         </div>
       )}
@@ -684,7 +684,7 @@ function LibraryContent() {
             data-testid="search-input"
           />
         </div>
-        <p className="mt-3 text-[15px] text-dim">
+        <p className="mt-3 text-[0.9375rem] text-dim">
           {q
             ? `${showing} ${segment === "series" ? "séries" : "filmes"} na biblioteca`
             : "Escreve para filtrar o que já tens. Procurar títulos novos é o passo seguinte, no fim da lista."}
@@ -692,7 +692,7 @@ function LibraryContent() {
         {q && (
           <button
             onClick={() => setPesquisaAberta(false)}
-            className="mt-4 flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full bg-ink text-[15px] font-semibold text-tube transition active:scale-95"
+            className="mt-4 flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full bg-ink text-[0.9375rem] font-semibold text-tube transition active:scale-95"
           >
             Ver resultados
           </button>
@@ -712,7 +712,7 @@ function LibraryContent() {
                 <button
                   key={f.id}
                   onClick={() => setParams({ filtro: f.id === "tudo" ? null : f.id })}
-                  className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
+                  className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
                     filter === f.id
                       ? "border-ink bg-ink text-tube"
                       : "border-line text-dim hover:border-ink hover:text-ink"
@@ -733,7 +733,7 @@ function LibraryContent() {
                 <button
                   key={o.id}
                   onClick={() => setParams({ ordem: o.id === "vistos" ? null : o.id })}
-                  className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
+                  className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
                     seriesSort === o.id
                       ? "border-ink bg-ink text-tube"
                       : "border-line text-dim hover:border-ink hover:text-ink"
@@ -754,7 +754,7 @@ function LibraryContent() {
                 <button
                   key={f.id}
                   onClick={() => setParams({ filtro: f.id === "vistos" ? null : f.id })}
-                  className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
+                  className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
                     movieFilter === f.id
                       ? "border-ink bg-ink text-tube"
                       : "border-line text-dim hover:border-ink hover:text-ink"
@@ -775,7 +775,7 @@ function LibraryContent() {
                 <button
                   key={o.id}
                   onClick={() => setParams({ ordem: o.id === "vistos" ? null : o.id })}
-                  className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
+                  className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
                     movieSort === o.id
                       ? "border-ink bg-ink text-tube"
                       : "border-line text-dim hover:border-ink hover:text-ink"
@@ -791,7 +791,7 @@ function LibraryContent() {
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
                     onClick={() => setParams({ decada: null })}
-                    className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
+                    className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
                       decade === null
                         ? "border-ink bg-ink text-tube"
                         : "border-line text-dim hover:border-ink hover:text-ink"
@@ -829,7 +829,7 @@ function LibraryContent() {
               key={d}
               onClick={() => setDensidade(d)}
               aria-pressed={densidade === d}
-              className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[15px] transition active:scale-95 ${
+              className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
                 densidade === d
                   ? "border-ink bg-ink text-tube"
                   : "border-line text-dim hover:border-ink hover:text-ink"
@@ -847,7 +847,7 @@ function LibraryContent() {
         <SectionHeader label="Coleções" className="mt-6" />
         <Link
           href="/listas"
-          className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-between rounded-full border border-line px-4 text-[15px] text-dim transition hover:border-ink hover:text-ink"
+          className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-between rounded-full border border-line px-4 text-[0.9375rem] text-dim transition hover:border-ink hover:text-ink"
         >
           As tuas listas
           <span className="text-faint">→</span>

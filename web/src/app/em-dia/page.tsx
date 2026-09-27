@@ -191,7 +191,7 @@ function EmDiaContent() {
               key={f.id}
               onClick={() => changeFilter(f.id)}
               aria-pressed={isActive}
-              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-[15px] font-medium transition active:scale-95 ${
+              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-[0.9375rem] font-medium transition active:scale-95 ${
                 isActive
                   ? "border-ink bg-ink text-tube"
                   : "border-line text-dim hover:border-ink hover:text-ink"
@@ -211,7 +211,7 @@ function EmDiaContent() {
           <div className="flex flex-1 flex-col items-center justify-center text-center">
             <CheckIcon className="h-10 w-10 text-faint" />
             <p className="mt-4 font-display font-semibold">Estás em dia com tudo</p>
-            <p className="mt-1 max-w-xs text-[15px] text-dim">
+            <p className="mt-1 max-w-xs text-[0.9375rem] text-dim">
               Não há episódios à espera em nenhuma das séries que segues.
             </p>
           </div>
@@ -222,7 +222,7 @@ function EmDiaContent() {
             <p className="font-display font-semibold">Nada para pôr em dia aqui</p>
             <button
               onClick={() => changeFilter(saida)}
-              className="mt-6 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95"
+              className="mt-6 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95"
             >
               Ver {FILTERS.find((f) => f.id === saida)!.label} · {contar(saida)}
             </button>
@@ -232,12 +232,12 @@ function EmDiaContent() {
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <CheckIcon className="h-10 w-10 text-faint" />
           <p className="mt-4 font-display font-semibold">Passaste tudo em revista</p>
-          <p className="mt-1 max-w-xs text-[15px] text-dim">
+          <p className="mt-1 max-w-xs text-[0.9375rem] text-dim">
             {decided} episódios revistos neste filtro.
           </p>
           <button
             onClick={() => changeFilter(filter)}
-            className="mt-6 cursor-pointer rounded-full bg-ink px-6 py-2.5 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95"
+            className="mt-6 cursor-pointer rounded-full bg-ink px-6 py-2.5 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95"
           >
             Rever outra vez
           </button>

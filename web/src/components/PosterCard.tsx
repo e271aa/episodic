@@ -106,7 +106,7 @@ export default function PosterCard({
           />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[17px] font-semibold">{name}</p>
+          <p className="truncate text-[0.9375rem] font-semibold">{name}</p>
           {legenda && <p className="ep-code truncate text-xs text-dim">{legenda}</p>}
           {progress !== null && (
             <div className="mt-1.5 h-[3px] overflow-hidden rounded-full bg-raised">
@@ -146,7 +146,7 @@ export default function PosterCard({
             um buraco preto que parece avariado. */}
         <div
           className={`absolute inset-0 flex items-center justify-center bg-raised p-2 text-center font-display font-bold text-dim ${
-            compacta ? "text-xs" : "text-[15px]"
+            compacta ? "text-xs" : "text-[0.9375rem]"
           }`}
         >
           {name}
@@ -178,7 +178,7 @@ export default function PosterCard({
           <>
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" />
             {acao.selo && (
-              <span className="ep-code absolute left-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-ink backdrop-blur">
+              <span className="ep-code absolute left-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-ink backdrop-blur">
                 {acao.selo}
               </span>
             )}
@@ -192,9 +192,9 @@ export default function PosterCard({
           </>
         )}
       </div>
-      <p
-        className={`mt-1.5 truncate font-semibold ${compacta ? "text-[15px]" : "text-[17px]"}`}
-      >
+      {/* Era compacta:15px / normal:17px — o 17px caiu na rampa do DESIGN
+          (Ronda 12, Fase 5b.2), ficando igual ao das duas densidades. */}
+      <p className="mt-1.5 truncate text-[0.9375rem] font-semibold">
         {name}
       </p>
       {legenda && <p className="ep-code truncate text-xs text-dim">{legenda}</p>}

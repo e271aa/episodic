@@ -22,7 +22,7 @@ function Badges({ data }: { data: StreamingAvailability }) {
               {logo ? (
                 <Image src={logo} alt={p.name} width={44} height={44} className="h-full w-full object-cover" />
               ) : (
-                <span className="flex h-full w-full items-center justify-center bg-raised text-center text-[10px] text-dim">
+                <span className="flex h-full w-full items-center justify-center bg-raised text-center text-[0.6875rem] text-dim">
                   {p.name}
                 </span>
               )}
@@ -30,7 +30,7 @@ function Badges({ data }: { data: StreamingAvailability }) {
           );
         })}
       </div>
-      <p className="ep-code mt-1.5 text-[11px] text-faint">Dados da JustWatch, via TMDB</p>
+      <p className="ep-code mt-1.5 text-[0.6875rem] text-faint">Dados da JustWatch, via TMDB</p>
     </>
   );
 }
@@ -100,18 +100,18 @@ export default function StreamingBadges({
         <button
           onClick={() => setAberto((v) => !v)}
           aria-expanded={aberto}
-          className="flex h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line bg-raised/60 text-[15px] font-medium text-ink backdrop-blur transition active:scale-95"
+          className="flex h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line bg-raised/60 text-[0.9375rem] font-medium text-ink backdrop-blur transition active:scale-95"
         >
           Onde ver
         </button>
         {aberto && (
           <div className="page-enter mt-3">
             {data === undefined ? (
-              <p className="text-[15px] text-dim">A verificar…</p>
+              <p className="text-[0.9375rem] text-dim">A verificar…</p>
             ) : data && data.streaming.length > 0 ? (
               <Badges data={data} />
             ) : falhou ? (
-              <p className="text-[15px] text-dim">
+              <p className="text-[0.9375rem] text-dim">
                 Não deu para verificar — sem ligação à internet.
               </p>
             ) : !tmdbId ? (
@@ -120,12 +120,12 @@ export default function StreamingBadges({
               // vieram todas da TVmaze — e todas afirmavam que não estavam em
               // lado nenhum. Sem saber que série é lá fora, não há pergunta a
               // fazer. O backfill preenche o id em segundo plano.
-              <p className="text-[15px] text-dim">
+              <p className="text-[0.9375rem] text-dim">
                 Ainda não identifiquei esta série no catálogo — sem isso não dá
                 para saber onde a ver. Volta daqui a pouco.
               </p>
             ) : (
-              <p className="text-[15px] text-dim">
+              <p className="text-[0.9375rem] text-dim">
                 Sem serviços de streaming em Portugal.
               </p>
             )}
@@ -141,7 +141,7 @@ export default function StreamingBadges({
 
   if (!data || data.streaming.length === 0) {
     return (
-      <p className="mt-4 text-[15px] text-dim">
+      <p className="mt-4 text-[0.9375rem] text-dim">
         {falhou
           ? "Não deu para verificar onde ver — sem ligação à internet."
           : tmdbId

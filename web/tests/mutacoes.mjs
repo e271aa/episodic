@@ -582,6 +582,20 @@ const MUTACOES = [
     de: '<span className={active ? "whitespace-nowrap" : "hidden sm:inline"}>',
     para: '<span className={active ? "" : "hidden sm:inline"}>',
   },
+  {
+    nome: "r12-fase5b2/heroi-volta-a-40px",
+    descricao: "o título do herói volta a fugir da rampa (40px em vez de 36)",
+    ficheiro: HEROI,
+    de: "text-[2.25rem]",
+    para: "text-[2.5rem]",
+  },
+  {
+    nome: "r12-fase5b2/texto-volta-a-px",
+    descricao: "o nome da série na Biblioteca volta a um valor absoluto (não responde à raiz)",
+    ficheiro: POSTER_CARD,
+    de: '<p className="mt-1.5 truncate text-[0.9375rem] font-semibold">',
+    para: '<p className="mt-1.5 truncate text-[15px] font-semibold">',
+  },
 ];
 
 const filtro = process.argv[2];

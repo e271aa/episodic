@@ -38,7 +38,7 @@ export default function LibraryEmptyState({
               ? "Ainda não há séries"
               : "Ainda não há filmes"}
       </p>
-      <p className="mt-1 max-w-xs text-[15px] text-dim">
+      <p className="mt-1 max-w-xs text-[0.9375rem] text-dim">
         {query
           ? "Procura no catálogo em baixo para o adicionares."
           : filtrado
@@ -48,7 +48,7 @@ export default function LibraryEmptyState({
       {filtrado && !query && (
         <button
           onClick={onClearFilter}
-          className="mt-5 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-[15px] font-semibold text-tube transition hover:brightness-110"
+          className="mt-5 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110"
         >
           Ver tudo
         </button>

@@ -169,10 +169,10 @@ function Baralho({
       {/* Progresso do baralho: faixa SMPTE a encher, com o contador em mono */}
       <div className="pointer-events-none absolute inset-x-5 bottom-[calc(var(--dock-h)+0.5rem)] z-20">
         <div className="flex items-center justify-between pb-1.5">
-          <span className="ep-code text-[11px] text-faint">
+          <span className="ep-code text-[0.6875rem] text-faint">
             {cursor + 1} / {total}
           </span>
-          <span className="text-[11px] text-faint">arrasta ou decide aqui</span>
+          <span className="text-[0.6875rem] text-faint">arrasta ou decide aqui</span>
         </div>
         <div className="h-[3px] overflow-hidden rounded-full bg-ink/8">
           <div
@@ -229,7 +229,7 @@ function Grelha({
       {sections.map((section) => (
         <section key={section.id}>
           <div className="flex items-baseline justify-between gap-3 px-4">
-            <h2 className="flex items-center gap-2 font-display text-[13px] font-semibold uppercase tracking-[0.15em] text-ink [font-stretch:80%]">
+            <h2 className="flex items-center gap-2 font-display text-[0.8125rem] font-semibold uppercase tracking-[0.15em] text-ink [font-stretch:80%]">
               <span
                 aria-hidden
                 className="h-3.5 w-[3px] shrink-0 rounded-full"
@@ -414,7 +414,7 @@ function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) 
               aria-label="Mudar de catálogo"
               className="tap-44 relative flex flex-1 cursor-pointer items-center gap-1.5 text-ink"
             >
-              <span className="font-display text-[22px] font-bold [font-stretch:110%]">
+              <span className="font-display text-[1.5rem] font-bold [font-stretch:110%]">
                 {kind === "tv" ? "Séries" : "Filmes"}
               </span>
               <ChevronDownIcon
@@ -446,7 +446,7 @@ function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) 
               key={id}
               onClick={() => escolherKind(id)}
               aria-pressed={kind === id}
-              className={`flex min-h-11 cursor-pointer items-center justify-between rounded-2xl px-3.5 text-[15px] font-semibold transition ${
+              className={`flex min-h-11 cursor-pointer items-center justify-between rounded-2xl px-3.5 text-[0.9375rem] font-semibold transition ${
                 kind === id ? "bg-raised text-ink" : "text-dim hover:text-ink"
               }`}
             >

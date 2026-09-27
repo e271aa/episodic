@@ -79,20 +79,20 @@ export default function ProfilePage() {
             {time.months > 0 && (
               <span className="flex items-baseline gap-1.5">
                 <span className="ep-code text-5xl font-bold text-ink">{time.months}</span>
-                <span className="text-[15px] text-dim">meses</span>
+                <span className="text-[0.9375rem] text-dim">meses</span>
               </span>
             )}
             <span className="flex items-baseline gap-1.5">
               <span className="ep-code text-5xl font-bold text-ink">{time.days}</span>
-              <span className="text-[15px] text-dim">dias</span>
+              <span className="text-[0.9375rem] text-dim">dias</span>
             </span>
             <span className="flex items-baseline gap-1.5">
               <span className="ep-code text-5xl font-bold text-ink">{time.hours}</span>
-              <span className="text-[15px] text-dim">horas</span>
+              <span className="text-[0.9375rem] text-dim">horas</span>
             </span>
           </div>
         ) : (
-          <p className="mt-3 text-[15px] text-dim">
+          <p className="mt-3 text-[0.9375rem] text-dim">
             Disponível depois de importares o TV Time.
           </p>
         )}
@@ -120,7 +120,7 @@ export default function ProfilePage() {
             </div>
             <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
               {stats.genres.map((g) => (
-                <li key={g.name} className="flex items-center gap-1.5 text-[15px]">
+                <li key={g.name} className="flex items-center gap-1.5 text-[0.9375rem]">
                   <span
                     className="h-2.5 w-2.5 shrink-0 rounded-sm"
                     style={{ background: g.color }}
@@ -149,7 +149,7 @@ export default function ProfilePage() {
           </div>
           <div className="w-px shrink-0 bg-line" aria-hidden />
           <Link href="/library" className="flex flex-1 flex-col justify-center pl-5">
-            <p className="font-display text-[15px] font-semibold text-ink hover:underline">
+            <p className="font-display text-[0.9375rem] font-semibold text-ink hover:underline">
               Biblioteca
             </p>
             <p className="text-xs text-faint">ver tudo →</p>
@@ -170,7 +170,7 @@ export default function ProfilePage() {
             )}
             <div className="min-w-0 flex-1">
               <p className="text-xs uppercase tracking-[0.15em] text-faint">A tua série</p>
-              <p className="mt-0.5 truncate font-display text-[15px] font-semibold text-ink">
+              <p className="mt-0.5 truncate font-display text-[0.9375rem] font-semibold text-ink">
                 {stats.topShow.name}
               </p>
             </div>
@@ -186,13 +186,13 @@ export default function ProfilePage() {
             <div className="mt-4 flex items-end justify-between gap-1.5">
               {stats.perYear.map((y) => (
                 <div key={y.year} className="flex flex-1 flex-col items-center gap-1.5">
-                  <span className="ep-code text-[10px] text-faint">{y.count}</span>
+                  <span className="ep-code text-[0.6875rem] text-faint">{y.count}</span>
                   <div
                     className="w-full rounded-t-sm bg-ink/80"
                     style={{ height: `${Math.max(4, (y.count / maxYear) * 72)}px` }}
                     title={`${y.year}: ${y.count} episódios`}
                   />
-                  <span className="ep-code text-[10px] text-faint">
+                  <span className="ep-code text-[0.6875rem] text-faint">
                     {String(y.year).slice(2)}
                   </span>
                 </div>
@@ -247,7 +247,7 @@ export default function ProfilePage() {
               querer dizer alguma coisa. */}
           {confirmClear ? (
             <div className="px-5 py-4">
-              <p className="font-display text-[15px] font-semibold text-danger">
+              <p className="font-display text-[0.9375rem] font-semibold text-danger">
                 Apagar tudo o que está neste dispositivo?
               </p>
               <p className="mt-0.5 text-xs text-dim">
@@ -263,13 +263,13 @@ export default function ProfilePage() {
                     disso, o que os botões primários da app já fazem. */}
                 <button
                   onClick={() => void handleClear()}
-                  className="min-h-11 flex-1 cursor-pointer rounded-full bg-danger px-4 text-[15px] font-semibold text-tube transition hover:brightness-110 active:scale-95"
+                  className="min-h-11 flex-1 cursor-pointer rounded-full bg-danger px-4 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95"
                 >
                   Apagar tudo
                 </button>
                 <button
                   onClick={() => setConfirmClear(false)}
-                  className="min-h-11 flex-1 cursor-pointer rounded-full border border-line px-4 text-[15px] font-semibold text-dim transition hover:border-ink hover:text-ink"
+                  className="min-h-11 flex-1 cursor-pointer rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-dim transition hover:border-ink hover:text-ink"
                 >
                   Manter
                 </button>

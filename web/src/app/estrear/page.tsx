@@ -47,12 +47,12 @@ export default function EstrearPage() {
         <BotaoVoltar
           label="Voltar a A seguir"
           fallback="/series"
-          className="-mr-2 inline-flex min-h-11 items-center px-2 text-[15px] text-dim hover:text-ink hover:underline"
+          className="-mr-2 inline-flex min-h-11 items-center px-2 text-[0.9375rem] text-dim hover:text-ink hover:underline"
         >
           A seguir
         </BotaoVoltar>
       </div>
-      <p className="mt-1 text-[15px] text-dim">
+      <p className="mt-1 text-[0.9375rem] text-dim">
         O calendário dos próximos episódios das séries que segues.
       </p>
 
@@ -62,7 +62,7 @@ export default function EstrearPage() {
         <div className="flex flex-1 flex-col items-center justify-center text-center">
           <ClapperboardIcon className="h-12 w-12 text-faint" />
           <p className="mt-4 max-w-sm font-display font-semibold">Nada agendado</p>
-          <p className="mt-2 max-w-sm text-[15px] text-dim">
+          <p className="mt-2 max-w-sm text-[0.9375rem] text-dim">
             Nenhuma das tuas séries tem estreia confirmada nos próximos tempos —
             ou já estão todas terminadas.
           </p>

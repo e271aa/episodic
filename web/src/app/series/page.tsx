@@ -305,7 +305,7 @@ export default function SeriesPage() {
               </span>
               <div>
                 <p className="font-display font-semibold">{step.title}</p>
-                <p className="mt-0.5 text-[15px] text-dim">{step.text}</p>
+                <p className="mt-0.5 text-[0.9375rem] text-dim">{step.text}</p>
               </div>
             </li>
           ))}
@@ -320,7 +320,7 @@ export default function SeriesPage() {
           </Link>
           <Link
             href="/import"
-            className="flex min-h-11 cursor-pointer items-center px-3 text-[15px] text-dim transition hover:text-ink"
+            className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim transition hover:text-ink"
           >
             Vens do TV Time? Importar o histórico
           </Link>
@@ -429,14 +429,14 @@ export default function SeriesPage() {
             {watching.length === 0 ? (
               <>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-medium">Ainda não segues nenhuma série</p>
+                  <p className="text-[0.9375rem] font-medium">Ainda não segues nenhuma série</p>
                   <p className="text-xs text-dim">
                     Segue uma e ela entra aqui. O que está em “Para ver” fica fora da fila.
                   </p>
                 </div>
                 <Link
                   href="/explorar?procurar=1"
-                  className="-mr-2 inline-flex min-h-11 shrink-0 cursor-pointer items-center px-2 text-[15px] font-semibold text-ink hover:underline"
+                  className="-mr-2 inline-flex min-h-11 shrink-0 cursor-pointer items-center px-2 text-[0.9375rem] font-semibold text-ink hover:underline"
                 >
                   Procurar
                 </Link>
@@ -444,14 +444,14 @@ export default function SeriesPage() {
             ) : (
               <>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[15px] font-medium">Estás em dia</p>
+                  <p className="text-[0.9375rem] font-medium">Estás em dia</p>
                   <p className="text-xs text-dim">
                     Nenhum episódio por ver nas séries que segues.
                   </p>
                 </div>
                 <Link
                   href="/library"
-                  className="-mr-2 inline-flex min-h-11 shrink-0 cursor-pointer items-center px-2 text-[15px] font-semibold text-ink hover:underline"
+                  className="-mr-2 inline-flex min-h-11 shrink-0 cursor-pointer items-center px-2 text-[0.9375rem] font-semibold text-ink hover:underline"
                 >
                   Biblioteca
                 </Link>
@@ -555,7 +555,7 @@ export default function SeriesPage() {
                   ) : null}
                 </div>
                 <div className="p-2">
-                  <p className="truncate text-[15px] font-semibold leading-tight">
+                  <p className="truncate text-[0.9375rem] font-semibold leading-tight">
                     {show.name}
                   </p>
                   {/* duas linhas: num cartão de 104px o código e a data não
@@ -578,7 +578,7 @@ export default function SeriesPage() {
       <p className="mt-10 text-center">
         <Link
           href="/library"
-          className="inline-flex min-h-11 cursor-pointer items-center px-3 text-[15px] font-semibold text-dim hover:text-ink hover:underline"
+          className="inline-flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] font-semibold text-dim hover:text-ink hover:underline"
         >
           Ver toda a biblioteca ({shows.length}) →
         </Link>

@@ -51,7 +51,7 @@ export default function SectionHeader({
         {label}
       </h2>
       {meta != null && (
-        <span className="ep-code ml-auto shrink-0 text-[13px] text-faint">{meta}</span>
+        <span className="ep-code ml-auto shrink-0 text-[0.8125rem] text-faint">{meta}</span>
       )}
     </div>
   );
