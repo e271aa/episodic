@@ -286,7 +286,7 @@ export default function SeriesPage() {
       },
     ];
     return (
-      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 pt-16 pb-[calc(var(--dock-h)+2rem)]">
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-16">
         <div className="text-center">
           <p className="ep-code text-sm tracking-[0.3em] text-dim">EPISODIC</p>
           <h1 className="mt-3 font-display text-3xl font-bold">

@@ -353,13 +353,6 @@ const MUTACOES = [
     para: '            href="/import"\n            className="flex min-h-12',
   },
   {
-    nome: "r12-fase5/casa-vazia-sob-a-dock",
-    descricao: "a casa vazia volta a não reservar o espaço da dock",
-    ficheiro: CASA,
-    de: "px-4 pt-16 pb-[calc(var(--dock-h)+2rem)]",
-    para: "px-4 py-16",
-  },
-  {
     nome: "r12-fase5/explorar-sem-seguir",
     descricao: "a pesquisa do Explorar volta a só saber guardar \"para ver\"",
     ficheiro: EXPLORAR,
