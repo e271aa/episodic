@@ -617,8 +617,10 @@ const MUTACOES = [
     nome: "r12-fase5b3/para-ver-volta-a-branco",
     descricao: "o 'Para ver' do Explorar volta a ser uma pílula branca",
     ficheiro: DISCOVER_CARD,
-    de: "rounded-full border border-line text-xs font-semibold text-ink transition hover:border-ink active:scale-95",
-    para: "rounded-full bg-ink text-xs font-semibold text-tube transition hover:brightness-110 active:scale-95",
+    // com `flex-1`: sem ele, a âncora batia primeiro no "Seguir" da pesquisa,
+    // que tem a mesma classe — e a mutação mudava o botão errado
+    de: "flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full border border-line text-xs font-semibold text-ink transition hover:border-ink active:scale-95",
+    para: "flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full bg-ink text-xs font-semibold text-tube transition hover:brightness-110 active:scale-95",
   },
   {
     nome: "r12-fase5b3/separador-volta-a-branco",
