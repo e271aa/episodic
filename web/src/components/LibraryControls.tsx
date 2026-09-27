@@ -29,9 +29,9 @@ export default function LibraryControls({
   onFilters,
   filtrosAtivos,
 }: {
-  segment: "series" | "filmes";
-  counts: { series: number; filmes: number };
-  onSegment: (s: "series" | "filmes") => void;
+  segment: "series" | "filmes" | "listas";
+  counts: { series: number; filmes: number; listas: number };
+  onSegment: (s: "series" | "filmes" | "listas") => void;
   onSearch: () => void;
   onFilters: () => void;
   /** true = há filtro por aplicar além do predefinido; acende o ponto */
@@ -67,6 +67,9 @@ export default function LibraryControls({
           [
             ["series", "Séries", counts.series],
             ["filmes", "Filmes", counts.filmes],
+            // o 3.º separador, escolhido pelo Ruben a 27-09 (Ronda 12, Fase
+            // 5b.3) — antes as listas viviam escondidas na folha de ordenar
+            ["listas", "Listas", counts.listas],
           ] as const
         ).map(([id, label, total]) => (
           <button
@@ -78,33 +81,41 @@ export default function LibraryControls({
             }`}
           >
             {label}
-            <span className={`ep-code text-xs ${segment === id ? "text-dim" : "text-faint"}`}>
+            {/* Abaixo de 360px as contagens não cabem: com três separadores e
+                os números do Ruben (138 · 266 · 3), a 320px empurravam a
+                pesquisa e a ordenação 36px para fora da barra (medido). */}
+            <span
+              className={`ep-code hidden text-xs min-[360px]:inline ${segment === id ? "text-dim" : "text-faint"}`}
+            >
               {total}
             </span>
           </button>
         ))}
 
-        <button
-          onClick={onSearch}
-          aria-label="Procurar na biblioteca"
-          className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-95"
-        >
-          <SearchIcon className="h-[18px] w-[18px]" />
-        </button>
-        <button
-          onClick={onFilters}
-          aria-label="Filtros e ordenação"
-          className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-95"
-        >
-          <SortIcon className="h-[18px] w-[18px]" />
-          {filtrosAtivos && (
-            <span
-              aria-hidden
-              className="absolute right-2 top-2 h-[7px] w-[7px] rounded-full"
-              style={{ background: "#3fd2c8" }}
-            />
-          )}
-        </button>
+        {segment !== "listas" && (
+          <>
+            <button
+              onClick={onSearch}
+              aria-label="Procurar na biblioteca"
+              className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-95"
+            >
+              <SearchIcon className="h-[18px] w-[18px]" />
+            </button>
+            <button
+              onClick={onFilters}
+              aria-label="Filtros e ordenação"
+              className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-95"
+            >
+              <SortIcon className="h-[18px] w-[18px]" />
+              {filtrosAtivos && (
+                <span
+                  aria-hidden
+                  className="absolute right-2 top-2 h-[7px] w-[7px] rounded-full bg-ink"
+                />
+              )}
+            </button>
+          </>
+        )}
       </div>
     </>,
     document.body,

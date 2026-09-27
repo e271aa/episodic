@@ -115,7 +115,10 @@ export default function ListaPage() {
         await recursoListas.revalidar();
       },
     });
-    router.push("/listas");
+    // Direto ao separador das Listas, não a `/listas`: essa rota reencaminha
+    // (Ronda 12, Fase 5b.3), o que eram DOIS ecrãs de caminho — e o aviso
+    // de anular só atravessa um. Medido: desaparecia antes de se ver.
+    router.push("/library?tipo=listas");
   }, [list, confirmDelete, router]);
 
   const handleRemoveItem = useCallback(

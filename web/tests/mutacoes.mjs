@@ -60,6 +60,7 @@ const ADD_TO_LIST = "src/components/AddToListButton.tsx";
 const BOTTOM_NAV = "src/components/BottomNav.tsx";
 const CABECALHO = "src/components/CabecalhoEcra.tsx";
 const CONTROLOS_BIBLIOTECA = "src/components/LibraryControls.tsx";
+const LISTAS_ROTA = "src/app/listas/page.tsx";
 
 /**
  * `de` tem de existir tal e qual no ficheiro — se deixar de existir, a
@@ -635,6 +636,55 @@ const MUTACOES = [
     ficheiro: EM_DIA_PAGINA,
     de: '? "border-ink/60 bg-raised text-ink"',
     para: '? "border-ink bg-ink text-tube"',
+  },
+  {
+    nome: "r12-fase5b3/biblioteca-volta-a-2-colunas",
+    descricao: "a Biblioteca volta a abrir em 2 colunas de cartazes grandes",
+    ficheiro: LIBRARY_PAGINA,
+    de: '    "biblioteca-densidade",\n    "compacta",',
+    para: '    "biblioteca-densidade",\n    "grande",',
+  },
+  {
+    nome: "r12-fase5b3/biblioteca-sem-titulo",
+    descricao: "o título da Biblioteca volta a ser só para leitores de ecrã",
+    ficheiro: LIBRARY_PAGINA,
+    de: '<h1 className="font-display text-2xl font-bold [font-stretch:110%]">Biblioteca</h1>',
+    para: '<h1 className="sr-only">Biblioteca</h1>',
+  },
+  {
+    nome: "r12-fase5b3/filmes-para-ver-escondidos",
+    descricao: "os filmes 'para ver' voltam a ficar de fora por omissão",
+    ficheiro: LIBRARY_PAGINA,
+    de: '        "todos";',
+    para: '        "vistos";',
+  },
+  {
+    nome: "r12-fase5b3/listas-sem-separador",
+    descricao: "as Listas deixam de ser um separador da Biblioteca",
+    ficheiro: LIBRARY_PAGINA,
+    de: '  const segment: Segment = tipo === "filmes" || tipo === "listas" ? tipo : "series";',
+    para: '  const segment: Segment = tipo === "filmes" ? tipo : "series";',
+  },
+  {
+    nome: "r12-fase5b3/listas-rota-sem-desvio",
+    descricao: "/listas deixa de levar ao separador das Listas",
+    ficheiro: LISTAS_ROTA,
+    de: '    router.replace("/library?tipo=listas");',
+    para: "    void router;",
+  },
+  {
+    nome: "r12-fase5b3/apagar-lista-leva-o-aviso",
+    descricao: "apagar uma lista volta a navegar por /listas — dois ecrãs, e o aviso de anular perde-se",
+    ficheiro: LISTA,
+    de: '    router.push("/library?tipo=listas");',
+    para: '    router.push("/listas");',
+  },
+  {
+    nome: "r12-fase5b3/contagens-a-320",
+    descricao: "as contagens voltam a aparecer a 320px e empurram a barra",
+    ficheiro: CONTROLOS_BIBLIOTECA,
+    de: "ep-code hidden text-xs min-[360px]:inline",
+    para: "ep-code text-xs",
   },
 ];
 

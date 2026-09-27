@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { kvGet, kvSet, type StoredMovie } from "@/lib/db";
 import type { ShowWithProgress } from "@/lib/shows";
-import { recursoFilmes, recursoSeries, useFilmes, useSeries } from "@/lib/cache";
+import { recursoFilmes, recursoSeries, useFilmes, useListas, useSeries } from "@/lib/cache";
 import { backfillMovies, backfillShows } from "@/lib/backfill";
 import { curarNumeracao } from "@/lib/numeracao";
 import { usePref } from "@/lib/prefs";
@@ -30,11 +30,12 @@ import ShowResultCard from "@/components/ShowResultCard";
 import MovieResultCard from "@/components/MovieResultCard";
 import LibraryEmptyState from "@/components/LibraryEmptyState";
 import LibraryControls from "@/components/LibraryControls";
+import ListasConteudo from "@/components/ListasConteudo";
 import SheetPanel from "@/components/SheetPanel";
 import { PosterGridBone, TitleBone } from "@/components/Skeleton";
 import { ChevronDownIcon, SearchIcon } from "@/components/icons";
 
-type Segment = "series" | "filmes";
+type Segment = "series" | "filmes" | "listas";
 type SeriesFilter =
   | "tudo"
   | "a-ver"
@@ -144,7 +145,8 @@ function LibraryContent() {
 
   // O estado de navegação vive no URL: partilhável, sobrevive a recargas e
   // faz o gesto de recuar funcionar dentro da própria Biblioteca.
-  const segment: Segment = params.get("tipo") === "filmes" ? "filmes" : "series";
+  const tipo = params.get("tipo");
+  const segment: Segment = tipo === "filmes" || tipo === "listas" ? tipo : "series";
   const rawFiltro = params.get("filtro") as SeriesFilter | null;
   const filter: SeriesFilter =
     rawFiltro &&
@@ -156,7 +158,10 @@ function LibraryContent() {
   const movieFilter: MovieFilter =
     rawFiltro && ["vistos", "para-ver", "todos"].includes(rawFiltro)
       ? (rawFiltro as MovieFilter)
-      : "vistos";
+      : // "Todos" por omissão: com "Vistos", a Biblioteca dizia "Filmes 14" e
+        // mostrava 10, sem dizer que os 4 "para ver" estavam de fora (Ronda
+        // 12, Fase 4, achado #12)
+        "todos";
   const rawOrdem = params.get("ordem");
   const seriesSort: SeriesSort =
     rawOrdem && SERIES_SORT_IDS.has(rawOrdem as SeriesSort)
@@ -188,13 +193,17 @@ function LibraryContent() {
   // (ver a nota longa em `lib/cache.ts`).
   const shows = useSeries();
   const movies = useFilmes();
+  const listas = useListas();
   const [query, setQuery] = useState("");
   // A pesquisa e os filtros saíram do cabeçalho; vivem atrás dos ícones da
   // barra flutuante e abrem por cima do conteúdo.
   const [pesquisaAberta, setPesquisaAberta] = useState(false);
+  // 3 colunas por omissão (escolhido pelo Ruben a 27-09): com 2 colunas de
+  // cartazes grandes, 138 séries davam ~25.000px para rolar. A escolha de
+  // cada um fica guardada — muda só para quem nunca a mexeu.
   const [densidade, setDensidade] = usePref<Densidade>(
     "biblioteca-densidade",
-    "grande",
+    "compacta",
     DENSIDADES,
   );
   const [filtrosAbertos, setFiltrosAbertos] = useState(false);
@@ -334,11 +343,13 @@ function LibraryContent() {
       list = list.filter((m) => [m.name, ...(m.aliases ?? [])].some((n) => norm(n).includes(q)));
     const sorted = [...list];
     if (movieSort === "vistos") {
-      // sem data de visto (para ver), cai para a data em que adicionaste
-      sorted.sort(
-        (a, b) =>
-          (b.watchedAt ?? b.addedAt ?? "").localeCompare(a.watchedAt ?? a.addedAt ?? ""),
-      );
+      // Os "para ver" primeiro — é o que pede atenção, como o "Em curso" nas
+      // séries — pela data em que entraram; depois o que já viste, do mais
+      // recente para o mais antigo.
+      sorted.sort((a, b) => {
+        if (!a.watchedAt !== !b.watchedAt) return a.watchedAt ? 1 : -1;
+        return (b.watchedAt ?? b.addedAt ?? "").localeCompare(a.watchedAt ?? a.addedAt ?? "");
+      });
     } else if (movieSort === "recentes") {
       sorted.sort((a, b) => movieYear(b) - movieYear(a));
     } else if (movieSort === "antigos") {
@@ -462,7 +473,7 @@ function LibraryContent() {
       q
         ? null
         : groupSorted(filteredMovies, {
-            vistos: (m: StoredMovie) => periodLabel(m.watchedAt),
+            vistos: (m: StoredMovie) => (m.watchedAt ? periodLabel(m.watchedAt) : "Para ver"),
             recentes: (m: StoredMovie) => decadeLabel(movieYear(m)),
             antigos: (m: StoredMovie) => decadeLabel(movieYear(m)),
             az: (m: StoredMovie) => letterLabel(m.name),
@@ -483,18 +494,20 @@ function LibraryContent() {
   ];
 
   const MOVIE_FILTERS: { id: MovieFilter; label: string }[] = [
+    { id: "todos", label: "Todos" },
     { id: "vistos", label: "Vistos" },
     { id: "para-ver", label: "Para ver" },
-    { id: "todos", label: "Todos" },
   ];
 
   return (
     <main className="mx-auto w-full max-w-2xl px-5 pt-10 pb-[calc(var(--dock-h)+5.5rem)]">
-      {/* Sem título visível de propósito (ver #12 na Fase 5b.3) — mas um
-          leitor de ecrã precisa de saber onde está. */}
-      <h1 className="sr-only">Biblioteca</h1>
+      <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Biblioteca</h1>
 
-      {loading ? (
+      {segment === "listas" ? (
+        <div className="mt-4">
+          <ListasConteudo />
+        </div>
+      ) : loading ? (
         <PosterGridBone count={9} />
       ) : showing > 0 ? (
         segment === "series" ? (
@@ -653,14 +666,18 @@ function LibraryContent() {
 
       <LibraryControls
         segment={segment}
-        counts={{ series: shows?.length ?? 0, filmes: movies?.length ?? 0 }}
+        counts={{
+          series: shows?.length ?? 0,
+          filmes: movies?.length ?? 0,
+          listas: listas?.length ?? 0,
+        }}
         onSegment={changeSegment}
         onSearch={() => setPesquisaAberta(true)}
         onFilters={() => setFiltrosAbertos(true)}
         filtrosAtivos={
           segment === "series"
             ? filter !== "tudo" || seriesSort !== "vistos"
-            : movieFilter !== "vistos" || movieSort !== "vistos" || decade !== null
+            : movieFilter !== "todos" || movieSort !== "vistos" || decade !== null
         }
       />
 
@@ -753,7 +770,7 @@ function LibraryContent() {
               {MOVIE_FILTERS.map((f) => (
                 <button
                   key={f.id}
-                  onClick={() => setParams({ filtro: f.id === "vistos" ? null : f.id })}
+                  onClick={() => setParams({ filtro: f.id === "todos" ? null : f.id })}
                   className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
                     movieFilter === f.id
                       ? "border-ink/60 bg-raised text-ink"
@@ -840,18 +857,6 @@ function LibraryContent() {
           ))}
         </div>
 
-        {/* As Listas perderam a entrada que tinham no cabeçalho quando o
-            cabeçalho saiu de cena (Fase T). Ficam aqui — são outra forma de
-            ver a mesma biblioteca, não um filtro dela, mas é o painel que
-            sobrou depois do cromo todo ter descido para a barra flutuante. */}
-        <SectionHeader label="Coleções" className="mt-6" />
-        <Link
-          href="/listas"
-          className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-between rounded-full border border-line px-4 text-[0.9375rem] text-dim transition hover:border-ink hover:text-ink"
-        >
-          As tuas listas
-          <span className="text-faint">→</span>
-        </Link>
       </SheetPanel>
     </main>
   );

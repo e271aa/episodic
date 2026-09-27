@@ -52,7 +52,8 @@ test("apagar uma lista dá para anular, com o mesmo conteúdo", async ({ page })
   // dois toques, de propósito — a confirmação fica
   await page.getByRole("button", { name: /Apagar lista/ }).click();
   await page.getByRole("button", { name: /Toca outra vez/ }).click();
-  await expect(page).toHaveURL(/\/listas$/);
+  // as listas são o 3.º separador da Biblioteca desde a Fase 5b.3
+  await expect(page).toHaveURL(/\/library\?tipo=listas$/);
   // pelo link da lista, não por texto solto: o próprio aviso de anular mostra
   // o nome dela, e um `getByText` apanhava-o
   const linkDaLista = page.locator('a[href="/listas/l-1"]');
