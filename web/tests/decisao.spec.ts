@@ -250,7 +250,12 @@ test("os géneros da série aparecem em pt-PT, não como veio do fornecedor", as
   await expect(page.getByText("Ação & Aventura")).toBeVisible();
 });
 
-test("'Melhor maratona' com um episódio não diz '1 episódios'", async ({ page }) => {
+test("'Melhor maratona' com um só episódio não aparece — superada pela 5e", async ({ page }) => {
+  // Esta corrigia só a gramática ("1 episódios"). A Fase 5e da Ronda 12
+  // (AUDITORIA.md) foi mais longe: um episódio sozinho não é maratona
+  // nenhuma, e a secção deixou de aparecer para esse caso — a frase que este
+  // teste protegia já não tem como acontecer (ver `advancedStats.spec.ts`
+  // seria o nome, mas fica em `p3.spec.ts`, o limiar em si).
   const dia = new Date().toISOString().slice(0, 10);
   await semear(page, {
     series: [{ uuid: "s-1", name: "Serie Um", totalEpisodes: 1 }],
@@ -258,8 +263,7 @@ test("'Melhor maratona' com um episódio não diz '1 episódios'", async ({ page
   });
   await page.goto("/estatisticas");
   await expect(page.getByText("1 episódios")).toHaveCount(0);
-  await expect(page.getByText("Melhor maratona")).toBeVisible();
-  await expect(page.getByText("episódio", { exact: true })).toBeVisible();
+  await expect(page.getByText("Melhor maratona")).toHaveCount(0);
 });
 
 test("o import não usa vocabulário de computador ('clica', 'browser')", async ({ page }) => {

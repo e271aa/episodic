@@ -459,7 +459,7 @@ function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) 
 
       {!searching && data?.taste.isEmpty && !catalogoAberto && (
         <p className="relative z-30 shrink-0 px-4 pt-1 text-center text-xs text-faint">
-          Ainda não sei o que gostas — isto afina-se à medida que marcares episódios.
+          Ainda não sei do que gostas — isto afina-se à medida que marcares episódios.
         </p>
       )}
 

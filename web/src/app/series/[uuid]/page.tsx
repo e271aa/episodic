@@ -504,7 +504,15 @@ export default function ShowPage() {
   const activity = useMemo(() => {
     const dates = [...watched.values()].map((w) => w.watchedAt).sort();
     if (dates.length === 0) return null;
-    return { first: dates[0].slice(0, 10), last: dates[dates.length - 1].slice(0, 10) };
+    // Comparar os ISO crus (ordenam bem na mesma) e só formatar no fim —
+    // "2024-06-26 → 2024-07-01" tinha escapado à limpeza da 5b.1.
+    const primeiro = dates[0].slice(0, 10);
+    const ultimo = dates[dates.length - 1].slice(0, 10);
+    return {
+      mesmoDia: primeiro === ultimo,
+      first: curta(dates[0]),
+      last: curta(dates[dates.length - 1]),
+    };
   }, [watched]);
 
   if (show === undefined) {
@@ -1114,9 +1122,7 @@ export default function ShowPage() {
                 <p className="text-[0.9375rem] text-dim">episódios vistos</p>
                 {activity && (
                   <p className="ep-code mt-1 text-xs text-faint">
-                    {activity.first === activity.last
-                      ? activity.first
-                      : `${activity.first} → ${activity.last}`}
+                    {activity.mesmoDia ? activity.first : `${activity.first} → ${activity.last}`}
                   </p>
                 )}
               </div>

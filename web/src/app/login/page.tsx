@@ -4,9 +4,31 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isCloudConfigured } from "@/lib/supabase";
 import { signInWithEmail, signInWithPassword, verifyEmailCode } from "@/lib/cloud";
-import { TvIcon } from "@/components/icons";
+import { TvIcon, ArrowLeftIcon } from "@/components/icons";
+import BotaoVoltar from "@/components/BotaoVoltar";
 
 type Modo = "password" | "codigo";
+
+/**
+ * O Entrar não tinha saída nenhuma: sem dock (escondida de propósito) e sem
+ * recuar, quem chegasse aqui por engano — ou mudasse de ideias a meio —
+ * ficava preso (Ronda 12, achado #14 da 5b.4). `useVoltar` desfaz a
+ * navegação quando há uma para desfazer; sem histórico dentro da app, sobe
+ * para `/series` — que, com sessão nenhuma e cloud configurada, volta a
+ * mandar para aqui. Não é um erro: é a verdade da app, não há mais nada
+ * para ver sem entrar.
+ */
+function BotaoDeSair() {
+  return (
+    <BotaoVoltar
+      label="Voltar"
+      fallback="/series"
+      className="absolute left-4 top-[max(1rem,env(safe-area-inset-top))] flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-90"
+    >
+      <ArrowLeftIcon className="h-5 w-5" />
+    </BotaoVoltar>
+  );
+}
 
 function LoginForm() {
   const router = useRouter();
@@ -67,7 +89,8 @@ function LoginForm() {
 
   if (!isCloudConfigured()) {
     return (
-      <main className="tela-cheia flex flex-col items-center justify-center px-6 text-center">
+      <main className="tela-cheia relative flex flex-col items-center justify-center px-6 text-center">
+        <BotaoDeSair />
         <p className="font-display text-lg font-bold">Cloud não configurada</p>
         <p className="mt-2 max-w-xs text-[0.9375rem] text-dim">
           A app está a correr só em modo local. Não há conta para iniciar sessão.
@@ -77,7 +100,8 @@ function LoginForm() {
   }
 
   return (
-    <main className="tela-cheia flex flex-col justify-center px-5">
+    <main className="tela-cheia relative flex flex-col justify-center px-5">
+      <BotaoDeSair />
       <div className="mx-auto w-full max-w-sm">
         <div className="bars mx-auto h-14 w-14 rounded-2xl" aria-hidden />
         <h1 className="mt-5 text-center font-display text-3xl font-bold [font-stretch:110%]">

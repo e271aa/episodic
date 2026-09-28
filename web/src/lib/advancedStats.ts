@@ -55,9 +55,14 @@ export function computeAdvancedStats(
     else byDay.set(day, [ep]);
   }
 
-  // maratona: o dia com mais episódios vistos (de qualquer série)
+  // maratona: o dia com mais episódios vistos (de qualquer série). Sem
+  // limiar, um único episódio marcado num dia sozinho já era "a melhor
+  // maratona" — um recorde que humilha em vez de festejar (5b.4). Uma
+  // maratona é mais do que um episódio, por definição.
+  const LIMIAR_MARATONA = 2;
   let bestBinge: BingeDay | null = null;
   for (const [date, eps] of byDay) {
+    if (eps.length < LIMIAR_MARATONA) continue;
     const perShow = new Map<string, number>();
     for (const ep of eps) perShow.set(ep.showUuid, (perShow.get(ep.showUuid) ?? 0) + 1);
     let top: { uuid: string; count: number } | null = null;
