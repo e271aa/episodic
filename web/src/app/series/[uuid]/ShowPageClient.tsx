@@ -129,7 +129,7 @@ const ENDED_STATUSES = new Set(["Ended", "Canceled", "Cancelled"]);
 // roxo = em dia mas terminou, branco = a meio.
 function stateColor(complete: boolean, status: string | null | undefined): string {
   if (!complete) return "var(--color-ink)";
-  return ENDED_STATUSES.has(status ?? "") ? "#d24bd2" : "#37c837";
+  return ENDED_STATUSES.has(status ?? "") ? "var(--color-smpte-magenta)" : "var(--color-smpte-green)";
 }
 
 /** O rótulo que acompanha a barra de cor no cabeçalho — diz em palavras o
@@ -636,7 +636,7 @@ export default function ShowPage() {
               aria-hidden
               data-testid="heroi-traco"
               className="h-[14px] w-[3px] shrink-0 rounded-full"
-              style={{ background: buracos.total > 0 ? "#3fd2c8" : accent }}
+              style={{ background: buracos.total > 0 ? "var(--color-smpte-cyan)" : accent }}
             />
             <p className="ep-code text-[0.8125rem] text-dim">{label}</p>
           </div>
@@ -854,7 +854,7 @@ export default function ShowPage() {
                           <span
                             aria-hidden
                             className="absolute right-1.5 top-[7px] h-[7px] w-[7px] rounded-full"
-                            style={{ background: "#3fd2c8" }}
+                            style={{ background: "var(--color-smpte-cyan)" }}
                           />
                         )}
                         <span className="flex h-full flex-col items-center justify-center gap-0.5">

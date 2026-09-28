@@ -10,7 +10,7 @@ import type { ReactNode } from "react";
  * cabeçalho sorteado entre as sete contradizia a Bars Rule — medido na
  * Fase 4 da Ronda 12 (AUDITORIA.md), decidido pelo Ruben a 27-09.
  */
-const BAR_COLORS = ["#c8c8c8", "#e6c832", "#e6483c", "#3c46e6"];
+const BAR_COLORS = ["var(--color-smpte-gray)", "var(--color-smpte-yellow)", "var(--color-smpte-red)", "var(--color-smpte-blue)"];
 
 export function sectionColor(seed: string): string {
   let n = 0;

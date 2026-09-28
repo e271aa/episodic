@@ -109,11 +109,11 @@ const ESTADOS = [
   "Já não sigo",
   "Arquivadas",
 ];
-const CINZA = "#8a8880";
+const CINZA = "var(--color-faint)";
 const COR_ESTADO: Record<string, string> = {
   "Em curso": "var(--color-ink)",
   "Por começar": CINZA,
-  Completas: "#d24bd2",
+  Completas: "var(--color-smpte-magenta)",
   "Para ver": CINZA,
   "Já não sigo": CINZA,
   Arquivadas: CINZA,

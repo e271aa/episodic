@@ -16,6 +16,16 @@
 
   --color-danger: #e5484d;
 
+  /* As barras SMPTE como tokens (Ronda 12, Fase 5e): estavam escritas à mão
+     em 12 sítios, e o audit contava-as como cor fora do sistema. */
+  --color-smpte-gray: #c8c8c8;
+  --color-smpte-yellow: #e6c832;
+  --color-smpte-cyan: #3fd2c8;
+  --color-smpte-green: #37c837;
+  --color-smpte-magenta: #d24bd2;
+  --color-smpte-red: #e6483c;
+  --color-smpte-blue: #3c46e6;
+
   --font-display: var(--font-archivo);
   --font-body: var(--font-schibsted);
   --font-code: var(--font-spline-mono);

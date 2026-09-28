@@ -219,7 +219,7 @@ export default function ProfilePage() {
             SMPTE, ao lado do "Apagar dados locais". Ter o mesmo vermelho a
             marcar uma secção e a assinalar perigo tira o significado ao
             segundo — e o significado é a única razão de haver cor nesta app. */}
-        <SectionHeader label="Dados" color="#3c46e6" />
+        <SectionHeader label="Dados" color="var(--color-smpte-blue)" />
         <Panel className="mt-3">
           <PanelRow
             titulo="Importar do TV Time"

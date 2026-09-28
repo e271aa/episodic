@@ -69,6 +69,7 @@ const ADVANCED_STATS = "src/lib/advancedStats.ts";
 const VAZIO_BIBLIOTECA = "src/components/LibraryEmptyState.tsx";
 const WATCHNEXT_CARD = "src/components/WatchNextCard.tsx";
 const LAYOUT = "src/app/layout.tsx";
+const POSTER = "src/components/Poster.tsx";
 const CASA_CASCA = "src/app/series/page.tsx";
 const ESTREAR = "src/app/estrear/EstrearPageClient.tsx";
 const FILME_PAGINA = "src/app/movies/[key]/MoviePageClient.tsx";
@@ -428,8 +429,8 @@ const MUTACOES = [
     nome: "r12-fase5b/cabecalhos-6-cores",
     descricao: "os cabeçalhos de secção voltam a sortear entre as 6 cores, incluindo estados",
     ficheiro: SECTION_HEADER,
-    de: 'const BAR_COLORS = ["#c8c8c8", "#e6c832", "#e6483c", "#3c46e6"];',
-    para: 'const BAR_COLORS = ["#c8c8c8", "#e6c832", "#d24bd2", "#37c837", "#3c46e6", "#e6483c"];',
+    de: 'const BAR_COLORS = ["var(--color-smpte-gray)", "var(--color-smpte-yellow)", "var(--color-smpte-red)", "var(--color-smpte-blue)"];',
+    para: 'const BAR_COLORS = ["var(--color-smpte-gray)", "var(--color-smpte-yellow)", "var(--color-smpte-magenta)", "var(--color-smpte-green)", "var(--color-smpte-blue)", "var(--color-smpte-red)"];',
   },
   {
     nome: "r12-fase5b/hover-ambar-volta",
@@ -914,7 +915,7 @@ const MUTACOES = [
     nome: "r12-fase5d/traco-sem-ciano",
     descricao: 'com buracos, o traço do detalhe volta a não ser ciano',
     ficheiro: DETALHE,
-    de: 'buracos.total > 0 ? "#3fd2c8" : accent',
+    de: 'buracos.total > 0 ? "var(--color-smpte-cyan)" : accent',
     para: 'accent',
   },
   {
@@ -1005,8 +1006,8 @@ const MUTACOES = [
     nome: "r12-fase5d/espetro-com-estados",
     descricao: 'o espetro de géneros volta a usar verde, ciano e magenta',
     ficheiro: STATS_PERFIL,
-    de: 'const SPECTRUM = ["#e6c832", "#e6483c", "#3c46e6", "#c8c8c8"];',
-    para: 'const SPECTRUM = ["#e6483c", "#e6c832", "#37c837", "#3fd2c8", "#3c46e6", "#d24bd2"];',
+    de: 'const SPECTRUM = ["var(--color-smpte-yellow)", "var(--color-smpte-red)", "var(--color-smpte-blue)", "var(--color-smpte-gray)"];',
+    para: 'const SPECTRUM = ["var(--color-smpte-red)", "var(--color-smpte-yellow)", "var(--color-smpte-green)", "var(--color-smpte-cyan)", "var(--color-smpte-blue)", "var(--color-smpte-magenta)"];',
   },
   // ── Ronda 12, Fase 8: o que o Safari do iOS mostrou ────────
   {
@@ -1130,6 +1131,13 @@ const MUTACOES = [
     ficheiro: REVER_PAGINA,
     de: 'flex-1 flex-col px-4 pt-8 pb-8">',
     para: 'flex-1 flex-col px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">',
+  },
+  {
+    nome: "r12-fase5e/capa-partida-brilha-para-sempre",
+    descricao: "uma capa que falha volta a ficar a brilhar, partida, para sempre",
+    ficheiro: POSTER,
+    de: "        onError={() => setFalhou(true)}\n",
+    para: "",
   },
 ];
 

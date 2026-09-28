@@ -285,3 +285,16 @@ test("o detalhe de filme e o Rever não reservam a dock outra vez — a moldura 
     expect(reserva, rota).toBeLessThanOrEqual(40);
   }
 });
+
+test("uma capa que falha a carregar não fica a brilhar para sempre nem partida", async ({
+  page,
+}) => {
+  // Sem `onError`, o brilho de "a carregar" ficava para sempre e a imagem
+  // partida do browser aparecia por cima do nome que fazia de plano B.
+  await semear(page, { series: [{ uuid: "s-1", name: "Serie Um", posterPath: "/cartaz.jpg" }] });
+  await page.route(/\/_next\/image/, (rota) => rota.fulfill({ status: 404, body: "" }));
+  await page.goto("/library");
+  await expect(page.getByText("Serie Um").first()).toBeVisible();
+  await expect(page.locator("main img")).toHaveCount(0);
+  await expect(page.locator(".poster-shimmer")).toHaveCount(0);
+});

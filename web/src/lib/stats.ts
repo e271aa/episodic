@@ -79,8 +79,8 @@ function horasDeAntena(
 // estados (em dia, buracos, terminada), e num espetro de géneros mentiam
 // (Bars Rule; escolhido pelo Ruben, Ronda 12, 5d). Os 4 géneros mais vistos
 // ficam com as cores, o resto junta-se em "Outros", num cinza esbatido.
-const SPECTRUM = ["#e6c832", "#e6483c", "#3c46e6", "#c8c8c8"];
-const OUTROS_COLOR = "#8a8880";
+const SPECTRUM = ["var(--color-smpte-yellow)", "var(--color-smpte-red)", "var(--color-smpte-blue)", "var(--color-smpte-gray)"];
+const OUTROS_COLOR = "var(--color-faint)";
 
 // Nomes de género dos fornecedores muitas vezes vêm em inglês (sobretudo
 // TVmaze) — traduz para pt-PT e assim fundem-se com os que já vêm traduzidos.

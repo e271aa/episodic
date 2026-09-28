@@ -43,9 +43,13 @@ export default function Poster({
   draggable = true,
 }: PosterProps) {
   const [loaded, setLoaded] = useState(false);
+  // Uma capa que falha (sem rede, removida da TMDB) sai de cena: sem isto o
+  // brilho de "a carregar" ficava para sempre, e o plano B — o nome, ou o
+  // fundo — nunca se lia por baixo de uma imagem partida.
+  const [falhou, setFalhou] = useState(false);
   const imgRef = useRef<HTMLImageElement>(null);
   const src = imageUrl(path, size);
-  if (!src) return null;
+  if (!src || falhou) return null;
 
   // Se a imagem já está na cache do browser (ex.: o mesmo poster que acabou
   // de aparecer na grelha, agora reaberto no detalhe), o `<img>` carrega
@@ -76,6 +80,7 @@ export default function Poster({
         priority={priority}
         loading={priority ? undefined : "lazy"}
         onLoad={() => setLoaded(true)}
+        onError={() => setFalhou(true)}
         draggable={draggable}
         className={`${className} transition-opacity duration-300 ${loaded ? "opacity-100" : "opacity-0"}`}
       />

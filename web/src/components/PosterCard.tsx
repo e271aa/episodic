@@ -60,7 +60,7 @@ function progressBarColor(
   status: string | null | undefined,
 ): string {
   if (watched < total) return "var(--color-ink)";
-  return ENDED_STATUSES.has(status ?? "") ? "#d24bd2" : "#37c837";
+  return ENDED_STATUSES.has(status ?? "") ? "var(--color-smpte-magenta)" : "var(--color-smpte-green)";
 }
 
 export default function PosterCard({

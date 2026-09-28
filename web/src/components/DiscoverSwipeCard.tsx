@@ -15,8 +15,8 @@ export interface DeckItem {
 const THRESHOLD = 100;
 const STAMP_FULL = 70;
 
-const YES = "#37c837";
-const NO = "#e8564a";
+const YES = "var(--color-smpte-green)";
+const NO = "var(--color-smpte-red)";
 
 
 /**
