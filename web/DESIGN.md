@@ -420,10 +420,31 @@ largura do progresso.
 
 ### Signature: o ritual de marcar
 Marcar um episódio: o círculo salta (320ms, com mola) e um anel de luz
-expande-se e desaparece. Fechar uma temporada é a única festa: o fio SMPTE
-atravessa a pastilha uma vez (520ms). Tudo se anula por um aviso que sobe do
-fundo, com uma barra que se esvazia enquanto a anulação ainda é possível.
-Com `prefers-reduced-motion`, nada disto se mexe.
+expande-se e desaparece. **Na casa**, a barra de progresso acende uma vez com
+as cores SMPTE, da esquerda para a direita, e apaga (620ms) — cor só onde há
+progresso —, o ✓ do botão salta, e o episódio troca com um desfoque curto
+(escolhido pelo Ruben, Ronda 12, Fase 6). Só marcar acende a barra: anular
+troca o episódio, mas não festeja. Fechar uma temporada continua a ser a
+festa maior: o fio SMPTE atravessa a pastilha inteira (520ms). Tudo se anula
+por um aviso que sobe do fundo, sem ressalto, e desce pelo mesmo caminho,
+com uma barra que se esvazia enquanto a anulação ainda é possível.
+
+### Movimento
+- **Curvas:** `--ease-out` = `cubic-bezier(0.23, 1, 0.32, 1)` (o `ease-out`
+  do Tailwind passa a esta) para o que entra e responde; `--ease-drawer` =
+  `cubic-bezier(0.32, 0.72, 0, 1)`, a do iOS, para o que sobe do fundo. As
+  do browser demoram a arrancar.
+- **Durações:** toque 120ms; trocas 160–220ms; folhas 320ms a subir e 200ms
+  a descer. Sai-se sempre mais depressa do que se entra.
+- **Folhas:** sobem do fundo e descem pelo mesmo caminho; fecham-se a
+  arrastar a cabeça para baixo — um piparote chega (> 0,11 px/ms), ou 30% da
+  altura devagar. Para cima cedem com atrito, não batem numa parede.
+- **Baralho:** decide aos 100px de arrasto, ou num piparote de mais de 24px.
+- **Nada com mola a passar do alvo**, exceto o ✓ que salta.
+- **`prefers-reduced-motion`:** tiram-se as deslocações (subir, descer,
+  varrer, saltar); ficam a opacidade e a cor, que dizem que alguma coisa
+  mudou. A contagem do anular corre sempre — é a funcionalidade, não
+  decoração.
 
 ### Signature: a lista de episódios
 Corridas de quatro ou mais episódios vistos colapsam numa linha ("E01–E19 ·
@@ -460,4 +481,6 @@ com um círculo tracejado, e não se podem marcar.
 - **Don't** baixar um campo de texto dos 16px.
 - **Don't** fazer um modo claro.
 - **Don't** fazer festa a cada toque: a animação grande é só para fechar
-  uma temporada.
+  uma temporada; a barra da casa é uma linha de 3px, não o ecrã.
+- **Don't** fazer desaparecer de golpe o que entrou a mexer-se: sai pelo
+  caminho por onde entrou.
