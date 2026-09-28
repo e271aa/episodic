@@ -3,6 +3,7 @@
 import { useRef, useState } from "react";
 import Poster from "@/components/Poster";
 import { formatEpCode } from "@/lib/watchnext";
+import { TvIcon } from "@/components/icons";
 import type { MetaEpisode } from "@/lib/metadata";
 
 export interface SwipeCardProps {
@@ -140,8 +141,10 @@ export default function SwipeCard({
             draggable={false}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-raised p-4 text-center font-display text-lg font-bold text-dim">
-            {showName}
+          // o nome já é o título do cartão, por baixo — aqui só o sinal de
+          // que falta a arte
+          <div className="absolute inset-0 flex items-center justify-center bg-raised text-faint">
+            <TvIcon className="h-12 w-12" />
           </div>
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-tube via-tube/50 to-transparent" />
@@ -189,14 +192,16 @@ export default function SwipeCard({
           não
         </div>
 
-        {/* Qual episódio estou a decidir: o código é o protagonista, porque é
-            isso que fica marcado; a série é só o contexto por cima. O
-            `pb` sobe o texto acima das ações flutuantes e da dock — sem
-            isto o título ficava tapado por baixo delas. */}
+        {/* De que série é, primeiro — como no herói da casa. Estava ao
+            contrário: a série a 12px, cinza, em maiúsculas sobre a arte, e o
+            nome do episódio a 24px ("Episódio 5" não diz nada a ninguém;
+            Ronda 12, 5b.4, P1 #5). O código continua a ser o que fica
+            marcado, no chip. O `pb` sobe o texto acima das ações flutuantes
+            e da dock — sem isto o título ficava tapado por baixo delas. */}
         <div className="relative flex h-full flex-col justify-end px-5 pt-5 pb-[calc(var(--dock-h)+7rem)]">
-          <p className="truncate font-display text-xs font-semibold uppercase tracking-[0.18em] text-dim [font-stretch:80%]">
+          <h2 className="line-clamp-2 font-display text-2xl font-bold leading-tight text-ink [font-stretch:105%]">
             {showName}
-          </p>
+          </h2>
           <div className="mt-2 flex items-center gap-2.5">
             <span className="ep-code rounded-lg bg-ink px-2.5 py-1 text-sm font-bold text-tube">
               {formatEpCode(episode.season, episode.episode)}
@@ -207,9 +212,9 @@ export default function SwipeCard({
               </span>
             )}
           </div>
-          <h2 className="mt-2 font-display text-2xl font-bold leading-tight text-ink [font-stretch:105%]">
+          <p className="mt-2 line-clamp-2 text-[0.9375rem] font-medium leading-snug text-ink">
             {episode.name}
-          </h2>
+          </p>
           {/* onde é que este episódio cai na série — sem isto, "visto" decide-se
               às cegas: é o próximo por ver, mas não se sabe de quantos */}
           <p className="ep-code mt-2 text-xs text-dim">
