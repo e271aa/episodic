@@ -4,7 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { getWatchedForShow, kvGet, kvSet, markWatched, unmarkWatched, updateShow } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
-import { useNextUp, useSeries } from "@/lib/cache";
+import { useFilmes, useNextUp, useSeries } from "@/lib/cache";
 import { buildUpcomingCalendar, type UpcomingEntry } from "@/lib/upcoming";
 import { hasTmdb } from "@/lib/metadata";
 import { backfillShows } from "@/lib/backfill";
@@ -21,6 +21,7 @@ import {
 import { pushUndo } from "@/lib/undo";
 import WatchNextCard from "@/components/WatchNextCard";
 import TonightHero from "@/components/TonightHero";
+import OuEntao, { type Alternativa } from "@/components/OuEntao";
 import Poster from "@/components/Poster";
 import SectionHeader from "@/components/SectionHeader";
 import { CheckIcon, SearchIcon } from "@/components/icons";
@@ -53,6 +54,8 @@ export default function SeriesPage() {
    * regressão a sério (Fase Y).
    */
   const cacheSeries = useSeries();
+  // só para o "Ou então": o filme mais recente da lista "para ver"
+  const filmes = useFilmes();
   const [proprias, setShows] = useState<ShowWithProgress[] | null>(null);
   const shows = proprias ?? cacheSeries;
   /** Mesma sobreposição das séries: a cache é o que se vê no primeiro frame. */
@@ -399,6 +402,41 @@ export default function SeriesPage() {
   const notStartedRest =
     activeHero || staleQueue[0] ? notStartedQueue : notStartedQueue.slice(1);
 
+  // "Ou então" (variante C, escolhida pelo Ruben a 27-09): a próxima série
+  // da fila, fora a do herói, e o filme que entrou mais recentemente na
+  // lista "para ver". O herói dava uma resposta só — e os filmes nunca
+  // entravam na decisão da noite.
+  const outraSerie = (
+    [
+      ...restActive.map((s) => ["continuar", s] as const),
+      ...staleRest.map((s) => ["retomar", s] as const),
+      ...notStartedRest.map((s) => ["começar", s] as const),
+    ] as const
+  )[0];
+  const filmeParaVer = (filmes ?? [])
+    .filter((m) => !m.watchedAt)
+    .sort((a, b) => (b.addedAt ?? "").localeCompare(a.addedAt ?? ""))[0];
+  const alternativas: Alternativa[] = [];
+  if (outraSerie) {
+    const [tipo, s] = outraSerie;
+    // só o porquê ("retomar"): o código do episódio não cabia num cartão de
+    // meia largura e ficava cortado ("retomar · S01…"); vê-se ao abrir
+    alternativas.push({
+      href: `/series/${s.uuid}`,
+      titulo: s.name,
+      rotulo: tipo,
+      posterPath: s.posterPath,
+    });
+  }
+  if (filmeParaVer) {
+    alternativas.push({
+      href: `/movies/${filmeParaVer.key}`,
+      titulo: filmeParaVer.name,
+      rotulo: "filme",
+      posterPath: filmeParaVer.posterPath ?? null,
+    });
+  }
+
   return (
     <main className="mx-auto w-full max-w-2xl px-4 py-8">
       {nextUp === null ? (
@@ -478,6 +516,7 @@ export default function SeriesPage() {
                   ? "Retomar onde ficaste"
                   : "Começar do início"
             }
+            alternativas={<OuEntao alternativas={alternativas} />}
             onCheck={(season, episode) => handleCheck(heroShow.uuid, season, episode)}
           />
           {restActive.length > 0 && (

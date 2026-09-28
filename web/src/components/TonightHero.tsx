@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { imageUrl } from "@/lib/tmdb";
@@ -25,6 +25,8 @@ export interface TonightHeroProps {
    * ver (Ronda 12, Fase 4).
    */
   seriesPorVer?: number;
+  /** "Ou então" — por baixo do "Marcar visto", ainda na primeira dobra */
+  alternativas?: ReactNode;
   onCheck: (season: number, episode: number) => Promise<void>;
 }
 
@@ -46,6 +48,7 @@ export default function TonightHero({
   watchedCount,
   totalEpisodes,
   seriesPorVer = 0,
+  alternativas,
   onCheck,
 }: TonightHeroProps) {
   const [checking, setChecking] = useState(false);
@@ -172,6 +175,8 @@ export default function TonightHero({
           )}
           Marcar visto
         </button>
+
+        {alternativas}
       </div>
     </div>
   );

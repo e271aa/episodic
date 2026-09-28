@@ -688,6 +688,20 @@ const MUTACOES = [
     de: "ep-code hidden text-xs min-[360px]:inline",
     para: "ep-code text-xs",
   },
+  {
+    nome: "r12-fase5b3/casa-sem-ou-entao",
+    descricao: "a casa volta a dar uma resposta só, sem alternativas por baixo do herói",
+    ficheiro: CASA,
+    de: "            alternativas={<OuEntao alternativas={alternativas} />}\n",
+    para: "",
+  },
+  {
+    nome: "r12-fase5b3/ou-entao-filme-mais-antigo",
+    descricao: "o 'Ou então' volta a propor o filme mais antigo da lista em vez do mais recente",
+    ficheiro: CASA,
+    de: '.sort((a, b) => (b.addedAt ?? "").localeCompare(a.addedAt ?? ""))[0];',
+    para: '.sort((a, b) => (a.addedAt ?? "").localeCompare(b.addedAt ?? ""))[0];',
+  },
 ];
 
 const filtro = process.argv[2];
