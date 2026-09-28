@@ -1,8 +1,8 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getShows, kvGet, kvSet } from "@/lib/db";
-import { getUser, pullAndMerge, type PullProgress } from "@/lib/cloud";
+import { getUser, onAuthChange, pullAndMerge, type PullProgress } from "@/lib/cloud";
 import { isCloudConfigured } from "@/lib/supabase";
 import { curarNumeracao } from "@/lib/numeracao";
 
@@ -21,45 +21,66 @@ type Estado =
  *
  * Corre uma vez por dispositivo: com sessão iniciada e biblioteca local vazia,
  * traz tudo e mostra a contagem a subir, para se perceber que está a trabalhar.
+ *
+ * Tenta ao abrir a app **e quando a sessão começa**. Só ao abrir não chegava
+ * (Ronda 12, Fase 8, visto no Safari do iOS): num dispositivo novo a app abre
+ * no login, ainda sem sessão, e desiste; depois de entrar, o login navega
+ * dentro da app, sem recarregar, e ninguém voltava a chamar isto — a casa
+ * ficava no "primeiro uso" até alguém recarregar a página.
  */
 export default function FirstSync() {
   const [estado, setEstado] = useState<Estado>({ fase: "inativo" });
+  // o Supabase anuncia a sessão inicial ao subscrever, ao mesmo tempo que o
+  // arranque — sem isto, a biblioteca descia duas vezes em paralelo
+  const aCorrer = useRef(false);
 
   const correr = useCallback(async () => {
-    if (!isCloudConfigured()) return;
-    if (await kvGet<boolean>(DONE_KEY)) return;
-
-    const user = await getUser();
-    if (!user) return;
-
-    // Já há biblioteca local (ex.: importação do TV Time antes de criar conta):
-    // não é preciso ecrã nenhum, o sync normal trata do resto em segundo plano.
-    const locais = await getShows();
-    if (locais.length > 0) {
-      await kvSet(DONE_KEY, true);
-      return;
-    }
-
-    setEstado({
-      fase: "a-trazer",
-      p: { shows: 0, episodes: 0, movies: 0, merging: false },
-    });
+    if (aCorrer.current) return;
+    aCorrer.current = true;
     try {
-      await pullAndMerge((p) => setEstado({ fase: "a-trazer", p }));
-      // o que veio de uma cloud antiga pode vir sem numeração — antes de a
-      // app ler uma única temporada, devolve-a às séries que a perderam
-      await curarNumeracao().catch(() => 0);
-      await kvSet(DONE_KEY, true);
-      // recarrega para os ecrãs lerem o IndexedDB já cheio
-      window.location.reload();
-    } catch {
-      setEstado({ fase: "erro" });
+      if (!isCloudConfigured()) return;
+      if (await kvGet<boolean>(DONE_KEY)) return;
+
+      const user = await getUser();
+      if (!user) return;
+
+      // Já há biblioteca local (ex.: importação do TV Time antes de criar conta):
+      // não é preciso ecrã nenhum, o sync normal trata do resto em segundo plano.
+      const locais = await getShows();
+      if (locais.length > 0) {
+        await kvSet(DONE_KEY, true);
+        return;
+      }
+
+      setEstado({
+        fase: "a-trazer",
+        p: { shows: 0, episodes: 0, movies: 0, merging: false },
+      });
+      try {
+        await pullAndMerge((p) => setEstado({ fase: "a-trazer", p }));
+        // o que veio de uma cloud antiga pode vir sem numeração — antes de a
+        // app ler uma única temporada, devolve-a às séries que a perderam
+        await curarNumeracao().catch(() => 0);
+        await kvSet(DONE_KEY, true);
+        // recarrega para os ecrãs lerem o IndexedDB já cheio
+        window.location.reload();
+      } catch {
+        setEstado({ fase: "erro" });
+      }
+    } finally {
+      aCorrer.current = false;
     }
   }, []);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => void correr());
-    return () => cancelAnimationFrame(raf);
+    const parar = onAuthChange((user) => {
+      if (user) void correr();
+    });
+    return () => {
+      cancelAnimationFrame(raf);
+      parar();
+    };
   }, [correr]);
 
   if (estado.fase === "inativo") return null;
