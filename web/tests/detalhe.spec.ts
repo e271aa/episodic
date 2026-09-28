@@ -146,3 +146,33 @@ test("os separadores andam com as setas e dizem que painel comandam", async ({
   await page.keyboard.press("ArrowLeft");
   await expect(episodios).toHaveAttribute("aria-selected", "true");
 });
+
+// ── Ronda 12, Fase 5b.3 — o que ficou da Ronda 11 ─────────────
+
+test("com buracos, a ação secundária também está toda tocável ao chegar", async ({
+  page,
+  tmdb,
+}) => {
+  // Medido: "Marcar próximo episódio" estava 20% livre — o resto debaixo da
+  // dock. Escolhido pelo Ruben (27-09): marcar primeiro, "Lista" e "Onde
+  // ver" depois.
+  await abrirSerie(page, tmdb, true);
+  await expect(page.getByTestId("mark-next")).toBeVisible();
+  expect(await cobertura(page, '[data-testid="mark-next"]')).toBe(100);
+});
+
+test("sem temporada aberta, o fim da página não tem vazio a mais", async ({ page, tmdb }) => {
+  // Medido: 188px de nada por baixo das temporadas fechadas — a moldura já
+  // reserva o espaço da dock (82px), e a página reservava-o outra vez.
+  await abrirSerie(page, tmdb, false);
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+  const vazio = await page.evaluate(() => {
+    const fundo = Math.max(
+      ...[...document.querySelectorAll("main *")]
+        .filter((el) => el.getBoundingClientRect().height > 0)
+        .map((el) => el.getBoundingClientRect().bottom + scrollY),
+    );
+    return document.documentElement.scrollHeight - fundo;
+  });
+  expect(vazio).toBeLessThan(110);
+});

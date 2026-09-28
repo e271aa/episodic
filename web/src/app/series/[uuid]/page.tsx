@@ -566,7 +566,10 @@ export default function ShowPage() {
     .join(" · ");
 
   return (
-    <main className="mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]">
+    // Sem padding em baixo: a moldura (layout.tsx) já reserva o espaço da
+    // dock, e reservá-lo aqui outra vez deixava 188px de nada por baixo das
+    // temporadas fechadas (medido — Ronda 12, Fase 5b.3)
+    <main className="mx-auto w-full max-w-2xl">
       {/* O backdrop É a identidade — sem cartaz sobreposto. O título vive no
           terço de baixo, por cima do gradiente, tal como no herói do "A
           seguir": a arte respira em cima, o texto lê-se em baixo. */}
@@ -634,36 +637,6 @@ export default function ShowPage() {
       </div>
 
       <div className="px-4">
-        {/* Duas ações, sempre as mesmas duas perguntas: juntar a uma lista,
-            ver onde passa. Lado a lado, mesmo peso — nenhuma é secundária
-            da outra. */}
-        <div className="mt-4 flex gap-2.5">
-          <AddToListButton
-            kind="show"
-            refId={uuid}
-            label="Lista"
-            wrapperClassName="relative flex-1"
-            className="flex h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line bg-raised/60 text-[0.9375rem] font-medium text-ink backdrop-blur transition active:scale-95"
-          />
-          <StreamingBadges kind="tv" tmdbId={show.tmdbId} variant="action" />
-        </div>
-
-        {/* só faz sentido para quem não está a seguir ativamente — uma série
-            já em acompanhamento não precisa de "para ver" a redundar */}
-        {!show.followed && (
-          <button
-            onClick={() => void toggleWatchlist()}
-            className={`mt-2.5 flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border px-4 text-[0.9375rem] font-medium transition active:scale-95 ${
-              show.inWatchlist
-                ? "border-ink bg-ink text-tube"
-                : "border-line text-dim hover:border-ink hover:text-ink"
-            }`}
-          >
-            {show.inWatchlist && <CheckIcon className="h-3.5 w-3.5" />}
-            {show.inWatchlist ? "Na lista para ver" : "Para ver"}
-          </button>
-        )}
-
         {/* Episódios por marcar ATRÁS do ponto onde já se vai. Fica antes da
             ação principal de propósito: não faz sentido propor o próximo
             episódio a quem tem 22 esquecidos para trás — e era exatamente
@@ -727,6 +700,41 @@ export default function ShowPage() {
             </span>
           </button>
         ) : null}
+
+        {/* Lista e Onde ver DEPOIS de marcar (escolhido pelo Ruben a 27-09,
+            Ronda 12, Fase 5b.3): marcar é a razão de se abrir uma série, e
+            com buracos o "Marcar próximo episódio" ficava 20% livre ao
+            chegar — o resto debaixo da dock. Agora as duas ações de marcar
+            estão inteiras à vista. */}
+        {/* Duas ações, sempre as mesmas duas perguntas: juntar a uma lista,
+            ver onde passa. Lado a lado, mesmo peso — nenhuma é secundária
+            da outra. */}
+        <div className="mt-4 flex gap-2.5">
+          <AddToListButton
+            kind="show"
+            refId={uuid}
+            label="Lista"
+            wrapperClassName="relative flex-1"
+            className="flex h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line bg-raised/60 text-[0.9375rem] font-medium text-ink backdrop-blur transition active:scale-95"
+          />
+          <StreamingBadges kind="tv" tmdbId={show.tmdbId} variant="action" />
+        </div>
+
+        {/* só faz sentido para quem não está a seguir ativamente — uma série
+            já em acompanhamento não precisa de "para ver" a redundar */}
+        {!show.followed && (
+          <button
+            onClick={() => void toggleWatchlist()}
+            className={`mt-2.5 flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border px-4 text-[0.9375rem] font-medium transition active:scale-95 ${
+              show.inWatchlist
+                ? "border-ink/60 bg-raised text-ink"
+                : "border-line text-dim hover:border-ink hover:text-ink"
+            }`}
+          >
+            {show.inWatchlist && <CheckIcon className="h-3.5 w-3.5" />}
+            {show.inWatchlist ? "Na lista para ver" : "Para ver"}
+          </button>
+        )}
 
         {/* Separadores */}
         <div className="mt-6 flex gap-1 border-b border-line" role="tablist">

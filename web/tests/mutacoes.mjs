@@ -702,6 +702,23 @@ const MUTACOES = [
     de: '.sort((a, b) => (b.addedAt ?? "").localeCompare(a.addedAt ?? ""))[0];',
     para: '.sort((a, b) => (a.addedAt ?? "").localeCompare(b.addedAt ?? ""))[0];',
   },
+  {
+    nome: "r12-fase5b3/detalhe-vazio-no-fim",
+    descricao: "o detalhe volta a reservar o espaço da dock outra vez — 188px de nada no fim",
+    ficheiro: DETALHE,
+    de: '    <main className="mx-auto w-full max-w-2xl">',
+    para: '    <main className="mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]">',
+  },
+  {
+    // Não é a mudança de ordem ao contrário (o guião só troca texto): é o
+    // mesmo efeito — algo acima das ações de marcar empurra a secundária para
+    // debaixo da dock. Prova que o teste mede o que está livre, não a ordem.
+    nome: "r12-fase5b3/secundaria-debaixo-da-dock",
+    descricao: "a ação secundária do detalhe volta a ficar debaixo da dock ao chegar",
+    ficheiro: DETALHE,
+    de: 'className="page-enter mt-4 rounded-2xl border border-line bg-raised/60 p-4"',
+    para: 'className="page-enter mt-20 rounded-2xl border border-line bg-raised/60 p-4"',
+  },
 ];
 
 const filtro = process.argv[2];
