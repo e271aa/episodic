@@ -157,7 +157,7 @@ export default function MoviePage() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]">
+    <main className="mx-auto w-full max-w-2xl pb-8">
       <div className="relative h-44 sm:h-56">
         {backdropPath ? (
           <>

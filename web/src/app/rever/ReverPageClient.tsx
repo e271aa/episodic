@@ -108,7 +108,7 @@ export default function ReverPage() {
     );
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-8 pb-8">
       <CabecalhoEcra titulo="Rever a biblioteca" voltar="Voltar ao perfil" fallback="/profile" />
       {/* Duas linhas, não três: "uma de cada vez, e tudo se anula" já o
           dizem o contador e o aviso de anular, e a linha a mais empurrava a

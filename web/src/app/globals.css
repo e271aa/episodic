@@ -105,7 +105,7 @@ body {
 
 /* Foco visível e consistente, só para navegação por teclado (:focus-visible
    não dispara em clique de rato/toque) — substitui o azul genérico do browser
-   pelo âmbar da marca em todos os elementos interativos. */
+   pelo branco-projetor em todos os elementos interativos. */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -144,7 +144,7 @@ input:focus-visible,
 }
 
 /* O "ritual" de marcar um episódio: o círculo salta e um anel de luz
-   âmbar expande e desvanece à volta dele — o momento de satisfação. */
+   branco-projetor expande e desvanece à volta dele — o momento de satisfação. */
 @keyframes check-pop {
   0% {
     transform: scale(0.7);

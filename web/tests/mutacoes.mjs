@@ -1117,6 +1117,20 @@ const MUTACOES = [
     de: 'title: "A seguir"',
     para: 'title: "Episodic"',
   },
+  {
+    nome: "r12-fase5e/filme-reserva-a-dock",
+    descricao: "o detalhe de filme volta a reservar a dock outra vez",
+    ficheiro: FILME_PAGINA,
+    de: '<main className="mx-auto w-full max-w-2xl pb-8">',
+    para: '<main className="mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]">',
+  },
+  {
+    nome: "r12-fase5e/rever-reserva-a-dock",
+    descricao: "o Rever volta a reservar a dock outra vez",
+    ficheiro: REVER_PAGINA,
+    de: 'flex-1 flex-col px-4 pt-8 pb-8">',
+    para: 'flex-1 flex-col px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">',
+  },
 ];
 
 const filtro = process.argv[2];

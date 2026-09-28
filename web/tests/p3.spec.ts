@@ -264,3 +264,24 @@ test("o <title> muda de ecrã para ecrã, em vez de ficar sempre 'Episodic'", as
     expect(await page.title()).not.toBe("Episodic");
   }
 });
+
+test("o detalhe de filme e o Rever não reservam a dock outra vez — a moldura já o faz", async ({
+  page,
+  tmdb,
+}) => {
+  // O mesmo padrão que se corrigiu no detalhe de série (5b.3): o layout raiz
+  // já deixa `--dock-h + 0.5rem` por baixo de tudo; reservá-lo na página
+  // deixava um vazio a mais no fim.
+  tmdb.tvmaze[801] = [2, 2];
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Tem Buracos", tvmazeId: 801, numeracao: "tvmaze" }],
+    vistos: [{ showUuid: "s-1", season: 2, episode: 1 }],
+    filmes: [{ key: "f-1", name: "Past Lives", watchedAt: null }],
+  });
+  for (const rota of ["/movies/f-1", "/rever"]) {
+    await page.goto(rota);
+    await page.locator("main").waitFor();
+    const reserva = await page.locator("main").evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
+    expect(reserva, rota).toBeLessThanOrEqual(40);
+  }
+});
