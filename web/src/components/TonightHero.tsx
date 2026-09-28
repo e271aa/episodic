@@ -37,6 +37,11 @@ export interface TonightHeroProps {
  * uma página, é a página. O texto vive por cima da arte, no terço de baixo,
  * onde o polegar chega e onde o gradiente já escureceu o suficiente para se
  * ler sem tapar a imagem.
+ *
+ * O ritual de marcar (Ronda 12, Fase 6 — escolhido pelo Ruben a 28-09,
+ * variante C): a barra de progresso acende uma vez com as cores SMPTE — cor
+ * só onde há progresso —, o ✓ salta, e o episódio troca com um desfoque
+ * curto. O varrimento grande continua reservado a fechar uma temporada.
  */
 export default function TonightHero({
   showUuid,
@@ -63,15 +68,34 @@ export default function TonightHero({
     return () => cancelAnimationFrame(raf);
   }, []);
 
+  // Só marcar festeja. Anular também muda o episódio (volta ao anterior), e
+  // por isso o ritual conta marcações, não mudanças de episódio.
+  const [marcacoes, setMarcacoes] = useState(0);
   const handleCheck = async () => {
     if (checking) return;
     setChecking(true);
     try {
       await onCheck(episode.season, episode.episode);
+      setMarcacoes((n) => n + 1);
     } finally {
       setChecking(false);
     }
   };
+
+  // O episódio que sai fica o tempo de desvanecer por cima do que entra —
+  // qualquer mudança, anular incluído. Acertado durante o render, como no
+  // SheetPanel, para não haver um frame com os dois trocados de golpe.
+  const [mostrado, setMostrado] = useState(episode);
+  const [aSair, setASair] = useState<MetaEpisode | null>(null);
+  if (episode.season !== mostrado.season || episode.episode !== mostrado.episode) {
+    setASair(mostrado);
+    setMostrado(episode);
+  }
+  useEffect(() => {
+    if (!aSair) return;
+    const t = setTimeout(() => setASair(null), 160);
+    return () => clearTimeout(t);
+  }, [aSair]);
 
   const progresso =
     watchedCount !== undefined && totalEpisodes
@@ -137,25 +161,31 @@ export default function TonightHero({
           </h1>
         </Link>
 
-        <div className="mt-3 flex items-center gap-2">
-          <span className="ep-code rounded-md bg-ink px-[7px] py-0.5 text-[0.9375rem] font-bold text-tube">
-            {formatEpCode(episode.season, episode.episode)}
-          </span>
-          {episode.airDate && (
-            <span className="ep-code text-[0.9375rem] text-faint">
-              {episode.airDate.slice(0, 4)}
-            </span>
+        <div className="relative">
+          {aSair && (
+            <div aria-hidden className="episodio-sai absolute inset-x-0 top-0">
+              <BlocoEpisodio episode={aSair} />
+            </div>
           )}
+          <div
+            key={`${episode.season}:${episode.episode}`}
+            className={aSair ? "episodio-entra" : undefined}
+          >
+            <BlocoEpisodio episode={episode} />
+          </div>
         </div>
-        <p className="mt-2 text-[0.9375rem] font-medium text-ink">{episode.name}</p>
 
         {progresso !== null && (
           <div className="mt-3 flex items-center gap-2.5">
-            <div className="h-[3px] flex-1 overflow-hidden rounded-full bg-ink/20">
+            <div className="relative h-[3px] flex-1 overflow-hidden rounded-full bg-ink/20">
               <div
                 className="h-full bg-ink transition-[width] duration-[240ms] ease-out"
                 style={{ width: `${progresso}%` }}
               />
+              {marcacoes > 0 && (
+                // a chave repete a animação a cada marcação
+                <div key={marcacoes} data-ritual="barra" aria-hidden className="barra-acende" />
+              )}
             </div>
             <span className="ep-code shrink-0 text-[0.8125rem] text-dim">
               {watchedCount}/{totalEpisodes}
@@ -171,7 +201,10 @@ export default function TonightHero({
           {checking ? (
             <span className="spinner h-5 w-5 rounded-full border-2 border-tube/30 border-t-tube" />
           ) : (
-            <CheckIcon className="h-5 w-5" />
+            <CheckIcon
+              key={marcacoes}
+              className={`h-5 w-5 ${marcacoes > 0 ? "check-pop" : ""}`}
+            />
           )}
           Marcar visto
         </button>
@@ -179,5 +212,22 @@ export default function TonightHero({
         {alternativas}
       </div>
     </div>
+  );
+}
+
+/** O código, o ano e o nome do episódio — o que troca a cada marcação. */
+function BlocoEpisodio({ episode }: { episode: MetaEpisode }) {
+  return (
+    <>
+      <div className="mt-3 flex items-center gap-2">
+        <span className="ep-code rounded-md bg-ink px-[7px] py-0.5 text-[0.9375rem] font-bold text-tube">
+          {formatEpCode(episode.season, episode.episode)}
+        </span>
+        {episode.airDate && (
+          <span className="ep-code text-[0.9375rem] text-faint">{episode.airDate.slice(0, 4)}</span>
+        )}
+      </div>
+      <p className="mt-2 text-[0.9375rem] font-medium text-ink">{episode.name}</p>
+    </>
   );
 }

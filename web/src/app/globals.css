@@ -253,6 +253,58 @@ input:focus-visible,
   pointer-events: none;
 }
 
+/* O ritual de marcar na casa (Ronda 12, Fase 6 — escolhido pelo Ruben a
+   28-09, variante C). A barra de progresso acende com as cores SMPTE uma
+   vez, da esquerda para a direita, e apaga — cor só onde há progresso. A
+   curva é o `ease-out` do browser de propósito: é a da maquete escolhida.
+   O episódio troca com um desfoque curto: o desfoque junta os dois estados
+   num só, em vez de se verem dois textos a trocar. */
+@keyframes barra-acende {
+  0% {
+    opacity: 1;
+    clip-path: inset(0 100% 0 0);
+  }
+  60% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(0 0 0 0);
+  }
+}
+@keyframes barra-luz {
+  50% {
+    opacity: 0.8;
+  }
+}
+.barra-acende {
+  position: absolute;
+  inset: 0;
+  background: var(--bars);
+  opacity: 0;
+  pointer-events: none;
+  animation: barra-acende 620ms ease-out;
+}
+@keyframes episodio-entra {
+  from {
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+@keyframes episodio-sai {
+  to {
+    opacity: 0;
+    filter: blur(4px);
+  }
+}
+.episodio-entra {
+  animation: episodio-entra 220ms var(--ease-out) 60ms both;
+}
+.episodio-sai {
+  animation: episodio-sai 160ms var(--ease-out) both;
+}
+
 /* Botões pequenos por cima de cartazes (marcar visto, remover da lista): o
    círculo tem de ser discreto para não tapar a capa, mas 28–32px é metade
    de um polegar. Isto estica só a área de toque até aos 44px do iOS — o que
@@ -406,6 +458,17 @@ input:focus-visible,
     animation-name: esvanecer;
   }
   .undo-out {
+    animation-name: apagar;
+  }
+  /* o ritual: a barra acende e apaga no sítio; o episódio só desvanece */
+  .barra-acende {
+    animation-name: barra-luz;
+    animation-duration: 500ms;
+  }
+  .episodio-entra {
+    animation-name: esvanecer;
+  }
+  .episodio-sai {
     animation-name: apagar;
   }
   /* a folha aparece e sai a desvanecer, sem subir nem descer */

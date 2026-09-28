@@ -1,5 +1,6 @@
 import { test, expect } from "./apoio/base";
 import { semear } from "./apoio/semear";
+import { serieCompleta } from "./apoio/tmdb";
 
 /**
  * Ronda 12, Fase 6 — movimento e o ritual de marcar (AUDITORIA.md).
@@ -271,4 +272,75 @@ test("no baralho, um arrasto curto e lento não decide: o cartão volta", async 
   await page.waitForTimeout(500);
   await expect(page.getByTestId("undo-toast")).toHaveCount(0);
   await expect(page.getByRole("heading", { name: "Severance" })).toBeVisible();
+});
+
+// ── o ritual de marcar na casa (variante C, escolhida pelo Ruben a 28-09) ──
+
+async function casaComSerie(
+  page: import("@playwright/test").Page,
+  tmdb: import("./apoio/tmdb").Catalogo,
+) {
+  const hoje = new Date().toISOString();
+  Object.assign(tmdb.series, serieCompleta(500, "Severance", [9]).series);
+  Object.assign(tmdb.episodios, serieCompleta(500, "Severance", [9]).episodios);
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Severance", tmdbId: 500, numeracao: "tmdb" }],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1, watchedAt: hoje }],
+    kv: {
+      "nextup-cache": {
+        "s-1": {
+          episode: { season: 1, episode: 2, name: "Episódio 2", airDate: "2020-01-01" },
+          lastWatchedAt: hoje,
+        },
+      },
+    },
+  });
+  await page.goto("/series");
+  await page.getByRole("heading", { level: 1, name: "Severance" }).waitFor();
+}
+
+/** As animações de um nome a correr agora na página. */
+function aCorrer(page: import("@playwright/test").Page, nome: string) {
+  return page.evaluate(
+    (n) =>
+      document
+        .getAnimations()
+        .filter((a) => (a as CSSAnimation).animationName === n && a.playState === "running").length,
+    nome,
+  );
+}
+
+test("marcar visto na casa acende a barra de progresso com as cores SMPTE, e o ✓ salta", async ({
+  page,
+  tmdb,
+}) => {
+  await casaComSerie(page, tmdb);
+  await page.getByRole("button", { name: "Marcar visto" }).click();
+  await expect(page.locator("main")).toContainText("S01·E03");
+  expect(await aCorrer(page, "barra-acende")).toBe(1);
+  const barra = await page
+    .locator('[data-ritual="barra"]')
+    .evaluate((el) => getComputedStyle(el).backgroundImage);
+  expect(barra).toContain("linear-gradient");
+  // o episódio novo entra com o desfoque curto
+  expect(await aCorrer(page, "episodio-entra")).toBeGreaterThan(0);
+});
+
+test("anular não festeja: o episódio volta, mas a barra não acende", async ({ page, tmdb }) => {
+  await casaComSerie(page, tmdb);
+  await page.getByRole("button", { name: "Marcar visto" }).click();
+  await expect(page.locator("main")).toContainText("S01·E03");
+  await page.waitForTimeout(900); // a barra já apagou
+  await page.getByTestId("undo-button").click();
+  await expect(page.locator("main")).toContainText("S01·E02");
+  expect(await aCorrer(page, "barra-acende")).toBe(0);
+});
+
+test("com movimento reduzido, a barra só acende e apaga, sem varrer", async ({ page, tmdb }) => {
+  await page.emulateMedia({ reducedMotion: "reduce" });
+  await casaComSerie(page, tmdb);
+  await page.getByRole("button", { name: "Marcar visto" }).click();
+  await expect(page.locator("main")).toContainText("S01·E03");
+  expect(await aCorrer(page, "barra-acende")).toBe(0);
+  expect(await aCorrer(page, "barra-luz")).toBe(1);
 });
