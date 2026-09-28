@@ -19,6 +19,7 @@ import {
   type QueueEntry,
 } from "@/lib/queue";
 import { pushUndo } from "@/lib/undo";
+import { curta } from "@/lib/datas";
 import WatchNextCard from "@/components/WatchNextCard";
 import TonightHero from "@/components/TonightHero";
 import OuEntao, { type Alternativa } from "@/components/OuEntao";
@@ -342,6 +343,11 @@ export default function SeriesPage() {
     );
   }
 
+  // "Esta semana" promete sete dias — mostrava o que estreasse daqui a 17
+  // (Ronda 12, 5b.4). O resto está a um toque, no A estrear.
+  const limiteSemana = new Date(now + 7 * 864e5).toISOString().slice(0, 10);
+  const estaSemana = (upcoming ?? []).filter((e) => (e.episode.airDate ?? "") <= limiteSemana);
+
   const watching = shows.filter((s) => s.followed && !s.archived);
   const queue = watching.filter((s) => nextUp?.has(s.uuid));
 
@@ -571,7 +577,8 @@ export default function SeriesPage() {
         <section className="mt-8">
           {/* O "meta" é um link, não só o número: sem isto, "/estrear" ficou
               sem porta de entrada nenhuma depois de a Biblioteca perder o
-              cabeçalho onde vivia o atalho. */}
+              cabeçalho onde vivia o atalho. Sem cor própria: um cabeçalho
+              usa as neutras da mira (tinha o ciano dos buracos). */}
           <SectionHeader
             label="Esta semana"
             meta={
@@ -579,13 +586,18 @@ export default function SeriesPage() {
                 href="/estrear"
                 className="tap-44 relative hover:text-ink hover:underline"
               >
-                {upcoming.length} · ver tudo
+                {estaSemana.length > 0 ? `${estaSemana.length} · ver tudo` : "ver tudo"}
               </Link>
             }
-            color="#3fd2c8"
           />
+          {estaSemana.length === 0 ? (
+            <p className="mt-3 text-[0.9375rem] text-dim">
+              Nada esta semana — o próximo é {upcoming[0].show.name}, a{" "}
+              {curta(upcoming[0].episode.airDate as string)}.
+            </p>
+          ) : (
           <div className="-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
-            {upcoming.slice(0, 10).map(({ show, episode }) => (
+            {estaSemana.slice(0, 10).map(({ show, episode }) => (
               <Link
                 key={`${show.uuid}-${episode.season}-${episode.episode}`}
                 href={`/series/${show.uuid}`}
@@ -621,6 +633,7 @@ export default function SeriesPage() {
               </Link>
             ))}
           </div>
+          )}
         </section>
       )}
 

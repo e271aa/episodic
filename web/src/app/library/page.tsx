@@ -112,7 +112,7 @@ const ESTADOS = [
 const CINZA = "#8a8880";
 const COR_ESTADO: Record<string, string> = {
   "Em curso": "var(--color-ink)",
-  "Por começar": "#e6c832",
+  "Por começar": CINZA,
   Completas: "#d24bd2",
   "Para ver": CINZA,
   "Já não sigo": CINZA,

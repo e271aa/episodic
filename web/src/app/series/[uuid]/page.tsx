@@ -622,10 +622,13 @@ export default function ShowPage() {
 
         <div className="absolute inset-x-4 bottom-5">
           <div className="flex items-center gap-2.5">
+            {/* Com buracos para trás, o traço é o ciano dos buracos — o
+                rótulo diz "por marcar", e a cor tem de dizer o mesmo. */}
             <span
               aria-hidden
+              data-testid="heroi-traco"
               className="h-[14px] w-[3px] shrink-0 rounded-full"
-              style={{ background: accent }}
+              style={{ background: buracos.total > 0 ? "#3fd2c8" : accent }}
             />
             <p className="ep-code text-[0.8125rem] text-dim">{label}</p>
           </div>

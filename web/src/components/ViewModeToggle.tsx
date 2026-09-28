@@ -48,7 +48,9 @@ export default function ViewModeToggle({
             aria-label={label}
             title={label}
             className={`tap-44 relative flex h-[30px] w-9 cursor-pointer items-center justify-center rounded-full transition-colors ${
-              ativo ? "bg-ink text-tube" : "text-faint hover:text-ink"
+              // uma escolha, não uma ação: painel levantado, não a pílula
+              // branca (Inverted Action Rule; Ronda 12, 5b.4)
+              ativo ? "bg-ink/[0.14] text-ink" : "text-faint hover:text-ink"
             }`}
           >
             <Icon className="h-[15px] w-[15px]" />

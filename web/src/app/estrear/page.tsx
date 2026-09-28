@@ -75,7 +75,9 @@ export default function EstrearPage() {
                   <div className="h-16 w-11 shrink-0 rounded-lg bg-raised" />
                 )}
                 <div className="min-w-0 flex-1">
-                  <p className="truncate font-semibold">{show.name}</p>
+                  {/* o nome inteiro, a quebrar linha: é o que se procura, e
+                      cortado deixava de se saber de que série era */}
+                  <p className="font-semibold leading-snug [overflow-wrap:anywhere]">{show.name}</p>
                   <p className="ep-code truncate text-sm text-dim">
                     {formatEpCode(episode.season, episode.episode)}
                     {episode.name ? ` · ${episode.name}` : ""}
