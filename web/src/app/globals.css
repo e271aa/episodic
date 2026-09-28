@@ -21,6 +21,15 @@
   --font-code: var(--font-spline-mono);
 }
 
+/* Curvas de movimento (Ronda 12, Fase 6). As do browser são fracas: o
+   `ease-out` nativo demora a arrancar, e a resposta lê-se atrasada. O
+   `ease-out` do Tailwind passa a esta curva forte em todo o lado; a da
+   gaveta é a do iOS, para o que sobe do fundo e volta a descer. */
+@theme {
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
 body {
   background: var(--color-tube);
   color: var(--color-ink);
@@ -131,7 +140,7 @@ input:focus-visible,
    dentro de uma página NÃO se posiciona pelo viewport. A barra flutuante da
    Biblioteca resolve isto com um portal para o body (ver LibraryControls). */
 .page-enter {
-  animation: page-enter 220ms ease-out both;
+  animation: page-enter 220ms var(--ease-out) both;
 }
 
 /* O "ritual" de marcar um episódio: o círculo salta e um anel de luz
@@ -166,7 +175,7 @@ input:focus-visible,
   inset: 0;
   border-radius: 9999px;
   background: var(--color-ink);
-  animation: check-ring 420ms ease-out both;
+  animation: check-ring 420ms var(--ease-out) both;
   pointer-events: none;
 }
 
@@ -240,7 +249,7 @@ input:focus-visible,
   inset: 0;
   background: var(--bars);
   opacity: 0.55;
-  animation: season-sweep 520ms ease-out both;
+  animation: season-sweep 520ms var(--ease-out) both;
   pointer-events: none;
 }
 
@@ -275,7 +284,7 @@ input:focus-visible,
   }
   a.cursor-pointer,
   button.cursor-pointer {
-    transition: transform 120ms ease-out;
+    transition: transform 120ms var(--ease-out);
   }
   /* desativados não fingem que responderam */
   button:disabled:active {
@@ -297,7 +306,7 @@ input:focus-visible,
   }
 }
 .poster-in {
-  animation: poster-in 260ms ease-out both;
+  animation: poster-in 260ms var(--ease-out) both;
 }
 
 /* Janela de anulação a esgotar-se. O tempo tem de estar à vista: a demora
@@ -330,16 +339,37 @@ input:focus-visible,
   animation: undo-in 200ms cubic-bezier(0.34, 1.36, 0.64, 1) both;
 }
 
-/* `.undo-drain` fica de fora: não é decoração, é a própria contagem do
-   tempo para anular ("o tempo tem de estar à vista", acima). Zerá-la fazia
-   a barra encolher para nada quase de imediato — parecia que a janela de
-   anular já tinha fechado (Ronda 12, Fase 4, achado #13). */
+/* Movimento reduzido é menos movimento, não nenhum (Ronda 12, Fase 6).
+   Zerava tudo a 0,01ms — as páginas apareciam de golpe e as mudanças de cor
+   também. Tiram-se as deslocações; ficam a opacidade e a cor, que dizem que
+   alguma coisa mudou.
+   `.undo-drain` não se toca: não é decoração, é a própria contagem do tempo
+   para anular ("o tempo tem de estar à vista", acima; Ronda 12, Fase 4,
+   achado #13). O `.spinner` também fica: é o aviso de que está a trabalhar. */
+@keyframes esvanecer {
+  from {
+    opacity: 0;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
-  *:not(.undo-drain),
-  *:not(.undo-drain)::before,
-  *:not(.undo-drain)::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
+  .page-enter,
+  .poster-in,
+  .undo-in {
+    animation-name: esvanecer;
+  }
+  .check-pop,
+  .check-ring::after,
+  .season-sweep::after,
+  .poster-shimmer::after,
+  .skeleton::after {
+    animation: none;
+  }
+  /* as transições de posição e tamanho passam a instantâneas — incluindo as
+     escritas no `style` (o baralho), que é por isso o `!important` */
+  *,
+  *::before,
+  *::after {
+    transition-property: opacity, color, background-color, border-color, box-shadow,
+      outline-color !important;
   }
 }
