@@ -70,3 +70,21 @@ test("renomear uma lista é um botão, e o campo tem nome", async ({ page }) => 
   await page.getByRole("button", { name: "Guardar" }).click();
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Para o fim de semana");
 });
+
+test("cada destino da dock tem nome para o VoiceOver, mesmo só com o ícone à vista", async ({
+  page,
+}) => {
+  // Ronda 12, Fase 5c — P1 #2 da crítica 5b.4. Num telemóvel, os separadores
+  // inativos mostram só o ícone, e o rótulo estava a `display:none`: 3 dos 4
+  // links da dock não tinham nome nenhum (WCAG 4.1.2). O rótulo continua
+  // escondido à vista, mas não ao leitor de ecrã.
+  await semear(page, { series: [{ uuid: "s-1", name: "Serie Um" }] });
+  await page.goto("/series");
+  const dock = page.getByRole("navigation");
+  for (const nome of ["A seguir", "Explorar", "Biblioteca", "Perfil"]) {
+    await expect(dock.getByRole("link", { name: nome, exact: true })).toHaveCount(1);
+  }
+  // e à vista continua a ser só o ícone nos inativos (o desenho não muda)
+  const rotulo = dock.locator('a[href="/library"] span');
+  expect(await rotulo.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
+});

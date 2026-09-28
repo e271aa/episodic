@@ -69,8 +69,11 @@ export default function BottomNav() {
               <Icon className="h-[18px] w-[18px] shrink-0" />
               {/* whitespace-nowrap: a 320px, "A seguir" quebrava em duas
                   linhas e a pílula do separador ativo crescia para 61px
-                  (Ronda 12, Fase 4, achado novo). */}
-              <span className={active ? "whitespace-nowrap" : "hidden sm:inline"}>
+                  (Ronda 12, Fase 4, achado novo).
+                  Nos inativos, `sr-only` e não `hidden`: escondido à vista,
+                  mas é o nome do link para o VoiceOver — com `display:none`
+                  3 dos 4 destinos não tinham nome (Ronda 12, 5b.4). */}
+              <span className={active ? "whitespace-nowrap" : "sr-only sm:not-sr-only"}>
                 {label}
               </span>
             </Link>
