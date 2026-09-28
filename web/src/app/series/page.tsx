@@ -275,21 +275,31 @@ export default function SeriesPage() {
       {
         n: "01",
         title: "Procura o que andas a ver",
-        text: "Toca em Seguir e a série entra na tua fila.",
+        // o Seguir está na pesquisa — os cartazes do Explorar só têm "Para
+        // ver", e dizer só "toca em Seguir" mandava procurá-lo onde não há
+        text: "Pelo nome, na pesquisa. Toca em Seguir e a série entra na tua fila.",
       },
       {
         n: "02",
+        title: "Já vais a meio?",
+        text: "Marca o último episódio que viste: a app oferece-se para marcar os de trás.",
+      },
+      {
+        n: "03",
         title: "Marca à medida que vês",
         text: "A fila “A seguir” diz-te sempre qual é o próximo episódio.",
       },
       {
-        n: "03",
+        n: "04",
         title: "Guarda o resto para depois",
         text: "O que queres ver um dia fica em “Para ver”, fora da fila.",
       },
     ];
+    // As duas portas logo a seguir ao título, e os passos por baixo a
+    // explicar: centrado no ecrã, "Procurar uma série" ficava desbotado pelo
+    // degradê da dock e "Vens do TV Time?" debaixo dela (Ronda 12, 5b.4).
     return (
-      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col justify-center px-4 py-16">
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-10 pb-6">
         <div className="text-center">
           <p className="ep-code text-sm tracking-[0.3em] text-dim">EPISODIC</p>
           <h1 className="mt-3 font-display text-3xl font-bold">
@@ -298,6 +308,21 @@ export default function SeriesPage() {
           <p className="mt-3 text-dim">
             O teu registo de séries: o que viste, o que falta, o que vem a seguir.
           </p>
+        </div>
+
+        <div className="mt-8 flex flex-col items-center gap-2">
+          <Link
+            href="/explorar?procurar=1"
+            className="flex min-h-12 cursor-pointer items-center rounded-full bg-ink px-6 font-semibold text-tube transition hover:brightness-110 active:scale-95"
+          >
+            Procurar uma série
+          </Link>
+          <Link
+            href="/import"
+            className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim transition hover:text-ink"
+          >
+            Vens do TV Time? Importar o histórico
+          </Link>
         </div>
 
         <ol className="mt-10 space-y-4">
@@ -313,21 +338,6 @@ export default function SeriesPage() {
             </li>
           ))}
         </ol>
-
-        <div className="mt-10 flex flex-col items-center gap-2">
-          <Link
-            href="/explorar?procurar=1"
-            className="flex min-h-12 cursor-pointer items-center rounded-full bg-ink px-6 font-semibold text-tube transition hover:brightness-110 active:scale-95"
-          >
-            Procurar uma série
-          </Link>
-          <Link
-            href="/import"
-            className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim transition hover:text-ink"
-          >
-            Vens do TV Time? Importar o histórico
-          </Link>
-        </div>
       </main>
     );
   }
