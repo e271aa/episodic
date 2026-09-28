@@ -15,8 +15,15 @@ function hasAired(episode: MetaEpisode, todayIso: string): boolean {
 }
 
 /**
- * Primeiro episódio já estreado que ainda não foi visto, percorrendo as
- * temporadas por ordem. Devolve null quando a série está em dia.
+ * O episódio já estreado que vem DEPOIS do último visto. Devolve null quando
+ * não há nada por ver à frente — a série está em dia, mesmo que tenha
+ * episódios por marcar para trás.
+ *
+ * Começava no S01·E01 e devolvia o primeiro por marcar que encontrasse: com
+ * buracos para trás, propunha um deles (a crítica da Ronda 12, 5b.4: "Marcar
+ * próximo · S02·E20" ao lado de "22 por marcar mais atrás", e o E20 era um
+ * dos 22). Os buracos são "por marcar", não "por ver" — têm o cartão deles
+ * no detalhe e o Rever (`buracos.ts`, `rever.ts`).
  *
  * O TV Time numera temporadas sequencialmente (1, 2, 3…), mas alguns
  * fornecedores não — a TVmaze indexa animes longos (Naruto, etc.) pelo ANO de
@@ -37,20 +44,29 @@ export async function findNextUnwatched(
   const seasons = await getSeasons(show);
   if (!seasons) return null;
 
-  for (let i = 0; i < seasons.length; i++) {
+  // o último visto, por posição (os especiais, temporada 0, não contam)
+  let ultimo = { season: 1, episode: 0 };
+  for (const w of watched) {
+    if (w.season < 1) continue;
+    if (
+      w.season > ultimo.season ||
+      (w.season === ultimo.season && w.episode > ultimo.episode)
+    ) {
+      ultimo = { season: w.season, episode: w.episode };
+    }
+  }
+
+  // só a partir da temporada do último visto: as de trás não se leem
+  for (let i = ultimo.season - 1; i < seasons.length; i++) {
     const localSeason = i + 1; // posição, não o número literal do fornecedor
     const episodes = await getEpisodesOfSeason(show, seasons[i].number);
     const aired = episodes
       .filter((ep) => hasAired(ep, today))
-      .map((ep) => ({ ...ep, season: localSeason }));
-    const next = aired.find(
-      (ep) => !seen.has(episodeKey(show.uuid, ep.season, ep.episode)),
-    );
-    if (next) {
-      const remaining = aired.filter(
-        (ep) => !seen.has(episodeKey(show.uuid, ep.season, ep.episode)),
-      ).length;
-      return { showUuid: show.uuid, episode: next, remainingInSeason: remaining };
+      .map((ep) => ({ ...ep, season: localSeason }))
+      .filter((ep) => localSeason > ultimo.season || ep.episode > ultimo.episode)
+      .filter((ep) => !seen.has(episodeKey(show.uuid, ep.season, ep.episode)));
+    if (aired.length > 0) {
+      return { showUuid: show.uuid, episode: aired[0], remainingInSeason: aired.length };
     }
   }
   return null;
