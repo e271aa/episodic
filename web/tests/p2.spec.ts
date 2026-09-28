@@ -169,3 +169,107 @@ test("o A estrear não corta o nome da série", async ({ page, tmdb }) => {
   );
   expect(cabe).toBe(true);
 });
+
+// ── o que faltava poder fazer, e o que ficava tapado ─────────
+
+test("um filme visto desmarca-se — volta a 'para ver' — e o desmarcar anula-se", async ({
+  page,
+}) => {
+  // Marcar era para sempre: nem desmarcar, nem corrigir, depois de o aviso
+  // de anular passar (movies/[key], achado da 5b.4).
+  await semear(page, {
+    filmes: [{ key: "f-1", name: "Past Lives", watchedAt: "2025-05-01T21:00:00.000Z" }],
+  });
+  await page.goto("/movies/f-1");
+  await expect(page.getByText(/^Visto a/)).toBeVisible();
+  await page.getByRole("button", { name: "Desmarcar como visto" }).click();
+  await expect(page.getByText("Na lista para ver")).toBeVisible();
+  await page.getByTestId("undo-button").click();
+  await expect(page.getByText(/^Visto a/)).toBeVisible();
+
+  // e fica gravado
+  await page.getByRole("button", { name: "Desmarcar como visto" }).click();
+  await expect(page.getByText("Na lista para ver")).toBeVisible();
+  await page.reload();
+  await expect(page.getByText("Na lista para ver")).toBeVisible();
+});
+
+test("com o texto a 150%, o detalhe da série não sai do ecrã, e os separadores continuam a um toque", async ({
+  page,
+  tmdb,
+}) => {
+  // "Estatísticas" chegava aos 428px num ecrã de 390 (medido na 5b.4).
+  tmdb.tvmaze[495] = [5];
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Severance", tvmazeId: 495, numeracao: "tvmaze" }],
+  });
+  await page.goto("/series/s-1");
+  await page.getByTestId("tab-episodios").waitFor();
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "150%";
+  });
+  const larguras = await page.evaluate(() => ({
+    doc: document.documentElement.scrollWidth,
+    janela: innerWidth,
+  }));
+  expect(larguras.doc).toBeLessThanOrEqual(larguras.janela);
+  const estatisticas = page.getByTestId("tab-estatisticas");
+  await estatisticas.click();
+  await expect(estatisticas).toHaveAttribute("aria-selected", "true");
+});
+
+test("no Rever, as saídas do cartão estão acima da dock ao chegar — mesmo com três botões", async ({
+  page,
+  tmdb,
+}) => {
+  // Buracos para trás E episódios à frente: "Marcar os 2 de trás", "Vi
+  // tudo · também…" e "Ainda estou a ver" — e "Deixei de ver" e "Decidir
+  // depois" ficavam debaixo da dock (0% livres ao chegar, 5b.4).
+  tmdb.tvmaze[806] = [2, 2, 2];
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Buracos E Frente", tvmazeId: 806, numeracao: "tvmaze" }],
+    vistos: [
+      { showUuid: "s-1", season: 2, episode: 1 },
+      { showUuid: "s-1", season: 2, episode: 2 },
+    ],
+  });
+  await page.goto("/rever");
+  await expect(page.getByRole("button", { name: /^Vi tudo/ })).toBeVisible();
+  const dock = (await page.locator("nav > div").last().boundingBox())!;
+  for (const nome of [/Deixei de ver/, /Decidir depois/]) {
+    const caixa = (await page.getByRole("button", { name: nome }).boundingBox())!;
+    expect(caixa.y + caixa.height).toBeLessThanOrEqual(dock.y);
+  }
+});
+
+test("o aviso de anular não tapa o 'Marcar visto' da casa, nem a dock", async ({ page, tmdb }) => {
+  // Sem "Ou então", o botão ficava nos 486–546px e o aviso começava nos
+  // 527: 19px do botão por baixo do aviso durante os 7 segundos — e o aviso
+  // entrava 10px na dock (medido na Fase 6).
+  const hoje = new Date().toISOString();
+  Object.assign(tmdb.series, serieCompleta(500, "Severance", [9]).series);
+  Object.assign(tmdb.episodios, serieCompleta(500, "Severance", [9]).episodios);
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Severance", tmdbId: 500, numeracao: "tmdb" }],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1, watchedAt: hoje }],
+    kv: {
+      "nextup-cache": {
+        "s-1": {
+          episode: { season: 1, episode: 2, name: "Episódio 2", airDate: "2020-01-01" },
+          lastWatchedAt: hoje,
+        },
+      },
+    },
+  });
+  await page.goto("/series");
+  const botao = page.getByRole("button", { name: "Marcar visto" });
+  await botao.click();
+  const aviso = page.getByTestId("undo-toast");
+  await expect(aviso).toBeVisible();
+  await page.waitForTimeout(300); // o aviso acabou de entrar
+  const b = (await botao.boundingBox())!;
+  const a = (await aviso.boundingBox())!;
+  const dock = (await page.locator("nav > div").last().boundingBox())!;
+  expect(b.y + b.height).toBeLessThanOrEqual(a.y);
+  expect(a.y + a.height).toBeLessThanOrEqual(dock.y);
+});

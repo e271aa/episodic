@@ -110,9 +110,11 @@ export default function ReverPage() {
   return (
     <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
       <CabecalhoEcra titulo="Rever a biblioteca" voltar="Voltar ao perfil" fallback="/profile" />
+      {/* Duas linhas, não três: "uma de cada vez, e tudo se anula" já o
+          dizem o contador e o aviso de anular, e a linha a mais empurrava a
+          saída do cartão para debaixo da dock (Ronda 12, 5d). */}
       <p className="mt-1 text-[0.9375rem] text-dim">
-        Séries com menos marcado do que o que já estreou. A app não sabe se as
-        viste — tu sabes. Uma de cada vez, e tudo se anula.
+        Séries com menos marcado do que o que já estreou. Só tu sabes se as viste.
       </p>
 
       {series === null ? (
@@ -152,18 +154,30 @@ export default function ReverPage() {
           </Link>
         </div>
       ) : (
-        <section className="mt-6" data-testid="rever-cartao" aria-live="polite">
-          <p className="ep-code text-xs text-faint">
-            {indice + 1} de {series.length}
-          </p>
+        <section className="mt-4" data-testid="rever-cartao" aria-live="polite">
+          {/* "Decidir depois" é passar à seguinte — vive junto do contador.
+              Em baixo, com três botões no cartão, ficava debaixo da dock ao
+              chegar (0% livre, 5b.4). A margem negativa guarda os 44px de
+              toque sem alargar a linha. */}
+          <div className="flex items-center justify-between">
+            <p className="ep-code text-xs text-faint">
+              {indice + 1} de {series.length}
+            </p>
+            <button
+              onClick={() => setIndice(indice + 1)}
+              className="-mr-3 -my-3.5 flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim hover:text-ink"
+            >
+              Decidir depois
+            </button>
+          </div>
           <div key={atual.show.uuid} className="page-enter mt-2 rounded-2xl border border-line bg-panel p-4">
             <div className="flex gap-3">
               {atual.show.posterPath ? (
-                <div className="relative h-24 w-16 shrink-0 overflow-hidden rounded-lg">
+                <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg">
                   <Poster path={atual.show.posterPath} alt="" size="w185" fill className="object-cover" />
                 </div>
               ) : (
-                <div className="flex h-24 w-16 shrink-0 items-center justify-center rounded-lg bg-raised text-faint">
+                <div className="flex h-20 w-14 shrink-0 items-center justify-center rounded-lg bg-raised text-faint">
                   <TvIcon className="h-6 w-6" />
                 </div>
               )}
@@ -209,7 +223,7 @@ export default function ReverPage() {
                 <button
                   onClick={() => void marcar(prova, `${contarEpisodios(prova.length)} marcados`)}
                   disabled={aCorrer}
-                  className="flex min-h-12 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
+                  className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
                 >
                   <CheckIcon className="h-4 w-4" />
                   Marcar {prova.length === 1 ? "o episódio" : `os ${prova.length}`}
@@ -222,7 +236,7 @@ export default function ReverPage() {
                     void marcar(atual.porMarcar, `${contarEpisodios(atual.porMarcar.length)} marcados`)
                   }
                   disabled={aCorrer}
-                  className="flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-ink transition hover:border-ink/40 hover:bg-raised active:scale-[0.99] disabled:opacity-50"
+                  className="flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-ink transition hover:border-ink/40 hover:bg-raised active:scale-[0.99] disabled:opacity-50"
                 >
                   {prova
                     ? `Vi tudo · também ${alemDaProva.length === 1 ? "o" : `os ${alemDaProva.length}`} da ${temporadasDe(alemDaProva)}`
@@ -238,15 +252,15 @@ export default function ReverPage() {
                   )
                 }
                 disabled={aCorrer}
-                className="flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-ink transition hover:border-ink/40 hover:bg-raised active:scale-[0.99] disabled:opacity-50"
+                className="flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-ink transition hover:border-ink/40 hover:bg-raised active:scale-[0.99] disabled:opacity-50"
               >
                 Ainda estou a ver
               </button>
             </div>
           </div>
-          {/* Arquivar e adiar não são respostas à pergunta do cartão — são
-              saídas dele. Numa linha discreta, fora da pilha de botões. */}
-          <div className="mt-3 flex flex-wrap items-center justify-center gap-x-4">
+          {/* Arquivar não é uma resposta à pergunta do cartão — é uma saída
+              dele. Numa linha discreta, fora da pilha de botões. */}
+          <div className="mt-2 flex flex-wrap items-center justify-center gap-x-4">
             <button
               onClick={() =>
                 void responder(
@@ -259,12 +273,6 @@ export default function ReverPage() {
               className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim transition hover:text-ink disabled:opacity-50"
             >
               Deixei de ver — arquivar
-            </button>
-            <button
-              onClick={() => setIndice(indice + 1)}
-              className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim hover:text-ink"
-            >
-              Decidir depois
             </button>
           </div>
         </section>

@@ -147,7 +147,11 @@ export default function TonightHero({
         )}
       </div>
 
-      <div className="relative flex min-h-[calc(100dvh-var(--dock-h)-5rem)] flex-col justify-end px-5 pb-6">
+      {/* `pb-16`: o espaço de um aviso de anular por baixo do "Marcar
+          visto". Marca-se aqui e o aviso sobe logo acima da dock — com
+          `pb-6`, sem "Ou então", tapava a parte de baixo do botão durante os
+          7 segundos da janela (medido na Fase 6). */}
+      <div className="relative flex min-h-[calc(100dvh-var(--dock-h)-5rem)] flex-col justify-end px-5 pb-16">
         <p className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-dim [font-stretch:80%]">
           {eyebrow}
         </p>

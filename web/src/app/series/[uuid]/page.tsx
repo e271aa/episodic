@@ -739,8 +739,13 @@ export default function ShowPage() {
           </button>
         )}
 
-        {/* Separadores */}
-        <div className="mt-6 flex gap-1 border-b border-line" role="tablist">
+        {/* Separadores. Com o texto grande não cabem os três numa linha
+            ("Estatísticas" chegava aos 428px num ecrã de 390, 5b.4): rolam
+            de lado dentro da própria faixa, em vez de alargar a página. */}
+        <div
+          className="mt-6 flex gap-1 overflow-x-auto border-b border-line [scrollbar-width:none]"
+          role="tablist"
+        >
           {(
             [
               ["episodios", "Episódios"],
@@ -769,7 +774,7 @@ export default function ShowPage() {
               }}
               onClick={() => setTab(id)}
               data-testid={`tab-${id}`}
-              className={`-mb-px flex min-h-11 cursor-pointer items-center border-b-2 px-3 text-[0.9375rem] transition-colors ${
+              className={`-mb-px flex min-h-11 shrink-0 cursor-pointer items-center border-b-2 px-3 text-[0.9375rem] whitespace-nowrap transition-colors ${
                 tab === id
                   ? "border-ink font-semibold text-ink"
                   : "border-transparent text-dim hover:text-ink"

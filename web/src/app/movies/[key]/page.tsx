@@ -140,6 +140,22 @@ export default function MoviePage() {
     });
   };
 
+  // Marcar era para sempre: depois de o aviso passar, nem desmarcar nem
+  // corrigir (Ronda 12, 5b.4). Desmarcar devolve-o à lista para ver.
+  const desmarcar = async () => {
+    const antes = { watchedAt: movie.watchedAt, dateIsExact: movie.dateIsExact };
+    await putMovie({ ...movie, watchedAt: null });
+    setMovie((m) => (m ? { ...m, watchedAt: null } : m));
+    pushUndo({
+      label: "Filme desmarcado",
+      detail: movie.name,
+      undo: async () => {
+        await putMovie({ ...movie, ...antes });
+        setMovie((m) => (m ? { ...m, ...antes } : m));
+      },
+    });
+  };
+
   return (
     <main className="mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]">
       <div className="relative h-44 sm:h-56">
@@ -201,6 +217,15 @@ export default function MoviePage() {
             </p>
           </div>
         </div>
+
+        {movie.watchedAt && (
+          <button
+            onClick={() => void desmarcar()}
+            className="mt-4 flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-line text-[0.9375rem] font-semibold text-dim transition hover:border-ink/40 hover:text-ink active:scale-[0.99]"
+          >
+            Desmarcar como visto
+          </button>
+        )}
 
         {!movie.watchedAt && (
           <button

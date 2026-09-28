@@ -177,10 +177,18 @@ test("a ação recomendada só marca o que a prova cobre", async ({ page, tmdb }
   await expect(cartao).toContainText("Parou Na Fronteira");
   for (const b of await cartao.getByRole("button").all()) expect(await preenchido(b)).toBe(false);
 
-  // Cinco saídas eram de mais: arquivar e adiar vivem numa linha discreta
-  const arquivar = await page.getByRole("button", { name: "Deixei de ver — arquivar" }).boundingBox();
-  const depois = await page.getByRole("button", { name: "Decidir depois" }).boundingBox();
-  expect(Math.abs(arquivar!.y - depois!.y)).toBeLessThan(4);
+  // Cinco saídas eram de mais: arquivar e adiar ficam fora da pilha de
+  // botões. Desde a 5d, "Decidir depois" vive junto do contador (é passar à
+  // seguinte) e "Deixei de ver" numa linha discreta por baixo — nenhum dos
+  // dois é um botão da largura do cartão.
+  const larguraCartao = (await cartao.boundingBox())!.width;
+  for (const nome of ["Deixei de ver — arquivar", "Decidir depois"]) {
+    const caixa = (await page.getByRole("button", { name: nome }).boundingBox())!;
+    expect(caixa.width).toBeLessThan(larguraCartao * 0.75);
+  }
+  const contador = (await cartao.getByText(/^\d+ de \d+$/).boundingBox())!;
+  const depois = (await page.getByRole("button", { name: "Decidir depois" }).boundingBox())!;
+  expect(Math.abs(depois.y + depois.height / 2 - (contador.y + contador.height / 2))).toBeLessThan(4);
 });
 
 test("a linha do cartão usa o glossário: 'por marcar' é o de trás, 'por ver' o da frente", async ({
