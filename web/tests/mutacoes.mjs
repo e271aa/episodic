@@ -1002,6 +1002,21 @@ const MUTACOES = [
     de: 'const SPECTRUM = ["#e6c832", "#e6483c", "#3c46e6", "#c8c8c8"];',
     para: 'const SPECTRUM = ["#e6483c", "#e6c832", "#37c837", "#3fd2c8", "#3c46e6", "#d24bd2"];',
   },
+  // ── Ronda 12, Fase 8: o que o Safari do iOS mostrou ────────
+  {
+    nome: "r12-fase8/icone-em-cima-do-titulo",
+    descricao: 'sem capa, o ícone volta a ficar centrado no cartão, em cima do título',
+    ficheiro: SWIPE_CARD,
+    de: '<div className="absolute inset-x-0 top-0 flex h-1/3 items-center justify-center">',
+    para: '<div className="absolute inset-0 flex items-center justify-center">',
+  },
+  {
+    nome: "r12-fase8/aviso-tapa-os-botoes-do-baralho",
+    descricao: 'o aviso de anular volta a tapar o ✕ e o ✓ do cartão seguinte',
+    ficheiro: EM_DIA_PAGINA,
+    de: 'bottom-[calc(var(--dock-h)+5.5rem)] z-20',
+    para: 'bottom-[calc(var(--dock-h)+2.25rem)] z-20',
+  },
 ];
 
 const filtro = process.argv[2];

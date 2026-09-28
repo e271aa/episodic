@@ -70,3 +70,68 @@ test("sem capa, o nome da série não aparece duas vezes", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Severance" })).toBeVisible();
   await expect(page.getByText("Severance", { exact: true })).toHaveCount(1);
 });
+
+test("sem capa, o ícone no lugar da arte não toca no título da série", async ({ page }) => {
+  // Visto no Safari do iOS (Fase 8): o ícone estava centrado no cartão
+  // inteiro — e o texto também vive no cartão, no terço de baixo —, por
+  // isso caía em cima de "Succession". O teste da 5c só olhava para o nome
+  // não aparecer duas vezes.
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Severance" }],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1, watchedAt: HOJE }],
+    kv: {
+      "nextup-cache": {
+        "s-1": {
+          episode: { season: 1, episode: 2, name: "Meio-dia", airDate: "2022-02-18" },
+          lastWatchedAt: HOJE,
+        },
+      },
+    },
+  });
+  await page.goto("/em-dia");
+  const titulo = page.getByRole("heading", { name: "Severance" });
+  await expect(titulo).toBeVisible();
+  const icone = page.locator("[data-swipe-stack] svg").first();
+  const t = (await titulo.boundingBox())!;
+  const i = (await icone.boundingBox())!;
+  expect(i.y + i.height).toBeLessThanOrEqual(t.y);
+});
+
+test("o aviso de anular não tapa os botões do cartão seguinte", async ({ page }) => {
+  // Visto no Safari do iOS (Fase 8): decidir pelo ✕ punha o aviso por cima
+  // do ✕ e do ✓ do cartão seguinte durante os 7 segundos da janela.
+  await semear(page, {
+    series: [
+      { uuid: "s-1", name: "Severance" },
+      { uuid: "s-2", name: "Andor" },
+    ],
+    vistos: [
+      { showUuid: "s-1", season: 1, episode: 1, watchedAt: HOJE },
+      { showUuid: "s-2", season: 1, episode: 1, watchedAt: HOJE },
+    ],
+    kv: {
+      "nextup-cache": {
+        "s-1": {
+          episode: { season: 1, episode: 2, name: "Meio-dia", airDate: "2022-02-18" },
+          lastWatchedAt: HOJE,
+        },
+        "s-2": {
+          episode: { season: 1, episode: 2, name: "Dois", airDate: "2022-09-21" },
+          lastWatchedAt: HOJE,
+        },
+      },
+    },
+  });
+  await page.goto("/em-dia");
+  const saltar = page.getByRole("button", { name: "Saltar — ainda não vi" });
+  await saltar.waitFor();
+  await saltar.dispatchEvent("click");
+  const aviso = page.getByTestId("undo-toast");
+  await expect(aviso).toBeVisible();
+  await page.waitForTimeout(300);
+  const a = (await aviso.boundingBox())!;
+  for (const nome of ["Saltar — ainda não vi", "Marcar como visto"]) {
+    const b = (await page.getByRole("button", { name: nome }).boundingBox())!;
+    expect(b.y + b.height).toBeLessThanOrEqual(a.y);
+  }
+});

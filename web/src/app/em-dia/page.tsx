@@ -275,8 +275,11 @@ function EmDiaContent() {
             />
 
             {/* As ações flutuam sobre o cartaz, acima da dock — nunca por
-                baixo dela, que era a avaria (o degradê da dock apagava-as). */}
-            <div className="pointer-events-none absolute inset-x-0 bottom-[calc(var(--dock-h)+2.25rem)] z-20 flex items-center justify-center gap-6">
+                baixo dela, que era a avaria (o degradê da dock apagava-as).
+                E acima do aviso de anular: decidir põe-no por cima da dock
+                durante 7 segundos, e tapava o ✕ e o ✓ do cartão seguinte
+                (visto no Safari do iOS, Fase 8). */}
+            <div className="pointer-events-none absolute inset-x-0 bottom-[calc(var(--dock-h)+5.5rem)] z-20 flex items-center justify-center gap-6">
               <button
                 onClick={() => handleDecide(remaining[0], false)}
                 aria-label="Saltar — ainda não vi"

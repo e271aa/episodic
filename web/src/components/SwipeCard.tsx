@@ -153,9 +153,12 @@ export default function SwipeCard({
           />
         ) : (
           // o nome já é o título do cartão, por baixo — aqui só o sinal de
-          // que falta a arte
-          <div className="absolute inset-0 flex items-center justify-center bg-raised text-faint">
-            <TvIcon className="h-12 w-12" />
+          // que falta a arte, no terço de cima: centrado no cartão inteiro
+          // caía em cima do título (visto no Safari do iOS, Fase 8)
+          <div className="absolute inset-0 bg-raised text-faint">
+            <div className="absolute inset-x-0 top-0 flex h-1/3 items-center justify-center">
+              <TvIcon className="h-12 w-12" />
+            </div>
           </div>
         )}
         <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-tube via-tube/50 to-transparent" />
@@ -209,7 +212,7 @@ export default function SwipeCard({
             Ronda 12, 5b.4, P1 #5). O código continua a ser o que fica
             marcado, no chip. O `pb` sobe o texto acima das ações flutuantes
             e da dock — sem isto o título ficava tapado por baixo delas. */}
-        <div className="relative flex h-full flex-col justify-end px-5 pt-5 pb-[calc(var(--dock-h)+7rem)]">
+        <div className="relative flex h-full flex-col justify-end px-5 pt-5 pb-[calc(var(--dock-h)+10.25rem)]">
           <h2 className="line-clamp-2 font-display text-2xl font-bold leading-tight text-ink [font-stretch:105%]">
             {showName}
           </h2>
