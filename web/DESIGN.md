@@ -232,6 +232,10 @@ botão. Uma cor SMPTE sem significado é ruído.
 
 **The Inverted Action Rule.** A ação principal é branca com texto preto. Não
 há azul de marca, nem âmbar, nem gradiente: o sinal é da emissão, não do botão.
+Uma **escolha** não é uma ação: um separador ativo, um filtro escolhido, um
+estado ("Na lista para ver") ficam em painel levantado com contorno claro,
+nunca brancos. A única exceção é a dock, a navegação que está sempre à vista
+(Ronda 12, Fase 5b.3 — havia três pílulas brancas no mesmo ecrã).
 
 **The Blue Is Never Text Rule.** O azul de sinal dá 2,9:1 sobre o tubo: serve
 para marcas finas (a barra de secção), nunca para letras.
@@ -284,6 +288,11 @@ Ritmo: 8–12px dentro de um grupo, 24–32px entre secções. Linhas de painel 
 60px de altura e 20px de margem interna. Tudo respeita as áreas seguras do
 iPhone (entalhe e barra de gestos).
 
+Uma página não reserva o espaço da dock outra vez: a moldura (`layout.tsx`)
+já o faz para todas. Reservá-lo na página dava 82px de scroll fantasma nos
+ecrãs de altura própria e 188px de nada no fim do detalhe (Ronda 12, Fase
+5b). Os ecrãs de altura própria usam `.tela-cheia`.
+
 O que é longo e da mesma espécie vai em **faixas horizontais** com encaixe
 (temporadas com mais de cinco, as filas do "Esta noite"); o resto em lista.
 Os cabeçalhos de temporada ficam fixos ao rolar. O herói de uma série ocupa
@@ -330,7 +339,9 @@ Diretos e táteis: respondem ao toque encolhendo 3% em 120ms.
   por ecrã — com buracos por marcar, o "Marcar próximo episódio" passa a
   secundário.
 - **Secondary:** contorno de fio, texto branco-projetor, 44px; no hover o
-  contorno clareia e o fundo sobe para painel levantado.
+  contorno clareia e o fundo sobe para painel levantado. É também o "Para
+  ver" de cada cartaz do Explorar — ações repetidas em cada item de uma
+  grelha nunca são brancas.
 - **Quiet:** só texto em luz secundária, que clareia no hover. Para ações
   terciárias ("Decidir depois", "Fechar E01–E19").
 - **Icon:** círculo de 44px, ícone de traço (Lucide, 2px) a 18–20px. Nos
@@ -344,7 +355,8 @@ Diretos e táteis: respondem ao toque encolhendo 3% em 120ms.
   progresso e a cor do estado. Selecionada sobe para painel levantado com um
   contorno mais claro. Um ponto ciano de 7px diz "buracos para trás", e diz
   o mesmo em palavras no nome acessível.
-- **Filtros:** pílulas; a ativa preenchida a branco-projetor.
+- **Filtros:** pílulas de contorno; a escolhida sobe para painel levantado,
+  com o contorno a 60% — nunca branca (é uma escolha, não uma ação).
 
 ### Cards / Containers
 - **Painel de definições:** painel com 24px de canto, linhas de 60px
@@ -362,11 +374,27 @@ Diretos e táteis: respondem ao toque encolhendo 3% em 120ms.
 - **Dock:** pílula flutuante ao fundo, painel a 90% com desfoque, sombra de
   dock, e um degradê de 110px por baixo para o conteúdo não se ler através
   dela. O item ativo é uma pílula branca com ícone e nome; os outros só
-  mostram o ícone no telemóvel.
+  mostram o ícone no telemóvel. Acende o separador **de onde se veio** — uma
+  série aberta a partir da Biblioteca acende a Biblioteca; só sem origem (a
+  app aberta direto num ecrã interior) vale uma regra fixa por rota.
 - **Separadores:** texto com uma linha de 2px por baixo do ativo; as setas
   do teclado andam entre eles.
-- **Recuar:** um círculo de 44px com seta, sobre o herói. Recuar desfaz a
-  navegação — nunca empurra uma página nova.
+- **Recuar:** um círculo de 44px com seta — sobre o herói nos ecrãs com
+  herói, e à esquerda do título nos outros (`CabecalhoEcra`). Nunca um texto
+  no canto superior direito. Recuar desfaz a navegação — nunca empurra uma
+  página nova.
+- **Biblioteca:** três separadores na barra flutuante — Séries · Filmes ·
+  Listas; as contagens só a partir de 360px de largura. Abre em 3 colunas de
+  cartazes (a vista "compacta"), com o título à vista. Nos filmes, os "para
+  ver" vêm primeiro, numa secção própria.
+
+### Signature: a casa ("Esta noite")
+O próximo episódio de ecrã inteiro — eyebrow, título em Archivo 36px largo,
+o chip `S01·E04`, a barra de progresso e a pílula "Marcar visto" debaixo do
+polegar. Por baixo, ainda na primeira dobra e acima da dock, **"Ou então"**:
+duas alternativas pequenas — a próxima série da fila (continuar, retomar ou
+começar) e o filme que entrou mais recentemente na lista "para ver". Tocar
+abre a página; não marca nada (escolhido pelo Ruben, Ronda 12, Fase 5b.3).
 
 ### Signature: o herói da série
 O backdrop de ponta a ponta, com um degradê a subir do tubo; a eyebrow em

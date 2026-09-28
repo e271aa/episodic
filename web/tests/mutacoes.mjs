@@ -706,8 +706,10 @@ const MUTACOES = [
     nome: "r12-fase5b3/detalhe-vazio-no-fim",
     descricao: "o detalhe volta a reservar o espaço da dock outra vez — 188px de nada no fim",
     ficheiro: DETALHE,
-    de: '    <main className="mx-auto w-full max-w-2xl">',
-    para: '    <main className="mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]">',
+    // com a linha do comentário: sem ela, a âncora batia primeiro no <main>
+    // do ecrã de carregamento, que tem a mesma classe
+    de: '    // temporadas fechadas (medido — Ronda 12, Fase 5b.3)\n    <main className="mx-auto w-full max-w-2xl">',
+    para: '    // temporadas fechadas (medido — Ronda 12, Fase 5b.3)\n    <main className="mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]">',
   },
   {
     // Não é a mudança de ordem ao contrário (o guião só troca texto): é o
