@@ -298,3 +298,30 @@ test("uma capa que falha a carregar não fica a brilhar para sempre nem partida"
   await expect(page.locator("main img")).toHaveCount(0);
   await expect(page.locator(".poster-shimmer")).toHaveCount(0);
 });
+
+test("o nome da série no herói da casa tem 44px de alvo (medido no iPhone: 43)", async ({
+  page,
+  tmdb,
+}) => {
+  const hoje = new Date().toISOString();
+  Object.assign(tmdb.series, serieCompleta(500, "Severance", [9]).series);
+  Object.assign(tmdb.episodios, serieCompleta(500, "Severance", [9]).episodios);
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Severance", tmdbId: 500, numeracao: "tmdb" }],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1, watchedAt: hoje }],
+    kv: {
+      "nextup-cache": {
+        "s-1": {
+          episode: { season: 1, episode: 2, name: "Dois", airDate: "2020-01-01" },
+          lastWatchedAt: hoje,
+        },
+      },
+    },
+  });
+  await page.setViewportSize({ width: 430, height: 775 });
+  await page.goto("/series");
+  const alvo = page.getByRole("link", { name: "Severance" }).first();
+  await alvo.waitFor();
+  const altura = await alvo.evaluate((el) => el.getBoundingClientRect().height);
+  expect(altura).toBeGreaterThanOrEqual(44);
+});

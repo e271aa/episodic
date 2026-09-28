@@ -159,7 +159,7 @@ export default function TonightHero({
             entrelinha apertada) e o alvo recomendado são 44. O padding
             alarga a área de toque e a margem negativa devolve o espaço ao
             layout — cresce o que o dedo apanha, não muda o que se vê. */}
-        <Link href={`/series/${showUuid}`} className="mt-2 -my-1 block py-1">
+        <Link href={`/series/${showUuid}`} className="mt-2 -my-1 flex min-h-11 items-center">
           <h1 className="font-display text-[2.25rem] font-bold leading-[0.98] tracking-[-0.015em] text-ink [font-stretch:110%]">
             {showName}
           </h1>

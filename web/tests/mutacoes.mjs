@@ -1139,6 +1139,13 @@ const MUTACOES = [
     de: "        onError={() => setFalhou(true)}\n",
     para: "",
   },
+  {
+    nome: "r12-fase8/titulo-do-heroi-43px",
+    descricao: "o nome da série no herói da casa volta a ter 43px de alvo",
+    ficheiro: HEROI,
+    de: 'className="mt-2 -my-1 flex min-h-11 items-center"',
+    para: 'className="mt-2 -my-1 block py-1"',
+  },
 ];
 
 const filtro = process.argv[2];
