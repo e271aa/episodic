@@ -204,6 +204,12 @@ export async function backfillShows(
          * `numeracao` — ver a nota em `db.ts`.
          */
         lista.filter((s) => s.posterPath && s.totalEpisodes && !s.tmdbId),
+        /**
+         * Sem a duração de um episódio, o Tempo de antena não conta o que
+         * se marca na app (Ronda 12, 5c). Só as que nunca foram perguntadas
+         * (`undefined`); as que o fornecedor não sabe ficam a `null`.
+         */
+        lista.filter((s) => s.posterPath && s.tmdbId && s.runtime === undefined),
       ].flat(),
       (s) => s.uuid,
       async (show) => {

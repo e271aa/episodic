@@ -1,7 +1,14 @@
 // Estatísticas do perfil, calculadas a partir do armazém local. O perfil é o
 // "cartão de estação" do utilizador: tempo de antena, o seu espetro de géneros
 // (as barras SMPTE, mas construídas com os dados reais dele) e a série-farol.
-import { getAllWatched, getImportMeta, getMovies, getShows } from "./db";
+import {
+  getAllWatched,
+  getImportMeta,
+  getMovies,
+  getShows,
+  type StoredShow,
+  type WatchedEpisode,
+} from "./db";
 
 export interface GenreSlice {
   name: string;
@@ -33,6 +40,39 @@ export interface ProfileStats {
   topShow: TopShow | null;
   genres: GenreSlice[];
   perYear: YearBar[];
+}
+
+/**
+ * Tempo de antena: o total do TV Time até à importação, mais o que se
+ * marcou depois, à duração de cada série.
+ *
+ * Vinha só do export: não crescia com nada marcado na app, e quem nunca
+ * usou o TV Time não o tinha (Ronda 12, 5b.4, P1 #3). O corte é a data da
+ * importação — o que o TV Time somou tem datas anteriores; tudo o que a app
+ * marca (um a um ou "vi tudo") leva a data de quando se marcou.
+ *
+ * Uma série sem duração conhecida conta à média do próprio import; sem
+ * import nem duração, não conta — melhor a menos do que inventado.
+ */
+function horasDeAntena(
+  meta: Awaited<ReturnType<typeof getImportMeta>>,
+  shows: StoredShow[],
+  watched: WatchedEpisode[],
+): number | null {
+  const corte = meta?.importedAt ?? null;
+  const base = meta?.totalSeriesRuntimeSec ?? 0;
+  const importados = corte ? watched.filter((w) => w.watchedAt <= corte).length : 0;
+  const media = base > 0 && importados > 0 ? base / importados : null;
+  const duracao = new Map(shows.map((s) => [s.uuid, s.runtime ?? null]));
+
+  let segundos = base;
+  for (const w of watched) {
+    if (corte && w.watchedAt <= corte) continue;
+    const minutos = duracao.get(w.showUuid);
+    const s = minutos ? minutos * 60 : media;
+    if (s) segundos += s;
+  }
+  return segundos > 0 ? Math.round(segundos / 3600) : null;
 }
 
 // Cores das barras SMPTE, reordenadas para os géneros mais vistos ficarem com
@@ -160,9 +200,7 @@ export async function loadProfileStats(): Promise<ProfileStats> {
     following: shows.filter((s) => s.followed).length,
     episodes: watched.length,
     movies: movies.length,
-    hours: meta?.totalSeriesRuntimeSec
-      ? Math.round(meta.totalSeriesRuntimeSec / 3600)
-      : null,
+    hours: horasDeAntena(meta, shows, watched),
     importedAt: meta?.importedAt ?? null,
     firstYear,
     topShow,

@@ -18,6 +18,9 @@ export interface TvmazeShow {
   status: string;
   genres: string[];
   summary: string | null; // vem em HTML
+  /** minutos; `averageRuntime` quando os episódios variam */
+  runtime?: number | null;
+  averageRuntime?: number | null;
   image: { medium: string; original: string } | null;
   externals: { thetvdb: number | null; imdb: string | null };
 }

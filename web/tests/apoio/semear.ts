@@ -25,6 +25,8 @@ export interface SerieSemeada {
   genres?: string[] | null;
   /** qual dos fornecedores define a numeração — ver `StoredShow.numeracao` */
   numeracao?: "tmdb" | "tvmaze";
+  /** minutos de um episódio típico — ver `StoredShow.runtime` */
+  runtime?: number | null;
   followed?: boolean;
   inWatchlist?: boolean;
   archived?: boolean;
@@ -92,6 +94,7 @@ function registos(semente: Semente): Registos {
       status: s.status ?? "Ended",
       genres: s.genres ?? null,
       ...(s.numeracao ? { numeracao: s.numeracao } : {}),
+      ...(s.runtime !== undefined ? { runtime: s.runtime } : {}),
       followed: s.followed ?? true,
       inWatchlist: s.inWatchlist ?? false,
       archived: s.archived ?? false,

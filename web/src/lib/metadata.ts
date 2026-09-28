@@ -127,6 +127,14 @@ function pickBestShow(
  * fallback por nome na TMDB existir ficava presa 24h a repetir o
  * "falhou" de ontem contra uma lógica que hoje já resolvia.
  */
+/**
+ * Minutos de um episódio típico. O `episode_run_time` da TMDB vem vazio em
+ * muitas séries recentes; o último episódio emitido costuma ter a duração.
+ */
+function duracaoTmdb(details: tmdb.TmdbShowDetails): number | null {
+  return details.episode_run_time?.[0] || details.last_episode_to_air?.runtime || null;
+}
+
 export async function enrichShow(
   show: StoredShow,
   refresh = false,
@@ -159,6 +167,7 @@ export async function enrichShow(
           firstAired: details.first_air_date || null,
           status: details.status || null,
           genres: details.genres?.map((g) => g.name) ?? null,
+          runtime: duracaoTmdb(details),
         };
       }
     }
@@ -166,7 +175,11 @@ export async function enrichShow(
     // TMDB completa (poster + sinopse + imdb já não é possível aqui)? Só vale
     // a pena consultar a TVmaze se faltar algo que ela possa preencher.
     const needsMaze =
-      !fromTmdb || !fromTmdb.posterPath || !fromTmdb.overview || !show.imdbId;
+      !fromTmdb ||
+      !fromTmdb.posterPath ||
+      !fromTmdb.overview ||
+      !show.imdbId ||
+      !fromTmdb.runtime;
 
     let fromMaze: Partial<StoredShow> | null = null;
     if (needsMaze) {
@@ -194,6 +207,7 @@ export async function enrichShow(
           status: mazeShow.status ?? null,
           genres: mazeShow.genres.length > 0 ? mazeShow.genres : null,
           imdbId: mazeShow.externals?.imdb ?? null,
+          runtime: mazeShow.averageRuntime || mazeShow.runtime || null,
         };
       }
     }
@@ -220,6 +234,7 @@ export async function enrichShow(
           firstAired: details.first_air_date || null,
           status: details.status || null,
           genres: details.genres?.map((g) => g.name) ?? null,
+          runtime: duracaoTmdb(details),
           // Guardar os títulos aqui, não só o id, é o que já resolveu o
           // "Erased" (duas entradas TMDB diferentes) — sem isto o Explorar
           // voltaria a sugerir esta série como se fosse nova.
@@ -269,11 +284,16 @@ export async function enrichShow(
             firstAired: fromTmdb.firstAired ?? fromMaze.firstAired,
             status: fromTmdb.status ?? fromMaze.status,
             genres: fromTmdb.genres ?? fromMaze.genres,
+            runtime: fromTmdb.runtime ?? fromMaze.runtime,
             tvmazeId: fromMaze.tvmazeId,
             imdbId: fromMaze.imdbId,
           };
 
     if (numeracao) patch.numeracao = numeracao;
+    // sempre escrito, mesmo a null: `undefined` quer dizer "ainda não se
+    // perguntou", e o backfill voltaria a pedir a série todos os dias. Um
+    // fornecedor que hoje não respondeu não apaga o que já se sabia.
+    patch.runtime ??= show.runtime ?? null;
 
     /**
      * O **total de episódios** pertence a quem manda na numeração, e não ao

@@ -18,6 +18,13 @@ export interface StoredShow {
   genres?: string[] | null;
   imdbId?: string | null; // ex. "tt1234567" — para link externo
   /**
+   * Minutos de um episódio típico, do fornecedor — para o Tempo de antena
+   * contar o que se marca na app (Ronda 12, 5c). `undefined` = ainda não se
+   * perguntou; `null` = o fornecedor não sabe. Só local: não vai para a
+   * cloud, e o `juntarSerie` guarda-o ao juntar.
+   */
+  runtime?: number | null;
+  /**
    * Outros títulos por que esta série é conhecida na TMDB (o pt-PT e o
    * original), capturados quando se resolve o id TMDB.
    *

@@ -29,9 +29,14 @@ import { escolherNumeracao } from "../src/lib/numeracao";
  *
  * `Required<>` é de propósito: acrescentar um campo a StoredShow ou a
  * StoredMovie e não o pôr na cloud deixa de compilar aqui.
+ *
+ * A única exceção é a `runtime` (Ronda 12, 5c): volta-se a buscar ao
+ * fornecedor — uma instalação nova não perde nada, o backfill repõe-na — e
+ * uma coluna nova obrigava a correr SQL no Supabase ANTES do deploy, senão
+ * a sincronização partia. Fica só no telemóvel, e o `juntarSerie` guarda-a.
  */
 
-const SERIE: Required<StoredShow> = {
+const SERIE: Required<Omit<StoredShow, "runtime">> = {
   uuid: "uuid-naruto",
   name: "Naruto",
   tvdbId: 78857,
@@ -112,6 +117,12 @@ test("sincronizar com uma cloud antiga não apaga o que só o telemóvel sabe", 
   expect(junta.numeracao).toBe("tvmaze");
   expect(junta.tmdbAliases).toEqual(SERIE.tmdbAliases);
   expect(junta.archived).toBe(true);
+});
+
+test("a duração de um episódio, só no telemóvel, sobrevive a uma sincronização", () => {
+  const local: StoredShow = { ...SERIE, runtime: 23 };
+  const daNuvem = rowToShow(pelaNuvem<ShowRow>(showToRow(local, "u")));
+  expect(juntarSerie(local, daNuvem).runtime).toBe(23);
 });
 
 test("num filme, vazio na cloud quer dizer 'para ver' — mas só a data de visto", () => {

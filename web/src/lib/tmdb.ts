@@ -36,6 +36,7 @@ export interface TmdbShowDetails extends TmdbShowLite {
     season_number: number;
     episode_number: number;
     air_date: string | null;
+    runtime?: number | null;
   } | null;
   number_of_seasons: number;
   seasons: TmdbSeasonSummary[];

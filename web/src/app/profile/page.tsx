@@ -93,7 +93,7 @@ export default function ProfilePage() {
           </div>
         ) : (
           <p className="mt-3 text-[0.9375rem] text-dim">
-            Disponível depois de importares o TV Time.
+            Começa a contar com o primeiro episódio que marcares.
           </p>
         )}
         <p className="ep-code mt-3 text-xs text-faint">
