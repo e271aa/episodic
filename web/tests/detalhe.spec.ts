@@ -157,7 +157,13 @@ test("com buracos, a ação secundária também está toda tocável ao chegar", 
   // dock. Escolhido pelo Ruben (27-09): marcar primeiro, "Lista" e "Onde
   // ver" depois.
   await abrirSerie(page, tmdb, true);
+  // Esperar pelo cartão dos buracos e que a entrada dele (220ms) assente: sem
+  // isto, com a máquina carregada, media-se antes de ele aparecer — e sem ele
+  // a secundária fica mais acima e sempre livre. O teste passava sem provar
+  // nada (a mutação que a empurra para debaixo da dock sobrevivia).
+  await expect(page.getByTestId("marcar-buracos")).toBeVisible();
   await expect(page.getByTestId("mark-next")).toBeVisible();
+  await page.waitForTimeout(400);
   expect(await cobertura(page, '[data-testid="mark-next"]')).toBe(100);
 });
 
