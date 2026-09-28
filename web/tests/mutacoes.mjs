@@ -58,6 +58,11 @@ const SHEET_PANEL = "src/components/SheetPanel.tsx";
 const LISTAS_PAGINA = "src/app/listas/page.tsx";
 const ADD_TO_LIST = "src/components/AddToListButton.tsx";
 const BOTTOM_NAV = "src/components/BottomNav.tsx";
+const LISTAS_CONTEUDO = "src/components/ListasConteudo.tsx";
+const WATCHNEXT = "src/lib/watchnext.ts";
+const STATS_PERFIL = "src/lib/stats.ts";
+const BACKFILL = "src/lib/backfill.ts";
+const SWIPE_CARD = "src/components/SwipeCard.tsx";
 const CABECALHO = "src/components/CabecalhoEcra.tsx";
 const CONTROLOS_BIBLIOTECA = "src/components/LibraryControls.tsx";
 const LISTAS_ROTA = "src/app/listas/page.tsx";
@@ -100,15 +105,15 @@ const MUTACOES = [
     nome: "fase3/balde-por-comecar",
     descricao: "'Por começar' volta para dentro do 'A ver'",
     ficheiro: BIBLIOTECA,
-    de: '    return s.watchedCount === 0 ? "Por começar" : "A ver";',
-    para: '    return "A ver";',
+    de: '    return s.watchedCount === 0 ? "Por começar" : "Em curso";',
+    para: '    return "Em curso";',
   },
   {
     nome: "fase3/ordem-das-seccoes",
     descricao: "as completas voltam para o segundo lugar",
     ficheiro: BIBLIOTECA,
-    de: 'const ESTADOS = [\n  "A ver",\n  "Por começar",\n  "Para ver",\n  "Completas",',
-    para: 'const ESTADOS = [\n  "A ver",\n  "Completas",\n  "Por começar",\n  "Para ver",',
+    de: 'const ESTADOS = [\n  "Em curso",\n  "Por começar",\n  "Para ver",\n  "Completas",',
+    para: 'const ESTADOS = [\n  "Em curso",\n  "Completas",\n  "Por começar",\n  "Para ver",',
   },
   {
     nome: "fase3/dobrar-completas",
@@ -237,8 +242,8 @@ const MUTACOES = [
     nome: "r12/rever-so-os-de-tras",
     descricao: "\"só os de trás\" passa a marcar também os que estão à frente",
     ficheiro: REVER_PAGINA,
-    de: "void marcar(atual.paraTras, `${contarEpisodios(atual.paraTras.length)} marcados`)",
-    para: "void marcar(atual.porMarcar, `${contarEpisodios(atual.paraTras.length)} marcados`)",
+    de: 'void marcar(prova, `${contarEpisodios(prova.length)} marcados`)',
+    para: 'void marcar(atual.porMarcar, `${contarEpisodios(prova.length)} marcados`)',
   },
   {
     nome: "r12/rever-sem-arquivadas",
@@ -477,8 +482,8 @@ const MUTACOES = [
     nome: "r12-fase5b/biblioteca-sem-h1",
     descricao: "a Biblioteca volta a não ter <h1>",
     ficheiro: LIBRARY_PAGINA,
-    de: '<h1 className="sr-only">Biblioteca</h1>',
-    para: "",
+    de: '<h1 className="font-display text-2xl font-bold [font-stretch:110%]">Biblioteca</h1>',
+    para: '<p className="font-display text-2xl font-bold [font-stretch:110%]">Biblioteca</p>',
   },
   {
     nome: "r12-fase5b/perfil-sem-h1",
@@ -512,8 +517,8 @@ const MUTACOES = [
     nome: "r12-fase5b/manifest-cor-v1",
     descricao: "o manifest volta à cor de tema da v1",
     ficheiro: MANIFEST,
-    de: '"#101014"',
-    para: '"#0b0e14"',
+    de: 'theme_color: "#101014"',
+    para: 'theme_color: "#0b0e14"',
   },
   {
     nome: "r12-fase5b/apagar-lista-vermelho-sempre",
@@ -539,7 +544,7 @@ const MUTACOES = [
   {
     nome: "r12-fase5b/listas-transborda-320",
     descricao: "/listas volta a transbordar a 320px",
-    ficheiro: LISTAS_PAGINA,
+    ficheiro: LISTAS_CONTEUDO,
     de: '"min-h-11 min-w-0 flex-1',
     para: '"min-h-11 flex-1',
   },
@@ -553,7 +558,7 @@ const MUTACOES = [
   {
     nome: "r12-fase5b/listas-campo-sem-rotulo",
     descricao: "o campo de nova lista volta a não ter aria-label",
-    ficheiro: LISTAS_PAGINA,
+    ficheiro: LISTAS_CONTEUDO,
     de: '          aria-label="Nome da nova lista"\n',
     para: "",
   },
@@ -582,8 +587,8 @@ const MUTACOES = [
     nome: "r12-fase5b/dock-parte-a-seguir-320",
     descricao: "a dock volta a partir 'A seguir' em duas linhas a 320px",
     ficheiro: BOTTOM_NAV,
-    de: '<span className={active ? "whitespace-nowrap" : "hidden sm:inline"}>',
-    para: '<span className={active ? "" : "hidden sm:inline"}>',
+    de: '<span className={active ? "whitespace-nowrap" : "sr-only sm:not-sr-only"}>',
+    para: '<span className={active ? "" : "sr-only sm:not-sr-only"}>',
   },
   {
     nome: "r12-fase5b2/heroi-volta-a-40px",
@@ -721,12 +726,100 @@ const MUTACOES = [
     de: 'className="page-enter mt-4 rounded-2xl border border-line bg-raised/60 p-4"',
     para: 'className="page-enter mt-20 rounded-2xl border border-line bg-raised/60 p-4"',
   },
+  // ── Ronda 12, Fase 5c: os 6 P1 da crítica 5b.4 ─────────────
+  {
+    // sem o último visto, a procura parte do início da série: é o bug original
+    nome: "r12-fase5c/proximo-e-o-primeiro-buraco",
+    descricao: 'o próximo episódio volta a ser o primeiro por marcar desde o S01·E01 — um buraco',
+    ficheiro: WATCHNEXT,
+    de: '    if (w.season < 1) continue;\n',
+    para: '    if (w.season < 1 || true) continue;\n',
+  },
+  {
+    nome: "r12-fase5c/dock-sem-nome",
+    descricao: 'os separadores inativos da dock voltam a não ter nome para o VoiceOver',
+    ficheiro: BOTTOM_NAV,
+    de: ': "sr-only sm:not-sr-only"}>',
+    para: ': "hidden sm:inline"}>',
+  },
+  {
+    nome: "r12-fase5c/antena-congelada",
+    descricao: 'o Tempo de antena volta a ser só o total do import',
+    ficheiro: STATS_PERFIL,
+    de: '    hours: horasDeAntena(meta, shows, watched),',
+    para: '    hours: meta?.totalSeriesRuntimeSec ? Math.round(meta.totalSeriesRuntimeSec / 3600) : null,',
+  },
+  {
+    nome: "r12-fase5c/duracao-nunca-se-pergunta",
+    descricao: 'o backfill deixa de pedir a duração às séries que já têm capa e total',
+    ficheiro: BACKFILL,
+    de: '        lista.filter((s) => s.posterPath && s.tmdbId && s.runtime === undefined),\n',
+    para: "",
+  },
+  {
+    // a primeira das duas chamadas (a do id da TMDB): o trecho leva o fim do bloco para ser único
+    nome: "r12-fase5c/duracao-nao-se-guarda",
+    descricao: 'o enriquecimento pela TMDB deixa de guardar a duração de um episódio',
+    ficheiro: METADATA,
+    de: '          runtime: duracaoTmdb(details),\n        };\n      }\n    }\n\n    // TMDB completa',
+    para: '          runtime: null,\n        };\n      }\n    }\n\n    // TMDB completa',
+  },
+  {
+    nome: "r12-fase5c/rever-por-marcar-junta-tudo",
+    descricao: "o Rever volta a chamar 'por marcar' ao que está à frente do último visto",
+    ficheiro: REVER_PAGINA,
+    de: '{atual.paraTras.length} por marcar · {temporadasDe(atual.paraTras)}',
+    para: '{atual.porMarcar.length} por marcar · {temporadasDe(atual.porMarcar)}',
+  },
+  {
+    nome: "r12-fase5c/baralho-serie-pequena",
+    descricao: 'no Pôr em dia, a série volta a 12px, cinza, em maiúsculas',
+    ficheiro: SWIPE_CARD,
+    de: '<h2 className="line-clamp-2 font-display text-2xl font-bold leading-tight text-ink [font-stretch:105%]">',
+    para: '<h2 className="truncate font-display text-xs font-semibold uppercase tracking-[0.18em] text-dim [font-stretch:80%]">',
+  },
+  {
+    nome: "r12-fase5c/baralho-nome-duas-vezes",
+    descricao: 'sem capa, o nome da série volta a aparecer no lugar da arte e no título',
+    ficheiro: SWIPE_CARD,
+    de: '<TvIcon className="h-12 w-12" />',
+    para: '{showName}',
+  },
+  {
+    nome: "r12-fase5c/onboarding-portas-no-fundo",
+    descricao: 'as duas portas do primeiro uso voltam para depois dos passos, debaixo do degradê da dock',
+    ficheiro: CASA,
+    de: '        <div className="mt-8 flex flex-col items-center gap-2">\n          <Link\n            href="/explorar?procurar=1"\n            className="flex min-h-12 cursor-pointer items-center rounded-full bg-ink px-6 font-semibold text-tube transition hover:brightness-110 active:scale-95"\n          >\n            Procurar uma série\n          </Link>\n          <Link\n            href="/import"\n            className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim transition hover:text-ink"\n          >\n            Vens do TV Time? Importar o histórico\n          </Link>\n        </div>\n\n        <ol className="mt-10 space-y-4">\n          {steps.map((step) => (\n            <li key={step.n} className="flex items-start gap-4">\n              <span className="ep-code mt-0.5 shrink-0 text-lg font-bold text-ink">\n                {step.n}\n              </span>\n              <div>\n                <p className="font-display font-semibold">{step.title}</p>\n                <p className="mt-0.5 text-[0.9375rem] text-dim">{step.text}</p>\n              </div>\n            </li>\n          ))}\n        </ol>\n',
+    para: '        <ol className="mt-10 space-y-4">\n          {steps.map((step) => (\n            <li key={step.n} className="flex items-start gap-4">\n              <span className="ep-code mt-0.5 shrink-0 text-lg font-bold text-ink">\n                {step.n}\n              </span>\n              <div>\n                <p className="font-display font-semibold">{step.title}</p>\n                <p className="mt-0.5 text-[0.9375rem] text-dim">{step.text}</p>\n              </div>\n            </li>\n          ))}\n        </ol>\n\n        <div className="mt-8 flex flex-col items-center gap-2">\n          <Link\n            href="/explorar?procurar=1"\n            className="flex min-h-12 cursor-pointer items-center rounded-full bg-ink px-6 font-semibold text-tube transition hover:brightness-110 active:scale-95"\n          >\n            Procurar uma série\n          </Link>\n          <Link\n            href="/import"\n            className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim transition hover:text-ink"\n          >\n            Vens do TV Time? Importar o histórico\n          </Link>\n        </div>\n',
+  },
+  {
+    nome: "r12-fase5c/onboarding-seguir-sem-onde",
+    descricao: "o onboarding volta a dizer 'Toca em Seguir' sem dizer que é na pesquisa",
+    ficheiro: CASA,
+    de: 'text: "Pelo nome, na pesquisa. Toca em Seguir e a série entra na tua fila.",',
+    para: 'text: "Toca em Seguir e a série entra na tua fila.",',
+  },
 ];
 
 const filtro = process.argv[2];
 const alvo = filtro ? MUTACOES.filter((m) => m.nome.includes(filtro)) : MUTACOES;
 if (alvo.length === 0) {
   console.error(`Nenhuma mutação com "${filtro}".`);
+  process.exit(1);
+}
+
+// Todos os trechos, antes de correr seja o que for — incluindo os que o
+// filtro deixa de fora. Oito mutações ficaram sem trecho entre a Fase 5 e a
+// 5c da Ronda 12 (o código mudou por baixo delas) e ninguém deu por isso:
+// as corridas eram filtradas pela fase, e só a corrida completa as via.
+const partidas = MUTACOES.filter((m) => {
+  const n = readFileSync(m.ficheiro, "utf8").split(m.de).length - 1;
+  return n !== 1;
+});
+if (partidas.length > 0) {
+  console.error("Mutações cujo trecho já não existe (ou existe mais de uma vez):");
+  for (const m of partidas) console.error(`  · ${m.nome} (${m.ficheiro})`);
+  console.error("Uma mutação assim não repõe o bug que diz repor — corrige-a.");
   process.exit(1);
 }
 
