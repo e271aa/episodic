@@ -1047,10 +1047,12 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5e/entrar-sem-saida",
-    descricao: 'o Entrar volta a não ter recuar no formulário',
+    // só o ramo sem cloud é exercitado: a suite corre sem chaves do Supabase,
+    // e o formulário (com cloud) nunca chega a renderizar-se aqui
+    descricao: 'o Entrar (sem cloud) volta a não ter recuar',
     ficheiro: LOGIN,
-    de: '      <BotaoDeSair />\n      <div className="mx-auto w-full max-w-sm">',
-    para: '      <div className="mx-auto w-full max-w-sm">',
+    de: 'justify-center px-6 text-center">\n        <BotaoDeSair />',
+    para: 'justify-center px-6 text-center">',
   },
   {
     nome: "r12-fase5e/maratona-de-um-episodio",
