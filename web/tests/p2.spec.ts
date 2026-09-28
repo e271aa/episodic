@@ -263,7 +263,13 @@ test("o aviso de anular não tapa o 'Marcar visto' da casa, nem a dock", async (
   });
   await page.goto("/series");
   const botao = page.getByRole("button", { name: "Marcar visto" });
-  await botao.click();
+  await botao.waitFor();
+  // `dispatchEvent`, não `click()`: o Playwright rola a página até o botão
+  // antes de tocar, e a casa tem 772px — o teste media-se a ele próprio e
+  // deixava passar o aviso por cima do botão (a mutação sobreviveu). O dedo
+  // toca onde o botão está, sem rolar nada.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await botao.dispatchEvent("click");
   const aviso = page.getByTestId("undo-toast");
   await expect(aviso).toBeVisible();
   await page.waitForTimeout(300); // o aviso acabou de entrar

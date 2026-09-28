@@ -218,7 +218,11 @@ As sete barras do cartão de teste, na ordem da mira, com os papéis que têm:
   segue a mesma regra: "Em curso" é o branco-projetor (é o estado "a meio",
   sem sinal), "Completas" é o magenta (o mesmo da barra de progresso de uma
   série terminada), o resto é cinza neutro.
-- A meio de uma série, o estado é o próprio branco-projetor.
+- A meio de uma série, o estado é o próprio branco-projetor; com buracos
+  para trás, o traço do estado é o ciano.
+- **O espetro de géneros** do Perfil usa as mesmas 4 neutras (amarelo,
+  vermelho, azul, cinza) para os 4 géneros mais vistos; o resto é "Outros",
+  em luz de fundo (escolhido pelo Ruben, Ronda 12, 5d).
 
 ### Danger
 - **Vermelho de perigo** (danger): o único acento de perigo. Só acende quando
@@ -342,6 +346,9 @@ Diretos e táteis: respondem ao toque encolhendo 3% em 120ms.
   contorno clareia e o fundo sobe para painel levantado. É também o "Para
   ver" de cada cartaz do Explorar — ações repetidas em cada item de uma
   grelha nunca são brancas.
+- **Sobre a arte:** vidro escuro — tubo a 60%, desfoque, fio claro a 25% —
+  com o ícone em branco-projetor. O recuar sobre o herói e o ✓ de cada
+  cartaz "para ver" da Biblioteca (escolhido pelo Ruben, Ronda 12, 5d).
 - **Quiet:** só texto em luz secundária, que clareia no hover. Para ações
   terciárias ("Decidir depois", "Fechar E01–E19").
 - **Icon:** círculo de 44px, ícone de traço (Lucide, 2px) a 18–20px. Nos
@@ -386,9 +393,12 @@ Diretos e táteis: respondem ao toque encolhendo 3% em 120ms.
   no canto superior direito. Recuar desfaz a navegação — nunca empurra uma
   página nova.
 - **Biblioteca:** três separadores na barra flutuante — Séries · Filmes ·
-  Listas; as contagens só a partir de 360px de largura. Abre em 3 colunas de
-  cartazes (a vista "compacta"), com o título à vista. Nos filmes, os "para
-  ver" vêm primeiro, numa secção própria.
+  Listas; as contagens só a partir de 360px de largura. A barra esconde-se
+  ao rolar para baixo e volta ao rolar para cima, como a do Safari
+  (escolhido pelo Ruben, Ronda 12, 5d); escondida não se toca, e o teclado
+  trá-la de volta. Abre em 3 colunas de cartazes (a vista "compacta"), com
+  o título à vista. Nos filmes, os "para ver" vêm primeiro, numa secção
+  própria.
 
 ### Signature: a casa ("Esta noite")
 O próximo episódio de ecrã inteiro — eyebrow, título em Archivo 36px largo,
@@ -426,8 +436,10 @@ progresso —, o ✓ do botão salta, e o episódio troca com um desfoque curto
 (escolhido pelo Ruben, Ronda 12, Fase 6). Só marcar acende a barra: anular
 troca o episódio, mas não festeja. Fechar uma temporada continua a ser a
 festa maior: o fio SMPTE atravessa a pastilha inteira (520ms). Tudo se anula
-por um aviso que sobe do fundo, sem ressalto, e desce pelo mesmo caminho,
-com uma barra que se esvazia enquanto a anulação ainda é possível.
+por um aviso que sobe logo acima da dock (pela mesma medida, `--dock-h`),
+sem ressalto, e desce pelo mesmo caminho, com uma barra que se esvazia
+enquanto a anulação ainda é possível. A casa deixa-lhe espaço por baixo do
+"Marcar visto": o aviso nunca tapa a ação que o fez aparecer.
 
 ### Movimento
 - **Curvas:** `--ease-out` = `cubic-bezier(0.23, 1, 0.32, 1)` (o `ease-out`
