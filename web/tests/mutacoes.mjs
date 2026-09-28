@@ -20,8 +20,8 @@
 import { execFileSync, execSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 
-const DETALHE = "src/app/series/[uuid]/page.tsx";
-const BIBLIOTECA = "src/app/library/page.tsx";
+const DETALHE = "src/app/series/[uuid]/ShowPageClient.tsx";
+const BIBLIOTECA = "src/app/library/LibraryPageClient.tsx";
 const RUNS = "src/lib/episodeRuns.ts";
 const BURACOS = "src/lib/buracos.ts";
 const EXISTENTE = "src/lib/existente.ts";
@@ -30,27 +30,27 @@ const METADATA = "src/lib/metadata.ts";
 const DB = "src/lib/db.ts";
 const STATS = "src/lib/advancedStats.ts";
 const REVER = "src/lib/rever.ts";
-const REVER_PAGINA = "src/app/rever/page.tsx";
+const REVER_PAGINA = "src/app/rever/ReverPageClient.tsx";
 const LINHAS = "src/lib/linhas.ts";
 const NUMERACAO = "src/lib/numeracao.ts";
 const HEROI = "src/components/TonightHero.tsx";
-const EM_DIA = "src/app/em-dia/page.tsx";
+const EM_DIA = "src/app/em-dia/EmDiaPageClient.tsx";
 const RESULTADO_SERIE = "src/components/ShowResultCard.tsx";
-const CASA = "src/app/series/page.tsx";
-const EXPLORAR = "src/app/explorar/page.tsx";
-const LISTA = "src/app/listas/[id]/page.tsx";
+const CASA = "src/app/series/SeriesPageClient.tsx";
+const EXPLORAR = "src/app/explorar/ExplorarPageClient.tsx";
+const LISTA = "src/app/listas/[id]/ListaPageClient.tsx";
 const AVISO = "src/components/UndoToast.tsx";
 const SECTION_HEADER = "src/components/SectionHeader.tsx";
 const CSS = "src/app/globals.css";
 const POSTER_CARD = "src/components/PosterCard.tsx";
-const LIBRARY = "src/app/library/page.tsx";
-const IMPORT_PAGINA = "src/app/import/page.tsx";
-const ESTATISTICAS = "src/app/estatisticas/page.tsx";
-const PROFILE_PAGINA = "src/app/profile/page.tsx";
-const LIBRARY_PAGINA = "src/app/library/page.tsx";
-const EXPLORAR_PAGINA = "src/app/explorar/page.tsx";
-const EM_DIA_PAGINA = "src/app/em-dia/page.tsx";
-const LOGIN = "src/app/login/page.tsx";
+const LIBRARY = "src/app/library/LibraryPageClient.tsx";
+const IMPORT_PAGINA = "src/app/import/ImportPageClient.tsx";
+const ESTATISTICAS = "src/app/estatisticas/EstatisticasPageClient.tsx";
+const PROFILE_PAGINA = "src/app/profile/ProfilePageClient.tsx";
+const LIBRARY_PAGINA = "src/app/library/LibraryPageClient.tsx";
+const EXPLORAR_PAGINA = "src/app/explorar/ExplorarPageClient.tsx";
+const EM_DIA_PAGINA = "src/app/em-dia/EmDiaPageClient.tsx";
+const LOGIN = "src/app/login/LoginPageClient.tsx";
 const POSTER_CARD_2 = "src/components/PosterCard.tsx";
 const DISCOVER_CARD = "src/components/DiscoverCard.tsx";
 const MANIFEST = "src/app/manifest.ts";
@@ -64,8 +64,14 @@ const STATS_PERFIL = "src/lib/stats.ts";
 const BACKFILL = "src/lib/backfill.ts";
 const SWIPE_CARD = "src/components/SwipeCard.tsx";
 const VIEW_TOGGLE = "src/components/ViewModeToggle.tsx";
-const ESTREAR = "src/app/estrear/page.tsx";
-const FILME_PAGINA = "src/app/movies/[key]/page.tsx";
+const TEXTO_IMPORTAR = "src/lib/textoImportar.ts";
+const ADVANCED_STATS = "src/lib/advancedStats.ts";
+const VAZIO_BIBLIOTECA = "src/components/LibraryEmptyState.tsx";
+const WATCHNEXT_CARD = "src/components/WatchNextCard.tsx";
+const LAYOUT = "src/app/layout.tsx";
+const CASA_CASCA = "src/app/series/page.tsx";
+const ESTREAR = "src/app/estrear/EstrearPageClient.tsx";
+const FILME_PAGINA = "src/app/movies/[key]/MoviePageClient.tsx";
 const CABECALHO = "src/components/CabecalhoEcra.tsx";
 const CONTROLOS_BIBLIOTECA = "src/components/LibraryControls.tsx";
 const LISTAS_ROTA = "src/app/listas/page.tsx";
@@ -449,7 +455,7 @@ const MUTACOES = [
   {
     nome: "r12-fase5b/data-importacao-crua",
     descricao: "a data da última importação volta a aparecer em ISO cru",
-    ficheiro: "src/app/profile/page.tsx",
+    ficheiro: "src/app/profile/ProfilePageClient.tsx",
     de: "`Última importação a ${porExtenso(stats.importedAt)}`",
     para: "`Última importação a ${stats.importedAt.slice(0, 10)}`",
   },
@@ -1016,6 +1022,98 @@ const MUTACOES = [
     ficheiro: EM_DIA_PAGINA,
     de: 'bottom-[calc(var(--dock-h)+5.5rem)] z-20',
     para: 'bottom-[calc(var(--dock-h)+2.25rem)] z-20',
+  },
+  // ── Ronda 12, Fase 5e: os P3 ───────────────────────────────
+  {
+    nome: "r12-fase5e/data-iso-no-detalhe",
+    descricao: 'o detalhe volta a mostrar a atividade em ISO cru',
+    ficheiro: DETALHE,
+    de: '      first: curta(dates[0]),',
+    para: '      first: dates[0].slice(0, 10),',
+  },
+  {
+    nome: "r12-fase5e/o-que-gostas",
+    descricao: "o Explorar volta a dizer 'o que gostas', sem preposição",
+    ficheiro: EXPLORAR,
+    de: 'Ainda não sei do que gostas',
+    para: 'Ainda não sei o que gostas',
+  },
+  {
+    nome: "r12-fase5e/privacidade-falsa",
+    descricao: "o Importar volta a prometer 'nada é enviado' com a cloud ligada",
+    ficheiro: TEXTO_IMPORTAR,
+    de: 'Tudo é processado aqui no teu aparelho — sobe para a tua conta se tiveres sessão iniciada.',
+    para: 'Tudo é processado aqui no teu aparelho; nada é enviado para servidores.',
+  },
+  {
+    nome: "r12-fase5e/entrar-sem-saida",
+    descricao: 'o Entrar volta a não ter recuar no formulário',
+    ficheiro: LOGIN,
+    de: '      <BotaoDeSair />\n      <div className="mx-auto w-full max-w-sm">',
+    para: '      <div className="mx-auto w-full max-w-sm">',
+  },
+  {
+    nome: "r12-fase5e/maratona-de-um-episodio",
+    descricao: "'Melhor maratona' volta a aceitar um episódio só",
+    ficheiro: ADVANCED_STATS,
+    de: 'const LIMIAR_MARATONA = 2;',
+    para: 'const LIMIAR_MARATONA = 1;',
+  },
+  {
+    nome: "r12-fase5e/adicionar-uma-serie",
+    descricao: "a Biblioteca vazia volta a mandar 'adicionar' uma série",
+    ficheiro: VAZIO_BIBLIOTECA,
+    de: '"Procura pelo nome para seguires a primeira."',
+    para: '"Procura pelo nome para adicionares o primeiro."',
+  },
+  {
+    nome: "r12-fase5e/renomear-32px",
+    descricao: 'o botão de renomear a lista volta a ter só o alvo do texto',
+    ficheiro: LISTA,
+    de: 'className="tap-44 relative cursor-pointer text-left"',
+    para: 'className="cursor-pointer text-left"',
+  },
+  {
+    nome: "r12-fase5e/sizes-estrear",
+    descricao: 'o A estrear volta a pedir a imagem do ecrã inteiro',
+    ficheiro: ESTREAR,
+    de: 'fill sizes="44px"',
+    para: 'fill',
+  },
+  {
+    nome: "r12-fase5e/sizes-rever",
+    descricao: 'o Rever volta a pedir a imagem do ecrã inteiro',
+    ficheiro: REVER_PAGINA,
+    de: 'fill sizes="56px"',
+    para: 'fill',
+  },
+  {
+    nome: "r12-fase5e/sizes-perfil",
+    descricao: 'o Perfil volta a pedir a imagem do ecrã inteiro',
+    ficheiro: PROFILE_PAGINA,
+    de: 'fill sizes="44px"',
+    para: 'fill',
+  },
+  {
+    nome: "r12-fase5e/sizes-fila",
+    descricao: 'o WatchNextCard volta a pedir a imagem do ecrã inteiro',
+    ficheiro: WATCHNEXT_CARD,
+    de: 'fill sizes="56px"',
+    para: 'fill',
+  },
+  {
+    nome: "r12-fase5e/titulo-sempre-episodic",
+    descricao: "o <title> volta a ser 'Episodic' em todos os ecrãs",
+    ficheiro: LAYOUT,
+    de: 'title: { default: "Episodic", template: "%s · Episodic" },',
+    para: 'title: "Episodic",',
+  },
+  {
+    nome: "r12-fase5e/titulo-da-casa",
+    descricao: 'a casa volta a não ter <title> próprio',
+    ficheiro: CASA_CASCA,
+    de: 'title: "A seguir"',
+    para: 'title: "Episodic"',
   },
 ];
 
