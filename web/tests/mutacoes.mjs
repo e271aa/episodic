@@ -63,6 +63,9 @@ const WATCHNEXT = "src/lib/watchnext.ts";
 const STATS_PERFIL = "src/lib/stats.ts";
 const BACKFILL = "src/lib/backfill.ts";
 const SWIPE_CARD = "src/components/SwipeCard.tsx";
+const VIEW_TOGGLE = "src/components/ViewModeToggle.tsx";
+const ESTREAR = "src/app/estrear/page.tsx";
+const FILME_PAGINA = "src/app/movies/[key]/page.tsx";
 const CABECALHO = "src/components/CabecalhoEcra.tsx";
 const CONTROLOS_BIBLIOTECA = "src/components/LibraryControls.tsx";
 const LISTAS_ROTA = "src/app/listas/page.tsx";
@@ -885,6 +888,119 @@ const MUTACOES = [
     ficheiro: CSS,
     de: '  .barra-acende {\n    animation-name: barra-luz;\n    animation-duration: 500ms;\n  }',
     para: '  .barra-acende {\n    animation-duration: 500ms;\n  }',
+  },
+  // ── Ronda 12, Fase 5d: os P2 da crítica 5b.4 ───────────────
+  {
+    nome: "r12-fase5d/esta-semana-ciano",
+    descricao: "'Esta semana' volta a ter o ciano dos buracos",
+    ficheiro: CASA,
+    de: '          <SectionHeader\n            label="Esta semana"',
+    para: '          <SectionHeader\n            color="#3fd2c8"\n            label="Esta semana"',
+  },
+  {
+    nome: "r12-fase5d/por-comecar-amarelo",
+    descricao: "'Por começar' volta a amarelo na Biblioteca",
+    ficheiro: BIBLIOTECA,
+    de: '  "Por começar": CINZA,',
+    para: '  "Por começar": "#e6c832",',
+  },
+  {
+    nome: "r12-fase5d/traco-sem-ciano",
+    descricao: 'com buracos, o traço do detalhe volta a não ser ciano',
+    ficheiro: DETALHE,
+    de: 'buracos.total > 0 ? "#3fd2c8" : accent',
+    para: 'accent',
+  },
+  {
+    nome: "r12-fase5d/modo-ativo-branco",
+    descricao: 'o modo ativo do Explorar volta a ser a pílula branca',
+    ficheiro: VIEW_TOGGLE,
+    de: 'ativo ? "bg-ink/[0.14] text-ink"',
+    para: 'ativo ? "bg-ink text-tube"',
+  },
+  {
+    nome: "r12-fase5d/semana-sem-janela",
+    descricao: "'Esta semana' volta a mostrar o que estreia daqui a 17 dias",
+    ficheiro: CASA,
+    de: '  const estaSemana = (upcoming ?? []).filter((e) => (e.episode.airDate ?? "") <= limiteSemana);',
+    para: '  const estaSemana = (upcoming ?? []).filter((e) => (e.episode.airDate ?? "") !== limiteSemana);',
+  },
+  {
+    nome: "r12-fase5d/semana-vazia-sem-frase",
+    descricao: 'sem nada esta semana, a secção volta a ficar calada',
+    ficheiro: CASA,
+    de: '          {estaSemana.length === 0 ? (',
+    para: '          {estaSemana.length === -1 ? (',
+  },
+  {
+    nome: "r12-fase5d/estrear-corta-o-nome",
+    descricao: 'o A estrear volta a cortar o nome da série',
+    ficheiro: ESTREAR,
+    de: '<p className="font-semibold leading-snug [overflow-wrap:anywhere]">{show.name}</p>',
+    para: '<p className="truncate font-semibold">{show.name}</p>',
+  },
+  {
+    nome: "r12-fase5d/filme-nao-se-desmarca",
+    descricao: 'um filme visto volta a não se poder desmarcar',
+    ficheiro: FILME_PAGINA,
+    de: '        {movie.watchedAt && (\n          <button\n            onClick={() => void desmarcar()}',
+    para: '        {!movie && (\n          <button\n            onClick={() => void desmarcar()}',
+  },
+  {
+    nome: "r12-fase5d/separadores-alargam-a-pagina",
+    descricao: 'a 150%, os separadores do detalhe voltam a alargar a página',
+    ficheiro: DETALHE,
+    de: 'className="mt-6 flex gap-1 overflow-x-auto border-b border-line [scrollbar-width:none]"',
+    para: 'className="mt-6 flex gap-1 border-b border-line"',
+  },
+  {
+    nome: "r12-fase5d/rever-saida-debaixo-da-dock",
+    descricao: 'a introdução do Rever volta às três linhas, e a saída do cartão desce para debaixo da dock',
+    ficheiro: REVER_PAGINA,
+    de: '        Séries com menos marcado do que o que já estreou. Só tu sabes se as viste.',
+    para: '        Séries com menos marcado do que o que já estreou. A app não sabe se as\n        viste — tu sabes. Uma de cada vez, e tudo se anula.',
+  },
+  {
+    nome: "r12-fase5d/aviso-tapa-marcar",
+    descricao: "a casa volta a não deixar espaço ao aviso: tapa a parte de baixo do 'Marcar visto'",
+    ficheiro: HEROI,
+    de: 'flex-col justify-end px-5 pb-16">',
+    para: 'flex-col justify-end px-5 pb-6">',
+  },
+  {
+    nome: "r12-fase5d/aviso-entra-na-dock",
+    descricao: 'o aviso de anular volta a 64px do fundo, a entrar na dock',
+    ficheiro: AVISO,
+    de: 'style={{ bottom: "calc(var(--dock-h) + 0.5rem)" }}',
+    para: 'style={{ bottom: "4rem" }}',
+  },
+  {
+    nome: "r12-fase5d/visto-em-branco",
+    descricao: 'o ✓ de cada cartaz volta a ser a pílula branca',
+    ficheiro: POSTER_CARD,
+    de: 'border border-ink/25 bg-tube/60 text-ink backdrop-blur',
+    para: 'bg-ink text-tube shadow-md',
+  },
+  {
+    nome: "r12-fase5d/barra-nunca-se-esconde",
+    descricao: 'a barra da Biblioteca volta a ficar sempre à vista',
+    ficheiro: CONTROLOS_BIBLIOTECA,
+    de: '      setEscondida(y > ultimo);',
+    para: '      setEscondida(y < 0);',
+  },
+  {
+    nome: "r12-fase5d/barra-escondida-toca-se",
+    descricao: 'escondida, a barra da Biblioteca volta a apanhar toques',
+    ficheiro: CONTROLOS_BIBLIOTECA,
+    de: 'escondida ? "pointer-events-none translate-y-6 opacity-0" : ""',
+    para: 'escondida ? "translate-y-6 opacity-0" : ""',
+  },
+  {
+    nome: "r12-fase5d/espetro-com-estados",
+    descricao: 'o espetro de géneros volta a usar verde, ciano e magenta',
+    ficheiro: STATS_PERFIL,
+    de: 'const SPECTRUM = ["#e6c832", "#e6483c", "#3c46e6", "#c8c8c8"];',
+    para: 'const SPECTRUM = ["#e6483c", "#e6c832", "#37c837", "#3fd2c8", "#3c46e6", "#d24bd2"];',
   },
 ];
 
