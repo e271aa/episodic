@@ -292,6 +292,38 @@ input:focus-visible,
   }
 }
 
+/* As folhas que sobem do fundo (SheetPanel, Ronda 12, Fase 6). Sobem com a
+   curva da gaveta do iOS; descem pelo mesmo caminho, mais depressa — quem
+   espera é quem abre, não quem fecha. O véu acompanha. Transições e não
+   keyframes: fechar a meio da subida inverte a partir de onde está. */
+.folha {
+  transform: translateY(0);
+  transition: transform 320ms var(--ease-drawer);
+}
+.folha-veu {
+  opacity: 1;
+  transition: opacity 320ms var(--ease-out);
+}
+@starting-style {
+  .folha {
+    transform: translateY(100%);
+  }
+  .folha-veu {
+    opacity: 0;
+  }
+}
+[data-estado="a-fechar"] {
+  pointer-events: none;
+}
+[data-estado="a-fechar"] .folha {
+  transform: translateY(100%);
+  transition-duration: 200ms;
+}
+[data-estado="a-fechar"] .folha-veu {
+  opacity: 0;
+  transition-duration: 200ms;
+}
+
 /* Entrada escalonada da grelha: os cartazes assentam em cascata em vez de
    aparecerem todos ao mesmo tempo. O atraso vem do índice, limitado à
    primeira dúzia — quem está fora do ecrã não precisa de espera. */
@@ -356,6 +388,15 @@ input:focus-visible,
   .poster-in,
   .undo-in {
     animation-name: esvanecer;
+  }
+  /* a folha aparece e sai a desvanecer, sem subir nem descer */
+  @starting-style {
+    .folha {
+      opacity: 0;
+    }
+  }
+  [data-estado="a-fechar"] .folha {
+    opacity: 0;
   }
   .check-pop,
   .check-ring::after,

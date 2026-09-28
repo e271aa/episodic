@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useSyncExternalStore, type ReactNode } from "react";
+import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { CloseIcon } from "@/components/icons";
 
@@ -17,7 +17,19 @@ import { CloseIcon } from "@/components/icons";
  * descendente `position: fixed`. Sem o portal, o painel assentava no fundo
  * do **documento** em vez do fundo do ecrã, e era preciso rolar a página
  * inteira para lá chegar.
+ *
+ * Movimento (Ronda 12, Fase 6): sobe do fundo com a curva da gaveta do iOS e
+ * desce pelo mesmo caminho, mais depressa — entrava como uma página (6px a
+ * subir) e desaparecia de golpe. Fecha-se também a arrastar a cabeça para
+ * baixo: um piparote rápido chega, não é preciso passar um limiar.
  */
+
+/** quanto dura a descida — tem de bater com `[data-estado="a-fechar"]` no CSS */
+const SAIDA_MS = 200;
+/** px/ms a partir dos quais um arrasto para baixo fecha, seja qual for a distância */
+const VELOCIDADE_FECHA = 0.11;
+/** a partir daqui (fração da altura) fecha mesmo devagar */
+const DISTANCIA_FECHA = 0.3;
 export default function SheetPanel({
   titulo,
   aberto,
@@ -84,23 +96,103 @@ export default function SheetPanel({
     () => false,
   );
 
-  if (!aberto || !noCliente) return null;
+  // Fechar não desmonta logo: a folha fica o tempo de descer. Acertado
+  // durante o render (e não num efeito) para não haver um frame em que já
+  // está fechada e ainda não começou a sair.
+  const [montada, setMontada] = useState(aberto);
+  const [aFechar, setAFechar] = useState(false);
+  if (aberto && !montada) setMontada(true);
+  if (aberto && aFechar) setAFechar(false);
+  if (!aberto && montada && !aFechar) setAFechar(true);
+  useEffect(() => {
+    if (!aFechar) return;
+    const t = setTimeout(() => {
+      setMontada(false);
+      setAFechar(false);
+    }, SAIDA_MS);
+    return () => clearTimeout(t);
+  }, [aFechar]);
+
+  // Arrastar a cabeça para baixo. Escreve direto no `style` do painel — um
+  // re-render por movimento do dedo é trabalho a mais onde um frame perdido
+  // se sente logo. A captura do ponteiro só começa quando o dedo se mexe de
+  // facto: capturar logo no toque roubava o clique ao ✕ da cabeça.
+  const arrasto = useRef<{ id: number; y0: number; t0: number; capturado: boolean } | null>(
+    null,
+  );
+  const deslocar = (dy: number | null) => {
+    const painel = painelRef.current;
+    if (!painel) return;
+    painel.style.transform = dy === null ? "" : `translateY(${dy}px)`;
+    painel.style.transition = dy === null ? "" : "none";
+  };
+  const aoTocar = (e: React.PointerEvent) => {
+    if (e.button !== 0 || aFechar) return;
+    arrasto.current = { id: e.pointerId, y0: e.clientY, t0: performance.now(), capturado: false };
+  };
+  const aoMover = (e: React.PointerEvent) => {
+    const a = arrasto.current;
+    if (!a || a.id !== e.pointerId) return;
+    const d = e.clientY - a.y0;
+    if (!a.capturado) {
+      if (Math.abs(d) < 4) return;
+      a.capturado = true;
+      e.currentTarget.setPointerCapture(e.pointerId);
+    }
+    // para cima não há para onde ir: cede um pouco, com atrito, em vez de
+    // bater numa parede invisível
+    deslocar(d > 0 ? d : -Math.sqrt(-d) * 2);
+  };
+  const aoLargar = (e: React.PointerEvent) => {
+    const a = arrasto.current;
+    arrasto.current = null;
+    if (!a || a.id !== e.pointerId || !a.capturado) return;
+    const d = e.clientY - a.y0;
+    const velocidade = d / Math.max(1, performance.now() - a.t0);
+    const altura = painelRef.current?.offsetHeight ?? 1;
+    // tirar o arrasto do `style` devolve a folha ao CSS: sobe de volta, ou
+    // desce a partir de onde o dedo a deixou
+    deslocar(null);
+    if (d > 0 && (velocidade > VELOCIDADE_FECHA || d > altura * DISTANCIA_FECHA)) onFechar();
+  };
+
+  if (!montada || !noCliente) return null;
 
   return createPortal(
-    <div className="fixed inset-0 z-50" role="dialog" aria-modal="true" aria-label={titulo}>
+    <div
+      className="fixed inset-0 z-50"
+      role="dialog"
+      aria-modal="true"
+      aria-label={titulo}
+      data-estado={aFechar ? "a-fechar" : "aberta"}
+    >
       {/* O véu escurece o suficiente para o painel ser o assunto, e fecha ao
           toque — a saída não pode depender de acertar num botão pequeno. */}
       <button
         aria-label="Fechar"
         onClick={onFechar}
-        className="absolute inset-0 cursor-default bg-tube/70 backdrop-blur-sm"
+        className="folha-veu absolute inset-0 cursor-default bg-tube/70 backdrop-blur-sm"
       />
       <div
         ref={painelRef}
         tabIndex={-1}
-        className="page-enter absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-3xl border-t border-line bg-panel pb-[calc(var(--dock-h)+1rem)] outline-none"
+        data-folha
+        className="folha absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-3xl border-t border-line bg-panel pb-[calc(var(--dock-h)+1rem)] outline-none"
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between gap-3 border-b border-line bg-panel px-5 py-4">
+        {/* A cabeça é a pega: `touch-none` para o arrasto não rolar o
+            conteúdo por baixo. A barrinha diz que se pode puxar. */}
+        <div
+          data-folha-pega
+          onPointerDown={aoTocar}
+          onPointerMove={aoMover}
+          onPointerUp={aoLargar}
+          onPointerCancel={aoLargar}
+          className="sticky top-0 z-10 flex touch-none items-center justify-between gap-3 border-b border-line bg-panel px-5 pt-5 pb-4"
+        >
+          <span
+            aria-hidden
+            className="absolute top-2 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full bg-ink/20"
+          />
           <p className="font-display text-[0.9375rem] font-bold [font-stretch:105%]">{titulo}</p>
           <button
             onClick={onFechar}
