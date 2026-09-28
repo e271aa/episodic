@@ -230,3 +230,37 @@ test("no WatchNextCard (a fila secundária), a capa pede 56px", async ({ page, t
   const img = secaoRetomar.locator('img[alt=""]').first();
   await expect(img).toHaveAttribute("sizes", "56px");
 });
+
+// ── o <title> de cada ecrã ───────────────────────────────────
+
+test("o <title> muda de ecrã para ecrã, em vez de ficar sempre 'Episodic'", async ({
+  page,
+  tmdb,
+}) => {
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Severance", posterPath: "/cartaz.jpg" }],
+    filmes: [{ key: "f-1", name: "Past Lives", watchedAt: null }],
+    listas: [{ id: "l-1", name: "A minha lista" }],
+  });
+
+  const casos: [string, RegExp][] = [
+    ["/series", /^A seguir/],
+    ["/explorar", /^Explorar/],
+    ["/library", /^Biblioteca/],
+    ["/profile", /^Perfil/],
+    ["/rever", /^Rever a biblioteca/],
+    ["/em-dia", /^Pôr em dia/],
+    ["/estrear", /^A estrear/],
+    ["/estatisticas", /^Estatísticas/],
+    ["/import", /^Importar/],
+    ["/login", /^Entrar/],
+    ["/series/s-1", /^Série · /],
+    ["/movies/f-1", /^Filme · /],
+    ["/listas/l-1", /^Lista · /],
+  ];
+  for (const [rota, esperado] of casos) {
+    await page.goto(rota);
+    await expect.poll(() => page.title(), { message: rota }).toMatch(esperado);
+    expect(await page.title()).not.toBe("Episodic");
+  }
+});
