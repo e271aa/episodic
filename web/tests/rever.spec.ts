@@ -182,3 +182,26 @@ test("a ação recomendada só marca o que a prova cobre", async ({ page, tmdb }
   const depois = await page.getByRole("button", { name: "Decidir depois" }).boundingBox();
   expect(Math.abs(arquivar!.y - depois!.y)).toBeLessThan(4);
 });
+
+test("a linha do cartão usa o glossário: 'por marcar' é o de trás, 'por ver' o da frente", async ({
+  page,
+  tmdb,
+}) => {
+  // Ronda 12, 5c — P1 #4 da crítica 5b.4: dizia "por marcar: 35 · T2 e T4"
+  // quando 28 desses eram a T4 inteira, à frente do último visto — por ver.
+  await semearBiblioteca(page, tmdb);
+  await page.goto("/rever");
+  const cartao = page.getByTestId("rever-cartao");
+  await expect(cartao).toContainText("Buracos E Frente");
+  await expect(cartao).toContainText("2 por marcar · T1");
+  await expect(cartao).toContainText("2 por ver · T3");
+
+  // e uma série parada a meio, sem nada para trás, não tem nada "por marcar"
+  for (let i = 0; i < 4; i++) {
+    if ((await cartao.textContent())?.includes("A Meio")) break;
+    await page.getByRole("button", { name: "Decidir depois" }).click();
+  }
+  await expect(cartao).toContainText("A Meio");
+  await expect(cartao).toContainText("2 por ver · T1");
+  await expect(cartao).not.toContainText("por marcar");
+});

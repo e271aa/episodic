@@ -177,9 +177,22 @@ export default function ReverPage() {
                 <p className="ep-code mt-1 text-sm text-dim">
                   {atual.vistos} de {atual.estreados} estreados
                 </p>
-                <p className="ep-code text-sm text-dim">
-                  por marcar: {atual.porMarcar.length} · {temporadasDe(atual.porMarcar)}
-                </p>
+                {/* O glossário (PRODUCT.md): "por marcar" é só o que está
+                    ATRÁS do último visto; o que vem depois é "por ver". Dizia
+                    "por marcar: 35 · T2 e T4" quando 28 eram a T4 inteira,
+                    à frente (Ronda 12, 5b.4, P1 #4). `paraTras` é o início
+                    de `porMarcar` — os dois estão pela mesma ordem. */}
+                {atual.paraTras.length > 0 && (
+                  <p className="ep-code text-sm text-dim">
+                    {atual.paraTras.length} por marcar · {temporadasDe(atual.paraTras)}
+                  </p>
+                )}
+                {atual.porMarcar.length > atual.paraTras.length && (
+                  <p className="ep-code text-sm text-dim">
+                    {atual.porMarcar.length - atual.paraTras.length} por ver ·{" "}
+                    {temporadasDe(atual.porMarcar.slice(atual.paraTras.length))}
+                  </p>
+                )}
               </div>
             </div>
             <p className="mt-4 text-[0.9375rem] text-ink" data-testid="rever-porque">
