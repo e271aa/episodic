@@ -43,7 +43,11 @@ export default function LibraryEmptyState({
           ? "Procura no catálogo em baixo para o adicionares."
           : filtrado
             ? "Este filtro está vazio — vê tudo o que tens."
-            : "Procura pelo nome para adicionares o primeiro."}
+            : // Uma série SEGUE-se, não se "adiciona" — é o verbo do
+              // glossário (PRODUCT.md); só o filme se adiciona mesmo.
+              segment === "series"
+              ? "Procura pelo nome para seguires a primeira."
+              : "Procura pelo nome para adicionares o primeiro."}
       </p>
       {filtrado && !query && (
         <button

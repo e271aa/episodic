@@ -87,3 +87,146 @@ test("'Melhor maratona' aparece a partir de 2 episódios no mesmo dia", async ({
   await expect(page.getByText("Melhor maratona")).toBeVisible();
   await expect(page.getByText("2", { exact: true })).toBeVisible();
 });
+
+test("a Biblioteca vazia usa 'seguir' para séries, não 'adicionar' — o glossário do PRODUCT.md", async ({
+  page,
+}) => {
+  await semear(page, {});
+  await page.goto("/library");
+  await expect(page.getByText("Ainda não há séries")).toBeVisible();
+  await expect(page.getByText(/seguires a primeira/)).toBeVisible();
+  await expect(page.getByText(/adicionares o primeiro/)).toHaveCount(0);
+
+  await page.goto("/library?tipo=filmes");
+  await expect(page.getByText("Ainda não há filmes")).toBeVisible();
+  await expect(page.getByText(/adicionares o primeiro/)).toBeVisible();
+});
+
+test("o botão de renomear uma lista tem 44px de alvo, não só os ~32px do texto", async ({
+  page,
+}) => {
+  await semear(page, {
+    listas: [{ id: "l-1", name: "A minha lista" }],
+  });
+  await page.goto("/listas/l-1");
+  const botao = page.getByRole("button", { name: "Renomear a lista A minha lista" });
+  const alvo = await botao.evaluate((el) => {
+    const antes = getComputedStyle(el, "::before");
+    return { largura: parseFloat(antes.width), altura: parseFloat(antes.height) };
+  });
+  expect(alvo.largura).toBeGreaterThanOrEqual(44);
+  expect(alvo.altura).toBeGreaterThanOrEqual(44);
+});
+
+// ── `fill` sem `sizes`: pedia sempre a imagem maior para uma capa pequena ──
+
+test("o A estrear pede o tamanho da capa que mostra, não o ecrã inteiro", async ({
+  page,
+  tmdb,
+}) => {
+  Object.assign(tmdb.series, serieCompleta(600, "Andor", [8]).series);
+  Object.assign(tmdb.episodios, serieCompleta(600, "Andor", [8]).episodios);
+  const daqui3dias = new Date(Date.now() + 3 * 864e5).toISOString().slice(0, 10);
+  const s = serieCompleta(600, "Andor", [8]);
+  s.episodios["600:1"][7].air_date = daqui3dias;
+  Object.assign(tmdb.series, s.series);
+  Object.assign(tmdb.episodios, s.episodios);
+  await semear(page, {
+    series: [
+      {
+        uuid: "s-1",
+        name: "Andor",
+        tmdbId: 600,
+        numeracao: "tmdb",
+        status: "Returning Series",
+        posterPath: "/cartaz.jpg",
+      },
+    ],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1 }],
+  });
+  await page.goto("/estrear");
+  const img = page.locator('img[alt=""]').first();
+  await expect(img).toHaveAttribute("sizes", "44px");
+});
+
+test("no Rever, a capa da série pede 56px, não a página inteira", async ({ page, tmdb }) => {
+  tmdb.tvmaze[801] = [2, 2];
+  await semear(page, {
+    series: [
+      {
+        uuid: "s-1",
+        name: "Tem Buracos",
+        tvmazeId: 801,
+        numeracao: "tvmaze",
+        posterPath: "/cartaz.jpg",
+      },
+    ],
+    vistos: [{ showUuid: "s-1", season: 2, episode: 1 }],
+  });
+  await page.goto("/rever");
+  await expect(page.getByTestId("rever-cartao")).toBeVisible();
+  const img = page.locator('img[alt=""]').first();
+  await expect(img).toHaveAttribute("sizes", "56px");
+});
+
+test("no Perfil, a série-farol pede 44px, não a página inteira", async ({ page }) => {
+  const hoje = new Date().toISOString();
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Serie Farol", posterPath: "/cartaz.jpg" }],
+    vistos: Array.from({ length: 5 }, (_, i) => ({
+      showUuid: "s-1",
+      season: 1,
+      episode: i + 1,
+      watchedAt: hoje,
+    })),
+  });
+  await page.goto("/profile");
+  const img = page.locator('img[alt=""]').first();
+  await expect(img).toHaveAttribute("sizes", "44px");
+});
+
+test("no WatchNextCard (a fila secundária), a capa pede 56px", async ({ page, tmdb }) => {
+  const hoje = new Date().toISOString();
+  const ha60Dias = new Date(Date.now() - 60 * 864e5).toISOString();
+  for (const [id, nome] of [
+    [500, "Ativa"],
+    [501, "Parada"],
+  ] as const) {
+    Object.assign(tmdb.series, serieCompleta(id, nome, [9]).series);
+    Object.assign(tmdb.episodios, serieCompleta(id, nome, [9]).episodios);
+  }
+  await semear(page, {
+    series: [
+      { uuid: "s-ativa", name: "Ativa", tmdbId: 500, numeracao: "tmdb" },
+      { uuid: "s-parada", name: "Parada", tmdbId: 501, numeracao: "tmdb" },
+    ],
+    vistos: [
+      { showUuid: "s-ativa", season: 1, episode: 1, watchedAt: hoje },
+      { showUuid: "s-parada", season: 1, episode: 1, watchedAt: ha60Dias },
+    ],
+    kv: {
+      "nextup-cache": {
+        "s-ativa": {
+          episode: { season: 1, episode: 2, name: "Dois", airDate: "2020-01-01" },
+          lastWatchedAt: hoje,
+        },
+        "s-parada": {
+          episode: { season: 1, episode: 2, name: "Dois", airDate: "2020-01-01" },
+          lastWatchedAt: ha60Dias,
+        },
+      },
+    },
+  });
+  await page.goto("/series");
+  await page.getByRole("heading", { level: 1, name: "Ativa" }).waitFor();
+  const toggle = page.getByRole("button", { name: /^Retomar/ });
+  await toggle.waitFor();
+  await toggle.click();
+  // dentro da secção "Retomar" — não a capa de 32px do "Ou então", que já
+  // tem `sizes` certo e também aponta para a mesma série parada
+  const secaoRetomar = page.locator("section", {
+    has: page.getByRole("heading", { name: "Retomar" }),
+  });
+  const img = secaoRetomar.locator('img[alt=""]').first();
+  await expect(img).toHaveAttribute("sizes", "56px");
+});

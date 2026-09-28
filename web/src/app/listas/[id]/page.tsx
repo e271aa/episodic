@@ -199,7 +199,9 @@ export default function ListaPage() {
               onClick={comecarAEditar}
               aria-label={`Renomear a lista ${list.name}`}
               title="Toca para renomear"
-              className="cursor-pointer text-left"
+              // O texto por si só tinha ~32px de alto — `tap-44` estica a
+              // área de toque para os 44px sem alargar o que se vê.
+              className="tap-44 relative cursor-pointer text-left"
             >
               {list.name}
             </button>

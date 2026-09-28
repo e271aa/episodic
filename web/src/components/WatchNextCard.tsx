@@ -48,7 +48,7 @@ export default function WatchNextCard({
       <Link href={`/series/${showUuid}`} className="flex min-w-0 flex-1 items-center gap-3">
         {posterPath ? (
           <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg shadow-sm shadow-black/40">
-            <Poster path={posterPath} alt="" size="w185" fill className="object-cover" />
+            <Poster path={posterPath} alt="" size="w185" fill sizes="56px" className="object-cover" />
           </div>
         ) : (
           <div className="h-20 w-14 shrink-0 rounded-lg bg-raised" />

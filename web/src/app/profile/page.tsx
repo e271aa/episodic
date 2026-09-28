@@ -163,7 +163,7 @@ export default function ProfilePage() {
           >
             {topShowPosterPath ? (
               <div className="relative h-16 w-11 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/40">
-                <Poster path={topShowPosterPath} alt="" size="w185" fill className="object-cover" />
+                <Poster path={topShowPosterPath} alt="" size="w185" fill sizes="44px" className="object-cover" />
               </div>
             ) : (
               <div className="h-16 w-11 shrink-0 rounded-lg bg-raised" />

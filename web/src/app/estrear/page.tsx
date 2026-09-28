@@ -69,7 +69,7 @@ export default function EstrearPage() {
               >
                 {show.posterPath ? (
                   <div className="relative h-16 w-11 shrink-0 overflow-hidden rounded-lg">
-                    <Poster path={show.posterPath} alt="" size="w185" fill className="object-cover" />
+                    <Poster path={show.posterPath} alt="" size="w185" fill sizes="44px" className="object-cover" />
                   </div>
                 ) : (
                   <div className="h-16 w-11 shrink-0 rounded-lg bg-raised" />

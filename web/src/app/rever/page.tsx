@@ -174,7 +174,7 @@ export default function ReverPage() {
             <div className="flex gap-3">
               {atual.show.posterPath ? (
                 <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg">
-                  <Poster path={atual.show.posterPath} alt="" size="w185" fill className="object-cover" />
+                  <Poster path={atual.show.posterPath} alt="" size="w185" fill sizes="56px" className="object-cover" />
                 </div>
               ) : (
                 <div className="flex h-20 w-14 shrink-0 items-center justify-center rounded-lg bg-raised text-faint">
