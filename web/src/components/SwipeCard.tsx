@@ -29,6 +29,13 @@ const BACK_GESTURE_EDGE = 26;
 const THRESHOLD = 100;
 /** a partir daqui o selo já está a 100% — decidir "sente-se" antes do limiar */
 const STAMP_FULL = 70;
+/**
+ * Um piparote decide mesmo antes do limiar (Ronda 12, Fase 6): px/ms a
+ * partir dos quais o gesto conta, e a distância mínima para um toque com o
+ * dedo a tremer não contar como piparote.
+ */
+const FLICK_VELOCITY = 0.11;
+const FLICK_MIN = 24;
 
 const YES = "#37c837";
 const NO = "#e8564a";
@@ -49,6 +56,7 @@ export default function SwipeCard({
   const [drag, setDrag] = useState({ x: 0, dragging: false });
   const [leaving, setLeaving] = useState<"left" | "right" | null>(null);
   const startX = useRef(0);
+  const startT = useRef(0);
   const pointerId = useRef<number | null>(null);
   const backdropOrPoster = backdropPath ?? posterPath;
 
@@ -60,6 +68,7 @@ export default function SwipeCard({
   const handlePointerDown = (e: React.PointerEvent) => {
     if (!active || leaving || e.clientX <= BACK_GESTURE_EDGE) return;
     startX.current = e.clientX;
+    startT.current = performance.now();
     pointerId.current = e.pointerId;
     try {
       (e.target as Element).setPointerCapture(e.pointerId);
@@ -77,7 +86,9 @@ export default function SwipeCard({
 
   const endDrag = () => {
     if (!drag.dragging) return;
-    if (Math.abs(drag.x) > THRESHOLD) {
+    const velocity = Math.abs(drag.x) / Math.max(1, performance.now() - startT.current);
+    const flick = velocity > FLICK_VELOCITY && Math.abs(drag.x) > FLICK_MIN;
+    if (Math.abs(drag.x) > THRESHOLD || flick) {
       decide(drag.x > 0);
     } else {
       setDrag({ x: 0, dragging: false });
@@ -104,7 +115,7 @@ export default function SwipeCard({
       className="absolute inset-0 touch-none select-none"
       style={{
         transform,
-        transition: drag.dragging ? "none" : "transform 220ms ease-out",
+        transition: drag.dragging ? "none" : "transform 220ms var(--ease-out)",
         // sem isto, os cartões de trás partilham o mesmo z-index e é o último
         // do DOM (o 3.º) que se vê atrás — não o que sobe a seguir
         zIndex: 10 - depth,

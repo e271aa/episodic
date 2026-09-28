@@ -221,3 +221,54 @@ test("o aviso de anular sai pelo caminho por onde entrou, em vez de desaparecer 
   // e, a sair, já não se anula nada: não é um botão
   await expect(page.getByTestId("undo-toast")).toHaveCount(0);
 });
+
+// ── o baralho do Pôr em dia ──────────────────────────────────
+
+async function baralho(page: import("@playwright/test").Page) {
+  const hoje = new Date().toISOString();
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Severance" }],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1, watchedAt: hoje }],
+    kv: {
+      "nextup-cache": {
+        "s-1": {
+          episode: { season: 1, episode: 2, name: "Meio-dia", airDate: "2022-02-18" },
+          lastWatchedAt: hoje,
+        },
+      },
+    },
+  });
+  await page.goto("/em-dia");
+  const serie = page.getByRole("heading", { name: "Severance" });
+  await expect(serie).toBeVisible();
+  const caixa = (await serie.boundingBox())!;
+  return { x: caixa.x + caixa.width / 2, y: caixa.y + caixa.height / 2 };
+}
+
+test("no baralho, um piparote curto e rápido decide — não é preciso arrastar 100px", async ({
+  page,
+}) => {
+  // Só decidia depois de 100px de arrasto: um gesto rápido e curto voltava
+  // para trás, como se a app não tivesse ouvido.
+  const { x, y } = await baralho(page);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  await page.mouse.move(x + 30, y);
+  await page.mouse.move(x + 60, y);
+  await page.mouse.up();
+  await expect(page.getByTestId("undo-toast")).toContainText("Marcado como visto");
+});
+
+test("no baralho, um arrasto curto e lento não decide: o cartão volta", async ({ page }) => {
+  const { x, y } = await baralho(page);
+  await page.mouse.move(x, y);
+  await page.mouse.down();
+  for (let d = 10; d <= 60; d += 10) {
+    await page.mouse.move(x + d, y);
+    await page.waitForTimeout(120);
+  }
+  await page.mouse.up();
+  await page.waitForTimeout(500);
+  await expect(page.getByTestId("undo-toast")).toHaveCount(0);
+  await expect(page.getByRole("heading", { name: "Severance" })).toBeVisible();
+});
