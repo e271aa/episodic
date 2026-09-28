@@ -175,3 +175,49 @@ test("com movimento reduzido, a folha aparece a desvanecer, sem subir", async ({
   expect(propriedades).toContain("opacity");
   expect(propriedades).not.toContain("transform");
 });
+
+// ── o aviso de anular ────────────────────────────────────────
+
+async function marcarUmEpisodio(page: import("@playwright/test").Page, tmdb: { tvmaze: Record<number, number[]> }) {
+  tmdb.tvmaze[495] = [5];
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Severance", tvmazeId: 495, numeracao: "tvmaze" }],
+  });
+  await page.goto("/series/s-1");
+  await page.getByTestId("tab-episodios").waitFor();
+  const primeiro = page.getByTestId("ep-1-1");
+  if (!(await primeiro.isVisible())) await page.getByTestId("season-1").click();
+  await primeiro.click();
+  await expect(page.getByTestId("undo-toast")).toBeVisible();
+}
+
+/** Os dois pontos de controlo de um `cubic-bezier(...)` — y acima de 1 é passar do alvo. */
+function pontosY(curva: string) {
+  const n = curva.match(/cubic-bezier\(([^)]+)\)/)?.[1].split(",").map(Number) ?? [];
+  return [n[1], n[3]];
+}
+
+test("o aviso de anular entra sem passar do alvo", async ({ page, tmdb }) => {
+  // Entrava com uma mola a passar do sítio (y = 1,36) — apontado pelo audit
+  // da 5b.4. Um aviso não é um brinquedo: chega e fica.
+  await marcarUmEpisodio(page, tmdb);
+  const curva = await page
+    .getByTestId("undo-toast")
+    .evaluate((el) => getComputedStyle(el).animationTimingFunction);
+  for (const y of pontosY(curva)) expect(y).toBeLessThanOrEqual(1);
+});
+
+test("o aviso de anular sai pelo caminho por onde entrou, em vez de desaparecer de golpe", async ({
+  page,
+  tmdb,
+}) => {
+  await marcarUmEpisodio(page, tmdb);
+  await page.getByTestId("undo-button").click();
+  const aSair = page.getByTestId("undo-toast-a-sair");
+  await expect(aSair).toBeAttached();
+  const nome = await aSair.evaluate((el) => getComputedStyle(el).animationName);
+  expect(nome).toBe("undo-out");
+  await expect(aSair).toHaveCount(0);
+  // e, a sair, já não se anula nada: não é um botão
+  await expect(page.getByTestId("undo-toast")).toHaveCount(0);
+});
