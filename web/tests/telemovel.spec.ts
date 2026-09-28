@@ -49,6 +49,13 @@ test("o painel de filtros abre por cima do ecrã, mesmo com a página a meio", a
   await page.goto("/library");
   await page.locator('a[href="/series/s-29"]').waitFor();
   await page.evaluate(() => window.scrollTo(0, 2000));
+  // a descer, a barra esconde-se (Ronda 12, 5d); sobe-se um pouco para ela
+  // voltar, como no Safari — e a página continua a meio. Espera-se entre os
+  // dois: no mesmo frame, o browser junta os dois scrolls num só evento.
+  const barra = page.getByTestId("barra-biblioteca");
+  await expect(barra).toHaveAttribute("data-escondida", "true");
+  await page.evaluate(() => window.scrollBy(0, -100));
+  await expect(barra).toHaveAttribute("data-escondida", "false");
 
   await page.getByRole("button", { name: "Filtros e ordenação" }).click();
 
