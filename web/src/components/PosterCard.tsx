@@ -185,7 +185,10 @@ export default function PosterCard({
             <button
               onClick={acao.onClick}
               aria-label={acao.aria}
-              className="tap-44 absolute bottom-1.5 right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-ink text-tube shadow-md transition active:scale-90"
+              // o vidro escuro do recuar sobre a arte, não a pílula branca:
+              // um ✓ em cada cartaz era a ação principal repetida por toda a
+              // grelha (escolhido pelo Ruben, Ronda 12, 5d)
+              className="tap-44 absolute bottom-1.5 right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full border border-ink/25 bg-tube/60 text-ink backdrop-blur transition active:scale-90"
             >
               {acao.icon}
             </button>

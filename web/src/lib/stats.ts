@@ -75,10 +75,12 @@ function horasDeAntena(
   return segundos > 0 ? Math.round(segundos / 3600) : null;
 }
 
-// Cores das barras SMPTE, reordenadas para os géneros mais vistos ficarem com
-// as cores mais vivas; o cinzento fica para "Outros".
-const SPECTRUM = ["#e6483c", "#e6c832", "#37c837", "#3fd2c8", "#3c46e6", "#d24bd2"];
-const OUTROS_COLOR = "#c8c8c8";
+// Só as 4 barras neutras da mira: verde, ciano e magenta já querem dizer
+// estados (em dia, buracos, terminada), e num espetro de géneros mentiam
+// (Bars Rule; escolhido pelo Ruben, Ronda 12, 5d). Os 4 géneros mais vistos
+// ficam com as cores, o resto junta-se em "Outros", num cinza esbatido.
+const SPECTRUM = ["#e6c832", "#e6483c", "#3c46e6", "#c8c8c8"];
+const OUTROS_COLOR = "#8a8880";
 
 // Nomes de género dos fornecedores muitas vezes vêm em inglês (sobretudo
 // TVmaze) — traduz para pt-PT e assim fundem-se com os que já vêm traduzidos.

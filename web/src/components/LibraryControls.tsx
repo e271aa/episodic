@@ -1,6 +1,6 @@
 "use client";
 
-import { useSyncExternalStore } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { createPortal } from "react-dom";
 import { SearchIcon, SortIcon } from "@/components/icons";
 
@@ -20,7 +20,16 @@ import { SearchIcon, SortIcon } from "@/components/icons";
  * elemento com `transform`, e um transform — mesmo identidade — torna-se o
  * bloco de referência de qualquer descendente `position: fixed`. Sem o
  * portal, a barra assentava 76px acima do sítio, medido.
+ *
+ * Esconde-se ao rolar para baixo e volta ao rolar para cima, como a barra do
+ * Safari (escolhido pelo Ruben, Ronda 12, 5d): eram duas barras a flutuar no
+ * fundo, ~140px de 664, e os títulos liam-se por baixo delas.
  */
+
+/** px de scroll no mesmo sentido antes de mudar — um tremor não conta */
+const LIMIAR_SCROLL = 8;
+/** perto do topo, está sempre à vista */
+const TOPO = 80;
 export default function LibraryControls({
   segment,
   counts,
@@ -45,6 +54,25 @@ export default function LibraryControls({
     () => true,
     () => false,
   );
+
+  const [escondida, setEscondida] = useState(false);
+  useEffect(() => {
+    let ultimo = window.scrollY;
+    const aoRolar = () => {
+      const y = window.scrollY;
+      if (y < TOPO) {
+        setEscondida(false);
+        ultimo = y;
+        return;
+      }
+      if (Math.abs(y - ultimo) < LIMIAR_SCROLL) return;
+      setEscondida(y > ultimo);
+      ultimo = y;
+    };
+    window.addEventListener("scroll", aoRolar, { passive: true });
+    return () => window.removeEventListener("scroll", aoRolar);
+  }, []);
+
   if (!noCliente) return null;
 
   return createPortal(
@@ -53,14 +81,23 @@ export default function LibraryControls({
           baixo" em vez de "acabou aqui". */}
       <div
         aria-hidden
-        className="pointer-events-none fixed inset-x-0 z-30 h-[170px]"
+        className={`pointer-events-none fixed inset-x-0 z-30 h-[170px] transition-opacity duration-200 ${
+          escondida ? "opacity-0" : ""
+        }`}
         style={{
           bottom: 0,
           background: "linear-gradient(to top, #101014 32%, rgba(16,16,20,0) 100%)",
         }}
       />
       <div
-        className="fixed inset-x-5 z-40 flex h-[52px] items-center gap-1 rounded-full border border-line bg-raised/92 px-1 backdrop-blur-lg"
+        data-testid="barra-biblioteca"
+        data-escondida={escondida}
+        // quem chega por teclado traz a barra de volta — escondida não é
+        // inacessível
+        onFocus={() => setEscondida(false)}
+        className={`fixed inset-x-5 z-40 flex h-[52px] items-center gap-1 rounded-full border border-line bg-raised/92 px-1 backdrop-blur-lg transition-[transform,opacity] duration-200 ease-out ${
+          escondida ? "pointer-events-none translate-y-6 opacity-0" : ""
+        }`}
         style={{ bottom: "calc(var(--dock-h) + 12px)" }}
       >
         {(

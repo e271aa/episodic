@@ -273,3 +273,67 @@ test("o aviso de anular não tapa o 'Marcar visto' da casa, nem a dock", async (
   expect(b.y + b.height).toBeLessThanOrEqual(a.y);
   expect(a.y + a.height).toBeLessThanOrEqual(dock.y);
 });
+
+// ── as escolhas do Ruben (28-09) ─────────────────────────────
+
+test("o ✓ de cada cartaz 'para ver' é um círculo escuro sobre a arte, não uma pílula branca", async ({
+  page,
+}) => {
+  await semear(page, { filmes: [{ key: "f-1", name: "Past Lives", watchedAt: null }] });
+  await page.goto("/library?tipo=filmes");
+  const marcar = page.getByRole("button", { name: "Marcar Past Lives como visto" });
+  await expect(marcar).toBeVisible();
+  const fundo = await marcar.evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(fundo).not.toBe(TINTA);
+  // o vidro escuro do recuar sobre a arte: meio transparente (o Tailwind 4
+  // dá-o em `lab(… / 0.6)`, o WebKit às vezes em `rgba(…, 0.6)`)
+  expect(fundo).toMatch(/(\/ 0?\.\d+\)|, 0?\.\d+\))$/);
+});
+
+test("a barra da Biblioteca esconde-se ao rolar para baixo e volta ao rolar para cima", async ({
+  page,
+}) => {
+  // Duas barras a flutuar no fundo (~140px de 664), e os títulos a lerem-se
+  // por baixo delas. Escolhido pelo Ruben: como a barra do Safari.
+  await semear(page, {
+    series: Array.from({ length: 45 }, (_, i) => ({ uuid: `s-${i}`, name: `Serie ${i}` })),
+  });
+  await page.goto("/library");
+  const barra = page.getByTestId("barra-biblioteca");
+  await expect(barra).toHaveAttribute("data-escondida", "false");
+
+  // o WebKit móvel não tem roda: rola-se a página, que é o que o dedo faz
+  await page.evaluate(() => window.scrollBy(0, 700));
+  await expect(barra).toHaveAttribute("data-escondida", "true");
+  // escondida a sério: não se toca por engano no que já não se vê
+  expect(await barra.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
+
+  await page.evaluate(() => window.scrollBy(0, -200));
+  await expect(barra).toHaveAttribute("data-escondida", "false");
+});
+
+test("o espetro de géneros usa só as 4 neutras da mira, e o resto vai para 'Outros'", async ({
+  page,
+}) => {
+  // Verde, ciano e magenta já querem dizer estados — num espetro de géneros
+  // mentiam. Escolhido pelo Ruben: 4 géneros + Outros.
+  const generos = ["Drama", "Comedy", "Crime", "Animation", "Documentary", "Mystery"];
+  await semear(page, {
+    series: generos.map((g, i) => ({ uuid: `s-${i}`, name: `Serie ${i}`, genres: [g] })),
+    vistos: generos.flatMap((_, i) =>
+      Array.from({ length: 10 - i }, (_, e) => ({ showUuid: `s-${i}`, season: 1, episode: e + 1 })),
+    ),
+  });
+  await page.goto("/profile");
+  const legenda = page.locator("section", { hasText: "O teu espetro" }).locator("li");
+  await expect(legenda.first()).toBeVisible();
+  expect(await legenda.count()).toBe(5);
+  await expect(legenda.last()).toContainText("Outros");
+  const cores = await legenda.evaluateAll((lis) =>
+    lis.map((li) => getComputedStyle(li.querySelector("span") as Element).backgroundColor),
+  );
+  for (const estado of ["rgb(55, 200, 55)", CIANO, "rgb(210, 75, 210)"]) {
+    expect(cores).not.toContain(estado);
+  }
+  for (const cor of cores.slice(0, 4)) expect(cor).toMatch(NEUTRA);
+});
