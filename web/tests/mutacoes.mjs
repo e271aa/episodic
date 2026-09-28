@@ -753,7 +753,7 @@ const MUTACOES = [
     nome: "r12-fase5c/duracao-nunca-se-pergunta",
     descricao: 'o backfill deixa de pedir a duração às séries que já têm capa e total',
     ficheiro: BACKFILL,
-    de: '        lista.filter((s) => s.posterPath && s.tmdbId && s.runtime === undefined),\n',
+    de: '        lista.filter(\n          (s) => s.posterPath && s.totalEpisodes && s.tmdbId && s.runtime === undefined,\n        ),\n',
     para: "",
   },
   {

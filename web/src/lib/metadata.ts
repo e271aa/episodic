@@ -118,6 +118,14 @@ function pickBestShow(
 }
 
 /**
+ * Minutos de um episódio típico. O `episode_run_time` da TMDB vem vazio em
+ * muitas séries recentes; o último episódio emitido costuma ter a duração.
+ */
+function duracaoTmdb(details: tmdb.TmdbShowDetails): number | null {
+  return details.episode_run_time?.[0] || details.last_episode_to_air?.runtime || null;
+}
+
+/**
  * Completa uma série da biblioteca com poster, sinopse e nº de episódios.
  * Devolve o patch a aplicar ao registo, ou null se não houver dados novos.
  *
@@ -127,14 +135,6 @@ function pickBestShow(
  * fallback por nome na TMDB existir ficava presa 24h a repetir o
  * "falhou" de ontem contra uma lógica que hoje já resolvia.
  */
-/**
- * Minutos de um episódio típico. O `episode_run_time` da TMDB vem vazio em
- * muitas séries recentes; o último episódio emitido costuma ter a duração.
- */
-function duracaoTmdb(details: tmdb.TmdbShowDetails): number | null {
-  return details.episode_run_time?.[0] || details.last_episode_to_air?.runtime || null;
-}
-
 export async function enrichShow(
   show: StoredShow,
   refresh = false,

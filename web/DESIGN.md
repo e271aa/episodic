@@ -374,7 +374,9 @@ Diretos e táteis: respondem ao toque encolhendo 3% em 120ms.
 - **Dock:** pílula flutuante ao fundo, painel a 90% com desfoque, sombra de
   dock, e um degradê de 110px por baixo para o conteúdo não se ler através
   dela. O item ativo é uma pílula branca com ícone e nome; os outros só
-  mostram o ícone no telemóvel. Acende o separador **de onde se veio** — uma
+  mostram o ícone no telemóvel — o nome fica para o leitor de ecrã
+  (`sr-only`, nunca `hidden`: sem ele, 3 dos 4 destinos não tinham nome).
+  Acende o separador **de onde se veio** — uma
   série aberta a partir da Biblioteca acende a Biblioteca; só sem origem (a
   app aberta direto num ecrã interior) vale uma regra fixa por rota.
 - **Separadores:** texto com uma linha de 2px por baixo do ativo; as setas
@@ -395,6 +397,19 @@ polegar. Por baixo, ainda na primeira dobra e acima da dock, **"Ou então"**:
 duas alternativas pequenas — a próxima série da fila (continuar, retomar ou
 começar) e o filme que entrou mais recentemente na lista "para ver". Tocar
 abre a página; não marca nada (escolhido pelo Ruben, Ronda 12, Fase 5b.3).
+
+O "próximo episódio" é sempre o que vem **depois do último visto** — um
+buraco para trás é "por marcar", tem o cartão dele no detalhe, e nunca é
+proposto como o episódio desta noite.
+
+Sem séries nenhumas, a casa é o primeiro uso: o título, logo a seguir as
+duas portas ("Procurar uma série" e "Vens do TV Time?"), acima do degradê
+da dock, e os quatro passos por baixo a explicar.
+
+### O baralho do Pôr em dia
+A mesma ordem do herói: a **série é o título** (Archivo 24px, branco-
+projetor), o chip `S01·E04` e o nome do episódio (15px) por baixo. O
+episódio sozinho — "Episódio 5" — não diz a ninguém o que está a decidir.
 
 ### Signature: o herói da série
 O backdrop de ponta a ponta, com um degradê a subir do tubo; a eyebrow em

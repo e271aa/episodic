@@ -207,9 +207,13 @@ export async function backfillShows(
         /**
          * Sem a duração de um episódio, o Tempo de antena não conta o que
          * se marca na app (Ronda 12, 5c). Só as que nunca foram perguntadas
-         * (`undefined`); as que o fornecedor não sabe ficam a `null`.
+         * (`undefined`); as que o fornecedor não sabe ficam a `null`. As
+         * sem total ou sem id da TMDB já estão nas filas de cima — sem as
+         * repetir aqui, cada série é pedida uma vez só por volta.
          */
-        lista.filter((s) => s.posterPath && s.tmdbId && s.runtime === undefined),
+        lista.filter(
+          (s) => s.posterPath && s.totalEpisodes && s.tmdbId && s.runtime === undefined,
+        ),
       ].flat(),
       (s) => s.uuid,
       async (show) => {

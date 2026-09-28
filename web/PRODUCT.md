@@ -90,6 +90,8 @@ sentidos e "em dia" usado ao contrário):
   dia** quer dizer *sem nada por ver* — nunca o contrário
 - **Por ver / por marcar** — "por ver" é o que ainda não viste; "por marcar"
   é o que viste e não marcaste (os buracos). É a distinção central do produto
+- **Próximo episódio** — o que vem depois do último visto. Os buracos para
+  trás nunca o são: são "por marcar"
 - **Marcar visto**; códigos de episódio `S04·E01`; temporadas `T4`
 
 **Por decidir:**
