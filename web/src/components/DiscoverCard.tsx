@@ -1,14 +1,90 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Cartaz from "@/components/mira/Cartaz";
 import Poster from "@/components/Poster";
 import SheetPanel from "@/components/SheetPanel";
 import StreamingBadges from "@/components/StreamingBadges";
 import { CheckIcon, PlusIcon } from "@/components/icons";
-import type { DiscoverItem } from "@/lib/tmdb";
+import { getMovieDetails, getShowDetails, type DiscoverItem } from "@/lib/tmdb";
 
 type Estado = "idle" | "a-guardar" | "guardado" | "seguida";
+
+interface Numeros {
+  /** [valor, rótulo] — o que ajuda a decidir se vale a pena começar */
+  blocos: [string, string, string][];
+  generos: string[];
+  estado: string | null;
+}
+
+const ESTADOS: Record<string, string> = {
+  "Returning Series": "Em exibição",
+  Ended: "Terminada",
+  Canceled: "Cancelada",
+  Cancelled: "Cancelada",
+};
+
+function plural(n: number, um: string, varios: string) {
+  return n === 1 ? um : varios;
+}
+
+/**
+ * Os números da ficha: numa série, temporadas e episódios (é o que decide se
+ * se começa); num filme, a duração. Pedidos só quando a ficha abre; sem rede
+ * simplesmente não aparecem — a sinopse e a ação continuam.
+ */
+function FichaNumeros({ item }: { item: DiscoverItem }) {
+  const [n, setN] = useState<Numeros | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    const pedido: Promise<Numeros> =
+      item.kind === "tv"
+        ? getShowDetails(item.tmdbId).then((d) => {
+            const minutos = d.episode_run_time?.[0];
+            return {
+              blocos: [
+                [String(d.number_of_seasons), plural(d.number_of_seasons, "temporada", "temporadas"), "temporadas"],
+                [String(d.number_of_episodes), plural(d.number_of_episodes, "episódio", "episódios"), "episodios"],
+                ...(minutos ? [[String(minutos), "min por episódio", "minutos"] as [string, string, string]] : []),
+              ],
+              generos: (d.genres ?? []).map((g) => g.name),
+              estado: ESTADOS[d.status] ?? null,
+            };
+          })
+        : getMovieDetails(item.tmdbId).then((d) => ({
+            blocos: d.runtime ? [[String(d.runtime), "minutos", "minutos"]] : [],
+            generos: (d.genres ?? []).map((g) => g.name),
+            estado: null,
+          }));
+    pedido.then((r) => vivo && setN(r)).catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, [item.kind, item.tmdbId]);
+
+  if (!n || (n.blocos.length === 0 && n.generos.length === 0)) return null;
+  return (
+    <div className="mt-4">
+      {n.blocos.length > 0 && (
+        <div className="flex gap-2.5">
+          {n.blocos.map(([valor, rotulo, id]) => (
+            <div key={id} className="min-w-0 flex-1 rounded-[22px] bg-group px-3 py-3">
+              <p data-testid={`ficha-${id}`} className="text-2xl font-bold leading-none text-label [font-family:ui-rounded,system-ui]">
+                {valor}
+              </p>
+              <p className="mt-1 text-[0.8125rem] text-label-2">{rotulo}</p>
+            </div>
+          ))}
+        </div>
+      )}
+      {(n.generos.length > 0 || n.estado) && (
+        <p className="mt-2.5 text-[0.8125rem] text-label-2">
+          {[n.estado, ...n.generos.slice(0, 3)].filter(Boolean).join(" · ")}
+        </p>
+      )}
+    </div>
+  );
+}
 
 /**
  * Um cartaz do Explorar (B·4): **uma só ação** — «+ Para ver» numa cápsula
@@ -123,6 +199,7 @@ export default function DiscoverCard({
               </p>
             </div>
           </div>
+          <FichaNumeros item={item} />
           <p className="mt-4 text-[0.9375rem] leading-relaxed text-label">
             {item.overview ?? "Sem sinopse disponível."}
           </p>

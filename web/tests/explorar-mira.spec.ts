@@ -1,5 +1,6 @@
 import { test, expect } from "./apoio/base";
 import { semear } from "./apoio/semear";
+import { serieCompleta } from "./apoio/tmdb";
 
 /**
  * Explorar na Mira (Ronda 14, Fase 6 · B·4 e B·E3). Só comportamento: o que
@@ -163,4 +164,29 @@ test("tocar na capa abre a ficha da sugestão, sem a guardar; dá para guardar l
   await page.getByRole("button", { name: "Abrir Sugestao 1" }).click();
   await page.getByRole("dialog").getByRole("button", { name: "Para ver" }).click();
   await expect(page.getByRole("dialog").getByText("Na lista", { exact: true })).toBeVisible();
+});
+
+test("a ficha de uma série diz quantas temporadas e episódios tem; a de um filme, a duração", async ({
+  page,
+  tmdb,
+}) => {
+  tmdb.tendencias = [sugestoes(1, 950)[0]];
+  Object.assign(tmdb.series, serieCompleta(950, "Sugestao 1", [8, 10, 12]).series);
+  await semear(page, {});
+  await page.goto("/explorar");
+  await page.getByRole("button", { name: "Abrir Sugestao 1" }).click();
+  const ficha = page.getByRole("dialog");
+  await expect(ficha.getByTestId("ficha-temporadas")).toHaveText("3");
+  await expect(ficha.getByTestId("ficha-episodios")).toHaveText("30");
+  await expect(ficha.getByText("temporadas", { exact: true })).toBeVisible();
+});
+
+test("uma série de uma só temporada diz «temporada», no singular", async ({ page, tmdb }) => {
+  tmdb.tendencias = [sugestoes(1, 951)[0]];
+  Object.assign(tmdb.series, serieCompleta(951, "Sugestao 1", [6]).series);
+  await semear(page, {});
+  await page.goto("/explorar");
+  await page.getByRole("button", { name: "Abrir Sugestao 1" }).click();
+  await expect(page.getByRole("dialog").getByText("temporada", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("ficha-episodios")).toHaveText("6");
 });

@@ -220,8 +220,8 @@ faixas, **Listas**.
   só contorno `label-3`, sem preenchimento. Dispensar saiu do cartaz — é na
   Triagem. **Exceção:** os resultados de uma pesquisa de séries têm «Seguir» +
   «Para ver» (quem procura pelo nome já costuma estar a ver).
-- **Tocar na capa** abre a ficha (folha agrupada): sinopse, «Onde ver» e a
-  mesma ação. Espreitar não guarda nada — a série só entra na biblioteca com
+- **Tocar na capa** abre a ficha (folha agrupada): números (séries: temporadas, episódios, minutos; filmes: duração), estado e
+  géneros, sinopse, «Onde ver» e a mesma ação. Espreitar não guarda nada — a série só entra na biblioteca com
   «Para ver» / «Seguir».
 - **Ver o primeiro episódio** de uma série que estava só em «Para ver» passa-a
   a seguida (`comecarASeguir`, em `db.ts`): sai de «Para ver» e vai para «Em
