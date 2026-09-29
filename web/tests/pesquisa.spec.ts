@@ -42,7 +42,6 @@ const RESULTADOS: LinhaTmdb[] = [
 ];
 
 async function procurar(page: import("@playwright/test").Page, termo: string) {
-  await page.getByRole("button", { name: "Procurar no catálogo" }).click();
   await page.getByRole("searchbox").fill(termo);
 }
 
@@ -77,7 +76,6 @@ test("o campo de pesquisa tem 16px — abaixo disso o iOS amplia a página", asy
 }) => {
   await semear(page, {});
   await page.goto("/explorar");
-  await page.getByRole("button", { name: "Procurar no catálogo" }).click();
 
   // O Safari do iPhone amplia sozinho qualquer campo com letra < 16px, e com
   // a página ampliada o ✕ de fechar sai do ecrã. Não é gosto: é o número.
@@ -114,14 +112,13 @@ test("os resultados da pesquisa quebram em mosaico, e as secções continuam em 
   await page.goto("/explorar");
 
   // As secções de descoberta são para espreitar: a faixa que rola fica.
-  await expect(page.getByText("Em alta esta semana")).toBeVisible();
+  await expect(page.getByText("Em tendência")).toBeVisible();
   const faixaRola = await page.evaluate(() => {
     const faixa = document.querySelector('[class*="overflow-x-auto"]');
     return faixa ? faixa.scrollWidth > faixa.clientWidth + 1 : false;
   });
   expect(faixaRola).toBe(true);
 
-  await page.getByRole("button", { name: "Procurar no catálogo" }).click();
   await page.getByRole("searchbox").fill("resultado");
   await expect(page.getByText('Resultados para "resultado"')).toBeVisible();
 

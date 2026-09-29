@@ -209,6 +209,26 @@ metadados em texto corrido. Os três separadores saíram.
   anular). `SheetPanel agrupada` troca o degrau da folha e dos grupos
   (`--m-folha`, `--m-folha-grupo`) — as outras folhas passam a ela na Fase 8.
 
+## O Explorar (Fase 6)
+
+«Há alguma coisa nova para mim?» Ordem: título grande, pesquisa (sempre à
+vista, 17px, «Séries e filmes»), Séries · Filmes, a linha da **Triagem**, as
+faixas, **Listas**.
+
+- **Uma só ação por cartaz** (`DiscoverCard` sobre o `Cartaz` `grande`: capa
+  150px, raio 14, nome 15/600): «+ Para ver» em `fill`; depois «✓ Na lista»,
+  só contorno `label-3`, sem preenchimento. Dispensar saiu do cartaz — é na
+  Triagem. **Exceção:** os resultados de uma pesquisa de séries têm «Seguir» +
+  «Para ver» (quem procura pelo nome já costuma estar a ver).
+- **Ver tudo** dobra a faixa num mosaico de 3 colunas; a pesquisa é sempre
+  mosaico (numa faixa, «matrix» eram 2400px).
+- **Triagem** = o baralho, a ecrã cheio com «‹ Explorar» para fechar. A
+  preferência `explorar-modo` guarda-a aberta ao espreitar outro separador.
+- **Sem ligação (B·E3)**: sem cache das tendências (decisão da Fase 0) — o
+  ecrã diz «Sem ligação», desliga a pesquisa («A pesquisa precisa de rede») e
+  as Listas, que são locais, continuam. `useOnline` reage a `online`/`offline`.
+- Cores das secções, o «lupa» do topo e o `ViewModeToggle` saíram.
+
 ## A Biblioteca (Fase 5)
 
 «Onde está aquela série?» — a resposta acaba quase sempre em abrir uma e

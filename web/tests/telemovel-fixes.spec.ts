@@ -38,17 +38,3 @@ test("a dica de instalar a PWA não tapa nada: vive no fluxo da casa, por baixo 
   await page.goto("/library");
   await expect(page.getByTestId("dica-instalar")).toHaveCount(0);
 });
-
-test("os botões 'cartões'/'grelha' não roubam toques um ao outro", async ({ page }) => {
-  await semear(page, {});
-  await page.goto("/explorar");
-
-  const cartoes = page.getByRole("button", { name: "Ver em cartões, um a um" });
-  const caixa = (await cartoes.boundingBox())!;
-
-  // Um toque na própria beira direita do botão "cartões" tem de ativar
-  // "cartões" — antes, essa faixa pertencia à área invisível (44px) do
-  // vizinho "grelha", que vinha depois no DOM e ganhava o toque.
-  await page.mouse.click(caixa.x + caixa.width - 2, caixa.y + caixa.height / 2);
-  await expect(cartoes).toHaveAttribute("aria-pressed", "true");
-});

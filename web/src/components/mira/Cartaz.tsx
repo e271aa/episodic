@@ -47,8 +47,12 @@ export default function Cartaz({
   progresso,
   legenda,
   acao,
+  grande = false,
+  fluida = false,
+  rodape,
 }: {
-  href: string;
+  /** sem `href` o cartaz não leva a lado nenhum (no Explorar, a capa ainda não tem detalhe) */
+  href?: string;
   nome: string;
   capa: string | null | undefined;
   /** posição na grelha, para a entrada escalonada */
@@ -58,6 +62,12 @@ export default function Cartaz({
   /** a linha em mono por baixo do nome: `S02·E07`, `6/10`, `2021`, «completa» */
   legenda?: ReactNode;
   acao?: CartazAcao;
+  /** a capa grande do Explorar (B·4): 150px, raio 14, nome a 15/600, legenda a 13 */
+  grande?: boolean;
+  /** numa grelha o cartaz enche a coluna; numa faixa tem a largura da capa */
+  fluida?: boolean;
+  /** a ação por baixo (fora da ligação): uma só por cartaz no Explorar */
+  rodape?: ReactNode;
 }) {
   const barra =
     progresso?.total
@@ -67,15 +77,13 @@ export default function Cartaz({
         }
       : null;
 
-  return (
-    <Link
-      href={href}
-      className="poster-in group block cursor-pointer transition-transform active:scale-[0.97]"
-      style={
-        indice !== undefined ? { animationDelay: `${Math.min(indice, 11) * 35}ms` } : undefined
-      }
-    >
-      <div className="relative aspect-2/3 overflow-hidden rounded-xl bg-group shadow-[inset_0_0_0_0.5px_var(--m-separator)]">
+  const corpo = (
+    <>
+      <div
+        className={`relative aspect-2/3 overflow-hidden bg-group shadow-[inset_0_0_0_0.5px_var(--m-separator)] ${
+          grande ? "rounded-[14px]" : "rounded-xl"
+        }`}
+      >
         {/* O plano B fica **por baixo** da imagem: enquanto a capa não chega,
             ou se faltar de todo, lê-se o nome. */}
         <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 p-2 text-center">
@@ -89,7 +97,7 @@ export default function Cartaz({
           path={capa}
           alt={nome}
           fill
-          sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
+          sizes={grande ? "150px" : "(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"}
           className="object-cover"
           priority={indice !== undefined && indice < 2}
         />
@@ -121,11 +129,37 @@ export default function Cartaz({
         </div>
       )}
       <p
-        className={`line-clamp-2 text-[0.76rem] font-semibold leading-snug text-label ${barra ? "mt-1.5" : "mt-2"}`}
+        className={`line-clamp-2 font-semibold leading-snug text-label ${
+          grande ? "text-[0.9375rem]" : "text-[0.76rem]"
+        } ${barra ? "mt-1.5" : "mt-2"}`}
       >
         {nome}
       </p>
-      {legenda && <p className="ep-code mt-0.5 truncate text-[0.7rem] text-label-2">{legenda}</p>}
-    </Link>
+      {legenda && (
+        <p
+          className={`ep-code mt-0.5 truncate text-label-2 ${grande ? "text-[0.8125rem]" : "text-[0.7rem]"}`}
+        >
+          {legenda}
+        </p>
+      )}
+    </>
+  );
+
+  return (
+    <div
+      className={`poster-in ${grande && !fluida ? "w-[150px] shrink-0" : ""}`}
+      style={
+        indice !== undefined ? { animationDelay: `${Math.min(indice, 11) * 35}ms` } : undefined
+      }
+    >
+      {href ? (
+        <Link href={href} className="group block cursor-pointer transition-transform active:scale-[0.97]">
+          {corpo}
+        </Link>
+      ) : (
+        <div>{corpo}</div>
+      )}
+      {rodape}
+    </div>
   );
 }

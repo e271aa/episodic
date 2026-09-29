@@ -1,0 +1,114 @@
+import { test, expect } from "./apoio/base";
+import { semear } from "./apoio/semear";
+
+/**
+ * Explorar na Mira (Ronda 14, Fase 6 · B·4 e B·E3). Só comportamento: o que
+ * se pode fazer e o que o ecrã diz, não cores nem tamanhos.
+ */
+
+function sugestoes(n: number, base = 900) {
+  return Array.from({ length: n }, (_, i) => ({
+    id: base + i,
+    name: `Sugestao ${i + 1}`,
+    poster_path: "/cartaz.jpg",
+    backdrop_path: null,
+    overview: "",
+    first_air_date: "2021-01-01",
+    vote_average: 7,
+  }));
+}
+
+test("cada cartaz tem uma só ação; depois de tocada diz «Na lista» e a série fica guardada", async ({
+  page,
+  tmdb,
+}) => {
+  tmdb.tendencias = sugestoes(4);
+  await semear(page, {});
+  await page.goto("/explorar");
+
+  await expect(page.getByRole("heading", { level: 2, name: "Em tendência" })).toBeVisible();
+  // dispensar já não vive no cartaz (é na Triagem)
+  await expect(page.getByRole("button", { name: /Não me interessa/ })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Para ver" })).toHaveCount(4);
+
+  await page.getByRole("button", { name: "Para ver" }).first().click();
+  await expect(page.getByText("Na lista", { exact: true })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Para ver" })).toHaveCount(3);
+
+  await page.goto("/library");
+  await page.getByText("Sugestao 1").first().waitFor();
+});
+
+test("a linha da Triagem abre o baralho e fecha de volta ao Explorar", async ({ page, tmdb }) => {
+  tmdb.tendencias = sugestoes(4);
+  await semear(page, {});
+  await page.goto("/explorar");
+
+  await page.getByRole("button", { name: /Triagem/ }).click();
+  await expect(page.getByText("1 / 4")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "Triagem" })).toBeVisible();
+
+  await page.getByRole("button", { name: "Fechar a Triagem" }).click();
+  await expect(page.getByRole("heading", { level: 1, name: "Explorar" })).toBeVisible();
+  await expect(page.getByText("1 / 4")).toHaveCount(0);
+});
+
+test("«Ver tudo» abre a secção em mosaico e «Ver menos» volta à faixa", async ({ page, tmdb }) => {
+  tmdb.tendencias = sugestoes(9);
+  await semear(page, {});
+  await page.goto("/explorar");
+
+  const faixa = () =>
+    page.evaluate(() => {
+      const f = document.querySelector('[class*="overflow-x-auto"]');
+      return f ? f.scrollWidth > f.clientWidth + 1 : false;
+    });
+  await page.getByRole("button", { name: "Ver tudo" }).first().waitFor();
+  expect(await faixa()).toBe(true);
+
+  await page.getByRole("button", { name: "Ver tudo" }).first().click();
+  expect(await faixa()).toBe(false);
+  await page.getByRole("button", { name: "Ver menos" }).first().click();
+  expect(await faixa()).toBe(true);
+});
+
+test("as listas aparecem no Explorar, com a contagem, e levam à lista", async ({ page, tmdb }) => {
+  tmdb.tendencias = sugestoes(4);
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Serie Um" }],
+    listas: [
+      { id: "l-1", name: "Para a viagem", items: [{ kind: "show", refId: "s-1" }] },
+    ],
+  });
+  await page.goto("/explorar");
+
+  const linha = page.getByRole("link", { name: /Para a viagem/ });
+  await expect(linha).toContainText("1");
+  await linha.click();
+  await expect(page).toHaveURL(/\/listas\/l-1/);
+});
+
+test("sem ligação: diz-o, desliga a pesquisa, e as listas continuam; com rede volta tudo", async ({
+  page,
+  context,
+  tmdb,
+}) => {
+  tmdb.tendencias = sugestoes(4);
+  await semear(page, {
+    listas: [{ id: "l-1", name: "Para a viagem", items: [] }],
+  });
+  await page.goto("/explorar");
+  await expect(page.getByText("Sugestao 1").first()).toBeVisible();
+
+  await context.setOffline(true);
+  await expect(page.getByText("Sem ligação", { exact: true })).toBeVisible();
+  await expect(page.getByText(/sobe sozinho quando a rede voltar/)).toBeVisible();
+  await expect(page.getByRole("searchbox")).toBeDisabled();
+  await expect(page.getByPlaceholder("A pesquisa precisa de rede")).toBeVisible();
+  await expect(page.getByRole("link", { name: /Para a viagem/ })).toBeVisible();
+
+  await context.setOffline(false);
+  await expect(page.getByText("Sem ligação", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("searchbox")).toBeEnabled();
+  await expect(page.getByText("Sugestao 1").first()).toBeVisible();
+});

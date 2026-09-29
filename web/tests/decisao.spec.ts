@@ -291,7 +291,7 @@ test("Biblioteca, Explorar e Perfil têm um h1, mesmo sem título visível", asy
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Biblioteca");
 
   await page.goto("/explorar");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Explorar séries");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Explorar");
 
   await page.goto("/profile");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Perfil");
@@ -482,7 +482,7 @@ test("os campos de texto têm um rótulo a sério, não só placeholder", async 
   expect(await temRotuloAsSerio(page.getByPlaceholder("Procurar na biblioteca"))).toBe(true);
 
   await page.goto("/explorar?procurar=1");
-  expect(await temRotuloAsSerio(page.getByPlaceholder("Procurar uma série…"))).toBe(true);
+  expect(await temRotuloAsSerio(page.getByPlaceholder("Séries e filmes"))).toBe(true);
 });
 
 test("criar uma lista a partir do detalhe de uma série tem um rótulo a sério", async ({

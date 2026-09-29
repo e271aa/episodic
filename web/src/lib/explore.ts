@@ -129,7 +129,7 @@ export async function loadExplore(kind: "tv" | "movie"): Promise<ExploreData> {
   if (trendingItems.length > 0) {
     sections.push({
       id: "tendencias",
-      title: "Em alta esta semana",
+      title: "Em tendência",
       items: trendingItems,
     });
   }

@@ -1,17 +1,16 @@
 "use client";
 
 /**
- * Direção B — "Baralho de bordo a bordo".
+ * Explorar (B·4, Mira): «há alguma coisa nova para mim?» Título grande, a
+ * pesquisa sempre à vista, a Triagem numa linha, as faixas de sugestões com
+ * uma só ação por cartaz e as Listas. A Triagem (o baralho, uma sugestão de
+ * cada vez) abre por cima, a ecrã cheio, e fecha para aqui.
  *
- * Cromo: 264px → 74px. Uma só linha: o catálogo como menu (Séries ▾), a
- * lupa, e os ícones de modo. O baralho ocupa tudo o resto, de bordo a bordo,
- * e as ações flutuam sobre ele na zona do polegar — nada por baixo da dock.
- *
- * Perde-se o enquadramento 2:3 (o cartaz é recortado) e a leitura de
- * "objeto" com bordas; ganha-se imagem e um alvo "Para ver" com rótulo.
+ * Sem ligação (B·E3) não há sugestões — não se guardam: a pesquisa desliga-se,
+ * dizemo-lo às claras e as Listas, que são locais, continuam.
  */
 
-import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   alreadyInLibrary,
@@ -22,23 +21,24 @@ import {
 import { isCloudConfigured } from "@/lib/supabase";
 import { searchMulti, type DiscoverItem } from "@/lib/tmdb";
 import DiscoverCard from "@/components/DiscoverCard";
-import { sectionColor } from "@/components/SectionHeader";
+import Poster from "@/components/Poster";
+import TituloGrande from "@/components/mira/TituloGrande";
+import Segmentado from "@/components/mira/Segmentado";
+import { Grupo, Linha } from "@/components/mira/Grupo";
+import { useListas } from "@/lib/cache";
+import { useOnline } from "@/lib/useOnline";
+import { ChevronLeft, ChevronRight, Search, WifiOff } from "lucide-react";
 import DiscoverSwipeCard, { type DeckItem } from "@/components/DiscoverSwipeCard";
 import SwipeCoach, { EXPLORAR_COACH_KEY } from "@/components/SwipeCoach";
-import ViewModeToggle, { MODOS, type Modo } from "@/components/ViewModeToggle";
 import { useExploreAcoes } from "@/lib/useExploreAcoes";
 import { usePref } from "@/lib/prefs";
-import {
-  CheckIcon,
-  ChevronDownIcon,
-  CloseIcon,
-  CompassIcon,
-  PlusIcon,
-  SearchIcon,
-} from "@/components/icons";
+import { CloseIcon, CompassIcon, PlusIcon } from "@/components/icons";
 import { Bone, PosterRowBone, TitleBone } from "@/components/Skeleton";
 
 type Kind = "tv" | "movie";
+type Modo = "cartoes" | "grelha";
+// «cartoes» = a Triagem aberta; guardado para sobreviver a espreitar outro separador
+const MODOS: readonly Modo[] = ["cartoes", "grelha"];
 
 /**
  * Por sessão, não por sempre — fora do componente para sobreviver a uma
@@ -197,101 +197,186 @@ function Baralho({
   );
 }
 
-function Grelha({
-  sections,
+function TituloSecao({ children, direita }: { children: React.ReactNode; direita?: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <h2 className="min-w-0 text-[1.375rem] font-bold leading-tight text-label">{children}</h2>
+      {direita}
+    </div>
+  );
+}
+
+/**
+ * Uma secção de sugestões. Em faixa (para espreitar, com encaixe) ou, com
+ * «Ver tudo», em mosaico — e na pesquisa é sempre mosaico: numa faixa,
+ * «matrix» eram 2400px de conteúdo numa janela de 390 (medido).
+ */
+function Secao({
+  section,
   onGuardar,
-  onDispensar,
   onSeguir,
   mostrarTipo = false,
-  disposicao = "faixa",
+  mosaico = false,
 }: {
-  sections: ExploreSection[];
+  section: ExploreSection;
   onGuardar: (item: DiscoverItem) => Promise<void>;
-  onDispensar: (item: DiscoverItem) => Promise<void>;
-  /** só na pesquisa: as séries ganham "Seguir" (ver DiscoverCard) */
   onSeguir?: (item: DiscoverItem) => Promise<void>;
-  /** a pesquisa mistura séries e filmes — sem isto não se sabe qual é qual */
   mostrarTipo?: boolean;
-  /**
-   * "faixa" = uma linha que rola para o lado, para **espreitar**: é o que
-   * as secções de descoberta querem, porque ninguém vem cá com um título
-   * na cabeça e o que interessa é caber muita secção no ecrã.
-   *
-   * "mosaico" = quebra em linhas, para **encontrar**: numa pesquisa já se
-   * sabe o que se procura. Medido: "matrix" dá 17 resultados, e numa faixa
-   * são 2400px de conteúdo numa janela de 390 — seis arrastos para chegar
-   * ao fim de uma lista que num mosaico se vê quase toda de uma vez.
-   */
-  disposicao?: "faixa" | "mosaico";
+  /** força o mosaico (pesquisa), sem «Ver tudo» */
+  mosaico?: boolean;
+}) {
+  const [aberta, setAberta] = useState(false);
+  const emMosaico = mosaico || aberta;
+  return (
+    <section>
+      <TituloSecao
+        direita={
+          mosaico ? undefined : (
+            <button
+              type="button"
+              onClick={() => setAberta((v) => !v)}
+              aria-expanded={aberta}
+              className="tap-44 relative shrink-0 cursor-pointer text-base text-label-2"
+            >
+              {aberta ? "Ver menos" : "Ver tudo"}
+            </button>
+          )
+        }
+      >
+        {section.title}
+      </TituloSecao>
+      {section.reason && <p className="mt-0.5 text-[0.88rem] text-label-2">{section.reason}</p>}
+      <div
+        className={
+          emMosaico
+            ? "mt-3 grid grid-cols-3 gap-x-3 gap-y-5"
+            : "-mx-4 mt-3 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-1"
+        }
+      >
+        {section.items.map((item, i) => (
+          <div key={`${item.kind}-${item.tmdbId}`} className={emMosaico ? "" : "snap-start"}>
+            <DiscoverCard
+              item={item}
+              index={i}
+              onSave={onGuardar}
+              onFollow={item.kind === "tv" ? onSeguir : undefined}
+              mostrarTipo={mostrarTipo}
+              fluida={emMosaico}
+            />
+          </div>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/** A linha da Triagem (B·4): duas capas sobrepostas e inclinadas, o nome e quantas há. */
+function LinhaTriagem({
+  capas,
+  total,
+  onAbrir,
+}: {
+  capas: (string | null)[];
+  total: number;
+  onAbrir: () => void;
 }) {
   return (
-    <div className="space-y-7 overflow-y-auto pb-[calc(var(--dock-h)+1rem)] pt-4">
-      {sections.map((section) => (
-        <section key={section.id}>
-          <div className="flex items-baseline justify-between gap-3 px-4">
-            <h2 className="flex items-center gap-2 font-display text-[0.8125rem] font-semibold uppercase tracking-[0.15em] text-ink [font-stretch:80%]">
-              <span
-                aria-hidden
-                className="h-3.5 w-[3px] shrink-0 rounded-full"
-                style={{ backgroundColor: sectionColor(section.title) }}
-              />
-              {section.title}
-            </h2>
-            <span className="ep-code shrink-0 text-xs text-faint">
-              {section.reason ?? section.items.length}
+    <Grupo className="mt-4">
+      <button
+        type="button"
+        onClick={onAbrir}
+        className="flex min-h-[76px] w-full cursor-pointer items-center gap-4 px-4 text-left transition-colors active:bg-fill"
+      >
+        <span aria-hidden className="relative h-[52px] w-[60px] shrink-0">
+          {capas.slice(0, 2).map((capa, i) => (
+            <span
+              key={i}
+              className={`absolute top-0 h-[52px] w-9 overflow-hidden rounded-md bg-elevated shadow-[0_0_0_1.5px_var(--m-group)] ${
+                i === 0 ? "left-0 -rotate-6" : "left-[22px] rotate-[7deg]"
+              }`}
+            >
+              <Poster path={capa} alt="" fill sizes="36px" className="object-cover" priority />
             </span>
+          ))}
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block text-base font-semibold text-label">Triagem</span>
+          <span className="block text-[0.88rem] text-label-2">
+            {total} sugestões, uma de cada vez
+          </span>
+        </span>
+        <ChevronRight aria-hidden className="h-4 w-4 shrink-0 text-label-3" strokeWidth={2.4} />
+      </button>
+    </Grupo>
+  );
+}
+
+/** B·E3: sem rede. Honesto e curto — o que funciona, o que volta com a rede. */
+function SemLigacao() {
+  return (
+    <div className="mt-4" role="status">
+      <Grupo>
+        <div className="flex items-start gap-3 px-4 py-4">
+          <WifiOff aria-hidden className="mt-0.5 h-5 w-5 shrink-0 text-label-2" strokeWidth={2} />
+          <div className="min-w-0">
+            <p className="text-base font-semibold text-label">Sem ligação</p>
+            <p className="mt-0.5 text-[0.88rem] text-label-2">
+              A biblioteca e as marcações funcionam. O que marcares sobe sozinho quando a rede
+              voltar.
+            </p>
           </div>
-          <div
-            className={
-              disposicao === "mosaico"
-                ? "mt-3 grid grid-cols-3 gap-3 px-4 pb-2"
-                : "mt-3 flex gap-3 overflow-x-auto px-4 pb-2"
-            }
-          >
-            {section.items.map((item, i) => (
-              <DiscoverCard
-                key={`${item.kind}-${item.tmdbId}`}
-                item={item}
-                index={i}
-                onSave={onGuardar}
-                onDismiss={onDispensar}
-                onFollow={item.kind === "tv" ? onSeguir : undefined}
-                mostrarTipo={mostrarTipo}
-                fluida={disposicao === "mosaico"}
-              />
-            ))}
-          </div>
-        </section>
-      ))}
+        </div>
+      </Grupo>
+      <p className="mt-2 px-4 text-[0.8125rem] text-label-2">
+        «Onde ver» e a Triagem voltam com a rede.
+      </p>
     </div>
+  );
+}
+
+function ListasDoExplorar() {
+  const listas = useListas();
+  if (!listas) return null;
+  return (
+    <section className="mt-8">
+      <TituloSecao>Listas</TituloSecao>
+      <Grupo className="mt-3">
+        {listas.length === 0 ? (
+          <Linha titulo="Ainda sem listas" depois="Criar" href="/library?tipo=listas" />
+        ) : (
+          listas.map((l) => (
+            <Linha key={l.id} titulo={l.name} depois={l.items.length} href={`/listas/${l.id}`} />
+          ))
+        )}
+      </Grupo>
+    </section>
   );
 }
 
 function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) {
   const router = useRouter();
   const { guardar, seguir, naoInteressa } = useExploreAcoes();
+  const online = useOnline();
 
   const [data, setData] = useState<ExploreData | null>(null);
   const [erro, setErro] = useState<string | null>(null);
-  // Grelha por omissão: vê-se tudo de uma vez. O baralho continua lá, num
-  // toque, e a escolha fica guardada entre visitas.
+  // A Triagem aberta ou não; a escolha fica guardada entre visitas.
   const [modo, setModo] = usePref<Modo>("explorar-modo", "grelha", MODOS);
-  const [catalogoAberto, setCatalogoAberto] = useState(false);
-  // `?procurar=1` chega da casa vazia ("Procurar uma série"): abre já com o
-  // campo à espera, em vez de mais um toque na lupa.
-  const [pesquisaAberta, setPesquisaAberta] = useState(procurar);
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
   const [searchState, setSearchState] = useState<{ query: string; items: DiscoverItem[] } | null>(
     null,
   );
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    if (!online) return; // sem rede não há nada a pedir; o estado diz-o
     let vivo = true;
     void loadExplore(kind)
       .then((d) => {
-        if (vivo) setData(d);
+        if (vivo) {
+          setData(d);
+          setErro(null);
+        }
       })
       .catch(() => {
         if (vivo) setErro("Não foi possível carregar. Verifica a ligação.");
@@ -299,7 +384,7 @@ function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) 
     return () => {
       vivo = false;
     };
-  }, [kind]);
+  }, [kind, online]);
 
   useEffect(() => {
     const t = setTimeout(() => setDebouncedQuery(query), 350);
@@ -307,7 +392,7 @@ function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) 
   }, [query]);
 
   const termo = debouncedQuery.trim();
-  const searching = termo.length >= 2;
+  const searching = online && termo.length >= 2;
 
   useEffect(() => {
     if (!searching) return;
@@ -338,7 +423,6 @@ function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) 
   const searchResults = searchState && searchState.query === termo ? searchState.items : null;
 
   const escolherKind = (next: Kind) => {
-    setCatalogoAberto(false);
     router.replace(next === "movie" ? "/explorar?tipo=filmes" : "/explorar", { scroll: false });
   };
 
@@ -347,148 +431,110 @@ function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) 
       ? [{ id: "pesquisa", title: `Resultados para "${termo}"`, items: searchResults }]
       : []
     : (data?.sections ?? []);
-  const carregando = searching ? searchResults === null : data === null;
+  const carregando = online && (searching ? searchResults === null : data === null && !erro);
   const totalItens = sections.reduce((n, s) => n + s.items.length, 0);
 
-  return (
-    <main className="tela-cheia page-enter mx-auto flex w-full max-w-md flex-col overflow-hidden pt-[max(0.25rem,env(safe-area-inset-top))]">
-      {/* Sem título visível — "Séries ▾"/"Filmes ▾" é um botão, não um
-          título, e não pode ser um <h1> (muda com um toque). O leitor de
-          ecrã precisa de saber em qual dos dois catálogos está. */}
-      <h1 className="sr-only">{kind === "tv" ? "Explorar séries" : "Explorar filmes"}</h1>
-      {/* O respiro do topo tem de contar com `safe-area-inset-top`: este
-          ecrã é o único (com o "Pôr em dia") que define a própria altura
-          em `100dvh` — o resto da app vive dentro do `<body>`, que nunca
-          precisou de tratar a área segura de cima porque todos os outros
-          cabeçalhos já tinham padding de sobra. Sem isto, o campo de
-          pesquisa (44px cheios) ficava com o topo por baixo da barra de
-          estado do iPhone. Fica no `main`, não na linha: a linha tem
-          altura fixa (36/44px), e a área segura de um iPhone com notch
-          (47–59px) é maior do que ela — pô-la como padding da própria
-          linha esmagava o campo em vez de o empurrar para baixo.
+  // A Triagem: a ecrã cheio, com o seu próprio cabeçalho. Não há triagem sem
+  // sugestões — se a lista esvaziou (ou a rede caiu), volta-se ao Explorar.
+  if (modo === "cartoes" && !searching && online && totalItens > 0) {
+    return (
+      <main className="tela-cheia page-enter mx-auto flex w-full max-w-md flex-col overflow-hidden pt-[max(0.25rem,env(safe-area-inset-top))]">
+        <div className="relative z-30 flex h-11 shrink-0 items-center gap-1 px-2">
+          <button
+            type="button"
+            onClick={() => setModo("grelha")}
+            aria-label="Fechar a Triagem"
+            className="tap-44 relative flex h-11 cursor-pointer items-center gap-0.5 rounded-full pl-1 pr-3 text-base text-label"
+          >
+            <ChevronLeft aria-hidden className="h-6 w-6" strokeWidth={2.2} />
+            Explorar
+          </button>
+          <h1 className="flex-1 pr-16 text-center text-base font-semibold text-label">Triagem</h1>
+        </div>
+        <Baralho
+          key={termo}
+          chave={`${kind}:${termo}`}
+          sections={sections}
+          onGuardar={(item) => void guardar(item)}
+          onDispensar={(item) => void naoInteressa(item)}
+        />
+      </main>
+    );
+  }
 
-          A linha cresce para 44px com a pesquisa aberta: o campo tem de
-          ter 16px de fonte (senão o iOS amplia a página e o ✕ sai do
-          ecrã) e 16px não cabem numa linha de 36px. `transition-[height]`
-          para o crescimento se ver — sem ela a linha saltava de 36 para
-          44px no mesmo instante em que o teclado sobe, e as duas mudanças
-          a acontecerem de repente é o que se lê como "esquisito". */}
-      <div
-        className={`relative z-30 flex shrink-0 items-center gap-2 px-4 transition-[height] duration-150 ease-out ${
-          pesquisaAberta ? "h-11" : "h-9"
-        }`}
-      >
-        {pesquisaAberta ? (
-          <>
-            {/* min-w-0: sem isto o campo recusa-se a encolher abaixo da
-                largura do `placeholder` e empurra o ✕ para fora do ecrã */}
-            <div className="relative min-w-0 flex-1">
-              <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
-              <input
-                ref={inputRef}
-                autoFocus
-                type="search"
-                aria-label={kind === "tv" ? "Procurar uma série" : "Procurar um filme"}
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder={kind === "tv" ? "Procurar uma série…" : "Procurar um filme…"}
-                className="relative h-11 w-full rounded-full border border-ink bg-panel/90 pl-9 pr-3 text-base outline-none backdrop-blur-md"
-              />
-            </div>
-            <button
-              onClick={() => {
-                setPesquisaAberta(false);
-                setQuery("");
-              }}
-              aria-label="Fechar pesquisa"
-              className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim"
-            >
-              <CloseIcon className="h-[18px] w-[18px]" />
-            </button>
-          </>
-        ) : (
-          <>
-            <button
-              onClick={() => setCatalogoAberto((v) => !v)}
-              aria-expanded={catalogoAberto}
-              aria-label="Mudar de catálogo"
-              className="tap-44 relative flex flex-1 cursor-pointer items-center gap-1.5 text-ink"
-            >
-              <span className="font-display text-[1.5rem] font-bold [font-stretch:110%]">
-                {kind === "tv" ? "Séries" : "Filmes"}
-              </span>
-              <ChevronDownIcon
-                className={`h-4 w-4 transition-transform ${catalogoAberto ? "rotate-180" : ""}`}
-                strokeWidth={2.5}
-              />
-            </button>
-            <button
-              onClick={() => setPesquisaAberta(true)}
-              aria-label="Procurar no catálogo"
-              className="tap-44 relative flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded-full border border-line bg-raised/80 text-dim backdrop-blur-md"
-            >
-              <SearchIcon className="h-[17px] w-[17px]" />
-            </button>
-            <ViewModeToggle modo={modo} onChange={setModo} />
-          </>
-        )}
+  const primeiras = sections.flatMap((s) => s.items).slice(0, 2);
+
+  return (
+    <main className="mx-auto w-full max-w-2xl px-4 pt-[max(12px,env(safe-area-inset-top))] pb-8">
+      <TituloGrande titulo="Explorar" />
+
+      <div className={`relative mt-3 ${online ? "" : "opacity-50"}`}>
+        <Search
+          aria-hidden
+          className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-label-2"
+          strokeWidth={2.2}
+        />
+        <input
+          type="search"
+          aria-label="Procurar séries e filmes"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={online ? "Séries e filmes" : "A pesquisa precisa de rede"}
+          disabled={!online}
+          autoFocus={procurar}
+          enterKeyHint="search"
+          className="min-h-11 w-full rounded-[22px] bg-fill py-2 pl-10 pr-4 text-base text-label outline-none placeholder:text-label-2"
+        />
       </div>
 
-      {catalogoAberto && (
-        <div className="relative z-30 mx-4 mt-2 flex shrink-0 flex-col gap-0.5 rounded-[1.25rem] border border-line bg-panel p-1.5">
-          {(
-            [
-              ["tv", "Séries"],
-              ["movie", "Filmes"],
-            ] as const
-          ).map(([id, label]) => (
-            <button
-              key={id}
-              onClick={() => escolherKind(id)}
-              aria-pressed={kind === id}
-              className={`flex min-h-11 cursor-pointer items-center justify-between rounded-2xl px-3.5 text-[0.9375rem] font-semibold transition ${
-                kind === id ? "bg-raised text-ink" : "text-dim hover:text-ink"
-              }`}
-            >
-              {label}
-              {kind === id && <CheckIcon className="h-4 w-4" />}
-            </button>
-          ))}
-        </div>
+      <Segmentado
+        className="mt-3"
+        rotulo="Catálogo"
+        valor={kind}
+        onChange={escolherKind}
+        opcoes={[
+          { valor: "tv", nome: "Séries" },
+          { valor: "movie", nome: "Filmes" },
+        ]}
+      />
+
+      {!online && <SemLigacao />}
+
+      {online && !searching && data && totalItens > 0 && (
+        <LinhaTriagem
+          capas={primeiras.map((i) => i.posterPath)}
+          total={totalItens}
+          onAbrir={() => setModo("cartoes")}
+        />
       )}
 
-      {!searching && data?.taste.isEmpty && !catalogoAberto && (
-        <p className="relative z-30 shrink-0 px-4 pt-1 text-center text-xs text-faint">
+      {!searching && data?.taste.isEmpty && (
+        <p className="mt-3 px-1 text-[0.88rem] text-label-2">
           Ainda não sei do que gostas — isto afina-se à medida que marcares episódios.
         </p>
       )}
 
       {erro ? (
-        <div className="mt-16 flex flex-col items-center px-8 text-center">
-          <span className="bars mb-4 h-11 w-11 rounded-full opacity-40" aria-hidden />
-          <p className="font-display font-semibold">Não deu para carregar</p>
-          <p className="mt-1 max-w-xs text-sm text-dim">{erro}</p>
+        <div className="mt-12 flex flex-col items-center px-8 text-center">
+          <p className="text-base font-semibold text-label">Não deu para carregar</p>
+          <p className="mt-1 max-w-xs text-[0.88rem] text-label-2">{erro}</p>
         </div>
       ) : carregando ? (
-        modo === "cartoes" ? (
-          <Bone className="mt-3 min-h-0 w-full flex-1" />
-        ) : (
-          <div className="space-y-7 pt-4">
-            {[0, 1].map((s) => (
-              <div key={s} className="px-4">
-                <Bone className="h-4 w-40 rounded" />
-                <PosterRowBone />
-              </div>
-            ))}
-          </div>
-        )
-      ) : totalItens === 0 ? (
-        <div className="mt-16 flex flex-col items-center px-8 text-center">
-          <CompassIcon className="mb-3 h-10 w-10 text-faint" />
-          <p className="font-display font-semibold">
+        <div className="mt-8 space-y-7">
+          {[0, 1].map((s) => (
+            <div key={s}>
+              <Bone className="h-6 w-40 rounded" />
+              <PosterRowBone />
+            </div>
+          ))}
+        </div>
+      ) : online && totalItens === 0 ? (
+        <div className="mt-12 flex flex-col items-center px-8 text-center">
+          <CompassIcon className="mb-3 h-10 w-10 text-label-2" />
+          <p className="text-base font-semibold text-label">
             {searching ? "Nada encontrado" : "Nada para mostrar agora"}
           </p>
-          <p className="mt-1 max-w-xs text-sm text-dim">
+          <p className="mt-1 max-w-xs text-[0.88rem] text-label-2">
             {searching
               ? `Sem resultados para "${termo}".`
               : isCloudConfigured()
@@ -496,27 +542,22 @@ function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) 
                 : "A TMDB não está configurada nesta instalação."}
           </p>
         </div>
-      ) : modo === "cartoes" && !searching ? (
-        // A pesquisa é sempre em mosaico: quem procura um título já sabe o
-        // que quer, e é aí que as séries têm "Seguir".
-        <Baralho
-          key={termo}
-          chave={`${kind}:${termo}`}
-          sections={sections}
-          onGuardar={(item) => void guardar(item)}
-          onDispensar={(item) => void naoInteressa(item)}
-          mostrarTipo={searching}
-        />
       ) : (
-        <Grelha
-          sections={sections}
-          onGuardar={guardar}
-          onDispensar={naoInteressa}
-          onSeguir={searching ? seguir : undefined}
-          mostrarTipo={searching}
-          disposicao={searching ? "mosaico" : "faixa"}
-        />
+        <div className="mt-8 space-y-8">
+          {sections.map((section) => (
+            <Secao
+              key={section.id}
+              section={section}
+              onGuardar={guardar}
+              onSeguir={searching ? seguir : undefined}
+              mostrarTipo={searching}
+              mosaico={searching}
+            />
+          ))}
+        </div>
       )}
+
+      {!searching && <ListasDoExplorar />}
     </main>
   );
 }
@@ -531,7 +572,7 @@ export default function ExplorarPage() {
   return (
     <Suspense
       fallback={
-        <main className="mx-auto w-full max-w-md px-4 pt-2">
+        <main className="mx-auto w-full max-w-2xl px-4 pt-2">
           <TitleBone />
           <Bone className="mt-3 h-[60vh] w-full rounded-none" />
         </main>

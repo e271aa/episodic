@@ -74,6 +74,6 @@ test("o Explorar abre em grelha, não no baralho", async ({ page, tmdb }) => {
   await page.goto("/explorar");
 
   // Vê-se tudo de uma vez; o baralho continua lá, num toque.
-  await expect(page.getByText("Em alta esta semana")).toBeVisible();
+  await expect(page.getByText("Em tendência")).toBeVisible();
   await expect(page.getByText("arrasta ou decide aqui")).toHaveCount(0);
 });

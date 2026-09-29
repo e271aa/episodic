@@ -101,16 +101,6 @@ test("no detalhe, com buracos para trás, o traço do estado é o ciano dos bura
   await expect.poll(() => traco.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe(CIANO);
 });
 
-test("o modo ativo do Explorar é uma escolha, não uma ação: painel levantado, não branco", async ({
-  page,
-}) => {
-  await semear(page, {});
-  await page.goto("/explorar");
-  const ativo = page.getByRole("group", { name: "Modo de visualização" }).locator('[aria-pressed="true"]');
-  await expect(ativo).toBeVisible();
-  expect(await ativo.evaluate((el) => getComputedStyle(el).backgroundColor)).not.toBe(TINTA);
-});
-
 // ── o que o rótulo promete ───────────────────────────────────
 
 test("'Esta semana' mostra os próximos 7 dias, não o que estreia daqui a 17", async ({
