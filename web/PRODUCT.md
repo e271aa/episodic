@@ -45,7 +45,8 @@ e **propõe, nunca decide** por quem a usa.
 ## Operating Context
 
 - iPhone, app instalada no ecrã principal (PWA), uma mão, à noite, muitas
-  vezes com a televisão já ligada
+  vezes com a televisão já ligada. **O do Ruben é um iPhone 15 Pro Max: 430×932** (medido a
+  29-09-2026); a suite de testes mede a 390 e a 320
 - Os dados vivem no telemóvel (IndexedDB, funciona sem rede) e são copiados
   para a cloud (Supabase); reinstalar recupera tudo (provado a 27-09-2026:
   138 séries, 3.375 episódios, 266 filmes)
@@ -64,7 +65,8 @@ biblioteca, Verificar biblioteca, Importar do TV Time, Entrar.
 **Restrições:**
 - **Português de Portugal em todo o lado** — nunca pt-BR ("ecrã", não "tela";
   "ver", não "assistir")
-- Só modo escuro
+- **Dois modos, noite e claro** (Ronda 14, Mira), a seguir o do iPhone por
+  omissão; fixáveis em Perfil › Aparência. (Até à Ronda 13: só escuro)
 - Tem de funcionar sem rede; o que se escreve no telemóvel sobe sozinho
 - Tudo em planos gratuitos (Vercel, Supabase, TMDB não comercial)
 - Nada de dados reais do Ruben no repositório (o export do TV Time fica
@@ -106,14 +108,18 @@ sentidos e "em dia" usado ao contrário):
 - Nome atual: **Episodic** (provisório, ver acima)
 - **Voz:** diário pessoal, direta, em pt-PT; admite o que não sabe ("não deu
   para verificar — sem ligação") em vez de afirmar o que não é verdade
-- A identidade visual em uso foi aprovada pelo Ruben no brief "ESTA NOITE"
-  (18-07-2026, PLANO.md) — está documentada em DESIGN.md, não aqui
+- A identidade visual em uso é a **Mira** (escolhida pelo Ruben a 29-09-2026,
+  pacote de desenho em `design_handoff_mira/`): parece ter
+  vindo com o iPhone, e só a mira de cor diz que é nossa. Documentada em
+  DESIGN.md, não aqui. (A anterior, «ESTA NOITE», de 18-07-2026, está no
+  histórico do git)
 
 ## Evidence on Hand
 
 - A biblioteca real do Ruben (na app e na cloud) — nunca copiar para o repo
 - Export GDPR do TV Time em `gdpr-data/` (privado, fora do git)
-- Pacote de desenho anterior em `design_handoff_episodic/`
+- Pacote de desenho atual em `design_handoff_mira/`; o anterior em
+  `design_handoff_episodic/`
 - Histórico de decisões e medições em `PLANO.md` e `AUDITORIA.md`
 - **Não existem** outros utilizadores, testemunhos, números de uso ou
   imprensa — não inventar
@@ -136,9 +142,10 @@ sentidos e "em dia" usado ao contrário):
 ## Accessibility & Inclusion
 
 - **O Ruben tem o tamanho do texto do iPhone MENOR do que o normal**
-  (27-09-2026). Texto pequeno é o gosto dele, não um defeito por si — os
-  "136 sítios a 14px" da Ronda 12 medem-se contra isto. Os amigos podem ter o
-  contrário: onde for barato, respeitar o tamanho que cada um escolheu no
-  sistema em vez de fixar um só
+  (27-09-2026; medido a 29-09: o corpo a **15px**, categoria «Pequeno»). Texto
+  pequeno é o gosto dele, não um defeito por si. Desde a Mira, **a app segue o
+  tamanho de texto do sistema** (Dynamic Type): o Ruben vê o dele, um amigo com
+  letra grande vê a dele — sem definição na app. Os espaços e os alvos de toque
+  não encolhem com o texto
 - Alvos de toque com pelo menos 44px; `prefers-reduced-motion` respeitado
 - Nomes acessíveis em português em todos os controlos

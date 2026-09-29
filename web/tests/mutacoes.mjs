@@ -1367,7 +1367,7 @@ const MUTACOES = [
   },
   {
     nome: "r14-f1/meta-do-next",
-    descricao: "a cor da barra de estado volta ao viewport do Next, que a repõe ao hidratar",
+    descricao: "mudar a aparência deixa de pintar a barra de estado até se recarregar a app",
     ficheiro: "src/lib/aparencia.ts",
     de: "  pintarBarraDeEstado(a);\n}",
     para: "}",

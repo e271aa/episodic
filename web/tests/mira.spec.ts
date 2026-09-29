@@ -17,6 +17,11 @@ test("Aparência: «Claro» fica escolhido depois de recarregar, sem piscar, e a
   expect(await fundoDoCorpo(page)).toBe("rgb(0, 0, 0)");
   await page.getByRole("radio", { name: "Claro" }).click();
   await expect.poll(() => fundoDoCorpo(page)).toBe("rgb(242, 242, 247)");
+  // a barra de estado muda logo, não só depois de recarregar
+  const metasJa = await page.evaluate(() =>
+    [...document.querySelectorAll('meta[name="theme-color"]')].map((m) => m.getAttribute("content")),
+  );
+  expect(metasJa).toEqual(["#f2f2f7", "#f2f2f7"]);
 
   await page.reload();
   // o script do <head> põe o tema antes da app: já está no HTML ao chegar
