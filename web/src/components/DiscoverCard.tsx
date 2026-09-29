@@ -6,7 +6,7 @@ import Poster from "@/components/Poster";
 import SheetPanel from "@/components/SheetPanel";
 import StreamingBadges from "@/components/StreamingBadges";
 import { CheckIcon, PlusIcon } from "@/components/icons";
-import { getMovieDetails, getShowDetails, type DiscoverItem } from "@/lib/tmdb";
+import { getImdbId, getMovieDetails, getShowDetails, type DiscoverItem } from "@/lib/tmdb";
 
 type Estado = "idle" | "a-guardar" | "guardado" | "seguida";
 
@@ -83,6 +83,38 @@ function FichaNumeros({ item }: { item: DiscoverItem }) {
         </p>
       )}
     </div>
+  );
+}
+
+/** A nota e, ao lado, a ligação ao IMDb — só se a TMDB souber o id. */
+function NotaEImdb({ item }: { item: DiscoverItem }) {
+  const [imdb, setImdb] = useState<string | null>(null);
+  useEffect(() => {
+    let vivo = true;
+    getImdbId(item.kind, item.tmdbId)
+      .then((id) => vivo && setImdb(id))
+      .catch(() => {});
+    return () => {
+      vivo = false;
+    };
+  }, [item.kind, item.tmdbId]);
+  return (
+    <>
+      {item.rating > 0 && ` · ★ ${item.rating.toFixed(1)}`}
+      {imdb && (
+        <>
+          {" · "}
+          <a
+            href={`https://www.imdb.com/title/${imdb}/`}
+            target="_blank"
+            rel="noreferrer"
+            className="text-label underline decoration-label-3 underline-offset-2"
+          >
+            IMDb ↗
+          </a>
+        </>
+      )}
+    </>
   );
 }
 
@@ -195,7 +227,7 @@ export default function DiscoverCard({
               <p className="text-[1.375rem] font-bold leading-tight text-label">{item.name}</p>
               <p className="ep-code mt-1 text-[0.8125rem] text-label-2">
                 {[item.kind === "movie" ? "Filme" : "Série", item.year].filter(Boolean).join(" · ")}
-                {item.rating > 0 && ` · ★ ${item.rating.toFixed(1)}`}
+                <NotaEImdb item={item} />
               </p>
             </div>
           </div>

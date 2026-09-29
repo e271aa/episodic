@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
-import { ChevronRight } from "lucide-react";
 import { getStreamingAvailability, imageUrl, type StreamingAvailability } from "@/lib/tmdb";
 
 function Badges({ data }: { data: StreamingAvailability }) {
@@ -12,13 +11,10 @@ function Badges({ data }: { data: StreamingAvailability }) {
         {data.streaming.map((p) => {
           const logo = imageUrl(p.logoPath, "w185");
           return (
-            <a
+            <span
               key={p.id}
-              href={data.link ?? undefined}
-              target="_blank"
-              rel="noreferrer"
               title={p.name}
-              className="block h-11 w-11 shrink-0 overflow-hidden rounded-xl shadow-sm shadow-black/30 transition active:scale-90"
+              className="block h-11 w-11 shrink-0 overflow-hidden rounded-xl shadow-sm shadow-black/30"
             >
               {logo ? (
                 <Image src={logo} alt={p.name} width={44} height={44} className="h-full w-full object-cover" />
@@ -27,7 +23,7 @@ function Badges({ data }: { data: StreamingAvailability }) {
                   {p.name}
                 </span>
               )}
-            </a>
+            </span>
           );
         })}
       </div>
@@ -146,18 +142,8 @@ export default function StreamingBadges({
       </>
     );
     const classe = "flex min-h-11 items-center gap-2.5 px-1";
-    return servicos.length > 0 && data?.link ? (
-      <a
-        href={data.link}
-        target="_blank"
-        rel="noreferrer"
-        data-testid="onde-ver"
-        className={`${classe} cursor-pointer transition-opacity active:opacity-60`}
-      >
-        {corpo}
-        <ChevronRight aria-hidden className="h-4 w-4 shrink-0 text-label-3" strokeWidth={2.4} />
-      </a>
-    ) : (
+    // Sem ligação: levava à página da TMDB, que não é o que se quer abrir.
+    return (
       <p data-testid="onde-ver" className={classe}>
         {corpo}
       </p>

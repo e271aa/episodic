@@ -205,3 +205,33 @@ test("a ficha diz o título uma só vez, e nada na app liga ao The Movie DB", as
   await expect(page.locator('a[href*="themoviedb.org"]')).toHaveCount(0);
   await expect(page.getByText("Ver na TMDB")).toHaveCount(0);
 });
+
+test("«Onde ver» não é uma ligação (levava à página da TMDB) e a nota leva ao IMDb", async ({
+  page,
+  tmdb,
+}) => {
+  tmdb.tendencias = [{ ...sugestoes(1, 970)[0], vote_average: 8.1 }];
+  Object.assign(tmdb.series, serieCompleta(970, "Sugestao 1", [2]).series);
+  tmdb.ondeVer["tv:970"] = ["HBO Max"];
+  tmdb.imdb["tv:970"] = "tt1234567";
+  await semear(page, {});
+  await page.goto("/explorar");
+  await page.getByRole("button", { name: "Abrir Sugestao 1" }).click();
+  const ficha = page.getByRole("dialog");
+
+  await expect(ficha.getByTestId("onde-ver")).toContainText("HBO Max");
+  await expect(ficha.getByTestId("onde-ver")).not.toHaveAttribute("href", /.+/);
+  await expect(ficha.locator('a[href*="themoviedb.org"], a[href*="exemplo/onde-ver"]')).toHaveCount(0);
+
+  const imdb = ficha.getByRole("link", { name: /IMDb/ });
+  await expect(imdb).toHaveAttribute("href", "https://www.imdb.com/title/tt1234567/");
+});
+
+test("sem id do IMDb não há ligação inventada", async ({ page, tmdb }) => {
+  tmdb.tendencias = [sugestoes(1, 971)[0]];
+  await semear(page, {});
+  await page.goto("/explorar");
+  await page.getByRole("button", { name: "Abrir Sugestao 1" }).click();
+  await expect(page.getByRole("dialog").getByText("Sem sinopse disponível.")).toBeVisible();
+  await expect(page.getByRole("link", { name: /IMDb/ })).toHaveCount(0);
+});

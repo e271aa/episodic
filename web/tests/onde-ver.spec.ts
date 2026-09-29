@@ -178,5 +178,7 @@ test("um filme sem streaming em Portugal diz que não há, em vez de desaparecer
   // filmes têm sobre o botão da série, e que não se perde.
   await page.goto("/movies/f-com");
   await expect(page.getByText("Onde ver em Portugal")).toBeVisible();
-  await expect(page.locator('a[title="Netflix"]')).toBeVisible();
+  await expect(page.locator('[title="Netflix"]')).toBeVisible();
+  // e já não leva à página da TMDB
+  await expect(page.locator('a[title="Netflix"]')).toHaveCount(0);
 });

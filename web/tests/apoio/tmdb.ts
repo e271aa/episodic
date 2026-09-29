@@ -71,6 +71,8 @@ export interface Catalogo {
    * Ausente = a TMDB não tem nada para Portugal.
    */
   ondeVer: Record<string, string[]>;
+  /** `tv|movie/{id}/external_ids` → id do IMDb, por `"tv:{id}"` / `"movie:{id}"` */
+  imdb: Record<string, string>;
   /** `find/{tvdbId}?external_source=tvdb_id` → id do TMDB */
   porTvdb: Record<number, number>;
   /**
@@ -94,6 +96,7 @@ export function catalogoVazio(): Catalogo {
     episodios: {},
     filmes: {},
     ondeVer: {},
+    imdb: {},
     porTvdb: {},
     tvmaze: {},
     tvmazeFuturos: {},
@@ -202,6 +205,10 @@ export async function interceptarTmdb(page: Page, catalogo: Catalogo): Promise<v
         },
       });
     }
+
+    const externos = /^(tv|movie)\/(\d+)\/external_ids$/.exec(caminho);
+    if (externos)
+      return json({ imdb_id: catalogo.imdb[`${externos[1]}:${externos[2]}`] ?? null });
 
     const filme = /^movie\/(\d+)$/.exec(caminho);
     if (filme) {

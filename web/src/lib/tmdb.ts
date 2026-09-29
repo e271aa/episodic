@@ -131,6 +131,12 @@ export async function getSeasonEpisodes(
   return season.episodes ?? [];
 }
 
+/** O id do IMDb (`tt…`), para a ligação ao lado da nota. `null` se a TMDB não o tem. */
+export async function getImdbId(kind: "movie" | "tv", tmdbId: number): Promise<string | null> {
+  const d = await tmdbGet<{ imdb_id?: string | null }>(`${kind}/${tmdbId}/external_ids`);
+  return d.imdb_id || null;
+}
+
 export interface StreamingProvider {
   id: number;
   name: string;
