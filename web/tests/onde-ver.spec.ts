@@ -88,9 +88,9 @@ test("com id do TMDB, o 'Onde ver' mostra os serviços portugueses", async ({ pa
   });
   await page.goto("/series/s-com");
 
-  await page.getByRole("button", { name: "Onde ver" }).click();
-  await expect(page.locator('a[title="Disney Plus"]')).toBeVisible();
-  await expect(page.locator('a[title="HBO Max"]')).toBeVisible();
+  // A resposta está à vista, sem um toque (Mira, B·2a)
+  await expect(page.getByTestId("onde-ver")).toContainText("Disney Plus");
+  await expect(page.getByTestId("onde-ver")).toContainText("HBO Max");
 });
 
 test("sem id do TMDB, o 'Onde ver' admite que não sabe em vez de dizer que não há", async ({
@@ -106,11 +106,10 @@ test("sem id do TMDB, o 'Onde ver' admite que não sabe em vez de dizer que não
   });
   await page.goto("/series/s-sem");
 
-  await page.getByRole("button", { name: "Onde ver" }).click();
-  await expect(page.getByText("Ainda não identifiquei esta série")).toBeVisible();
+  await expect(page.getByTestId("onde-ver")).toContainText("ainda por identificar");
   // A frase antiga era uma afirmação sobre Portugal que a app não tinha como
   // fazer — e era a que 69 de 74 séries mostravam.
-  await expect(page.getByText("Sem serviços de streaming em Portugal")).toHaveCount(0);
+  await expect(page.getByTestId("onde-ver")).not.toContainText("sem streaming");
 });
 
 test("abrir a série resolve o id na hora — sem esperar por uma passagem noutro ecrã", async ({
@@ -145,8 +144,7 @@ test("abrir a série resolve o id na hora — sem esperar por uma passagem noutr
   });
   await page.goto("/series/s-f1");
 
-  await page.getByRole("button", { name: "Onde ver" }).click();
-  await expect(page.locator('a[title="Netflix"]')).toBeVisible();
+  await expect(page.getByTestId("onde-ver")).toContainText("Netflix");
 
   // E o id novo não pode ter mudado a numeração: continua a mandar a TVmaze,
   // que dá duas temporadas — o TMDB dá uma só de 20.

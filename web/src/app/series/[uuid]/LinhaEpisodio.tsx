@@ -1,63 +1,77 @@
 import type { MetaEpisode } from "@/lib/metadata";
 import { porExtenso } from "@/lib/datas";
+import Codigo from "@/components/mira/Codigo";
 
 /**
- * Uma linha de episódio, repetida em dois sítios: sozinha na lista, e dentro
- * de uma corrida aberta. Visto e por ver distinguem-se sem depender só do
- * círculo de 26px — a linha toda de um episódio visto fica mais apagada, a
- * de um por ver fica a negrito. Antes as duas liam-se igual a um metro de
- * distância, numa lista de 51 linhas quase idênticas.
+ * Uma linha de episódio na lista agrupada (Mira, B·2a/2b). O círculo diz o
+ * estado sem cor de enfeite:
+ *  · o **próximo** — nome a negrito, anel de 2px em `label`;
+ *  · **por marcar** (um buraco) — anel tracejado na cor «por marcar»;
+ *  · **visto** — círculo cheio com ✓, e a linha toda a 55%;
+ *  · os outros por ver — anel fino em `label-3`.
+ * O círculo tem 44px de alvo; a linha inteira é o botão.
  */
 export default function LinhaEpisodio({
   season,
   epNumber,
   metaEp,
   isSeen,
+  isNext,
+  isBuraco,
   isPulsing,
-  accent,
   onToggle,
 }: {
   season: number;
   epNumber: number;
   metaEp: MetaEpisode | undefined;
   isSeen: boolean;
+  isNext: boolean;
+  isBuraco: boolean;
   isPulsing: boolean;
-  accent: string;
   onToggle: () => void;
 }) {
+  const circulo = isSeen
+    ? "bg-label text-bg"
+    : isNext
+      ? "shadow-[inset_0_0_0_2px_var(--color-label)] text-transparent"
+      : isBuraco
+        ? "border-2 border-dashed border-por-marcar text-transparent"
+        : "shadow-[inset_0_0_0_1.5px_var(--color-label-3)] text-transparent";
   return (
     <button
+      type="button"
       onClick={onToggle}
       data-testid={`ep-${season}-${epNumber}`}
-      className={`flex h-[52px] w-full cursor-pointer items-center gap-3 rounded-lg px-2 text-left transition-colors hover:bg-raised ${
-        isSeen ? "opacity-60" : ""
+      aria-pressed={isSeen}
+      className={`flex min-h-[54px] w-full cursor-pointer items-center gap-3 border-b-[0.5px] border-separator py-1.5 pr-1.5 pl-4 text-left transition-[opacity,background-color] duration-100 last:border-b-0 active:bg-fill ${
+        isSeen ? "opacity-55" : ""
       }`}
     >
-      <span className="ep-code w-[34px] shrink-0 text-[0.8125rem] text-faint">
-        E{String(epNumber).padStart(2, "0")}
-      </span>
-      <span
-        aria-hidden
-        className={`relative flex h-[26px] w-[26px] shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors ${
-          isPulsing ? "check-pop check-ring" : ""
+      <Codigo
+        className={`w-[62px] shrink-0 text-[0.76rem] ${
+          isNext ? "font-semibold text-label" : "font-medium text-label-2"
         }`}
-        style={
-          isSeen
-            ? { borderColor: accent, background: accent, color: "var(--color-tube)" }
-            : { borderColor: "var(--color-line)", color: "transparent" }
-        }
       >
-        ✓
-      </span>
+        E{String(epNumber).padStart(2, "0")}
+      </Codigo>
       <span className="min-w-0 flex-1">
         <span
-          className={`block truncate text-base ${isSeen ? "text-dim" : "font-medium text-ink"}`}
+          className={`block truncate text-base text-label ${isNext ? "font-semibold" : ""}`}
         >
           {metaEp?.name ?? `Episódio ${epNumber}`}
         </span>
         {metaEp?.airDate && (
-          <span className="ep-code block text-xs text-faint">{porExtenso(metaEp.airDate)}</span>
+          <Codigo className="block text-[0.7rem] text-label-2">{porExtenso(metaEp.airDate)}</Codigo>
         )}
+      </span>
+      <span aria-hidden className="flex h-11 w-11 shrink-0 items-center justify-center">
+        <span
+          className={`relative flex h-[26px] w-[26px] items-center justify-center rounded-full text-[0.8rem] font-bold transition-colors ${circulo} ${
+            isPulsing ? "check-pop check-ring" : ""
+          }`}
+        >
+          ✓
+        </span>
       </span>
     </button>
   );

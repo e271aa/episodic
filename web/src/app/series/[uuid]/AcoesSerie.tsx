@@ -1,14 +1,53 @@
-import AddToListButton from "@/components/AddToListButton";
+import { Fragment, type ReactNode } from "react";
+import { useRouter } from "next/navigation";
 import StreamingBadges from "@/components/StreamingBadges";
 import { Bone } from "@/components/Skeleton";
 import { CheckIcon } from "@/components/icons";
+import Acao from "@/components/mira/Acao";
+import Codigo from "@/components/mira/Codigo";
 import type { StoredShow } from "@/lib/db";
-import { contarEpisodios } from "@/lib/buracos";
 import { formatEpCode } from "@/lib/watchnext";
 import type { Serie } from "./useSerie";
 
-/** O que se faz nesta série: arrumar os buracos, marcar o próximo, juntar a
- *  uma lista, ver onde passa, pôr para ver. */
+const ep = (n: number) => `E${String(n).padStart(2, "0")}`;
+const POUCOS = ["", "o", "os dois", "os três"];
+
+/**
+ * A pergunta do cartão dos buracos (B·2b). Com poucos, numa temporada só,
+ * nomeiam-se um a um — «Viste o E04, o E05 e o E06 da T2?» — porque é assim
+ * que a pessoa se lembra deles. Com muitos, conta-se, e a divisão por
+ * temporada vai para o texto por baixo.
+ */
+function proposta(buracos: Serie["buracos"]) {
+  const lista = buracos.porTemporada.flatMap((t) =>
+    t.episodios.map((e) => ({ t: t.temporada, e })),
+  );
+  const n = lista.length;
+  if (buracos.porTemporada.length === 1 && n <= 3) {
+    const codigos: ReactNode[] = lista.map((x, i) => (
+      <Fragment key={x.e}>
+        {i > 0 && (i === n - 1 ? " e " : ", ")}o <Codigo>{ep(x.e)}</Codigo>
+      </Fragment>
+    ));
+    return {
+      pergunta: (
+        <>
+          Viste {codigos} da <Codigo>T{lista[0].t}</Codigo>?
+        </>
+      ),
+      sim: n === 1 ? `Sim, vi o ${ep(lista[0].e)}` : `Sim, vi ${POUCOS[n]}`,
+      divisao: false,
+    };
+  }
+  return { pergunta: <>Viste os {n} que ficaram para trás?</>, sim: `Sim, vi os ${n}`, divisao: true };
+}
+
+/**
+ * O que se faz nesta série, pela ordem do desenho: com buracos, o cartão que
+ * pergunta por eles (a ação principal) e o próximo numa linha secundária;
+ * sem buracos, «Marcar S02·E07» é a única cápsula preenchida do ecrã. Depois,
+ * onde ver e — para quem não segue a série — «Para ver».
+ */
 export default function AcoesSerie({
   uuid,
   show,
@@ -18,107 +57,115 @@ export default function AcoesSerie({
   show: StoredShow;
   serie: Serie;
 }) {
+  const router = useRouter();
   const { buracos, marcarBuracos, nextUp, markNext, pulseNext, toggleWatchlist } = serie;
+  const check = (
+    <CheckIcon aria-hidden className={`h-5 w-5 shrink-0 ${pulseNext ? "check-pop" : ""}`} />
+  );
+
   return (
-    <>
-      {/* Episódios por marcar ATRÁS do ponto onde já se vai. Fica antes da
-          ação principal de propósito: não faz sentido propor o próximo
-          episódio a quem tem 22 esquecidos para trás — e era exatamente
-          isso que a app fazia, sem nunca dizer que eles existiam.
+    <div className="mt-3 flex flex-col gap-3">
+      {/* Os buracos ANTES do próximo: não faz sentido propor o episódio
+          seguinte a quem tem 22 esquecidos para trás. E repara no que NÃO
+          diz — não afirma que os viste; pergunta. A decisão é tua. */}
+      {buracos.total > 0 &&
+        (() => {
+          const { pergunta, sim, divisao } = proposta(buracos);
+          return (
+            <section
+              className="page-enter flex flex-col gap-2.5 rounded-[26px] bg-group p-[18px]"
+              data-testid="aviso-buracos"
+            >
+              <h2 className="text-[1.18rem] leading-[1.25] font-semibold text-label">{pergunta}</h2>
+              <p className="text-[0.88rem] leading-[1.4] text-label-2">
+                Já marcaste episódios depois destes. Ficaram para trás, por marcar.
+                {divisao && (
+                  <>
+                    {" "}
+                    <Codigo className="text-label">
+                      {buracos.porTemporada
+                        .map((t) => `T${t.temporada}: ${t.episodios.length}`)
+                        .join(" · ")}
+                    </Codigo>
+                  </>
+                )}
+              </p>
+              <div className="mt-1 flex gap-2">
+                <Acao
+                  onClick={() => void marcarBuracos()}
+                  data-testid="marcar-buracos"
+                  className="flex-1"
+                >
+                  {sim}
+                </Acao>
+                <Acao
+                  tipo="secundaria"
+                  onClick={() => router.push(`/em-dia?serie=${encodeURIComponent(uuid)}`)}
+                  data-testid="um-a-um"
+                >
+                  Um a um
+                </Acao>
+              </div>
+            </section>
+          );
+        })()}
 
-          Repara no que NÃO diz: não afirma que os viste. Diz onde estão e
-          oferece-se para os marcar. A decisão é tua. */}
-      {buracos.total > 0 && (
-        <div
-          className="page-enter mt-4 rounded-2xl border border-line bg-raised/60 p-4"
-          data-testid="aviso-buracos"
-        >
-          <p className="font-display text-[0.9375rem] font-semibold text-ink">
-            {contarEpisodios(buracos.total)} por marcar mais atrás
-          </p>
-          <p className="mt-1 text-[0.9375rem] text-dim">
-            {buracos.porTemporada
-              .map((t) => `T${t.temporada}: ${t.episodios.length}`)
-              .join(" · ")}
-            {" — já viste episódios depois destes."}
-          </p>
-          <button
-            onClick={() => void marcarBuracos()}
-            data-testid="marcar-buracos"
-            className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-ink text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-[0.99]"
-          >
-            <CheckIcon className="h-4 w-4" />
-            Marcar {buracos.total === 1 ? "o episódio" : `os ${buracos.total}`}
-          </button>
-        </div>
-      )}
-
-      {/* Ação principal — a decisão nº 1 na página de série. Sem episódio
-          por marcar não há ação nenhuma a propor: o cabeçalho já disse "Em
-          dia" a par do título, repetir num cartão por baixo era a mesma
-          frase duas vezes na mesma página.
-
-          Com buracos por marcar deixa de ser a principal: eram dois blocos
-          brancos iguais empilhados, os dois a pedir o toque com o mesmo
-          peso, e a página tem uma decisão nº 1 de cada vez. Quem tem 22
-          esquecidos atrás arruma-os primeiro — foi essa a ordem decidida
-          na Fase 1, e o desenho passa a dizer o mesmo que a ordem. */}
       {nextUp === undefined ? (
-        <Bone className="mt-4 h-14 w-full rounded-2xl" />
+        <Bone className="h-[52px] w-full rounded-full" />
+      ) : nextUp && buracos.total > 0 ? (
+        // Com buracos, marcar o próximo não é a ação principal: uma linha
+        // secundária com contorno, para haver uma só cápsula preenchida.
+        <div
+          className="flex min-h-16 items-center gap-3 rounded-[26px] bg-group py-2 pr-2.5 pl-4"
+          data-testid="proximo"
+        >
+          <div className="min-w-0 flex-1">
+            <p className="text-[0.76rem] text-label-2">Próximo</p>
+            <p className="truncate text-base text-label">
+              <Codigo className="text-[0.82rem] font-semibold">
+                {formatEpCode(nextUp.season, nextUp.episode)}
+              </Codigo>{" "}
+              {nextUp.name}
+            </p>
+          </div>
+          <Acao
+            tipo="contorno"
+            grande={false}
+            onClick={() => void markNext()}
+            data-testid="mark-next"
+            aria-label={`Marcar ${formatEpCode(nextUp.season, nextUp.episode)}`}
+            icone={check}
+          >
+            Marcar
+          </Acao>
+        </div>
       ) : nextUp ? (
-        <button
+        <Acao
           onClick={() => void markNext()}
           data-testid="mark-next"
-          className={`mt-4 flex w-full cursor-pointer items-center gap-3 rounded-2xl px-4 py-3 text-left transition active:scale-[0.99] ${
-            buracos.total > 0
-              ? "border border-line text-ink hover:border-ink/40 hover:bg-raised"
-              : "bg-ink text-tube hover:brightness-110"
-          }`}
+          icone={check}
+          className="w-full"
         >
-          <CheckIcon className={`h-6 w-6 shrink-0 ${pulseNext ? "check-pop" : ""}`} />
-          <span className="min-w-0 flex-1">
-            <span className="block text-[0.9375rem] font-semibold">Marcar próximo episódio</span>
-            <span className="ep-code block truncate text-xs opacity-80">
-              {formatEpCode(nextUp.season, nextUp.episode)} · {nextUp.name}
-            </span>
-          </span>
-        </button>
+          Marcar <Codigo className="text-[0.94rem]">{formatEpCode(nextUp.season, nextUp.episode)}</Codigo>
+        </Acao>
       ) : null}
 
-      {/* Lista e Onde ver DEPOIS de marcar (escolhido pelo Ruben a 27-09,
-          Ronda 12, Fase 5b.3): marcar é a razão de se abrir uma série, e
-          com buracos o "Marcar próximo episódio" ficava 20% livre ao
-          chegar — o resto debaixo da dock. Agora as duas ações de marcar
-          estão inteiras à vista. */}
-      {/* Duas ações, sempre as mesmas duas perguntas: juntar a uma lista,
-          ver onde passa. Lado a lado, mesmo peso — nenhuma é secundária
-          da outra. */}
-      <div className="mt-4 flex gap-2.5">
-        <AddToListButton
-          kind="show"
-          refId={uuid}
-          label="Lista"
-          wrapperClassName="relative flex-1"
-          className="flex h-12 w-full cursor-pointer items-center justify-center rounded-full border border-line bg-raised/60 text-[0.9375rem] font-medium text-ink backdrop-blur transition active:scale-95"
-        />
-        <StreamingBadges kind="tv" tmdbId={show.tmdbId} variant="action" />
-      </div>
+      <StreamingBadges kind="tv" tmdbId={show.tmdbId} variant="linha" />
 
-      {/* só faz sentido para quem não está a seguir ativamente — uma série
-          já em acompanhamento não precisa de "para ver" a redundar */}
+      {/* Só para quem não está a seguir: a uma série em acompanhamento,
+          «para ver» só redundava. É uma escolha, não uma ação — contorno
+          quando já está, cinza quando não (Regra da ação). */}
       {!show.followed && (
-        <button
+        <Acao
+          tipo={show.inWatchlist ? "contorno" : "secundaria"}
+          grande={false}
           onClick={() => void toggleWatchlist()}
-          className={`mt-2.5 flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-full border px-4 text-[0.9375rem] font-medium transition active:scale-95 ${
-            show.inWatchlist
-              ? "border-ink/60 bg-raised text-ink"
-              : "border-line text-dim hover:border-ink hover:text-ink"
-          }`}
+          icone={show.inWatchlist ? <CheckIcon aria-hidden className="h-4 w-4" /> : undefined}
+          className="w-full"
         >
-          {show.inWatchlist && <CheckIcon className="h-3.5 w-3.5" />}
           {show.inWatchlist ? "Na lista para ver" : "Para ver"}
-        </button>
+        </Acao>
       )}
-    </>
+    </div>
   );
 }

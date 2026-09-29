@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import { createPortal } from "react-dom";
 import { CloseIcon } from "@/components/icons";
 
@@ -35,11 +41,18 @@ export default function SheetPanel({
   aberto,
   onFechar,
   children,
+  agrupada = false,
 }: {
   titulo: string;
   aberto: boolean;
   onFechar: () => void;
   children: ReactNode;
+  /**
+   * Uma folha de listas agrupadas, à iOS (Mira): o fundo e os grupos trocam
+   * de degrau — sem isto, um `Grupo` dentro da folha tinha a cor dela e
+   * desaparecia. Os grupos de dentro leem `--m-group` (o tema é `inline`) e apanham-no daqui.
+   */
+  agrupada?: boolean;
 }) {
   // Fechar com Escape — quem tem teclado espera isto, e é a saída óbvia
   useEffect(() => {
@@ -177,7 +190,9 @@ export default function SheetPanel({
         ref={painelRef}
         tabIndex={-1}
         data-folha
-        className="folha absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-3xl border-t border-line bg-panel pb-[calc(var(--dock-h)+1rem)] outline-none"
+        className={`folha absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-3xl pb-[calc(var(--dock-h)+1rem)] outline-none ${
+          agrupada ? "folha-agrupada" : "border-t border-line bg-panel"
+        }`}
       >
         {/* A cabeça é a pega: `touch-none` para o arrasto não rolar o
             conteúdo por baixo. A barrinha diz que se pode puxar. */}
@@ -187,7 +202,9 @@ export default function SheetPanel({
           onPointerMove={aoMover}
           onPointerUp={aoLargar}
           onPointerCancel={aoLargar}
-          className="sticky top-0 z-10 flex touch-none items-center justify-between gap-3 border-b border-line bg-panel px-5 pt-5 pb-4"
+          className={`sticky top-0 z-10 flex touch-none items-center justify-between gap-3 px-5 pt-5 pb-4 ${
+            agrupada ? "" : "border-b border-line bg-panel"
+          }`}
         >
           <span
             aria-hidden
@@ -202,7 +219,7 @@ export default function SheetPanel({
             <CloseIcon className="h-4 w-4" />
           </button>
         </div>
-        <div className="px-5 py-4">{children}</div>
+        <div className={agrupada ? "px-4 pb-4" : "px-5 py-4"}>{children}</div>
       </div>
     </div>,
     document.body,

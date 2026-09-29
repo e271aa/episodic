@@ -13,6 +13,7 @@ import SwipeCoach, { EM_DIA_COACH_KEY } from "@/components/SwipeCoach";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
 import { Bone, TitleBone } from "@/components/Skeleton";
+import UmAUm from "./UmAUm";
 
 type Filter = "continuar" | "retomar" | "comecar" | "todas";
 const FILTER_IDS = new Set<Filter>(["continuar", "retomar", "comecar", "todas"]);
@@ -313,6 +314,12 @@ function EmDiaContent() {
   );
 }
 
+/** `?serie=` é o «Um a um» de uma série (o cartão dos buracos, no detalhe). */
+function EmDiaOuSerie() {
+  const serie = useSearchParams().get("serie");
+  return serie ? <UmAUm uuid={serie} /> : <EmDiaContent />;
+}
+
 // useSearchParams exige uma fronteira de Suspense para a rota poder ser
 // pré-renderizada; sem ela o build falha.
 export default function EmDiaPage() {
@@ -326,7 +333,7 @@ export default function EmDiaPage() {
         </main>
       }
     >
-      <EmDiaContent />
+      <EmDiaOuSerie />
     </Suspense>
   );
 }

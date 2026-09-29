@@ -179,6 +179,36 @@ e se herda (Fases 4–8). Vitrine em `/mira` (só dados de exemplo; sai na Fase 
   fundo: os «28px» do desenho são o iPhone com barra de gestos (34 − 6); com 28
   fixos subia sem razão onde não há área segura.
 
+## O detalhe da série (Fase 4)
+
+Uma coluna só (B·2a): a arte de ponta a ponta (290px, nunca mais de 40% do
+ecrã) com o degradê para o fundo, dois círculos de vidro por cima (recuar e
+**«···»**), o título grande onde o degradê já é fundo e uma linha de
+metadados em texto corrido. Os três separadores saíram.
+
+- **A linha de metadados:** a meio, a contagem (`15/19 vistos`), que já é o
+  estado; com buracos, o estado **no lugar** da contagem (● `3 por marcar`,
+  B·2b); em dia, os dois. Mais de cinco temporadas: diz-se quantas.
+- **Uma cápsula por ecrã:** sem buracos, «Marcar `S02·E07`»; com buracos, o
+  cartão que pergunta por eles é a ação («Viste o `E04`, o `E05` e o `E06`
+  da `T2`?» — pelo nome até três numa temporada, contados acima disso) com
+  «Um a um» ao lado (o Pôr em dia desta série, `/em-dia?serie=`), e o
+  próximo desce para uma linha com «Marcar» em contorno.
+- **Onde ver** é a resposta numa linha de 44px (logótipo, nome, «incluído na
+  subscrição», leva à JustWatch) — sem botão para a abrir.
+- **Temporadas:** até cinco, segmentado (`T2 6/10`); mais, pastilhas de 68px
+  numa faixa com as pontas a desvanecer. A em curso **abre sozinha** e a
+  faixa centra-se nela **rolando só a faixa** (um `scrollIntoView` descia a
+  página num ecrã baixo). Tocar na aberta não a fecha. As barras das
+  pastilhas são sempre `label`: a cor de estado é da série, não da temporada.
+- **Episódios** num grupo: o próximo a negrito com anel de 2px; por marcar
+  com anel tracejado na cor dele; vistos com o círculo cheio e a linha a
+  55%; corridas de 4+ vistos numa linha (`E01–E06 · 6 vistos`).
+- **O «···»** é uma folha agrupada: Sobre, Estatísticas (a decisão da
+  Fase 0), Juntar a uma lista, Deixar de seguir, Arquivar (os dois com
+  anular). `SheetPanel agrupada` troca o degrau da folha e dos grupos
+  (`--m-folha`, `--m-folha-grupo`) — as outras folhas passam a ela na Fase 8.
+
 ## Movimento
 - **Curvas:** `--ease-out` = `cubic-bezier(0.23, 1, 0.32, 1)` para o que entra e
   responde; `--ease-drawer` = `cubic-bezier(0.32, 0.72, 0, 1)`, a do iOS, para o

@@ -24,11 +24,12 @@ test("marcar o próximo episódio conta o episódio e propõe o seguinte", async
   await page.goto("/series/s-alvo");
 
   const marcar = page.getByTestId("mark-next");
-  await expect(marcar).toContainText("Episódio 1");
+  await expect(marcar).toContainText("S01·E01");
 
   await marcar.click();
-  await expect(marcar).toContainText("Episódio 2");
-  await expect(page.getByText("2 por ver")).toBeVisible();
+  await expect(marcar).toContainText("S01·E02");
+  // conta o episódio: a linha do título passa a 1/3
+  await expect(page.locator("h1 + p")).toContainText("1/3 vistos");
 });
 
 test("marcar um filme 'para ver' como visto tira-o de 'para ver'", async ({ page }) => {

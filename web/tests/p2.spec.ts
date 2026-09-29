@@ -198,7 +198,7 @@ test("um filme visto desmarca-se — volta a 'para ver' — e o desmarcar anula-
   await expect(page.getByText("Na lista para ver")).toBeVisible();
 });
 
-test("com o texto a 150%, o detalhe da série não sai do ecrã, e os separadores continuam a um toque", async ({
+test("com o texto a 150%, o detalhe da série não sai do ecrã, e o «···» continua a um toque", async ({
   page,
   tmdb,
 }) => {
@@ -208,7 +208,7 @@ test("com o texto a 150%, o detalhe da série não sai do ecrã, e os separadore
     series: [{ uuid: "s-1", name: "Severance", tvmazeId: 495, numeracao: "tvmaze" }],
   });
   await page.goto("/series/s-1");
-  await page.getByTestId("tab-episodios").waitFor();
+  await page.getByTestId("temporadas").waitFor();
   await page.evaluate(() => {
     document.documentElement.style.fontSize = "150%";
   });
@@ -217,9 +217,9 @@ test("com o texto a 150%, o detalhe da série não sai do ecrã, e os separadore
     janela: innerWidth,
   }));
   expect(larguras.doc).toBeLessThanOrEqual(larguras.janela);
-  const estatisticas = page.getByTestId("tab-estatisticas");
-  await estatisticas.click();
-  await expect(estatisticas).toHaveAttribute("aria-selected", "true");
+  await page.getByTestId("menu-serie").click();
+  await page.getByRole("button", { name: /^Estatísticas/ }).click();
+  await expect(page.locator("#painel-estatisticas")).toBeVisible();
 });
 
 test("no Rever, as saídas do cartão estão acima da dock ao chegar — mesmo com três botões", async ({

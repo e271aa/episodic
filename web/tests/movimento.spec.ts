@@ -185,7 +185,7 @@ async function marcarUmEpisodio(page: import("@playwright/test").Page, tmdb: { t
     series: [{ uuid: "s-1", name: "Severance", tvmazeId: 495, numeracao: "tvmaze" }],
   });
   await page.goto("/series/s-1");
-  await page.getByTestId("tab-episodios").waitFor();
+  await page.getByTestId("temporadas").waitFor();
   const primeiro = page.getByTestId("ep-1-1");
   if (!(await primeiro.isVisible())) await page.getByTestId("season-1").click();
   await primeiro.click();

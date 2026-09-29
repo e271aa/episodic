@@ -51,14 +51,14 @@ test("o passo 02 é verdade: marcar só o último que se viu oferece os de trás
     series: [{ uuid: "s-1", name: "Severance", tvmazeId: 495, numeracao: "tvmaze" }],
   });
   await page.goto("/series/s-1");
-  await page.getByTestId("tab-episodios").waitFor();
+  await page.getByTestId("temporadas").waitFor();
   const quinto = page.getByTestId("ep-1-5");
   if (!(await quinto.isVisible())) await page.getByTestId("season-1").click();
   await quinto.click();
 
   await expect(page.getByTestId("aviso-buracos")).toContainText(
-    "4 episódios por marcar mais atrás",
+    "Viste os 4 que ficaram para trás?",
   );
   await expect(page.getByTestId("marcar-buracos")).toBeVisible();
-  await expect(page.getByTestId("mark-next")).toContainText("S01·E06");
+  await expect(page.getByTestId("mark-next")).toHaveAccessibleName("Marcar S01·E06");
 });

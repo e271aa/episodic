@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Image from "next/image";
+import { ChevronRight } from "lucide-react";
 import { getStreamingAvailability, imageUrl, type StreamingAvailability } from "@/lib/tmdb";
 
 function Badges({ data }: { data: StreamingAvailability }) {
@@ -55,6 +56,11 @@ function Badges({ data }: { data: StreamingAvailability }) {
  * `variant="action"` (Detalhe de série 2b) é o oposto de propósito: é uma das
  * duas ações fixas ao lado do título, por isso tem de estar sempre lá, e um
  * toque nela que não faça nada seria pior do que dizer "não há".
+ *
+ * `variant="linha"` (a Mira, B·2a) é a resposta já dada, numa linha de 44px:
+ * o logótipo do serviço, o nome, «incluído na subscrição» (só se mostram os
+ * de assinatura) e o toque leva à JustWatch. Sem botão para abrir: a app já
+ * sabe a resposta, escondê-la atrás de um toque era perguntar duas vezes.
  */
 export default function StreamingBadges({
   kind,
@@ -63,7 +69,7 @@ export default function StreamingBadges({
 }: {
   kind: "movie" | "tv";
   tmdbId: number | null | undefined;
-  variant?: "inline" | "action";
+  variant?: "inline" | "action" | "linha";
 }) {
   const [data, setData] = useState<StreamingAvailability | null | undefined>(undefined);
   /**
@@ -93,6 +99,70 @@ export default function StreamingBadges({
     });
     return () => cancelAnimationFrame(raf);
   }, [kind, tmdbId]);
+
+  if (variant === "linha") {
+    const servicos = data?.streaming ?? [];
+    const texto =
+      data === undefined
+        ? "a verificar…"
+        : servicos.length > 0
+          ? null
+          : falhou
+            ? "sem ligação para verificar"
+            : !tmdbId
+              ? "ainda por identificar no catálogo"
+              : "sem streaming em Portugal";
+    const corpo = (
+      <>
+        {servicos.length > 0 ? (
+          <span className="flex shrink-0 -space-x-2">
+            {servicos.slice(0, 3).map((p) => {
+              const logo = imageUrl(p.logoPath, "w185");
+              return logo ? (
+                <Image
+                  key={p.id}
+                  src={logo}
+                  alt=""
+                  width={28}
+                  height={28}
+                  className="h-7 w-7 rounded-[7px] object-cover ring-2 ring-bg"
+                />
+              ) : null;
+            })}
+          </span>
+        ) : null}
+        <span className="min-w-0 flex-1 truncate text-[0.88rem] text-label">
+          {servicos.length > 0 ? (
+            <>
+              {servicos.map((p) => p.name).join(" · ")}{" "}
+              <span className="text-label-2">· incluído na subscrição</span>
+            </>
+          ) : (
+            <>
+              Onde ver <span className="text-label-2">· {texto}</span>
+            </>
+          )}
+        </span>
+      </>
+    );
+    const classe = "flex min-h-11 items-center gap-2.5 px-1";
+    return servicos.length > 0 && data?.link ? (
+      <a
+        href={data.link}
+        target="_blank"
+        rel="noreferrer"
+        data-testid="onde-ver"
+        className={`${classe} cursor-pointer transition-opacity active:opacity-60`}
+      >
+        {corpo}
+        <ChevronRight aria-hidden className="h-4 w-4 shrink-0 text-label-3" strokeWidth={2.4} />
+      </a>
+    ) : (
+      <p data-testid="onde-ver" className={classe}>
+        {corpo}
+      </p>
+    );
+  }
 
   if (variant === "action") {
     return (

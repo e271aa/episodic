@@ -50,7 +50,7 @@ test("um buraco no meio é apontado, e diz onde está", async ({ page, tmdb }) =
 
   const aviso = page.getByTestId("aviso-buracos");
   await expect(aviso).toBeVisible();
-  await expect(aviso).toContainText("22 episódios por marcar mais atrás");
+  await expect(aviso).toContainText("Viste os 22 que ficaram para trás?");
   await expect(aviso).toContainText("T2: 22");
   // e o herói deixa de lhes chamar "por ver"
   await expect(page.getByText("22 por marcar")).toBeVisible();
@@ -76,7 +76,7 @@ test("quem está a meio de uma série NÃO é acusado de se ter esquecido", asyn
   );
 
   await expect(page.getByTestId("aviso-buracos")).toHaveCount(0);
-  await expect(page.getByText("26 por ver")).toBeVisible();
+  await expect(page.locator("h1 + p")).toContainText("vistos");
   await expect(page.getByText(/por marcar/)).toHaveCount(0);
 });
 

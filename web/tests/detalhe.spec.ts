@@ -38,6 +38,8 @@ async function abrirSerie(
   page: import("@playwright/test").Page,
   tmdb: { tvmaze: Record<number, number[]> },
   comBuracos: boolean,
+  /** rolar para o topo ao chegar (esconde um salto da página — ver o teste da faixa) */
+  topo = true,
 ) {
   tmdb.tvmaze[TVMAZE] = TEMPORADAS;
   const vistos: EpisodioVisto[] = [];
@@ -63,8 +65,8 @@ async function abrirSerie(
     vistos,
   });
   await page.goto("/series/s-1");
-  await page.getByTestId("tab-episodios").waitFor();
-  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.getByTestId("temporadas").waitFor();
+  if (topo) await page.evaluate(() => window.scrollTo(0, 0));
 }
 
 test("a ação principal está toda tocável mal se chega à página", async ({ page, tmdb }) => {
@@ -87,64 +89,56 @@ test("só há uma ação preenchida de cada vez", async ({ page, tmdb }) => {
   await abrirSerie(page, tmdb, true);
   // Eram dois blocos brancos iguais empilhados, os dois a pedir o toque com
   // o mesmo peso. Com buracos, o "próximo episódio" passa a contornado.
-  await expect(page.getByTestId("marcar-buracos")).toHaveClass(/bg-ink/);
-  await expect(page.getByTestId("mark-next")).not.toHaveClass(/bg-ink/);
+  await expect(page.getByTestId("marcar-buracos")).toHaveClass(/bg-acao/);
+  await expect(page.getByTestId("mark-next")).not.toHaveClass(/bg-acao/);
 
   // …e sem buracos volta a ser ele o preenchido.
   await abrirSerie(page, tmdb, false);
-  await expect(page.getByTestId("mark-next")).toHaveClass(/bg-ink/);
+  await expect(page.getByTestId("mark-next")).toHaveClass(/bg-acao/);
 });
 
-test("o herói mostra o progresso da série, não só o número", async ({ page, tmdb }) => {
+test("o título diz quanto se viu, em números", async ({ page, tmdb }) => {
   await abrirSerie(page, tmdb, false);
-  // 217 de 220 vistos ≈ 98,6%. Antes só existia em texto mono de 13px.
-  const largura = await page
-    .getByTestId("heroi-progresso")
-    .evaluate((el) => (el as HTMLElement).style.width);
-  expect(Number.parseFloat(largura)).toBeGreaterThan(95);
-  expect(Number.parseFloat(largura)).toBeLessThanOrEqual(100);
+  // A barra de 3px do herói saiu com a Mira (B·2a): a contagem vive na
+  // linha por baixo do título, e cada temporada tem a sua barra na faixa.
+  await expect(page.locator("h1 + p")).toContainText("217/220 vistos");
 });
 
-test("abrir uma temporada do fim da faixa traz a pastilha para o ecrã", async ({
+test("a faixa abre centrada na temporada em curso, e a escolhida vem para o ecrã", async ({
   page,
   tmdb,
 }) => {
   await abrirSerie(page, tmdb, false);
-  // Seis temporadas: a faixa rola de lado e a última está fora do ecrã.
+  const dentro = (el: Element) => {
+    const r = el.getBoundingClientRect();
+    return r.left >= 0 && r.right <= window.innerWidth;
+  };
+  // Seis temporadas, e a em curso é a última: abre já à vista (B·E5)…
   const ultima = page.getByTestId("season-6");
-  expect(
-    await ultima.evaluate((el) => el.getBoundingClientRect().right <= window.innerWidth),
-  ).toBe(false);
+  await expect(page.getByTestId("ep-6-3")).toBeVisible();
+  await expect.poll(() => ultima.evaluate(dentro)).toBe(true);
+  // …e a primeira fica fora, à esquerda.
+  const primeira = page.getByTestId("season-1");
+  expect(await primeira.evaluate(dentro)).toBe(false);
 
   // `click()` traria a pastilha para o ecrã SOZINHO — o Playwright rola até
   // ao elemento antes de tocar, e o teste passava a medir o Playwright em
   // vez da app. `dispatchEvent` toca sem rolar nada.
-  await ultima.dispatchEvent("click");
-  await expect(page.getByTestId("ep-6-1")).toBeVisible();
-  await expect
-    .poll(() =>
-      ultima.evaluate((el) => {
-        const r = el.getBoundingClientRect();
-        return r.left >= 0 && r.right <= window.innerWidth;
-      }),
-    )
-    .toBe(true);
+  await primeira.dispatchEvent("click");
+  await expect(page.getByTestId("corrida-1-1-13")).toBeAttached();
+  await expect.poll(() => primeira.evaluate(dentro)).toBe(true);
 });
 
-test("os separadores andam com as setas e dizem que painel comandam", async ({
-  page,
-  tmdb,
-}) => {
-  await abrirSerie(page, tmdb, false);
-  const episodios = page.getByTestId("tab-episodios");
-  await expect(episodios).toHaveAttribute("aria-controls", "painel-episodios");
-  await expect(page.locator("#painel-episodios")).toHaveAttribute("role", "tabpanel");
-
-  await episodios.focus();
-  await page.keyboard.press("ArrowRight");
-  await expect(page.getByTestId("tab-sobre")).toHaveAttribute("aria-selected", "true");
-  await page.keyboard.press("ArrowLeft");
-  await expect(episodios).toHaveAttribute("aria-selected", "true");
+test("centrar a faixa não puxa a página para baixo", async ({ page, tmdb }) => {
+  // A temporada em curso abre sozinha e a faixa centra-se nela — rolando a
+  // faixa, nunca a página: num ecrã baixo, a faixa ainda está fora de vista
+  // quando se chega, e um `scrollIntoView` descia a página sem se pedir.
+  await page.setViewportSize({ width: 390, height: 560 });
+  // Com o cartão dos buracos por cima, a faixa fica abaixo da dobra.
+  await abrirSerie(page, tmdb, true, false);
+  await expect(page.getByTestId("ep-6-3")).toBeAttached();
+  await page.waitForTimeout(400);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
 });
 
 // ── Ronda 12, Fase 5b.3 — o que ficou da Ronda 11 ─────────────
@@ -167,10 +161,16 @@ test("com buracos, a ação secundária também está toda tocável ao chegar", 
   expect(await cobertura(page, '[data-testid="mark-next"]')).toBe(100);
 });
 
-test("sem temporada aberta, o fim da página não tem vazio a mais", async ({ page, tmdb }) => {
+test("o fim da página não tem vazio a mais", async ({ page, tmdb }) => {
   // Medido: 188px de nada por baixo das temporadas fechadas — a moldura já
   // reserva o espaço da dock (82px), e a página reservava-o outra vez.
+  // Desde a Mira há sempre uma temporada aberta; mede-se num ecrã onde a
+  // página rola (numa página mais curta do que o ecrã, o fundo é o ecrã).
+  await page.setViewportSize({ width: 390, height: 560 });
   await abrirSerie(page, tmdb, false);
+  // a lista da temporada aberta tem de estar lá: sem ela, a página é mais
+  // curta do que o ecrã e o «fundo» passa a ser o ecrã
+  await expect(page.getByTestId("ep-6-5")).toBeVisible();
   await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
   const vazio = await page.evaluate(() => {
     const fundo = Math.max(

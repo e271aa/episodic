@@ -124,14 +124,16 @@ test("o detalhe da série não mostra datas em ISO (episódios nem Estreia)", as
     vistos: [{ showUuid: "s-1", season: 1, episode: 1 }],
   });
   await page.goto("/series/s-1");
-  await page.getByTestId("tab-episodios").waitFor();
+  await page.getByTestId("temporadas").waitFor();
   const iso = /\b\d{4}-\d{2}-\d{2}\b/;
   await page.getByTestId("season-1").click();
   await expect(page.getByText("1 de janeiro de 2020").first()).toBeVisible();
   expect(await page.locator("main").innerText()).not.toMatch(iso);
-  await page.getByTestId("tab-sobre").click();
-  await expect(page.getByText("Estreia")).toBeVisible();
-  await expect(page.getByText("1 de janeiro de 2020")).toBeVisible();
+  await page.getByTestId("menu-serie").click();
+  await page.getByRole("button", { name: /^Sobre/ }).click();
+  const sobre = page.getByRole("dialog");
+  await expect(sobre.getByText("Estreia")).toBeVisible();
+  await expect(sobre.getByText("1 de janeiro de 2020")).toBeVisible();
   expect(await page.locator("main").innerText()).not.toMatch(iso);
 });
 

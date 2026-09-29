@@ -40,6 +40,9 @@ export function useSerie(uuid: string) {
   // diferente da que se está a ver agora.
   const [corridasAbertas, setCorridasAbertas] = useState<Set<string>>(new Set());
   const [providerMissing, setProviderMissing] = useState(false);
+  /** as temporadas já chegaram (do fornecedor ou do histórico) — antes disso
+   *  «sem buracos» não quer dizer nada, só que ainda não se sabe */
+  const [temporadasCarregadas, setTemporadasCarregadas] = useState(false);
   const [nextUp, setNextUp] = useState<MetaEpisode | null | undefined>(undefined);
   // Chave (season-episode) do episódio a "saltar" no momento em que é
   // marcado como visto, e flag equivalente para o botão de ação principal.
@@ -59,16 +62,24 @@ export function useSerie(uuid: string) {
   useEffect(() => () => clearTimeout(pulseTimeout.current), []);
   useEffect(() => () => clearTimeout(sweepTimeout.current), []);
 
-  // Só de lado: `block: "nearest"` para não puxar a página verticalmente
-  // por baixo dos pés de quem acabou de tocar.
+  /**
+   * Centra a pastilha aberta **só na faixa**, rolando a faixa e nunca a
+   * página: a temporada em curso abre sozinha ao chegar (B·E5), e um
+   * `scrollIntoView` puxava a página para baixo num ecrã pequeno, onde a
+   * faixa ainda está fora de vista. A primeira vez é instantânea — abre-se
+   * já centrada, não se vê a faixa a correr.
+   */
+  const jaCentrou = useRef(false);
   useEffect(() => {
-    if (openSeason === null) return;
-    chipAberto.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "nearest",
-      inline: "center",
+    const chip = chipAberto.current;
+    const faixa = chip?.parentElement;
+    if (openSeason === null || !chip || !faixa || faixa.scrollWidth <= faixa.clientWidth) return;
+    faixa.scrollTo({
+      left: chip.offsetLeft - (faixa.clientWidth - chip.offsetWidth) / 2,
+      behavior: jaCentrou.current ? "smooth" : "auto",
     });
-  }, [openSeason]);
+    jaCentrou.current = true;
+  }, [openSeason, seasons.length]);
 
   // Recarrega o mapa de vistos e recalcula qual o próximo episódio por ver.
   const syncWatched = useCallback(
@@ -147,6 +158,7 @@ export function useSerie(uuid: string) {
           const atualizada = await updateShow(uuid, { totalEpisodes: total });
           if (atualizada) setShow(atualizada);
         }
+        setTemporadasCarregadas(true);
         return;
       }
       setProviderMissing(true);
@@ -168,6 +180,7 @@ export function useSerie(uuid: string) {
             fromProvider: false,
           })),
       );
+      setTemporadasCarregadas(true);
     })();
   }, [uuid, syncWatched]);
 
@@ -185,14 +198,30 @@ export function useSerie(uuid: string) {
     [episodesBySeason, show],
   );
 
-  const toggleSeason = useCallback(
+  /**
+   * Escolher uma temporada, como num controlo segmentado: tocar na que já
+   * está aberta não a fecha (Mira, B·2a). Havia sempre uma lista por baixo a
+   * aparecer e a desaparecer, e a página a saltar com ela.
+   */
+  const escolherTemporada = useCallback(
     async (season: SeasonView) => {
-      setOpenSeason((cur) => (cur === season.number ? null : season.number));
-      setCorridasAbertas(new Set());
+      setOpenSeason((cur) => {
+        if (cur !== season.number) setCorridasAbertas(new Set());
+        return season.number;
+      });
       await loadSeasonEpisodes(season);
     },
     [loadSeasonEpisodes],
   );
+
+  /**
+   * Ao chegar, abre a temporada em curso (a do próximo episódio; numa série
+   * em dia, a última). Era preciso um toque para ver um único episódio, e
+   * «qual é o próximo?» é a pergunta deste ecrã.
+   */
+  if (openSeason === null && nextUp !== undefined && seasons.length > 0) {
+    setOpenSeason(nextUp?.season ?? seasons[seasons.length - 1].number);
+  }
 
   const toggleCorrida = useCallback((chave: string) => {
     setCorridasAbertas((cur) => {
@@ -252,6 +281,13 @@ export function useSerie(uuid: string) {
     () => seasons.find((s) => s.number === openSeason) ?? null,
     [seasons, openSeason],
   );
+
+  // Os nomes dos episódios da temporada aberta — também a que abriu sozinha.
+  useEffect(() => {
+    if (!openSeasonView) return;
+    const raf = requestAnimationFrame(() => void loadSeasonEpisodes(openSeasonView));
+    return () => cancelAnimationFrame(raf);
+  }, [openSeasonView, loadSeasonEpisodes]);
 
   /**
    * Colapsa as corridas de episódios vistos da temporada aberta. Ver
@@ -357,6 +393,35 @@ export function useSerie(uuid: string) {
     });
   }, [show, uuid]);
 
+  /**
+   * Deixar de seguir e arquivar, do «···». Os dois tiram a série da fila do
+   * «A seguir» sem apagar nada, e desfazem-se como qualquer outro gesto.
+   */
+  const alternar = useCallback(
+    async (campo: "followed" | "archived") => {
+      if (!show) return;
+      const valor = !show[campo];
+      const updated = await updateShow(uuid, { [campo]: valor });
+      if (updated) setShow(updated);
+      pushUndo({
+        label:
+          campo === "followed"
+            ? valor
+              ? "A seguir outra vez"
+              : "Deixaste de seguir"
+            : valor
+              ? "Arquivada"
+              : "Tirada do arquivo",
+        detail: show.name,
+        undo: async () => {
+          const reverted = await updateShow(uuid, { [campo]: !valor });
+          if (reverted) setShow(reverted);
+        },
+      });
+    },
+    [show, uuid],
+  );
+
   // Sem as especiais (temporada 0): o total do fornecedor só conta episódios
   // regulares, por isso incluí-las dava "90/88" no Prison Break. Continuam
   // marcadas e continuam a contar nas estatísticas do perfil.
@@ -404,12 +469,14 @@ export function useSerie(uuid: string) {
     episodesBySeason,
     corridasAbertas,
     providerMissing,
+    temporadasCarregadas,
+    loadSeasonEpisodes,
     nextUp,
     pulseEp,
     sweepSeason,
     pulseNext,
     chipAberto,
-    toggleSeason,
+    escolherTemporada,
     toggleCorrida,
     toggleEpisode,
     buracos,
@@ -419,6 +486,7 @@ export function useSerie(uuid: string) {
     markSeasonAll,
     markNext,
     toggleWatchlist,
+    alternar,
     watchedCount,
     backdropPath,
     percent,

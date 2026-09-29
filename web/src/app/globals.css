@@ -19,6 +19,10 @@
   --m-bg: #000000;
   --m-group: #1c1c1e;
   --m-elevated: #2c2c2e;
+  /* uma folha agrupada (SheetPanel `agrupada`): no iOS, à noite a folha sobe
+     um degrau e os grupos outro; de dia a folha é o fundo e os grupos brancos */
+  --m-folha: #1c1c1e;
+  --m-folha-grupo: #2c2c2e;
   --m-segment: #636366;
   --m-chip: #48484a;
   --m-fill: rgba(120, 120, 128, 0.24);
@@ -54,6 +58,8 @@
   --m-bg: #f2f2f7;
   --m-group: #ffffff;
   --m-elevated: #e5e5ea;
+  --m-folha: #f2f2f7;
+  --m-folha-grupo: #ffffff;
   --m-segment: #ffffff;
   --m-chip: #d1d1d6;
   --m-fill: rgba(118, 118, 128, 0.12);
@@ -86,6 +92,8 @@
     --m-bg: #f2f2f7;
     --m-group: #ffffff;
     --m-elevated: #e5e5ea;
+    --m-folha: #f2f2f7;
+    --m-folha-grupo: #ffffff;
     --m-segment: #ffffff;
     --m-chip: #d1d1d6;
     --m-fill: rgba(118, 118, 128, 0.12);
@@ -550,6 +558,15 @@ summary:focus-visible,
 .folha {
   transform: translateY(0);
   transition: transform 320ms var(--ease-drawer);
+}
+/* A folha agrupada (Mira): a folha e os seus grupos trocam de degrau, à
+   iOS — sem isto um `Grupo` dentro dela tinha a cor dela e desaparecia. */
+.folha-agrupada,
+.folha-agrupada [data-folha-pega] {
+  background: var(--m-folha);
+}
+.folha-agrupada {
+  --m-group: var(--m-folha-grupo);
 }
 .folha-veu {
   opacity: 1;

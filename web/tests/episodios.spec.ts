@@ -43,8 +43,8 @@ test("uma corrida de vistos colapsa, o buraco no meio fica aberto", async ({ pag
   ];
   await serieCom(page, tmdb, 51, vistos);
 
-  await expect(page.getByTestId("corrida-1-1-19")).toContainText("19 episódios vistos");
-  await expect(page.getByTestId("corrida-1-42-51")).toContainText("10 episódios vistos");
+  await expect(page.getByTestId("corrida-1-1-19")).toContainText("19 vistos");
+  await expect(page.getByTestId("corrida-1-42-51")).toContainText("10 vistos");
 
   // O buraco fica aberto, linha a linha: é o que interessa ver.
   await expect(page.getByTestId("ep-1-20")).toBeVisible();
@@ -76,10 +76,12 @@ test("visto e por ver distinguem-se sem depender só do círculo", async ({ page
   const visto = page.getByTestId("ep-1-1");
   const porVer = page.getByTestId("ep-1-2");
 
-  await expect(visto).toHaveClass(/opacity-60/);
-  await expect(porVer).not.toHaveClass(/opacity-60/);
-  await expect(visto.locator("span.block").first()).toHaveClass(/text-dim/);
-  await expect(porVer.locator("span.block").first()).toHaveClass(/font-medium/);
+  // A linha toda de um visto fica a 55% (Mira, B·2b), e o leitor de ecrã
+  // ouve o estado — não só um círculo de 26px a dizê-lo.
+  await expect(visto).toHaveAttribute("aria-pressed", "true");
+  await expect(porVer).toHaveAttribute("aria-pressed", "false");
+  await expect(visto).toHaveCSS("opacity", "0.55");
+  await expect(porVer).toHaveCSS("opacity", "1");
 });
 
 test("o cabeçalho da temporada fica fixo ao rolar a lista", async ({ page, tmdb }) => {

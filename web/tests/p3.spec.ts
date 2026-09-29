@@ -21,7 +21,8 @@ test("no detalhe, a atividade não mostra datas em ISO cruas", async ({ page, tm
     ],
   });
   await page.goto("/series/s-1");
-  await page.getByTestId("tab-estatisticas").click();
+  await page.getByTestId("menu-serie").click();
+  await page.getByRole("button", { name: /^Estatísticas/ }).click();
   const painel = page.locator("#painel-estatisticas");
   await expect(painel).not.toContainText("2024-06-26");
   const esperado = `${curta("2024-06-26T20:00:00.000Z")} → ${curta("2024-07-01T21:00:00.000Z")}`;

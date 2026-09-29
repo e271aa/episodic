@@ -246,8 +246,13 @@ test("os géneros da série aparecem em pt-PT, não como veio do fornecedor", as
   });
   await page.goto("/series/s-1");
   await expect(page.getByText("Sci-Fi & Fantasy")).toHaveCount(0);
-  await expect(page.getByText("Ficção & Fantasia")).toBeVisible();
-  await expect(page.getByText("Ação & Aventura")).toBeVisible();
+  await expect(page.locator("h1 + p")).toContainText("Ficção & Fantasia");
+  // a lista inteira vive no Sobre, no «···»
+  await page.getByTestId("menu-serie").click();
+  await page.getByRole("button", { name: /^Sobre/ }).click();
+  const sobre = page.getByRole("dialog");
+  await expect(sobre).toContainText("Ficção & Fantasia · Ação & Aventura");
+  await expect(sobre).not.toContainText("Sci-Fi & Fantasy");
 });
 
 test("'Melhor maratona' com um só episódio não aparece — superada pela 5e", async ({ page }) => {
@@ -488,7 +493,8 @@ test("criar uma lista a partir do detalhe de uma série tem um rótulo a sério"
 }) => {
   await semear(page, { series: [{ uuid: "s-1", name: "Serie Um", totalEpisodes: 3 }] });
   await page.goto("/series/s-1");
-  await page.getByRole("button", { name: "Lista" }).click();
+  await page.getByTestId("menu-serie").click();
+  await page.getByRole("button", { name: "Juntar a uma lista" }).click();
   expect(await temRotuloAsSerio(page.getByPlaceholder("Nova lista…"))).toBe(true);
 });
 

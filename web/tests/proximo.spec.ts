@@ -54,7 +54,7 @@ test("no detalhe, o próximo é o que vem depois do último visto — não o pri
   await naruto(page, tmdb, 10);
   await page.goto("/series/s-1");
   await expect(page.getByTestId("aviso-buracos")).toContainText("T2: 22");
-  await expect(page.getByTestId("mark-next")).toContainText("S03·E11");
+  await expect(page.getByTestId("mark-next")).toHaveAccessibleName("Marcar S03·E11");
 });
 
 test("na casa, o herói propõe o mesmo episódio", async ({ page, tmdb }) => {
