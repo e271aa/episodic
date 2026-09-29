@@ -255,7 +255,10 @@ export default function TonightHero({
                 total={mostrada?.total ?? totalEpisodes ?? 1}
                 vistos={mostrada?.vistos ?? new Set(Array.from({ length: watchedCount ?? 0 }, (_, i) => i + 1))}
                 aceso={aceso}
-                ritual={marcacoes}
+                // o ritual só vive enquanto a marcação vive: anular (ou falhar
+                // a gravação) tira as fatias — senão, com a leitura nova, o
+                // fim da varredura mudava de segmento e a mira reacendia
+                ritual={otimista || fim ? marcacoes : 0}
                 construir={construir}
                 rotulo={
                   fim

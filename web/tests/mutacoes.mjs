@@ -1496,6 +1496,13 @@ const MUTACOES = [
     para: "                  backgroundSize: \"100% 100%\",",
   },
   {
+    nome: "r14-f3/anular-reacende",
+    descricao: "anular deixa as fatias montadas e, com a leitura nova, a mira reacende no segmento anterior",
+    ficheiro: HEROI,
+    de: "ritual={otimista || fim ? marcacoes : 0}",
+    para: "ritual={marcacoes}",
+  },
+  {
     nome: "r14-f3/fim-sem-momento",
     descricao: "fechar uma temporada passa de largo: sem «T1 ✓», salta logo para a seguinte",
     ficheiro: HEROI,

@@ -336,6 +336,10 @@ test("anular não festeja: o episódio volta, mas a barra não acende", async ({
   await page.waitForTimeout(1300);
   await page.getByTestId("undo-button").click();
   await expect(page.locator("main")).toContainText("S01·E02");
+  // e depois de chegar a leitura nova da temporada (1/9): era aí que a fatia
+  // do E01 trocava de classe e a mira reacendia — só às vezes, conforme a
+  // leitura chegava antes ou depois da verificação
+  await expect(page.getByTestId("progresso-casa")).toContainText("1/9");
   expect(await aCorrer(page, "mira-fatia")).toBe(0);
   expect(await aCorrer(page, "mira-fica")).toBe(0);
 });
