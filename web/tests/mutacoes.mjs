@@ -702,7 +702,7 @@ const MUTACOES = [
     nome: "r12-fase5b3/contagens-a-320",
     descricao: "as contagens voltam a aparecer a 320px e empurram a barra",
     ficheiro: CONTROLOS_BIBLIOTECA,
-    de: "ep-code hidden text-xs min-[360px]:inline",
+    de: "ep-code hidden text-xs @[22.5rem]:inline",
     para: "ep-code text-xs",
   },
   {
@@ -1304,8 +1304,8 @@ const MUTACOES = [
     nome: "r12-f4/barra-volta-a-baixo",
     descricao: "a barra da Biblioteca deixa de estar colada ao topo e volta a não seguir o scroll",
     ficheiro: CONTROLOS_BIBLIOTECA,
-    de: 'className="sticky top-[env(safe-area-inset-top)] z-30',
-    para: 'className="relative z-30',
+    de: 'className="@container sticky top-[env(safe-area-inset-top)] z-30',
+    para: 'className="@container relative z-30',
   },
   {
     nome: "r12-f4/disco-volta-ao-pora-em-dia",
