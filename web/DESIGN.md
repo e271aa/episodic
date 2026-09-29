@@ -18,6 +18,7 @@ colors:
     label-faint: "#8e8e93"
     label-3: "rgba(235, 235, 245, 0.34)"
     danger: "#ff453a"
+    acao: "#e5e5ea" # a cápsula de ação à noite: o cinza da mira
   claro:
     bg: "#f2f2f7"
     group: "#ffffff"
@@ -28,10 +29,11 @@ colors:
     fill-strong: "rgba(118, 118, 128, 0.16)"
     separator: "rgba(60, 60, 67, 0.18)"
     label: "#000000"
-    label-2: "rgba(60, 60, 67, 0.60)"
+    label-2: "rgba(60, 60, 67, 0.76)" # não os 60% do iOS: 3,1:1 (Fase 3)
     label-faint: "#6c6c70"
     label-3: "rgba(60, 60, 67, 0.30)"
     danger: "#ff3b30"
+    acao: "#000000"
   mira: ["#e5e5ea", "#ffd60a", "#64d2ff", "#30d158", "#da5ce8", "#ff453a", "#0a84ff"]
   estado:
     em-curso: { noite: "#ffffff", claro: "#000000" }
@@ -101,14 +103,17 @@ Aparência: **Automático** · **Noite** · **Claro**, guardado neste aparelho
   camadas — não é um custo.
 
 ### Regra da mira
-A mira (sete cores, pela ordem da mira) aparece **só** (1) na varredura ao
+A mira (sete cores, pela ordem da mira — `--mira-1` a `--mira-7`, **fixas**: uma
+carta de teste não muda com o modo) aparece **só** (1) na varredura ao
 marcar um episódio e (2) na casa vazia, onde quer dizer «sem sinal». As cores
 de estado aparecem **só** em barras de progresso, pontos e no texto «N por
 marcar». **Nunca decoração, nunca cor de botão.**
 
 ### Regra da ação
-**Uma só cápsula preenchida por ecrã** — branca à noite, preta de dia (`label`
-com texto `on-label`). As escolhas (segmento, filtro, «Na lista») usam `fill` ou
+**Uma só cápsula preenchida por ecrã** — à noite o **cinza da mira**
+(`#e5e5ea`, a primeira barra; brilha menos do que o branco numa sala às escuras
+e liga a ação à mira sem lhe dar cor), preta de dia. Token `acao`, texto
+`on-label` (16,7:1). As escolhas (segmento, filtro, «Na lista») usam `fill` ou
 contorno, nunca a cor da ação. O separador ativo da barra é uma cápsula de
 vidro, não a branca.
 
@@ -136,7 +141,7 @@ SF Pro, SF Mono e SF Rounded — **nenhuma fonte carregada**.
 | Corpo | 17px | 1 | 400 | linhas, nomes de episódio |
 | Subtítulo | 15px / 1.4 | 0.88 | 400 | metadados, secundário |
 | Nota | 13px | 0.76 | 400/600 | o rótulo de data em maiúsculas |
-| Legenda | 10–11px | 0.59–0.65 | 500/600 | nomes da barra, meses do mapa |
+| Legenda | 10–11px | 0.59–0.65 | 500/600 | nomes da barra (piso de 10px: `max(10px, 0.59rem)`), meses do mapa |
 | Mono | 12–15px | 0.7–0.88 | 500/600 | `S02·E07`, `6/10`, anos |
 | Rounded | 24–46px | 1.4–2.7 | 700 | `2 781 h`, `138` |
 
@@ -158,6 +163,14 @@ e se herda (Fases 4–8). Vitrine em `/mira` (só dados de exemplo; sai na Fase 
 - **`TituloGrande`** — o `<h1>` a 34px com rótulo por cima e ação ao lado; ao
   sair do ecrã, uma barra compacta de vidro com o nome a 17px.
 - **`EscolhaAparencia`** — Automático · Noite · Claro.
+- **`Codigo`** — a letra da TV (ver «A assinatura»).
+- **`Segmentos`** — o progresso de uma temporada e o palco do ritual (ver «A
+  assinatura»). `fino` para a barra de 3px por baixo de uma capa.
+- **`LinhaFila`** — uma série da fila numa lista agrupada: capa com a barra de
+  3px, nome, próximo episódio em `Codigo`, e o círculo de marcar com contorno
+  (a cápsula preenchida é só a do cartão).
+- **`DicaInstalar`** — «Instala no iPhone», **no fluxo**, por baixo do que se
+  faz; nunca a flutuar (tapava as portas da casa vazia).
 - **A barra de separadores** (`BottomNav`) — cápsula de vidro de 64px, quatro
   colunas iguais, **os quatro nomes à vista enquanto couberem na coluna**
   (`@container`, `@[3.4rem]`): com o texto a 150% num ecrã de 320 deixam de
@@ -178,13 +191,74 @@ e se herda (Fases 4–8). Vitrine em `/mira` (só dados de exemplo; sai na Fase 
 - **`prefers-reduced-motion`:** tiram-se deslocação, escala e desfoque; ficam a
   opacidade e a cor. A contagem do anular corre sempre.
 
-### O ritual «Marcar visto» (Fase 2)
-A cápsula comprime a 0,97; o ✓ salta com mola e um anel expande-se e apaga; **a
-mira revela-se por cima dos segmentos** da esquerda para a direita (620ms) e
-apaga; o episódio sai com desfoque e entra o seguinte; o aviso de anular sobe
-acima da barra, com uma linha que se esvazia em 5s. Anular volta atrás **sem
-festa**. Fechar uma temporada continua a ser a festa maior. Tabela de tempos no
-README da Mira.
+### O ritual «Marcar visto»
+Ver «A assinatura», abaixo: é o primeiro dos seus momentos.
+
+## A assinatura (Fase 3)
+
+A crítica da base e da casa (26/40, 29-09) mediu
+~75% de iOS de fábrica — por tese — e a identidade escondida onde quase não se
+vê. O Ruben escolheu quatro momentos que só esta app tem. **Vivem nas
+primitivas**, para as Fases 4–8 os herdarem sem os reinventar.
+
+### 1. O ritual, no toque
+Marcar é o que se faz todas as noites, por isso **nada espera pela gravação**:
+no toque, o segmento do episódio acende (otimista), a cápsula comprime a 0,97,
+o ✓ salta com mola e um anel, e **a mira pinta fatia a fatia** —
+
+- cada segmento visto mostra **a sua fatia** da mira: a mira estende-se pela
+  largura da fila (`background-size` = largura da fila, `background-position`
+  = −deslocamento do segmento), por isso os intervalos de 3px continuam a ser
+  intervalos;
+- a varredura vai **só até ao episódio marcado**, da esquerda (cada fatia
+  começa até 280ms depois da primeira; 720ms a revelar e apagar). Os por ver
+  **nunca** acendem. A fatia do marcado fica mais um pouco (`mira-fica`, 1100ms);
+- a contagem rola 6px (`contagem-rola`, 160ms), em mono tabular;
+- o episódio sai com desfoque e entra o seguinte; o aviso de anular diz
+  «`S01·E04` visto» e o nome da série por baixo.
+
+**Propõe, nunca finge:** se a gravação falhar, o segmento apaga, a contagem
+volta e diz-se, no cartão, «Não deu para marcar. Tenta outra vez.»
+(`role="alert"`). Anular volta atrás **sem festa**: o ritual só vive enquanto
+a marcação vive — anular (ou falhar) tira as fatias. Se ficassem, a leitura
+nova da temporada mudava o fim da varredura de segmento, a fatia trocava de
+classe e a mira reacendia no episódio anterior (apanhado a 29-09 por um teste
+que só falhava às vezes).
+
+**O fim de uma temporada** é raro e tem o seu momento: os segmentos ficam
+todos acesos 1400ms com «`T1 ✓`» no lugar da contagem, o aviso diz «`T1`
+completa · 9 episódios», e depois os da temporada seguinte **constroem-se da
+esquerda** (`segmento-constroi`, 220ms, 15ms entre cada).
+
+### 2. A gramática de TV
+- **`Codigo`** (`ep-code`): SF Mono, tabular — **só** para códigos (`S02·E07`,
+  `T1`), contagens (`6/10`, `12`) e datas. **Nunca nomes**: em mono, um nome
+  lê-se como máquina de escrever (estava assim no aviso de anular). No texto
+  corrido, os códigos são destacados sozinhos (`comCodigos` no aviso).
+- **`Segmentos`**: um segmento por episódio da temporada, `label` os vistos,
+  `track` os por ver; acima de 24, barra contínua; `fino` (3px) por baixo das
+  capas. Lê-se a temporada de relance — é informação, não decoração.
+
+### 3. O diário no cabeçalho
+Por baixo do título grande, a data **e o que se viu hoje**: «TERÇA, 29 DE
+SETEMBRO · `1` EPISÓDIO». A noite acaba em «viste», não só em «falta». Só
+aparece com pelo menos um; marcar soma, anular tira. A data e o diário têm
+linha própria, por cima do título (com o diário, empurravam o «Pôr em dia»).
+
+### 4. «Sem sinal», a carta de teste
+A casa vazia é uma carta SMPTE composta a sério: as sete barras em cima (3/4)
+e a fila de acerto por baixo (azul, preto, magenta, preto, ciano, preto,
+cinza), raio 24 com fio de 0,5px. Cores fixas. O mesmo desenho é candidato ao
+ícone da app (Fase 2b, na Fase 12).
+
+### O que acompanha a assinatura
+- A **linha de contexto** do cartão («Viste o anterior ontem», «Parada há 42
+  dias», «Ainda não viste nenhum episódio») existe **sempre** e tem uma linha:
+  era um sobretítulo que só aparecia em «Retomar» e o botão saltava ~23px
+  debaixo do polegar ao marcar.
+- O fundo da casa («Continuar», «Retomar», «Por começar», «Esta semana») em
+  listas agrupadas com `LinhaFila`/`Linha`; os cabeçalhos **sem cor** (a v2
+  punha-lhes uma barrinha da mira).
 
 ## Títulos
 Mostra-se o **título original** (o que o TV Time exportou: `Severance`, não
