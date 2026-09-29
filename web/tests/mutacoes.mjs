@@ -1206,8 +1206,8 @@ const MUTACOES = [
     nome: "r12-fecho/estrear-data-come-a-linha",
     descricao: "a data do A estrear volta a ir à direita, sem encolher, e come o nome da série",
     ficheiro: "src/app/estrear/EstrearPageClient.tsx",
-    de: '<p className="ep-code mt-0.5 text-xs text-faint first-letter:uppercase">',
-    para: '<p className="ep-code absolute right-3 top-3 shrink-0 text-xs text-faint first-letter:uppercase">',
+    de: "                  <p className=\"ep-code mt-0.5 text-xs text-faint first-letter:uppercase\">\n                    {relativeDay(episode.airDate as string)}\n                  </p>\n                </div>",
+    para: "                </div>\n                <p className=\"ep-code shrink-0 text-right text-xs text-faint first-letter:uppercase\">\n                  {relativeDay(episode.airDate as string)}\n                </p>",
   },
 ];
 
