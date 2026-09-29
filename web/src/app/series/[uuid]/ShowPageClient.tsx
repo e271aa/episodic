@@ -995,7 +995,7 @@ export default function ShowPage() {
                               </span>
                               <span
                                 aria-hidden
-                                className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full text-[0.6875rem] font-bold"
+                                className="flex h-[20px] w-[20px] shrink-0 items-center justify-center rounded-full text-xs font-bold"
                                 style={{ background: accent, color: "var(--color-tube)" }}
                               >
                                 ✓

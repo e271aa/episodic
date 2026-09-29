@@ -19,11 +19,14 @@ export default function LibraryEmptyState({
   segment,
   filter,
   onClearFilter,
+  onProcurar,
 }: {
   query: string | null;
   segment: Segment;
   filter: SeriesFilter;
   onClearFilter: () => void;
+  /** abre a procura — a saída de uma biblioteca vazia */
+  onProcurar: () => void;
 }) {
   const filtrado = segment === "series" && filter !== "tudo";
   return (
@@ -49,6 +52,14 @@ export default function LibraryEmptyState({
               ? "Procura pelo nome para seguires a primeira."
               : "Procura pelo nome para adicionares o primeiro."}
       </p>
+      {!filtrado && !query && (
+        <button
+          onClick={onProcurar}
+          className="mt-5 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110"
+        >
+          {segment === "series" ? "Procurar uma série" : "Procurar um filme"}
+        </button>
+      )}
       {filtrado && !query && (
         <button
           onClick={onClearFilter}

@@ -178,7 +178,7 @@ export default function PosterCard({
           <>
             <div className="pointer-events-none absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/70 to-transparent" />
             {acao.selo && (
-              <span className="ep-code absolute left-1.5 top-1.5 rounded-md bg-black/60 px-1.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-ink backdrop-blur">
+              <span className="ep-code absolute left-1.5 top-1.5 rounded-md bg-tube/60 px-1.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-ink backdrop-blur">
                 {acao.selo}
               </span>
             )}

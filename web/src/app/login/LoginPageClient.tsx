@@ -91,7 +91,7 @@ function LoginForm() {
     return (
       <main className="tela-cheia relative flex flex-col items-center justify-center px-6 text-center">
         <BotaoDeSair />
-        <p className="font-display text-lg font-bold">Cloud não configurada</p>
+        <h1 className="font-display text-lg font-bold">Cloud não configurada</h1>
         <p className="mt-2 max-w-xs text-[0.9375rem] text-dim">
           A app está a correr só em modo local. Não há conta para iniciar sessão.
         </p>

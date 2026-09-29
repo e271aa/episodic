@@ -54,7 +54,7 @@ typography:
     fontVariation: "'wdth' 80"
   code:
     fontFamily: "Spline Sans Mono, ui-monospace, monospace"
-    fontSize: "13px"
+    fontSize: "13px" # 11–13px: os códigos e contagens pequenos
     fontWeight: 400
     lineHeight: 1.3
     letterSpacing: "0.04em"
@@ -267,6 +267,9 @@ direto; o mono é o timecode.
   cabeçalhos de secção, as eyebrows.
 - **Code** (400, 11–13px, mono tabular, espaçamento 0,04em): `S04·E01`,
   contagens, datas, `29/51`.
+  O texto corrido nunca desce dos 12px — só o código (`.ep-code`) vai aos 11.
+- **Cor de fundo nos gradientes:** `var(--color-tube)` ou
+  `color-mix(… transparent)`, nunca o hex nem `rgba(16,16,20,…)` à mão.
 
 ### Named Rules
 **The Timecode Rule.** Códigos de episódio, contagens, datas e números que
@@ -506,9 +509,9 @@ com um círculo tracejado, e não se podem marcar.
   v1. O `manifest` e o brilho do `ep-card-hover` já foram limpos (Fase 5b da
   Ronda 12); resta um sítio: o ícone da app (`icon.svg` e `apple-icon.png`,
   ainda o triângulo âmbar) — liga à Fase 2b, o nome novo.
-- **Don't** criar um quarto vermelho. Hoje há três quase iguais — perigo
-  (`#e5484d`), o vermelho SMPTE (`#e6483c`) e o "não" do baralho
-  (`#e8564a`) —, e o último devia ser um dos dois primeiros.
+- **Don't** criar um terceiro vermelho. Há dois — perigo (`#e5484d`) e o
+  vermelho SMPTE (`#e6483c`); o `#e8564a` do "não" do baralho passou ao
+  SMPTE na 5e.
 - **Don't** pôr cor numa ação só para a destacar: é a pílula branca que
   destaca.
 - **Don't** escrever texto no azul de sinal.

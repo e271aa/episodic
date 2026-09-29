@@ -22,7 +22,7 @@ function Badges({ data }: { data: StreamingAvailability }) {
               {logo ? (
                 <Image src={logo} alt={p.name} width={44} height={44} className="h-full w-full object-cover" />
               ) : (
-                <span className="flex h-full w-full items-center justify-center bg-raised text-center text-[0.6875rem] text-dim">
+                <span className="flex h-full w-full items-center justify-center bg-raised text-center text-xs text-dim">
                   {p.name}
                 </span>
               )}

@@ -601,6 +601,7 @@ function LibraryContent() {
           segment={segment}
           filter={filter}
           onClearFilter={() => setParams({ filtro: null, decada: null })}
+          onProcurar={() => setPesquisaAberta(true)}
         />
       )}
 

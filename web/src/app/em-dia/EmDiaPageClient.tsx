@@ -191,7 +191,11 @@ function EmDiaContent() {
               key={f.id}
               onClick={() => changeFilter(f.id)}
               aria-pressed={isActive}
+              // um filtro vazio que não é o ativo fica apagado: "Continuar 0"
+              // à cabeça, primeiro e vazio, lia-se como o sítio onde estar
               className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-[0.9375rem] font-medium transition active:scale-95 ${
+                count === 0 && !isActive ? "opacity-60" : ""
+              } ${
                 isActive
                   ? "border-ink/60 bg-raised text-ink"
                   : "border-line text-dim hover:border-ink hover:text-ink"

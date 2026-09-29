@@ -149,8 +149,8 @@ export default function DiscoverSwipeCard({
           className="pointer-events-none absolute inset-0"
           style={{
             background: bordo
-              ? "linear-gradient(to top,#101014 2%,rgba(16,16,20,.85) 26%,rgba(16,16,20,.15) 52%,rgba(16,16,20,.55) 100%)"
-              : "linear-gradient(to top,#101014 0%,rgba(16,16,20,.72) 38%,rgba(16,16,20,0) 68%)",
+              ? `linear-gradient(to top,var(--color-tube) 2%,color-mix(in srgb, var(--color-tube) 85%, transparent) 26%,color-mix(in srgb, var(--color-tube) 15%, transparent) 52%,color-mix(in srgb, var(--color-tube) 55%, transparent) 100%)`
+              : `linear-gradient(to top,var(--color-tube) 0%,color-mix(in srgb, var(--color-tube) 72%, transparent) 38%,transparent 68%)`,
           }}
         />
 
@@ -216,7 +216,7 @@ export default function DiscoverSwipeCard({
         >
           {/* De onde veio isto — sem as filas lado a lado é a única pista do
               porquê. A barrinha de cor liga o cartão à secção de origem. */}
-          <p className="flex max-w-full items-center gap-2 self-start truncate rounded-full border border-line bg-raised/80 py-1 pl-2 pr-3 font-display text-[0.6875rem] font-semibold uppercase tracking-[0.16em] text-ink [font-stretch:80%]">
+          <p className="flex max-w-full items-center gap-2 self-start truncate rounded-full border border-line bg-raised/80 py-1 pl-2 pr-3 font-display text-xs font-semibold uppercase tracking-[0.16em] text-ink [font-stretch:80%]">
             <span
               aria-hidden
               className="h-[3px] w-5 shrink-0 rounded-full"
@@ -230,7 +230,7 @@ export default function DiscoverSwipeCard({
 
           <h2
             className={`mt-2 font-display font-bold leading-tight text-ink [font-stretch:105%] ${
-              bordo ? "text-[2.125rem] leading-[1.02]" : "text-2xl"
+              bordo ? "text-4xl leading-[1.02]" : "text-2xl"
             }`}
           >
             {item.name}

@@ -198,3 +198,32 @@ test("a primeira capa de uma lista não carrega em lazy (é a maior da dobra)", 
   const img = page.locator('a[href="/series/s-1"] img').first();
   await expect(img).toHaveAttribute("loading", "eager");
 });
+
+// ── F3: os P3 rápidos ──
+
+test("o Entrar sem cloud também tem um <h1>", async ({ page }) => {
+  await page.goto("/login");
+  await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
+});
+
+test("a Biblioteca vazia tem uma ação: procurar", async ({ page }) => {
+  await page.goto("/library");
+  const botao = page.getByRole("button", { name: "Procurar uma série" });
+  await expect(botao).toBeVisible();
+  await botao.click();
+  await expect(page.getByTestId("search-input")).toBeVisible();
+});
+
+test("no Pôr em dia, um filtro vazio que não está ativo aparece apagado", async ({ page }) => {
+  // parada há 60 dias: "Continuar" fica a 0 e a série está em "Retomar"
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Parada", totalEpisodes: 3 }],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1, watchedAt: new Date(Date.now() - 60 * 864e5).toISOString() }],
+  });
+  await page.goto("/em-dia?filtro=retomar");
+  const vazio = page.getByRole("button", { name: /^Continuar/ });
+  await expect(vazio).toBeVisible();
+  expect(await vazio.evaluate((el) => Number(getComputedStyle(el).opacity))).toBeLessThan(0.8);
+  const ativo = page.getByRole("button", { name: /^Retomar/ });
+  expect(await ativo.evaluate((el) => Number(getComputedStyle(el).opacity))).toBe(1);
+});

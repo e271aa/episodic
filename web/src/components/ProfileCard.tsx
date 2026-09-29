@@ -342,7 +342,7 @@ function EditorPerfil({
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 truncate text-[0.6875rem] font-medium">{c.character}</p>
+                      <p className="mt-1 truncate text-xs font-medium">{c.character}</p>
                       <p className="ep-code truncate text-[0.6875rem] text-faint">{c.actorName}</p>
                     </button>
                   );

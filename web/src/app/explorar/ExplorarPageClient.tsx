@@ -172,7 +172,7 @@ function Baralho({
           <span className="ep-code text-[0.6875rem] text-faint">
             {cursor + 1} / {total}
           </span>
-          <span className="text-[0.6875rem] text-faint">arrasta ou decide aqui</span>
+          <span className="text-xs text-faint">arrasta ou decide aqui</span>
         </div>
         <div className="h-[3px] overflow-hidden rounded-full bg-ink/8">
           <div

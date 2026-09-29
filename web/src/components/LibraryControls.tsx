@@ -86,7 +86,7 @@ export default function LibraryControls({
         }`}
         style={{
           bottom: 0,
-          background: "linear-gradient(to top, #101014 32%, rgba(16,16,20,0) 100%)",
+          background: "linear-gradient(to top, var(--color-tube) 32%, transparent 100%)",
         }}
       />
       <div

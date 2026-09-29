@@ -249,7 +249,7 @@ export default function ListaPage() {
                 <button
                   onClick={() => void handleRemoveItem(item)}
                   aria-label={`Remover ${item.name} da lista`}
-                  className="tap-44 absolute right-1.5 top-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-black/60 text-white backdrop-blur transition-opacity active:scale-90 focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:opacity-0"
+                  className="tap-44 absolute right-1.5 top-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-tube/60 text-ink backdrop-blur transition-opacity active:scale-90 focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:opacity-0"
                 >
                   <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden>
                     <path

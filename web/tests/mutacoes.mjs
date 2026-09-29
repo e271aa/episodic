@@ -1279,6 +1279,48 @@ const MUTACOES = [
     de: "priority={i < 3}",
     para: "priority={false}",
   },
+  {
+    nome: "r12-f3/login-sem-h1",
+    descricao: "o Entrar sem cloud volta a não ter <h1>",
+    ficheiro: "src/app/login/LoginPageClient.tsx",
+    de: "<h1 className=\"font-display text-lg font-bold\">Cloud não configurada</h1>",
+    para: "<p className=\"font-display text-lg font-bold\">Cloud não configurada</p>",
+  },
+  {
+    nome: "r12-f3/biblioteca-vazia-sem-acao",
+    descricao: "a Biblioteca vazia volta a não ter botão de procurar",
+    ficheiro: "src/components/LibraryEmptyState.tsx",
+    de: "{!filtrado && !query && (",
+    para: "{false && (",
+  },
+  {
+    nome: "r12-f3/filtro-vazio-sem-apagar",
+    descricao: "o filtro vazio do Pôr em dia deixa de aparecer apagado",
+    ficheiro: "src/app/em-dia/EmDiaPageClient.tsx",
+    de: "count === 0 && !isActive ? \"opacity-60\" : \"\"",
+    para: "\"\"",
+  },
+  {
+    nome: "r12-f3/texto-11px",
+    descricao: "a dica do Explorar volta aos 11px fora do código",
+    ficheiro: "src/app/explorar/ExplorarPageClient.tsx",
+    de: "<span className=\"text-xs text-faint\">arrasta",
+    para: "<span className=\"text-[0.6875rem] text-faint\">arrasta",
+  },
+  {
+    nome: "r12-f3/tubo-a-mao",
+    descricao: "o gradiente da Biblioteca volta a escrever o tubo em hex",
+    ficheiro: "src/components/LibraryControls.tsx",
+    de: "to top, var(--color-tube) 32%",
+    para: "to top, #101014 32%",
+  },
+  {
+    nome: "r12-f3/preto-solto-na-lista",
+    descricao: "o ✕ da lista volta a bg-black/60 text-white",
+    ficheiro: "src/app/listas/[id]/ListaPageClient.tsx",
+    de: "bg-tube/60 text-ink backdrop-blur",
+    para: "bg-black/60 text-white backdrop-blur",
+  },
 ];
 
 const filtro = process.argv[2];
