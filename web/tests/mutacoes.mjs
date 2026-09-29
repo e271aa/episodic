@@ -330,9 +330,9 @@ const MUTACOES = [
   {
     nome: "r12-fase5/pilula-em-dia",
     descricao: "a pílula volta a dizer \"10 em dia\" quando há 10 séries por ver",
-    ficheiro: HEROI,
-    de: '            Pôr em dia\n            <span className="ep-code text-dim">{seriesPorVer}</span>',
-    para: "            {seriesPorVer} em dia",
+    ficheiro: "src/app/series/SeriesPageClient.tsx",
+    de: "        Pôr em dia\n        <span className=\"ep-code font-medium text-label-2\">{queue.length}</span>",
+    para: "        {queue.length} em dia",
   },
   {
     nome: "r12-fase5/em-dia-abre-vazio",
@@ -386,9 +386,9 @@ const MUTACOES = [
   {
     nome: "r12-fase5/casa-vazia-pede-zip",
     descricao: "a casa vazia volta a ter \"importar do TV Time\" como primeira ação",
-    ficheiro: CASA,
-    de: '            href="/explorar?procurar=1"\n            className="flex min-h-12',
-    para: '            href="/import"\n            className="flex min-h-12',
+    ficheiro: "src/app/series/SeriesPageClient.tsx",
+    de: "            href=\"/explorar?procurar=1\"\n            className=\"flex min-h-[52px]",
+    para: "            href=\"/import\"\n            className=\"flex min-h-[52px]",
   },
   {
     nome: "r12-fase5/explorar-sem-seguir",
@@ -400,9 +400,9 @@ const MUTACOES = [
   {
     nome: "r12-fase5/sem-seguidas-em-dia",
     descricao: "sem nenhuma série seguida, a casa volta a dizer \"Estás em dia\"",
-    ficheiro: CASA,
-    de: "            {watching.length === 0 ? (\n              <>",
-    para: "            {watching.length < 0 ? (\n              <>",
+    ficheiro: "src/app/series/SeriesPageClient.tsx",
+    de: "          {watching.length === 0 ? (\n            <Linha",
+    para: "          {watching.length < 0 ? (\n            <Linha",
   },
   {
     nome: "r12-fase5/remover-invisivel",
@@ -598,10 +598,10 @@ const MUTACOES = [
   // Retirada na Ronda 14 (Mira, Fase 1): «r12-fase5b/dock-parte-a-seguir-320» — na barra da Mira o nome só aparece quando a coluna o comporta (`@[3.4rem]`), por isso partir em duas linhas deixou de ser possível por construção; o `whitespace-nowrap` é defensivo e sem mutação útil
   {
     nome: "r12-fase5b2/heroi-volta-a-40px",
-    descricao: "o título do herói volta a fugir da rampa (40px em vez de 36)",
-    ficheiro: HEROI,
-    de: "text-[2.25rem]",
-    para: "text-[2.5rem]",
+    descricao: "o nome da série na casa volta a fugir da rampa (40px em vez do Título 1)",
+    ficheiro: "src/components/TonightHero.tsx",
+    de: "line-clamp-3 text-[1.65rem]",
+    para: "line-clamp-3 text-[2.5rem]",
   },
   {
     nome: "r12-fase5b2/texto-volta-a-px",
@@ -702,8 +702,8 @@ const MUTACOES = [
   {
     nome: "r12-fase5b3/casa-sem-ou-entao",
     descricao: "a casa volta a dar uma resposta só, sem alternativas por baixo do herói",
-    ficheiro: CASA,
-    de: "            alternativas={<OuEntao alternativas={alternativas} />}\n",
+    ficheiro: "src/app/series/SeriesPageClient.tsx",
+    de: "          <OuEntao alternativas={alternativas} />\n",
     para: "",
   },
   {
@@ -793,18 +793,12 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5c/onboarding-portas-no-fundo",
-    descricao: 'as duas portas do primeiro uso voltam para depois dos passos, debaixo do degradê da dock',
-    ficheiro: CASA,
-    de: '        <div className="mt-8 flex flex-col items-center gap-2">\n          <Link\n            href="/explorar?procurar=1"\n            className="flex min-h-12 cursor-pointer items-center rounded-full bg-ink px-6 font-semibold text-tube transition hover:brightness-110 active:scale-95"\n          >\n            Procurar uma série\n          </Link>\n          <Link\n            href="/import"\n            className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim transition hover:text-ink"\n          >\n            Vens do TV Time? Importar o histórico\n          </Link>\n        </div>\n\n        <ol className="mt-10 space-y-4">\n          {steps.map((step) => (\n            <li key={step.n} className="flex items-start gap-4">\n              <span className="ep-code mt-0.5 shrink-0 text-lg font-bold text-ink">\n                {step.n}\n              </span>\n              <div>\n                <p className="font-display font-semibold">{step.title}</p>\n                <p className="mt-0.5 text-[0.9375rem] text-dim">{step.text}</p>\n              </div>\n            </li>\n          ))}\n        </ol>\n',
-    para: '        <ol className="mt-10 space-y-4">\n          {steps.map((step) => (\n            <li key={step.n} className="flex items-start gap-4">\n              <span className="ep-code mt-0.5 shrink-0 text-lg font-bold text-ink">\n                {step.n}\n              </span>\n              <div>\n                <p className="font-display font-semibold">{step.title}</p>\n                <p className="mt-0.5 text-[0.9375rem] text-dim">{step.text}</p>\n              </div>\n            </li>\n          ))}\n        </ol>\n\n        <div className="mt-8 flex flex-col items-center gap-2">\n          <Link\n            href="/explorar?procurar=1"\n            className="flex min-h-12 cursor-pointer items-center rounded-full bg-ink px-6 font-semibold text-tube transition hover:brightness-110 active:scale-95"\n          >\n            Procurar uma série\n          </Link>\n          <Link\n            href="/import"\n            className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim transition hover:text-ink"\n          >\n            Vens do TV Time? Importar o histórico\n          </Link>\n        </div>\n',
+    descricao: "as duas portas do primeiro uso voltam a ficar debaixo do degradê da barra",
+    ficheiro: "src/app/series/SeriesPageClient.tsx",
+    de: "<div className=\"mt-auto flex flex-col gap-2.5 pb-4 pt-8\">",
+    para: "<div className=\"mt-auto flex flex-col gap-2.5 pb-4 pt-40\">",
   },
-  {
-    nome: "r12-fase5c/onboarding-seguir-sem-onde",
-    descricao: "o onboarding volta a dizer 'Toca em Seguir' sem dizer que é na pesquisa",
-    ficheiro: CASA,
-    de: 'text: "Pelo nome, na pesquisa. Toca em Seguir e a série entra na tua fila.",',
-    para: 'text: "Toca em Seguir e a série entra na tua fila.",',
-  },
+  // Retirada na Ronda 14 (Mira, Fase 2): «r12-fase5c/onboarding-seguir-sem-onde» — a casa vazia da Mira já não tem os quatro passos; o mesmo bug (não dizer onde está o Seguir) é a `r14-f2/dicas-perdidas`
   // ── Ronda 12, Fase 6: movimento e o ritual de marcar ───────
   {
     nome: "r12-fase6/reduzido-apaga-o-que-se-desloca",
@@ -872,9 +866,9 @@ const MUTACOES = [
   {
     nome: "r12-fase6/ritual-sem-barra",
     descricao: 'marcar na casa volta a não acender a barra',
-    ficheiro: HEROI,
-    de: '                <div key={marcacoes} data-ritual="barra" aria-hidden className="barra-acende" />',
-    para: '                <div key={marcacoes} data-ritual="barra" aria-hidden />',
+    ficheiro: "src/components/TonightHero.tsx",
+    de: "data-ritual=\"barra\" aria-hidden className=\"barra-acende rounded-[2px]\" />",
+    para: "data-ritual=\"barra\" aria-hidden className=\"rounded-[2px]\" />",
   },
   {
     nome: "r12-fase6/ritual-festeja-o-anular",
@@ -963,10 +957,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5d/aviso-tapa-marcar",
-    descricao: "a casa volta a não deixar espaço ao aviso: tapa a parte de baixo do 'Marcar visto'",
-    ficheiro: HEROI,
-    de: 'flex-col justify-end px-5 pb-16">',
-    para: 'flex-col justify-end px-5 pb-6">',
+    descricao: "o aviso de anular sobe de mais e tapa o «Marcar visto» da casa",
+    ficheiro: "src/components/UndoToast.tsx",
+    de: "style={{ bottom: \"calc(var(--dock-h) + 0.5rem)\" }}",
+    para: "style={{ bottom: \"calc(var(--dock-h) + 14rem)\" }}",
   },
   {
     nome: "r12-fase5d/aviso-entra-na-dock",
@@ -1121,10 +1115,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase8/titulo-do-heroi-43px",
-    descricao: "o nome da série no herói da casa volta a ter 43px de alvo",
-    ficheiro: HEROI,
-    de: 'className="mt-2 -my-1 flex min-h-11 items-center"',
-    para: 'className="mt-2 -my-1 block py-1"',
+    descricao: "o nome da série na casa volta a ter menos de 44px de alvo",
+    ficheiro: "src/components/TonightHero.tsx",
+    de: "className=\"flex min-h-11 items-center\">\n            <h2 className=\"line-clamp-3",
+    para: "className=\"block\">\n            <h2 className=\"line-clamp-3",
   },
   {
     nome: "r12-fase7/degrau-do-mes-fraco-some",
@@ -1233,10 +1227,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-f2/eyebrow-apagada",
-    descricao: "a eyebrow do herói volta ao cinzento apagado sobre a arte",
+    descricao: "o texto pequeno volta para cima da arte (perdia-se nas capas claras)",
     ficheiro: "src/components/TonightHero.tsx",
-    de: "tracking-[0.2em] text-ink/85 [font-stretch:80%]",
-    para: "tracking-[0.2em] text-dim [font-stretch:80%]",
+    de: "        className=\"relative block h-44 overflow-hidden bg-elevated @max-[16rem]:hidden [@media(max-height:700px)]:h-28\"\n      >",
+    para: "        className=\"relative block h-44 overflow-hidden bg-elevated @max-[16rem]:hidden [@media(max-height:700px)]:h-28\"\n      >\n        <span className=\"absolute bottom-3 left-4 z-10 text-xs text-label-2\">Esta noite</span>",
   },
   {
     nome: "r12-f2/foco-sem-summary",
@@ -1304,9 +1298,9 @@ const MUTACOES = [
   {
     nome: "r12-f4/disco-volta-ao-pora-em-dia",
     descricao: "o Pôr em dia da casa volta a levar o disco colorido",
-    ficheiro: "src/components/TonightHero.tsx",
-    de: "            Pôr em dia\n",
-    para: "            <span className=\"bars h-4 w-4 shrink-0 rounded-full\" aria-hidden />\n            Pôr em dia\n",
+    ficheiro: "src/app/series/SeriesPageClient.tsx",
+    de: "        Pôr em dia\n        <span className=\"ep-code font-medium text-label-2\">{queue.length}</span>",
+    para: "        <span className=\"bars h-4 w-4 shrink-0 rounded-full\" aria-hidden />\n        Pôr em dia\n        <span className=\"ep-code font-medium text-label-2\">{queue.length}</span>",
   },
   {
     nome: "r12-f4/titulo-pt-no-explorar",
