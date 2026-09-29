@@ -436,8 +436,8 @@ const MUTACOES = [
     nome: "r12-fase5b/hover-ambar-volta",
     descricao: "o hover de um cartão volta a acender o âmbar da v1",
     ficheiro: CSS,
-    de: '.ep-card-hover:hover {\n  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 28px -10px rgba(0, 0, 0, 0.55);\n}',
-    para: '.ep-card-hover:hover {\n  border-color: rgba(255, 170, 51, 0.35);\n  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 28px -10px rgba(0, 0, 0, 0.55);\n}',
+    de: ".ep-card-hover:active {",
+    para: ".ep-card-hover:hover {\n  border: 1px solid rgba(255, 170, 51, 0.35);\n}\n.ep-card-hover:active {",
   },
   {
     nome: "r12-fase5b/brilho-volta",
@@ -527,8 +527,8 @@ const MUTACOES = [
     nome: "r12-fase5b/manifest-cor-v1",
     descricao: "o manifest volta à cor de tema da v1",
     ficheiro: MANIFEST,
-    de: 'theme_color: "#101014"',
-    para: 'theme_color: "#0b0e14"',
+    de: "theme_color: \"#000000\"",
+    para: "theme_color: \"#0b0e14\"",
   },
   {
     nome: "r12-fase5b/apagar-lista-vermelho-sempre",
@@ -595,13 +595,7 @@ const MUTACOES = [
     de: '              aria-label="Nome da nova lista"\n',
     para: "",
   },
-  {
-    nome: "r12-fase5b/dock-parte-a-seguir-320",
-    descricao: "a dock volta a partir 'A seguir' em duas linhas a 320px",
-    ficheiro: BOTTOM_NAV,
-    de: '<span className={active ? "whitespace-nowrap" : "sr-only sm:not-sr-only"}>',
-    para: '<span className={active ? "" : "sr-only sm:not-sr-only"}>',
-  },
+  // Retirada na Ronda 14 (Mira, Fase 1): «r12-fase5b/dock-parte-a-seguir-320» — na barra da Mira o nome só aparece quando a coluna o comporta (`@[3.4rem]`), por isso partir em duas linhas deixou de ser possível por construção; o `whitespace-nowrap` é defensivo e sem mutação útil
   {
     nome: "r12-fase5b2/heroi-volta-a-40px",
     descricao: "o título do herói volta a fugir da rampa (40px em vez de 36)",
@@ -749,10 +743,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5c/dock-sem-nome",
-    descricao: 'os separadores inativos da dock voltam a não ter nome para o VoiceOver',
+    descricao: "os separadores voltam a ficar sem nome para o VoiceOver quando o texto grande esconde os nomes",
     ficheiro: BOTTOM_NAV,
-    de: ': "sr-only sm:not-sr-only"}>',
-    para: ': "hidden sm:inline"}>',
+    de: "              aria-label={label}\n",
+    para: "",
   },
   {
     nome: "r12-fase5c/antena-congelada",
@@ -816,8 +810,8 @@ const MUTACOES = [
     nome: "r12-fase6/reduzido-apaga-o-que-se-desloca",
     descricao: 'com movimento reduzido, as páginas e os cartazes voltam a aparecer de golpe',
     ficheiro: CSS,
-    de: '  .page-enter,\n  .poster-in,\n  .undo-in {\n    animation-name: esvanecer;\n  }',
-    para: '  .page-enter,\n  .poster-in,\n  .undo-in {\n    animation: none;\n  }',
+    de: "  .page-enter,\n  .poster-in,\n  .undo-in,\n  .menu-abre {\n    animation-name: esvanecer;\n  }",
+    para: "  .page-enter,\n  .poster-in,\n  .undo-in,\n  .menu-abre {\n    animation: none;\n  }",
   },
   {
     nome: "r12-fase6/reduzido-transicoes-a-zero",
@@ -1115,8 +1109,8 @@ const MUTACOES = [
     nome: "r12-fase5e/rever-reserva-a-dock",
     descricao: "o Rever volta a reservar a dock outra vez",
     ficheiro: REVER_PAGINA,
-    de: 'flex-1 flex-col px-4 pt-8 pb-8">',
-    para: 'flex-1 flex-col px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">',
+    de: "flex-1 flex-col px-4 pt-4 pb-8\">",
+    para: "flex-1 flex-col px-4 pt-4 pb-[calc(var(--dock-h)+2rem)]\">",
   },
   {
     nome: "r12-fase5e/capa-partida-brilha-para-sempre",
@@ -1197,10 +1191,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-f2/dock-sai-do-ecra-a-150",
-    descricao: "a dock volta a ter px-4 e o rótulo sem teto: sai do ecrã com o texto a 150%",
+    descricao: "a barra volta a medir-se em rem e sai do ecrã com o texto a 150%",
     ficheiro: "src/components/BottomNav.tsx",
-    de: "px-[min(0.75rem,12px)] py-2 text-[min(0.9375rem,18px)]",
-    para: "px-4 py-2 text-[0.9375rem]",
+    de: "grid h-[var(--barra-h)] max-w-md grid-cols-4",
+    para: "grid h-[var(--barra-h)] min-w-[26rem] grid-cols-4",
   },
   {
     nome: "r12-f2/titulo-do-filme-alarga",
@@ -1342,13 +1336,7 @@ const MUTACOES = [
     de: "text-[min(0.9375rem,17px)]",
     para: "text-[0.9375rem]",
   },
-  {
-    nome: "r12-f5/dock-sem-teto-de-espaco",
-    descricao: "o espaço da dock volta a crescer com o texto: sai do ecrã a 320px e 150%",
-    ficheiro: "src/components/BottomNav.tsx",
-    de: "px-[min(0.75rem,12px)]",
-    para: "px-3",
-  },
+  // Retirada na Ronda 14 (Mira, Fase 1): «r12-f5/dock-sem-teto-de-espaco» — a barra da Mira não tem espaço lateral em rem (é uma grelha de 4 colunas em px); o bug que ela repunha já não tem onde existir — a variante útil é a `r12-f2/dock-sai-do-ecra-a-150`, reapontada
   {
     nome: "r12-f5/perfil-sem-min-w",
     descricao: "as três colunas dos números do Perfil perdem o min-w-0 e alargam o ecrã a 150% (cada uma sozinha é redundante)",
