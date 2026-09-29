@@ -37,7 +37,7 @@ test("mapa de calor: um mês por célula, o mais forte à cabeça, e a tabela di
   const mapa = page.locator("section", { hasText: "Quando viste" });
   const forte = mapa.getByRole("button", { name: "março de 2021 · 8 episódios" });
   await expect(forte).toHaveAttribute("data-degrau", "4");
-  await expect(mapa.getByRole("button", { name: "abril de 2021 · 2 episódios" })).toHaveAttribute("data-degrau", "1");
+  await expect(mapa.getByRole("button", { name: "abril de 2021 · 2 episódios" })).toHaveAttribute("data-degrau", "2");
   // ao abrir, a leitura já mostra o mês mais forte
   await expect(mapa.getByTestId("leitura")).toContainText("março de 2021");
   // tocar noutro mês passa a leitura para ele

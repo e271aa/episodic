@@ -74,18 +74,21 @@ export default function EstrearPage() {
                 ) : (
                   <div className="h-16 w-11 shrink-0 rounded-lg bg-raised" />
                 )}
+                {/* Tudo numa coluna (Ronda 12, Fecho): a data por extenso à
+                    direita, com `shrink-0`, comia a linha — o nome ficava com
+                    57px a 390px ("Grey's / Anato / my") e 0px a 320px. */}
                 <div className="min-w-0 flex-1">
                   {/* o nome inteiro, a quebrar linha: é o que se procura, e
                       cortado deixava de se saber de que série era */}
-                  <p className="font-semibold leading-snug [overflow-wrap:anywhere]">{show.name}</p>
-                  <p className="ep-code truncate text-sm text-dim">
-                    {formatEpCode(episode.season, episode.episode)}
-                    {episode.name ? ` · ${episode.name}` : ""}
+                  <p className="font-semibold leading-snug break-words">{show.name}</p>
+                  <p className="ep-code flex min-w-0 gap-1 text-sm text-dim">
+                    <span className="shrink-0">{formatEpCode(episode.season, episode.episode)}</span>
+                    {episode.name && <span className="truncate">· {episode.name}</span>}
+                  </p>
+                  <p className="ep-code mt-0.5 text-xs text-faint first-letter:uppercase">
+                    {relativeDay(episode.airDate as string)}
                   </p>
                 </div>
-                <p className="ep-code shrink-0 text-right text-xs text-faint first-letter:uppercase">
-                  {relativeDay(episode.airDate as string)}
-                </p>
               </Link>
             );
           })}

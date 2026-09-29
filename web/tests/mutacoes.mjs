@@ -1181,6 +1181,34 @@ const MUTACOES = [
     de: "return n === 1 ? singular : pluralForma;",
     para: "return pluralForma;",
   },
+  {
+    nome: "r12-fecho/degrau-volta-a-linear",
+    descricao: "a escala do mapa volta a ser fração do máximo: meses parecidos ficam todos no degrau de cima",
+    ficheiro: "src/lib/graficos.ts",
+    de: "  if (valor > q3) return 4;",
+    para: "  if (valor > maximo * 0.25) return 4;",
+  },
+  {
+    nome: "r12-fecho/celulas-com-intervalo",
+    descricao: "as células do mapa voltam a ter 3px de intervalo morto (21px de alvo)",
+    ficheiro: "src/components/MapaDeCalor.tsx",
+    de: 'className="flex aspect-square min-w-0 flex-1 cursor-pointer p-[1.5px]"',
+    para: 'className="mx-[1.5px] flex aspect-square min-w-0 flex-1 cursor-pointer p-[1.5px]"',
+  },
+  {
+    nome: "r12-fecho/horas-destaque-no-ultimo",
+    descricao: "o destaque das horas por ano volta a ser o último ano, não o maior",
+    ficheiro: ESTATISTICAS,
+    de: 'titulo="Horas por ano"\n              destaque="maior"',
+    para: 'titulo="Horas por ano"\n              destaque="ultima"',
+  },
+  {
+    nome: "r12-fecho/estrear-data-come-a-linha",
+    descricao: "a data do A estrear volta a ir à direita, sem encolher, e come o nome da série",
+    ficheiro: "src/app/estrear/EstrearPageClient.tsx",
+    de: '<p className="ep-code mt-0.5 text-xs text-faint first-letter:uppercase">',
+    para: '<p className="ep-code absolute right-3 top-3 shrink-0 text-xs text-faint first-letter:uppercase">',
+  },
 ];
 
 const filtro = process.argv[2];

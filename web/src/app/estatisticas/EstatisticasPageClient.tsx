@@ -119,7 +119,7 @@ export default function EstatisticasPage() {
           <div className="mt-3">
             <Colunas
               titulo="Horas por ano"
-              destaque="ultima"
+              destaque="maior"
               colunaCabecalho="Ano"
               valorCabecalho="Horas (≈)"
               dados={stats.horasAno.map((h) => ({

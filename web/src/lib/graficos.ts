@@ -24,8 +24,10 @@ export interface AnoDeMeses {
 
 export interface MapaAnoMes {
   anos: AnoDeMeses[];
-  /** o maior valor de um mês, para a escala das células */
+  /** o maior valor de um mês */
   maximo: number;
+  /** os quartis (25, 50, 75%) dos meses com alguma coisa — a escala das células */
+  limites: [number, number, number];
 }
 
 /** Episódios por mês, em cada ano — do mais antigo ao mais recente. */
@@ -42,22 +44,33 @@ export function porMesAno(watched: WatchedEpisode[]): MapaAnoMes {
   const anos = [...porAno.entries()]
     .sort((a, b) => a[0] - b[0])
     .map(([ano, meses]) => ({ ano, meses, total: meses.reduce((n, c) => n + c, 0) }));
-  const maximo = Math.max(0, ...anos.flatMap((a) => a.meses));
-  return { anos, maximo };
+  const cheios = anos.flatMap((a) => a.meses).filter((n) => n > 0).sort((x, y) => x - y);
+  const maximo = cheios.at(-1) ?? 0;
+  const quartil = (q: number) => cheios[Math.floor(q * (cheios.length - 1))] ?? 0;
+  return { anos, maximo, limites: [quartil(0.25), quartil(0.5), quartil(0.75)] };
 }
 
 /**
  * A intensidade de uma célula, de 0 (nada) a 4 — quatro degraus em vez de
  * uma escala contínua: dois meses de 38 e 40 episódios não são distinguíveis
  * a olho, e fingir que são é ruído. Um mês com **alguma** coisa nunca cai no
- * degrau 0.
+ * degrau 0, e o mês mais forte está sempre no 4.
+ *
+ * Os degraus são **quartis** dos meses com alguma coisa, não frações do
+ * máximo (Ronda 12, Fecho). Com frações, uma biblioteca regular (meses entre
+ * 15 e 18) ficava toda no degrau de cima — uma parede creme — e um mês de
+ * maratona esmagava os outros todos no de baixo.
  */
-export function degrau(valor: number, maximo: number): 0 | 1 | 2 | 3 | 4 {
+export function degrau(
+  valor: number,
+  { maximo, limites }: Pick<MapaAnoMes, "maximo" | "limites">,
+): 0 | 1 | 2 | 3 | 4 {
   if (valor <= 0 || maximo <= 0) return 0;
-  const f = valor / maximo;
-  if (f > 0.75) return 4;
-  if (f > 0.5) return 3;
-  if (f > 0.25) return 2;
+  if (valor >= maximo) return 4;
+  const [q1, q2, q3] = limites;
+  if (valor > q3) return 4;
+  if (valor > q2) return 3;
+  if (valor > q1) return 2;
   return 1;
 }
 

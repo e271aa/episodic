@@ -47,18 +47,35 @@ test("o mapa ano×mês conta por mês, ordena os anos e diz o máximo", () => {
 });
 
 test("sem episódios, o mapa está vazio e o máximo é 0", () => {
-  expect(porMesAno([])).toEqual({ anos: [], maximo: 0 });
+  expect(porMesAno([])).toEqual({ anos: [], maximo: 0, limites: [0, 0, 0] });
 });
 
-test("os degraus: 0 é nada; qualquer coisa nunca cai no 0; o máximo é o 4", () => {
-  expect(degrau(0, 40)).toBe(0);
-  expect(degrau(1, 40)).toBe(1); // um episódio num mês de 40 ainda se vê
-  expect(degrau(10, 40)).toBe(1);
-  expect(degrau(11, 40)).toBe(2);
-  expect(degrau(21, 40)).toBe(3);
-  expect(degrau(31, 40)).toBe(4);
-  expect(degrau(40, 40)).toBe(4);
-  expect(degrau(5, 0)).toBe(0);
+test("os degraus: 0 é nada; qualquer coisa nunca cai no 0; o máximo é o 4; o resto por quartis", () => {
+  const escala = { maximo: 40, limites: [10, 20, 30] as [number, number, number] };
+  expect(degrau(0, escala)).toBe(0);
+  expect(degrau(1, escala)).toBe(1); // um episódio ainda se vê
+  expect(degrau(10, escala)).toBe(1);
+  expect(degrau(11, escala)).toBe(2);
+  expect(degrau(21, escala)).toBe(3);
+  expect(degrau(31, escala)).toBe(4);
+  expect(degrau(40, escala)).toBe(4);
+  expect(degrau(5, { maximo: 0, limites: [0, 0, 0] })).toBe(0);
+  // meses regulares (15 a 18): espalham-se pelos degraus, não ficam todos no 4
+  const m = porMesAno(
+    [15, 16, 17, 18, 15, 16, 17, 18, 15, 16, 17, 18].flatMap((n, i) =>
+      Array.from({ length: n }, () => ({
+        showUuid: "s",
+        season: 1,
+        episode: 1,
+        watchedAt: `2021-${String(i + 1).padStart(2, "0")}-01T20:00:00.000Z`,
+      })) as never[],
+    ),
+  );
+  expect(m.anos[0].meses.map((n) => degrau(n, m))).toEqual([1, 2, 3, 4, 1, 2, 3, 4, 1, 2, 3, 4]);
+  // um mês de maratona não esmaga os outros no degrau 1
+  const k = { maximo: 200, limites: [5, 8, 12] as [number, number, number] };
+  expect(degrau(13, k)).toBe(4);
+  expect(degrau(9, k)).toBe(3);
 });
 
 test("as séries mais vistas: por episódios, desempate por nome, e só as que existem", () => {

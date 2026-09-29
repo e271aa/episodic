@@ -6,7 +6,9 @@ import { Tabela } from "@/components/Colunas";
 
 const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
 /** as cinco tintas: uma cor só, mais clara ou mais escura (sequencial) */
-const TINTAS = ["bg-ink/[0.06]", "bg-ink/25", "bg-ink/45", "bg-ink/70", "bg-ink"];
+// o topo a 85%, não a 100%: numa "sala às escuras", 72 quadrados de branco
+// cheio encandeiam (Ronda 12, Fecho)
+const TINTAS = ["bg-ink/[0.06]", "bg-ink/20", "bg-ink/35", "bg-ink/55", "bg-ink/85"];
 
 const leitura = (ano: number, mes: number, n: number) =>
   `${MESES[mes]} de ${ano} · ${n} ${plural(n, "episódio", "episódios")}`;
@@ -33,9 +35,9 @@ export default function MapaDeCalor({ mapa }: { mapa: MapaAnoMes }) {
       <p className="ep-code min-h-4 text-xs text-dim" aria-live="polite" data-testid="leitura">
         {leitura(foco.ano, foco.mes, focoN)}
       </p>
-      <div className="mt-3 flex flex-col gap-[3px]" role="group" aria-label="Episódios por mês e por ano">
-        <div className="flex items-center gap-[3px]" aria-hidden>
-          <span className="w-8 shrink-0" />
+      <div className="mt-3 flex flex-col" role="group" aria-label="Episódios por mês e por ano">
+        <div className="flex items-center" aria-hidden>
+          <span className="w-7 shrink-0" />
           {MESES.map((m) => (
             <span key={m} className="ep-code flex-1 text-center text-[0.6875rem] text-faint">
               {m[0].toUpperCase()}
@@ -43,22 +45,32 @@ export default function MapaDeCalor({ mapa }: { mapa: MapaAnoMes }) {
           ))}
         </div>
         {mapa.anos.map((a) => (
-          <div key={a.ano} className="flex items-center gap-[3px]">
-            <span className="ep-code w-8 shrink-0 text-[0.6875rem] text-faint">{a.ano}</span>
+          <div key={a.ano} className="flex items-center">
+            <span className="ep-code w-7 shrink-0 text-[0.6875rem] text-faint">{a.ano}</span>
             {a.meses.map((n, mes) => {
               const ativo = foco.ano === a.ano && foco.mes === mes;
               return (
                 <button
                   key={mes}
                   type="button"
-                  data-degrau={degrau(n, mapa.maximo)}
+                  data-degrau={degrau(n, mapa)}
                   onClick={() => setEscolhido({ ano: a.ano, mes })}
                   aria-label={leitura(a.ano, mes, n)}
                   aria-pressed={ativo}
-                  className={`aspect-square min-w-0 flex-1 cursor-pointer rounded-[4px] ${
-                    TINTAS[degrau(n, mapa.maximo)]
-                  } ${ativo ? "outline-2 outline-offset-1 outline-ink" : ""}`}
-                />
+                  // o alvo é a coluna inteira, sem espaço morto entre meses
+                  // (21px com 3px de intervalo ficava abaixo dos 24px da
+                  // WCAG 2.5.8); o quadrado que se vê fica por dentro. A
+                  // 390px dá 24px; num ecrã de 320 não cabem 12 de 24 — aí,
+                  // a tabela por baixo é a alternativa que a norma aceita
+                  // (DESIGN.md, Gráficos)
+                  className="flex aspect-square min-w-0 flex-1 cursor-pointer p-[1.5px]"
+                >
+                  <span
+                    className={`block h-full w-full rounded-[4px] ${TINTAS[degrau(n, mapa)]} ${
+                      ativo ? "outline-2 outline-offset-1 outline-ink" : ""
+                    }`}
+                  />
+                </button>
               );
             })}
           </div>
