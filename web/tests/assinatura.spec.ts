@@ -45,13 +45,39 @@ async function casa(
 
 test("o ritual começa no toque: a mira já corre antes de o episódio mudar", async ({ page, tmdb }) => {
   await casa(page, tmdb, [9, 10], [[1, 1], [1, 2], [1, 3]]);
-  await expect(page.getByTestId("cartao-casa")).toContainText("S01·E04");
+  const cartao = page.getByTestId("cartao-casa");
+  await expect(cartao).toContainText("S01·E04");
+  // A gravação fica presa 2s: uma transação nossa ocupa o store dos vistos, e a
+  // da app espera por ela. Sem isto o teste dependia do relógio — a escrita
+  // local acaba em milissegundos, e com o episódio já mudado um ritual que
+  // esperasse pela gravação passava por um ritual no toque (a primeira versão
+  // deste teste deixou sobreviver as duas mutações do ritual).
+  await page.evaluate(
+    () =>
+      new Promise<void>((pronto) => {
+        const pedido = indexedDB.open("tvlog");
+        pedido.onsuccess = () => {
+          const store = pedido.result.transaction("watched", "readwrite").objectStore("watched");
+          const fim = Date.now() + 2000;
+          const ocupar = () => {
+            if (Date.now() < fim) store.get("nada").onsuccess = ocupar;
+          };
+          store.get("nada").onsuccess = () => {
+            pronto();
+            ocupar();
+          };
+        };
+      }),
+  );
   await page.getByRole("button", { name: "Marcar visto" }).click();
-  // logo a seguir ao toque, ainda com o S01·E04 à vista, a mira já pinta
+  // ainda com o S01·E04 à vista (a gravação não acabou), a mira já pinta:
+  // os vistos e o marcado — os por ver nunca acendem — e a contagem já rolou
   const fatias = page.locator('[data-ritual="fatia"]');
-  await expect(fatias.first()).toBeAttached({ timeout: 150 });
-  // e pinta só os vistos, até ao marcado — os por ver nunca acendem
-  expect(await fatias.count()).toBe(4);
+  await expect(fatias).toHaveCount(4, { timeout: 1000 });
+  await expect(cartao).toContainText("4/9");
+  await expect(cartao).toContainText("S01·E04");
+  // e quando a gravação acaba, o episódio segue
+  await expect(cartao).toContainText("S01·E05", { timeout: 5000 });
 });
 
 test("fechar uma temporada tem o seu momento: «T1 ✓», e a seguinte constrói-se", async ({ page, tmdb }) => {
