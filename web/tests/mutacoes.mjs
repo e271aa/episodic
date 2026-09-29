@@ -1351,10 +1351,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-f5/perfil-sem-min-w",
-    descricao: "a coluna 'Biblioteca · ver tudo' do Perfil perde o min-w-0 e alarga o ecrã a 150%",
+    descricao: "o 'Biblioteca' do Perfil perde o break-words e alarga o ecrã a 150%",
     ficheiro: "src/app/profile/ProfilePageClient.tsx",
-    de: 'className="flex min-w-0 flex-1 flex-col justify-center pl-5"',
-    para: 'className="flex flex-1 flex-col justify-center pl-5"',
+    de: 'font-semibold text-ink break-words hover:underline',
+    para: 'font-semibold text-ink hover:underline',
   },
 ];
 
