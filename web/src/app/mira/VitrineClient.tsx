@@ -8,6 +8,7 @@ import { Grupo, Linha } from "@/components/mira/Grupo";
 import MenuFiltro from "@/components/mira/MenuFiltro";
 import Segmentado from "@/components/mira/Segmentado";
 import TituloGrande from "@/components/mira/TituloGrande";
+import BibliotecaExemplo from "./BibliotecaExemplo";
 
 type Seg = "series" | "filmes" | "listas";
 type Filtro = "todas" | "em-curso" | "por-comecar" | "retomar" | "completas" | "arquivadas";
@@ -34,6 +35,8 @@ export default function VitrineClient() {
           </button>
         }
       />
+
+      <BibliotecaExemplo />
 
       <Grupo titulo="Aparência" className="mt-6">
         <div className="p-3">
