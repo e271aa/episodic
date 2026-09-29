@@ -458,6 +458,23 @@ enquanto a anulação ainda é possível. A casa deixa-lhe espaço por baixo do
   mudou. A contagem do anular corre sempre — é a funcionalidade, não
   decoração.
 
+### Gráficos (Estatísticas e Perfil)
+- **Uma cor só, a neutra.** Tudo em `ink` com opacidade; nada de SMPTE (é
+  estado, não quantidade). O destaque — o maior, ou o ano corrente — vai a
+  `ink` cheio; o resto a `ink/35`.
+- **Mapa de calor em quatro degraus** (`ink/25 · 45 · 70 · 100`) mais o
+  vazio (`ink/6`): 38 e 40 episódios não se distinguem a olho, fingir que
+  sim é ruído. Um mês com alguma coisa nunca cai no vazio.
+- **Tocar, não pairar.** Cada coluna ou célula é um botão de 44px; a
+  leitura ("março de 2021 · 8 episódios") fica numa linha fixa por cima,
+  em `aria-live`. Ao abrir, já mostra o destaque.
+- **Um número à vista, não um em cada coluna**; os rótulos são os dias, os
+  meses (uma letra) ou os anos.
+- **Barras finas** (≤24px), ponta de dados arredondada a 4px, assente na
+  base. **Sempre uma tabela** em "Ver em tabela" (`<details>`).
+- **O que é estimado diz que é** (as horas por ano: o TV Time só deu o
+  total). Um gráfico de uma coluna não aparece.
+
 ### Signature: a lista de episódios
 Corridas de quatro ou mais episódios vistos colapsam numa linha ("E01–E19 ·
 19 episódios vistos"); os por ver ficam abertos, um a um, a negrito; os
