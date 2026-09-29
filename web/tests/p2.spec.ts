@@ -296,28 +296,6 @@ test("o ✓ de cada cartaz 'para ver' é um círculo escuro sobre a arte, não u
   expect(fundo).toMatch(/(\/ 0?\.\d+\)|, 0?\.\d+\))$/);
 });
 
-test("a barra da Biblioteca esconde-se ao rolar para baixo e volta ao rolar para cima", async ({
-  page,
-}) => {
-  // Duas barras a flutuar no fundo (~140px de 664), e os títulos a lerem-se
-  // por baixo delas. Escolhido pelo Ruben: como a barra do Safari.
-  await semear(page, {
-    series: Array.from({ length: 45 }, (_, i) => ({ uuid: `s-${i}`, name: `Serie ${i}` })),
-  });
-  await page.goto("/library");
-  const barra = page.getByTestId("barra-biblioteca");
-  await expect(barra).toHaveAttribute("data-escondida", "false");
-
-  // o WebKit móvel não tem roda: rola-se a página, que é o que o dedo faz
-  await page.evaluate(() => window.scrollBy(0, 700));
-  await expect(barra).toHaveAttribute("data-escondida", "true");
-  // escondida a sério: não se toca por engano no que já não se vê
-  expect(await barra.evaluate((el) => getComputedStyle(el).pointerEvents)).toBe("none");
-
-  await page.evaluate(() => window.scrollBy(0, -200));
-  await expect(barra).toHaveAttribute("data-escondida", "false");
-});
-
 test("o espetro de géneros usa só as 4 neutras da mira, e o resto vai para 'Outros'", async ({
   page,
 }) => {

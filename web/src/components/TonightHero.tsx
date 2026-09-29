@@ -140,7 +140,6 @@ export default function TonightHero({
             aria-label={`Pôr em dia: ${seriesPorVer} ${seriesPorVer === 1 ? "série" : "séries"} com episódios por ver`}
             className="flex min-h-11 items-center gap-2 rounded-full border border-line bg-tube/60 px-3 text-[0.8125rem] font-semibold text-ink backdrop-blur transition active:scale-95"
           >
-            <span className="bars h-4 w-4 shrink-0 rounded-full" aria-hidden />
             Pôr em dia
             <span className="ep-code text-dim">{seriesPorVer}</span>
           </Link>

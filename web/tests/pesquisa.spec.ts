@@ -61,8 +61,9 @@ for (const [catalogo, rota] of [
     await procurar(page, "hacksaw");
 
     await expect(page.getByText('Resultados para "hacksaw"')).toBeVisible();
-    await expect(page.getByText("O Herói de Hacksaw Ridge").first()).toBeVisible();
-    await expect(page.getByText("Serie Com Ridge No Nome").first()).toBeVisible();
+    // o original, como na biblioteca (F4); o título pt fica só para comparar
+    await expect(page.getByText("Hacksaw Ridge", { exact: true }).first()).toBeVisible();
+    await expect(page.getByText("Ridge", { exact: true }).first()).toBeVisible();
     // Com a mistura no mesmo sítio, dizer qual é qual deixa de ser detalhe.
     await expect(page.getByText("Filme · 2016")).toBeVisible();
     await expect(page.getByText("Série · 2019")).toBeVisible();

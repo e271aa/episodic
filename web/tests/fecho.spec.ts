@@ -227,3 +227,51 @@ test("no Pôr em dia, um filtro vazio que não está ativo aparece apagado", asy
   const ativo = page.getByRole("button", { name: /^Retomar/ });
   expect(await ativo.evaluate((el) => Number(getComputedStyle(el).opacity))).toBe(1);
 });
+
+// ── F4: as decisões do Ruben (29-09) ──
+
+test("Biblioteca: os separadores ficam no topo, por baixo do título, e seguem ao rolar", async ({ page }) => {
+  await semear(page, {
+    series: Array.from({ length: 45 }, (_, i) => ({ uuid: `s-${i}`, name: `Serie ${i}` })),
+  });
+  await page.goto("/library");
+  const titulo = (await page.getByRole("heading", { name: "Biblioteca" }).boundingBox())!;
+  const barra = page.getByTestId("barra-biblioteca");
+  const antes = (await barra.boundingBox())!;
+  // por baixo do título, na metade de cima do ecrã — e não flutuar em baixo
+  expect(antes.y).toBeGreaterThanOrEqual(titulo.y + titulo.height - 1);
+  expect(antes.y).toBeLessThan(200);
+  // colada ao topo quando se rola: os filtros ficam ao alcance a meio da página
+  await page.evaluate(() => window.scrollBy(0, 1500));
+  await page.waitForTimeout(300);
+  const depois = (await barra.boundingBox())!;
+  expect(depois.y).toBeLessThan(80);
+  expect(depois.y + depois.height).toBeGreaterThan(0);
+});
+
+test("Pôr em dia: a pílula da casa não leva o disco colorido (cor numa ação)", async ({ page, tmdb }) => {
+  const c = serieCompleta(720, "Alfa", [3]);
+  Object.assign(tmdb.series, c.series);
+  Object.assign(tmdb.episodios, c.episodios);
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Alfa", tmdbId: 720, numeracao: "tmdb", totalEpisodes: 3 }],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1 }],
+  });
+  await page.goto("/series");
+  const pilula = page.getByRole("link", { name: /^Pôr em dia/ });
+  await expect(pilula).toBeVisible();
+  await expect(pilula.locator(".bars")).toHaveCount(0);
+});
+
+test("Explorar: os títulos aparecem no original, como na biblioteca (o TV Time)", async ({ page, tmdb }) => {
+  tmdb.tendencias = [
+    { id: 801, name: "Separação", original_name: "Severance", poster_path: "/c.jpg", backdrop_path: null, overview: "", first_air_date: "2022-02-18" },
+    // original em japonês: fica o título em português, não o ideograma
+    { id: 802, name: "Ataque dos Titãs", original_name: "進撃の巨人", poster_path: "/c.jpg", backdrop_path: null, overview: "", first_air_date: "2013-04-07" },
+  ];
+  await semear(page, {});
+  await page.goto("/explorar");
+  await expect(page.getByText("Severance").first()).toBeVisible();
+  await expect(page.getByText("Separação")).toHaveCount(0);
+  await expect(page.getByText("Ataque dos Titãs").first()).toBeVisible();
+});

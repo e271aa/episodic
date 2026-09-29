@@ -989,20 +989,6 @@ const MUTACOES = [
     para: 'bg-ink text-tube shadow-md',
   },
   {
-    nome: "r12-fase5d/barra-nunca-se-esconde",
-    descricao: 'a barra da Biblioteca volta a ficar sempre à vista',
-    ficheiro: CONTROLOS_BIBLIOTECA,
-    de: '      setEscondida(y > ultimo);',
-    para: '      setEscondida(y < 0);',
-  },
-  {
-    nome: "r12-fase5d/barra-escondida-toca-se",
-    descricao: 'escondida, a barra da Biblioteca volta a apanhar toques',
-    ficheiro: CONTROLOS_BIBLIOTECA,
-    de: 'escondida ? "pointer-events-none translate-y-6 opacity-0" : ""',
-    para: 'escondida ? "translate-y-6 opacity-0" : ""',
-  },
-  {
     nome: "r12-fase5d/espetro-com-estados",
     descricao: 'o espetro de géneros volta a usar verde, ciano e magenta',
     ficheiro: STATS_PERFIL,
@@ -1308,18 +1294,39 @@ const MUTACOES = [
     para: "<span className=\"text-[0.6875rem] text-faint\">arrasta",
   },
   {
-    nome: "r12-f3/tubo-a-mao",
-    descricao: "o gradiente da Biblioteca volta a escrever o tubo em hex",
-    ficheiro: "src/components/LibraryControls.tsx",
-    de: "to top, var(--color-tube) 32%",
-    para: "to top, #101014 32%",
-  },
-  {
     nome: "r12-f3/preto-solto-na-lista",
     descricao: "o ✕ da lista volta a bg-black/60 text-white",
     ficheiro: "src/app/listas/[id]/ListaPageClient.tsx",
     de: "bg-tube/60 text-ink backdrop-blur",
     para: "bg-black/60 text-white backdrop-blur",
+  },
+  {
+    nome: "r12-f4/barra-volta-a-baixo",
+    descricao: "a barra da Biblioteca deixa de estar colada ao topo e volta a não seguir o scroll",
+    ficheiro: CONTROLOS_BIBLIOTECA,
+    de: 'className="sticky top-[env(safe-area-inset-top)] z-30',
+    para: 'className="relative z-30',
+  },
+  {
+    nome: "r12-f4/disco-volta-ao-pora-em-dia",
+    descricao: "o Pôr em dia da casa volta a levar o disco colorido",
+    ficheiro: "src/components/TonightHero.tsx",
+    de: "            Pôr em dia\n",
+    para: "            <span className=\"bars h-4 w-4 shrink-0 rounded-full\" aria-hidden />\n            Pôr em dia\n",
+  },
+  {
+    nome: "r12-f4/titulo-pt-no-explorar",
+    descricao: "o Explorar volta a mostrar o título pt-PT da TMDB",
+    ficheiro: "src/lib/tmdb.ts",
+    de: "    name: nome,\n    originalName: outro,",
+    para: "    name: (kind === \"tv\" ? row.name : row.title) ?? \"\",\n    originalName: original || null,",
+  },
+  {
+    nome: "r12-f4/original-nao-latino",
+    descricao: "um original em japonês volta a substituir o título pt",
+    ficheiro: "src/lib/titulos.ts",
+    de: "if (original && LATINO.test(original)) {",
+    para: "if (original) {",
   },
 ];
 

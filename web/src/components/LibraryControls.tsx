@@ -1,35 +1,23 @@
 "use client";
 
-import { useEffect, useState, useSyncExternalStore } from "react";
-import { createPortal } from "react-dom";
 import { SearchIcon, SortIcon } from "@/components/icons";
 
 /**
- * Os controlos da Biblioteca, a flutuar na zona do polegar.
+ * Os controlos da Biblioteca: os três separadores, a pesquisa e os filtros.
  *
- * A Biblioteca gastava ~330px de cabeçalho antes do primeiro cartaz: título,
- * três atalhos, pesquisa, segmented, seis chips de filtro e uma linha de
- * contagem. Quase metade do ecrã para configurar a vista de uma coisa que a
- * pessoa só quer ver.
+ * Estiveram a flutuar em baixo, na zona do polegar (Ronda 12, 5b.3), e
+ * depois a esconder-se ao rolar (5d). Mesmo assim, ao chegar eram duas
+ * barras — esta e a dock — a ocupar ~185 de 664px e a tapar o título da
+ * segunda fila (crítica final, 29-09). O Ruben escolheu tirá-los de lá:
+ * sobem para o topo, por baixo do título, e em baixo fica só a dock.
  *
- * Aqui o conteúdo começa em cima e os controlos descem para onde o polegar
- * chega. Fica **um** controlo do que se vê (o segmented) e ícones para o
- * resto — a regra de cromo do sistema.
- *
- * Vai por portal para o `body`: o `PageTransition` envolve as páginas num
- * elemento com `transform`, e um transform — mesmo identidade — torna-se o
- * bloco de referência de qualquer descendente `position: fixed`. Sem o
- * portal, a barra assentava 76px acima do sítio, medido.
- *
- * Esconde-se ao rolar para baixo e volta ao rolar para cima, como a barra do
- * Safari (escolhido pelo Ruben, Ronda 12, 5d): eram duas barras a flutuar no
- * fundo, ~140px de 664, e os títulos liam-se por baixo delas.
+ * `sticky`, não uma linha que rola e se perde: com 138 séries, os filtros
+ * têm de estar ao alcance a meio da página. Colada ao topo, com um fundo
+ * que deixa o conteúdo desvanecer por baixo. Sem portal: um `sticky` vive
+ * no fluxo, e o `transform` do `PageTransition` não o afeta (só um
+ * `overflow` num antepassado o partiria).
  */
 
-/** px de scroll no mesmo sentido antes de mudar — um tremor não conta */
-const LIMIAR_SCROLL = 8;
-/** perto do topo, está sempre à vista */
-const TOPO = 80;
 export default function LibraryControls({
   segment,
   counts,
@@ -46,60 +34,13 @@ export default function LibraryControls({
   /** true = há filtro por aplicar além do predefinido; acende o ponto */
   filtrosAtivos: boolean;
 }) {
-  // O portal só pode montar no cliente: no servidor não há `document`.
-  // `useSyncExternalStore` diz isto sem um setState dentro de um efeito, que
-  // é o padrão que já nos deu problemas neste projeto (ver Fase M).
-  const noCliente = useSyncExternalStore(
-    () => () => {},
-    () => true,
-    () => false,
-  );
-
-  const [escondida, setEscondida] = useState(false);
-  useEffect(() => {
-    let ultimo = window.scrollY;
-    const aoRolar = () => {
-      const y = window.scrollY;
-      if (y < TOPO) {
-        setEscondida(false);
-        ultimo = y;
-        return;
-      }
-      if (Math.abs(y - ultimo) < LIMIAR_SCROLL) return;
-      setEscondida(y > ultimo);
-      ultimo = y;
-    };
-    window.addEventListener("scroll", aoRolar, { passive: true });
-    return () => window.removeEventListener("scroll", aoRolar);
-  }, []);
-
-  if (!noCliente) return null;
-
-  return createPortal(
+  return (
     <>
-      {/* O degradê é o que faz o corte da grelha ler-se como "há mais por
-          baixo" em vez de "acabou aqui". */}
-      <div
-        aria-hidden
-        className={`pointer-events-none fixed inset-x-0 z-30 h-[170px] transition-opacity duration-200 ${
-          escondida ? "opacity-0" : ""
-        }`}
-        style={{
-          bottom: 0,
-          background: "linear-gradient(to top, var(--color-tube) 32%, transparent 100%)",
-        }}
-      />
       <div
         data-testid="barra-biblioteca"
-        data-escondida={escondida}
-        // quem chega por teclado traz a barra de volta — escondida não é
-        // inacessível
-        onFocus={() => setEscondida(false)}
-        className={`fixed inset-x-5 z-40 flex h-[52px] items-center gap-1 rounded-full border border-line bg-raised/92 px-1 backdrop-blur-lg transition-[transform,opacity] duration-200 ease-out ${
-          escondida ? "pointer-events-none translate-y-6 opacity-0" : ""
-        }`}
-        style={{ bottom: "calc(var(--dock-h) + 12px)" }}
+        className="sticky top-[env(safe-area-inset-top)] z-30 -mx-5 mt-3 bg-tube/90 px-5 py-2 backdrop-blur-lg"
       >
+      <div className="flex h-[52px] items-center gap-1 rounded-full border border-line bg-raised/92 px-1">
         {(
           [
             ["series", "Séries", counts.series],
@@ -154,7 +95,7 @@ export default function LibraryControls({
           </>
         )}
       </div>
-    </>,
-    document.body,
+      </div>
+    </>
   );
 }

@@ -500,8 +500,25 @@ function LibraryContent() {
   ];
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-5 pt-10 pb-[calc(var(--dock-h)+5.5rem)]">
+    <main className="mx-auto w-full max-w-2xl px-5 pt-10 pb-8">
       <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Biblioteca</h1>
+
+      <LibraryControls
+        segment={segment}
+        counts={{
+          series: shows?.length ?? 0,
+          filmes: movies?.length ?? 0,
+          listas: listas?.length ?? 0,
+        }}
+        onSegment={changeSegment}
+        onSearch={() => setPesquisaAberta(true)}
+        onFilters={() => setFiltrosAbertos(true)}
+        filtrosAtivos={
+          segment === "series"
+            ? filter !== "tudo" || seriesSort !== "vistos"
+            : movieFilter !== "todos" || movieSort !== "vistos" || decade !== null
+        }
+      />
 
       {segment === "listas" ? (
         <div className="mt-4">
@@ -665,22 +682,6 @@ function LibraryContent() {
         </div>
       )}
 
-      <LibraryControls
-        segment={segment}
-        counts={{
-          series: shows?.length ?? 0,
-          filmes: movies?.length ?? 0,
-          listas: listas?.length ?? 0,
-        }}
-        onSegment={changeSegment}
-        onSearch={() => setPesquisaAberta(true)}
-        onFilters={() => setFiltrosAbertos(true)}
-        filtrosAtivos={
-          segment === "series"
-            ? filter !== "tudo" || seriesSort !== "vistos"
-            : movieFilter !== "todos" || movieSort !== "vistos" || decade !== null
-        }
-      />
 
       {/* A pesquisa sobe por cima de tudo: enquanto se procura, procurar é a
           única coisa que interessa no ecrã. */}

@@ -1,5 +1,7 @@
 // Cliente TMDB (lado do browser) — fala com o proxy /api/tmdb que guarda a chave.
 
+import { tituloParaMostrar } from "./titulos";
+
 export class TmdbKeyMissingError extends Error {
   constructor() {
     super("TMDB_API_KEY não configurada");
@@ -193,6 +195,9 @@ export interface DiscoverItem {
   tmdbId: number;
   name: string;
   /**
+   * O **outro** título — o que não se mostra (o pt-PT da TMDB, ou o original
+   * se este não for latino). Serve para comparar; ver `tituloParaMostrar`.
+   *
    * Título na língua original. A TMDB responde em pt-PT, e a biblioteca do
    * Ruben guarda os nomes como o TV Time os exportou (quase sempre em
    * inglês): o "Prison Break" que ele tem é o "Prison Break: Fuga da Prisão"
@@ -227,11 +232,14 @@ interface TmdbDiscoverRow {
 function toDiscoverItem(row: TmdbDiscoverRow, kind: "tv" | "movie"): DiscoverItem {
   const date = kind === "tv" ? row.first_air_date : row.release_date;
   const original = kind === "tv" ? row.original_name : row.original_title;
+  // o título que se mostra é o original (F4); o outro fica como alias, para
+  // o "já está na biblioteca?" e o "já existe" continuarem a bater nos dois
+  const { nome, outro } = tituloParaMostrar((kind === "tv" ? row.name : row.title) ?? "", original);
   return {
     kind,
     tmdbId: row.id,
-    name: (kind === "tv" ? row.name : row.title) ?? "",
-    originalName: original || null,
+    name: nome,
+    originalName: outro,
     year: date ? date.slice(0, 4) : null,
     posterPath: row.poster_path,
     backdropPath: row.backdrop_path,
