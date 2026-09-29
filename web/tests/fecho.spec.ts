@@ -314,3 +314,19 @@ test("Perfil: a linha dos números cabe a 320px com o texto a 150%", async ({ pa
   await page.waitForTimeout(200);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
 });
+
+// O rótulo do separador ativo não parte em duas linhas — a 320px E a 150%, que é
+// onde a dock aperta depois do teto de espaço da F5 (a 320px normais já cabia).
+test("a dock não parte o rótulo ativo a 320px com o texto a 150%", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 664 });
+  await semear(page, { series: [{ uuid: "s-1", name: "Alfa" }] });
+  await page.goto("/series");
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "150%";
+  });
+  await page.waitForTimeout(200);
+  const ativo = page.locator('nav a[aria-current="page"]');
+  const altura = (await ativo.boundingBox())!.height;
+  // uma linha: a altura mínima de um alvo (44px a 150% = 66), não duas linhas de texto
+  expect(altura).toBeLessThan(75);
+});

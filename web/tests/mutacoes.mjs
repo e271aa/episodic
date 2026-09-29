@@ -1351,10 +1351,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-f5/perfil-sem-min-w",
-    descricao: "a linha dos números do Perfil perde o min-w-0 e alarga o ecrã a 150%",
+    descricao: "a coluna 'Biblioteca · ver tudo' do Perfil perde o min-w-0 e alarga o ecrã a 150%",
     ficheiro: "src/app/profile/ProfilePageClient.tsx",
-    de: "<div className=\"min-w-0 flex-1 pl-5\">\n            <p className=\"ep-code text-2xl font-bold text-ink\">{stats.movies}</p>",
-    para: "<div className=\"flex-1 pl-5\">\n            <p className=\"ep-code text-2xl font-bold text-ink\">{stats.movies}</p>",
+    de: 'className="flex min-w-0 flex-1 flex-col justify-center pl-5"',
+    para: 'className="flex flex-1 flex-col justify-center pl-5"',
   },
 ];
 
