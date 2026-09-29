@@ -190,3 +190,18 @@ test("uma série de uma só temporada diz «temporada», no singular", async ({ 
   await expect(page.getByRole("dialog").getByText("temporada", { exact: true })).toBeVisible();
   await expect(page.getByTestId("ficha-episodios")).toHaveText("6");
 });
+
+test("a ficha diz o título uma só vez, e nada na app liga ao The Movie DB", async ({ page, tmdb }) => {
+  tmdb.tendencias = [sugestoes(1, 960)[0]];
+  await semear(page, {
+    filmes: [{ key: "f-1", name: "Filme Um", tmdbId: 960, watchedAt: null }],
+  });
+  await page.goto("/explorar");
+  await page.getByRole("button", { name: "Abrir Sugestao 1" }).click();
+  await expect(page.getByRole("dialog").getByText("Sugestao 1", { exact: true })).toHaveCount(1);
+
+  await page.goto("/movies/f-1");
+  await page.getByRole("heading", { level: 1 }).waitFor();
+  await expect(page.locator('a[href*="themoviedb.org"]')).toHaveCount(0);
+  await expect(page.getByText("Ver na TMDB")).toHaveCount(0);
+});

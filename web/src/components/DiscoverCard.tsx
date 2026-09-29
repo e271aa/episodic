@@ -185,7 +185,7 @@ export default function DiscoverCard({
         rodape={<div className="mt-2">{acoes}</div>}
       />
       {/* A ficha: sinopse e onde ver, sem guardar nada só por espreitar */}
-      <SheetPanel titulo={item.name} aberto={ficha} onFechar={() => setFicha(false)} agrupada>
+      <SheetPanel titulo="Detalhes" aberto={ficha} onFechar={() => setFicha(false)} agrupada>
         <div className="px-5 pb-4">
           <div className="flex gap-4">
             <div className="relative aspect-2/3 w-[104px] shrink-0 overflow-hidden rounded-xl bg-group">

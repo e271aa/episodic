@@ -268,17 +268,6 @@ export default function MoviePage() {
             </p>
           )}
         </section>
-
-        {movie.tmdbId && (
-          <a
-            href={`https://www.themoviedb.org/movie/${movie.tmdbId}`}
-            target="_blank"
-            rel="noreferrer"
-            className="mt-4 inline-flex min-h-11 cursor-pointer items-center text-[0.9375rem] text-ink hover:underline"
-          >
-            Ver na TMDB ↗
-          </a>
-        )}
       </div>
     </main>
   );
