@@ -462,12 +462,17 @@ enquanto a anulação ainda é possível. A casa deixa-lhe espaço por baixo do
 - **Uma cor só, a neutra.** Tudo em `ink` com opacidade; nada de SMPTE (é
   estado, não quantidade). O destaque — o maior, ou o ano corrente — vai a
   `ink` cheio; o resto a `ink/35`.
-- **Mapa de calor em quatro degraus** (`ink/25 · 45 · 70 · 100`) mais o
-  vazio (`ink/6`): 38 e 40 episódios não se distinguem a olho, fingir que
-  sim é ruído. Um mês com alguma coisa nunca cai no vazio.
-- **Tocar, não pairar.** Cada coluna ou célula é um botão de 44px; a
-  leitura ("março de 2021 · 8 episódios") fica numa linha fixa por cima,
-  em `aria-live`. Ao abrir, já mostra o destaque.
+- **Mapa de calor em quatro degraus** (`ink/20 · 35 · 55 · 85`) mais o
+  vazio (`ink/6`), por **quartis** dos meses com alguma coisa — não frações
+  do máximo, que deixavam uma biblioteca regular toda no degrau de cima e um
+  mês de maratona a esmagar os outros. O mês mais forte está sempre no topo;
+  um mês com alguma coisa nunca cai no vazio. O topo fica a 85%: 72
+  quadrados de branco cheio encandeiam numa sala às escuras.
+- **Tocar, não pairar.** As colunas são botões de 44px; as células do mapa
+  são a exceção — a coluna inteira é alvo, 24px a 390px (o limite da WCAG
+  2.5.8), e a 320px não cabem 12, por isso a tabela é a alternativa. A
+  leitura ("março de 2021 · 8 episódios") fica numa linha fixa por cima, em
+  `aria-live`. Ao abrir, já mostra o destaque.
 - **Um número à vista, não um em cada coluna**; os rótulos são os dias, os
   meses (uma letra) ou os anos.
 - **Barras finas** (≤24px), ponta de dados arredondada a 4px, assente na
