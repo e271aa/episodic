@@ -1351,10 +1351,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-f5/perfil-sem-min-w",
-    descricao: "o 'Biblioteca' do Perfil perde o break-words e alarga o ecrã a 150%",
+    descricao: "as três colunas dos números do Perfil perdem o min-w-0 e alargam o ecrã a 150% (cada uma sozinha é redundante)",
     ficheiro: "src/app/profile/ProfilePageClient.tsx",
-    de: 'font-semibold text-ink break-words hover:underline',
-    para: 'font-semibold text-ink hover:underline',
+    de: "          <div className=\"min-w-0 flex-1\">\n            <p className=\"ep-code text-2xl font-bold text-ink\">{stats.shows}</p>\n            <p className=\"text-xs text-dim\">\n              séries · {stats.following} {stats.following === 1 ? \"seguida\" : \"seguidas\"}\n            </p>\n          </div>\n          <div className=\"w-px shrink-0 bg-line\" aria-hidden />\n          <div className=\"min-w-0 flex-1 pl-5\">\n            <p className=\"ep-code text-2xl font-bold text-ink\">{stats.movies}</p>\n            <p className=\"text-xs text-dim\">filmes</p>\n          </div>\n          <div className=\"w-px shrink-0 bg-line\" aria-hidden />\n          <Link href=\"/library\" className=\"flex min-w-0 flex-1 flex-col justify-center pl-5\">\n            ",
+    para: "          <div className=\"flex-1\">\n            <p className=\"ep-code text-2xl font-bold text-ink\">{stats.shows}</p>\n            <p className=\"text-xs text-dim\">\n              séries · {stats.following} {stats.following === 1 ? \"seguida\" : \"seguidas\"}\n            </p>\n          </div>\n          <div className=\"w-px shrink-0 bg-line\" aria-hidden />\n          <div className=\"flex-1 pl-5\">\n            <p className=\"ep-code text-2xl font-bold text-ink\">{stats.movies}</p>\n            <p className=\"text-xs text-dim\">filmes</p>\n          </div>\n          <div className=\"w-px shrink-0 bg-line\" aria-hidden />\n          <Link href=\"/library\" className=\"flex flex-1 flex-col justify-center pl-5\">\n            ",
   },
 ];
 
