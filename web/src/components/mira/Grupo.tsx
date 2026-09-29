@@ -19,7 +19,7 @@ export function Grupo({
 }) {
   return (
     <section className={className}>
-      {titulo && <h2 className="mb-2 px-1 text-[1.06rem] font-semibold text-label">{titulo}</h2>}
+      {titulo && <h2 className="mb-2 px-1 text-base font-semibold text-label">{titulo}</h2>}
       <div className="overflow-hidden rounded-[26px] bg-group">{children}</div>
     </section>
   );

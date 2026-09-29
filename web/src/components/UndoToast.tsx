@@ -1,5 +1,6 @@
 "use client";
 
+import Codigo from "@/components/mira/Codigo";
 import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
@@ -90,19 +91,21 @@ export default function UndoToast() {
               <Check className="h-3.5 w-3.5" strokeWidth={3} />
             </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[0.94rem] font-semibold text-label">
-                {mostrado.label}
+              <p className="truncate text-base font-semibold text-label">
+                {comCodigos(mostrado.label)}
                 {behind > 0 && (
                   <span className="ep-code ml-2 text-xs font-medium text-label-2">+{behind}</span>
                 )}
               </p>
               {mostrado.detail && (
-                <p className="ep-code mt-0.5 truncate text-xs text-label-2">{mostrado.detail}</p>
+                // o nome em letra normal: em mono lia-se como máquina de
+                // escrever (crítica da Fase 3); só os códigos são mono
+                <p className="mt-0.5 truncate text-[0.88rem] text-label-2">{comCodigos(mostrado.detail)}</p>
               )}
             </div>
             <button
               onClick={() => undoLast()}
-              className="flex min-h-11 shrink-0 cursor-pointer items-center rounded-full bg-fill-strong px-4 text-[0.94rem] font-semibold text-label transition active:scale-95"
+              className="flex min-h-11 shrink-0 cursor-pointer items-center rounded-full bg-fill-strong px-4 text-[0.88rem] font-semibold text-label transition active:scale-95"
               data-testid="undo-button"
             >
               Anular
@@ -115,5 +118,16 @@ export default function UndoToast() {
         </div>
       )}
     </div>
+  );
+}
+
+/** Os códigos de episódio (`S01·E04`) e de temporada (`T1`) em mono, o resto em letra normal. */
+function comCodigos(texto: string) {
+  return texto.split(/(S\d{2,}·E\d{2,}|\bT\d+\b)/).map((parte, i) =>
+    i % 2 === 1 ? (
+      <Codigo key={i}>{parte}</Codigo>
+    ) : (
+      parte
+    ),
   );
 }

@@ -317,11 +317,13 @@ test("marcar visto na casa acende a barra de progresso com as cores SMPTE, e o �
   await casaComSerie(page, tmdb);
   await page.getByRole("button", { name: "Marcar visto" }).click();
   await expect(page.locator("main")).toContainText("S01·E03");
-  expect(await aCorrer(page, "barra-acende")).toBe(1);
-  const barra = await page
-    .locator('[data-ritual="barra"]')
+  // a mira pinta fatia a fatia (Fase 3): pelo menos uma fatia a correr, e é a mira
+  expect(await aCorrer(page, "mira-fatia")).toBeGreaterThanOrEqual(1);
+  const fatia = await page
+    .locator('[data-ritual="fatia"], [data-ritual="barra"]')
+    .first()
     .evaluate((el) => getComputedStyle(el).backgroundImage);
-  expect(barra).toContain("linear-gradient");
+  expect(fatia).toContain("linear-gradient");
   // o episódio novo entra com o desfoque curto
   expect(await aCorrer(page, "episodio-entra")).toBeGreaterThan(0);
 });
@@ -330,11 +332,12 @@ test("anular não festeja: o episódio volta, mas a barra não acende", async ({
   await casaComSerie(page, tmdb);
   await page.getByRole("button", { name: "Marcar visto" }).click();
   await expect(page.locator("main")).toContainText("S01·E03");
-  // a barra já apagou: a mira da Mira dura 40 + 620 + 320 = 980ms (README)
-  await page.waitForTimeout(1100);
+  // a mira já apagou: as fatias duram até 280 + 720ms, a do marcado 1100ms
+  await page.waitForTimeout(1300);
   await page.getByTestId("undo-button").click();
   await expect(page.locator("main")).toContainText("S01·E02");
-  expect(await aCorrer(page, "barra-acende")).toBe(0);
+  expect(await aCorrer(page, "mira-fatia")).toBe(0);
+  expect(await aCorrer(page, "mira-fica")).toBe(0);
 });
 
 test("com movimento reduzido, a barra só acende e apaga, sem varrer", async ({ page, tmdb }) => {
@@ -342,6 +345,6 @@ test("com movimento reduzido, a barra só acende e apaga, sem varrer", async ({ 
   await casaComSerie(page, tmdb);
   await page.getByRole("button", { name: "Marcar visto" }).click();
   await expect(page.locator("main")).toContainText("S01·E03");
-  expect(await aCorrer(page, "barra-acende")).toBe(0);
-  expect(await aCorrer(page, "barra-luz")).toBe(1);
+  expect(await aCorrer(page, "mira-fatia")).toBe(0);
+  expect(await aCorrer(page, "barra-luz")).toBeGreaterThanOrEqual(1);
 });

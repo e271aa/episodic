@@ -48,23 +48,24 @@ export default function TituloGrande({
         <span className="text-base font-semibold text-label">{titulo}</span>
         {resumo && <span className="ep-code text-[0.7rem] text-label-2">{resumo}</span>}
       </div>
-      {/* `flex-wrap`: com texto grande a ação do lado passa para baixo, em vez
-          de espremer o título em duas linhas («A / seguir» a 320px e 150%) */}
-      <header className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-2">
-        <div className="min-w-0 max-w-full">
-          {rotulo && (
-            <p className="text-[0.76rem] font-semibold uppercase tracking-[0.02em] text-label-2">
-              {rotulo}
-            </p>
-          )}
+      {/* A data (e o diário) numa linha própria, por cima: com «· 1 EPISÓDIO»
+          ficava mais larga do que a coluna do título e empurrava a ação para
+          baixo (Fase 3). O título e a ação partilham a linha de baixo;
+          `flex-wrap` para, com texto grande, a ação passar para baixo em vez
+          de espremer o título («A / seguir» a 320px e 150%). */}
+      <header className="pt-2">
+        {rotulo && (
+          <p className="text-[0.76rem] font-semibold uppercase tracking-[0.02em] text-label-2">{rotulo}</p>
+        )}
+        <div className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2">
           <h1
             ref={ancora}
-            className="text-[2rem] font-bold leading-[1.15] tracking-[0.01em] text-label"
+            className="min-w-0 max-w-full text-[2rem] font-bold leading-[1.15] tracking-[0.01em] text-label"
           >
             {titulo}
           </h1>
+          {direita && <div className="shrink-0 pb-1">{direita}</div>}
         </div>
-        {direita && <div className="shrink-0 pb-1">{direita}</div>}
       </header>
     </>
   );

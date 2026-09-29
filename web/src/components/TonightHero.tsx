@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Check } from "lucide-react";
@@ -9,22 +9,27 @@ import { formatEpCode } from "@/lib/watchnext";
 import { getEpisodesOfSeason, getSeasons, type MetaEpisode } from "@/lib/metadata";
 import { getWatchedForShow, type StoredShow } from "@/lib/db";
 import Acao from "@/components/mira/Acao";
+import Codigo from "@/components/mira/Codigo";
+import Segmentos from "@/components/mira/Segmentos";
 
 export interface TonightHeroProps {
   show: StoredShow;
   episode: MetaEpisode;
-  /** «Retomar onde ficaste» / «Começar do início» — só quando não é a série do costume */
-  eyebrow?: string;
+  /**
+   * A linha de contexto, sempre presente e com a mesma altura: «Parada há 42
+   * dias», «Viste o anterior ontem». Era um sobretítulo que só existia em
+   * «Retomar»/«Começar» — ao marcar, desaparecia e o botão saltava ~23px
+   * debaixo do polegar (crítica da Fase 3).
+   */
+  contexto: string;
   /** episódios vistos / total da série — o progresso enquanto a temporada não chega */
   watchedCount?: number;
   totalEpisodes?: number | null;
   onCheck: (season: number, episode: number) => Promise<void>;
 }
 
-/** Acima disto, os segmentos ficam finos de mais para se contar: uma barra contínua. */
-const MAX_SEGMENTOS = 24;
-
 interface Temporada {
+  numero: number;
   total: number;
   vistos: Set<number>;
 }
@@ -35,7 +40,10 @@ interface Temporada {
  * do `findNextUnwatched` — assim os segmentos nunca contradizem o episódio
  * que o cartão propõe (séries de anime numeradas por ano, 2007, 2008…).
  */
-function useTemporada(show: StoredShow, episode: MetaEpisode): Temporada | null {
+function useTemporada(
+  show: StoredShow,
+  episode: MetaEpisode,
+): { valor: Temporada | null; fresca: boolean } {
   const [t, setT] = useState<{ chave: string; valor: Temporada | null } | null>(null);
   const chave = `${show.uuid}:${episode.season}:${episode.episode}`;
   useEffect(() => {
@@ -53,7 +61,7 @@ function useTemporada(show: StoredShow, episode: MetaEpisode): Temporada | null 
       ]);
       const total = Math.max(alvo.episodeCount, episodios.length);
       const desta = new Set(vistos.filter((w) => w.season === episode.season).map((w) => w.episode));
-      if (vivo) setT({ chave, valor: total > 0 ? { total, vistos: desta } : null });
+      if (vivo) setT({ chave, valor: total > 0 ? { numero: episode.season, total, vistos: desta } : null });
     })();
     return () => {
       vivo = false;
@@ -62,62 +70,109 @@ function useTemporada(show: StoredShow, episode: MetaEpisode): Temporada | null 
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [chave]);
   // enquanto a temporada nova não chega, a anterior continua certa o bastante
-  return t?.valor ?? null;
+  // — e `fresca` diz se já é a do episódio proposto
+  return { valor: t?.valor ?? null, fresca: t?.chave === chave };
 }
+
+/** quanto tempo a temporada acabada fica à vista, completa, antes de dar lugar à seguinte */
+const FIM_MS = 1400;
 
 /**
  * A casa responde a uma pergunta só: o que vejo esta noite? (Mira, Ronda 14)
  *
- * Um cartão: a arte em cima **sem texto por cima** (o texto pequeno sobre a
- * arte perdia-se nas capas claras — crítica final da Ronda 12), e por baixo a
- * série, o episódio, o progresso da temporada em segmentos e a única ação.
+ * Um cartão: a arte em cima **sem texto por cima**, e por baixo a série, a
+ * linha de contexto, o episódio, a temporada em segmentos e a única ação.
  *
- * O ritual de marcar: a cápsula comprime, o ✓ salta com um anel, **a mira
- * revela-se por cima dos segmentos** e apaga, e o episódio troca com um
- * desfoque. Só marcar festeja: anular troca o episódio, mas sem festa.
+ * **O ritual** (a assinatura, Fase 3) acontece **no toque**, não depois de a
+ * gravação acabar: o segmento acende, a mira corre fatia a fatia até ele, a
+ * contagem rola. Marcar é o que se faz todas as noites — nada espera.
+ * **O fim de uma temporada** tem o seu momento: a temporada fica à vista,
+ * completa, com «T1 ✓», e os segmentos da seguinte constroem-se da esquerda.
  */
 export default function TonightHero({
   show,
   episode,
-  eyebrow,
+  contexto,
   watchedCount,
   totalEpisodes,
   onCheck,
 }: TonightHeroProps) {
-  const [checking, setChecking] = useState(false);
+  const aMarcar = useRef(false);
+  const [erro, setErro] = useState<string | null>(null);
   // A troca de série (key={show.uuid} no chamador) remonta o componente, por
   // isso "lit" nasce sempre a false e só este efeito o liga.
   const [lit, setLit] = useState(false);
   const backdrop = imageUrl(show.backdropPath ?? show.posterPath, "w780");
-  const temporada = useTemporada(show, episode);
+  const { valor: temporada, fresca } = useTemporada(show, episode);
 
   useEffect(() => {
     const raf = requestAnimationFrame(() => setLit(true));
     return () => cancelAnimationFrame(raf);
   }, []);
 
-  // Só marcar festeja. Anular também muda o episódio (volta ao anterior), e
-  // por isso o ritual conta marcações, não mudanças de episódio.
+  // O otimista: o episódio marcado acende já, antes de a gravação acabar.
+  const [otimista, setOtimista] = useState<{ temporada: number; episodio: number } | null>(null);
+  // Só marcar festeja. Anular também muda o episódio, e por isso o ritual
+  // conta marcações, não mudanças de episódio.
   const [marcacoes, setMarcacoes] = useState(0);
+  // A temporada acabada, mantida à vista durante o momento de fim
+  const [fim, setFim] = useState<Temporada | null>(null);
+  const [construir, setConstruir] = useState(false);
+
   const handleCheck = async () => {
-    if (checking) return;
-    setChecking(true);
+    if (aMarcar.current) return;
+    aMarcar.current = true;
+    setErro(null);
+    const alvo = { temporada: episode.season, episodio: episode.episode };
+    setOtimista(alvo);
+    setMarcacoes((n) => n + 1);
+    const vistosDepois =
+      temporada && temporada.numero === alvo.temporada
+        ? new Set([...temporada.vistos, alvo.episodio])
+        : null;
+    if (temporada && vistosDepois && vistosDepois.size >= temporada.total) {
+      setFim({ ...temporada, vistos: vistosDepois });
+    }
     try {
-      await onCheck(episode.season, episode.episode);
-      setMarcacoes((n) => n + 1);
+      await onCheck(alvo.temporada, alvo.episodio);
+    } catch {
+      // Propõe, nunca finge: se não ficou gravado, não fica aceso.
+      setOtimista(null);
+      setFim(null);
+      setErro("Não deu para marcar. Tenta outra vez.");
     } finally {
-      setChecking(false);
+      aMarcar.current = false;
     }
   };
 
+  // O momento de fim de temporada: acesa e completa, depois dá lugar à
+  // seguinte, que se constrói da esquerda
+  useEffect(() => {
+    if (!fim) return;
+    const t = setTimeout(() => {
+      setFim(null);
+      setConstruir(true);
+    }, FIM_MS);
+    return () => clearTimeout(t);
+  }, [fim]);
+  useEffect(() => {
+    if (!construir) return;
+    const t = setTimeout(() => setConstruir(false), 600);
+    return () => clearTimeout(t);
+  }, [construir]);
+
   // O episódio que sai fica o tempo de desvanecer por cima do que entra —
-  // qualquer mudança, anular incluído. Acertado durante o render, para não
-  // haver um frame com os dois trocados de golpe.
+  // qualquer mudança, anular incluído. Acertado durante o render.
   const [mostrado, setMostrado] = useState(episode);
   const [aSair, setASair] = useState<MetaEpisode | null>(null);
   if (episode.season !== mostrado.season || episode.episode !== mostrado.episode) {
     setASair(mostrado);
     setMostrado(episode);
+    // anulou-se: voltou ao episódio que estava aceso de forma otimista —
+    // apaga-se já, sem esperar pela leitura
+    if (otimista && otimista.temporada === episode.season && otimista.episodio === episode.episode) {
+      setOtimista(null);
+    }
   }
   useEffect(() => {
     if (!aSair) return;
@@ -125,19 +180,26 @@ export default function TonightHero({
     return () => clearTimeout(t);
   }, [aSair]);
 
-  // Com a temporada: um segmento por episódio (ou uma barra contínua, acima
-  // de 24). Sem ela (sem fornecedor, ou ainda a chegar): a série inteira.
-  const segmentos = temporada && temporada.total <= MAX_SEGMENTOS ? temporada : null;
-  const fracao = temporada
-    ? temporada.vistos.size / temporada.total
-    : watchedCount !== undefined && totalEpisodes
-      ? Math.min(1, watchedCount / totalEpisodes)
-      : null;
-  const contagem = temporada
-    ? `${temporada.vistos.size}/${temporada.total}`
-    : watchedCount !== undefined && totalEpisodes
-      ? `${watchedCount}/${totalEpisodes}`
-      : null;
+  // O que os segmentos mostram: a temporada acabada durante o momento de fim;
+  // senão a do episódio proposto, com o otimista aceso (1) no toque, enquanto
+  // o cartão ainda mostra o episódio marcado — a leitura desse episódio é
+  // fresca mas é de antes de o marcar — e (2) depois de o episódio mudar,
+  // enquanto a leitura nova não chega (quando chega, `fresca`, já o traz)
+  const noToque =
+    otimista !== null && otimista.temporada === episode.season && otimista.episodio === episode.episode;
+  const mostrada: Temporada | null = fim
+    ? fim
+    : temporada && otimista && (noToque || !fresca) && otimista.temporada === temporada.numero
+      ? { ...temporada, vistos: new Set([...temporada.vistos, otimista.episodio]) }
+      : temporada;
+  const contagem = fim
+    ? `T${fim.numero} ✓`
+    : mostrada
+      ? `${mostrada.vistos.size}/${mostrada.total}`
+      : watchedCount !== undefined && totalEpisodes
+        ? `${watchedCount}/${totalEpisodes}`
+        : null;
+  const aceso = fim ? fim.total : (otimista?.episodio ?? null);
 
   return (
     // `@container`: com texto grande (150%) o cartão fica estreito em rem, e
@@ -166,17 +228,15 @@ export default function TonightHero({
 
       <div className="flex flex-col gap-3.5 px-[18px] pb-[18px] pt-4">
         <div>
-          {eyebrow && (
-            <p className="mb-1 text-[0.76rem] font-semibold uppercase tracking-[0.02em] text-label-2">
-              {eyebrow}
-            </p>
-          )}
           {/* `min-h-11`: o nome é o caminho para a série, e o alvo são 44px
               mesmo quando cabe numa linha */}
           <Link href={`/series/${show.uuid}`} className="flex min-h-11 items-center">
             <h2 className="line-clamp-3 text-[1.65rem] font-bold leading-[1.1] text-label">{show.name}</h2>
           </Link>
-          <div className="relative mt-1">
+          <p className="truncate text-[0.88rem] leading-snug text-label-2" data-testid="contexto-casa">
+            {contexto}
+          </p>
+          <div className="relative mt-2">
             {aSair && (
               <div aria-hidden className="episodio-sai absolute inset-x-0 top-0">
                 <LinhaEpisodio episode={aSair} />
@@ -188,57 +248,48 @@ export default function TonightHero({
           </div>
         </div>
 
-        {fracao !== null && (
-          <div className="flex items-center gap-2">
-            <div
-              className="relative flex h-1 flex-1 gap-[3px]"
-              role="img"
-              aria-label={`${contagem} vistos${temporada ? ` na temporada ${episode.season}` : ""}`}
-              data-testid="progresso-casa"
-            >
-              {segmentos ? (
-                Array.from({ length: segmentos.total }, (_, i) => (
-                  <i
-                    key={i}
-                    data-visto={segmentos.vistos.has(i + 1)}
-                    className={`h-full flex-1 rounded-[2px] transition-colors duration-200 ${
-                      segmentos.vistos.has(i + 1) ? "bg-label" : "bg-track"
-                    }`}
-                  />
-                ))
-              ) : (
-                <div className="h-full flex-1 overflow-hidden rounded-[2px] bg-track">
-                  <div
-                    className="h-full bg-label transition-[width] duration-[240ms] ease-out"
-                    style={{ width: `${fracao * 100}%` }}
-                  />
-                </div>
-              )}
-              {marcacoes > 0 && (
-                // a mira, por cima dos segmentos; a chave repete-a a cada marcação
-                <div key={marcacoes} data-ritual="barra" aria-hidden className="barra-acende rounded-[2px]" />
-              )}
+        {contagem && (
+          <div className="flex items-center gap-2" data-testid="progresso-casa" data-fim={fim ? "sim" : undefined}>
+            <div className="flex-1">
+              <Segmentos
+                total={mostrada?.total ?? totalEpisodes ?? 1}
+                vistos={mostrada?.vistos ?? new Set(Array.from({ length: watchedCount ?? 0 }, (_, i) => i + 1))}
+                aceso={aceso}
+                ritual={marcacoes}
+                construir={construir}
+                rotulo={
+                  fim
+                    ? `Temporada ${fim.numero} completa`
+                    : mostrada
+                      ? `${mostrada.vistos.size} de ${mostrada.total} vistos na temporada ${mostrada.numero}`
+                      : `${contagem} vistos`
+                }
+              />
             </div>
-            <span className="ep-code shrink-0 text-[0.76rem] text-label-2">{contagem}</span>
+            <Codigo className="shrink-0 text-[0.76rem] text-label-2">
+              <span key={contagem} className={marcacoes > 0 ? "contagem-rola" : undefined}>
+                {contagem}
+              </span>
+            </Codigo>
           </div>
         )}
 
         <Acao
           onClick={() => void handleCheck()}
-          disabled={checking}
           className="w-full"
           icone={
-            checking ? (
-              <span className="spinner h-5 w-5 rounded-full border-2 border-on-label/30 border-t-on-label" />
-            ) : (
-              <span key={marcacoes} className={`relative ${marcacoes > 0 ? "check-ring" : ""}`}>
-                <Check aria-hidden strokeWidth={2.6} className={`h-[22px] w-[22px] ${marcacoes > 0 ? "check-pop" : ""}`} />
-              </span>
-            )
+            <span key={marcacoes} className={`relative ${marcacoes > 0 ? "check-ring" : ""}`}>
+              <Check aria-hidden strokeWidth={2.6} className={`h-[22px] w-[22px] ${marcacoes > 0 ? "check-pop" : ""}`} />
+            </span>
           }
         >
           Marcar visto
         </Acao>
+        {erro && (
+          <p role="alert" className="-mt-1 text-center text-[0.88rem] text-danger">
+            {erro}
+          </p>
+        )}
       </div>
     </article>
   );
@@ -248,9 +299,9 @@ export default function TonightHero({
 function LinhaEpisodio({ episode }: { episode: MetaEpisode }) {
   return (
     <p className="text-base leading-snug text-label-2">
-      <span className="ep-code mr-2 text-[0.88rem] font-semibold text-label">
+      <Codigo className="mr-2 text-[0.88rem] font-semibold text-label">
         {formatEpCode(episode.season, episode.episode)}
-      </span>
+      </Codigo>
       {episode.name}
     </p>
   );

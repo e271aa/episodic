@@ -186,7 +186,7 @@ test("no Perfil, a série-farol pede 44px, não a página inteira", async ({ pag
   await expect(img).toHaveAttribute("sizes", "44px");
 });
 
-test("no WatchNextCard (a fila secundária), a capa pede 56px", async ({ page, tmdb }) => {
+test("na fila secundária, a capa pede o tamanho que mostra (36px na Mira)", async ({ page, tmdb }) => {
   const hoje = new Date().toISOString();
   const ha60Dias = new Date(Date.now() - 60 * 864e5).toISOString();
   for (const [id, nome] of [
@@ -229,7 +229,7 @@ test("no WatchNextCard (a fila secundária), a capa pede 56px", async ({ page, t
     has: page.getByRole("heading", { name: "Retomar" }),
   });
   const img = secaoRetomar.locator('img[alt=""]').first();
-  await expect(img).toHaveAttribute("sizes", "56px");
+  await expect(img).toHaveAttribute("sizes", "36px");
 });
 
 // ── o <title> de cada ecrã ───────────────────────────────────

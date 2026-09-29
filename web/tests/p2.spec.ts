@@ -29,13 +29,6 @@ function aEstrear(tmdb: Catalogo, id: number, nome: string, dias: number) {
   Object.assign(tmdb.episodios, s.episodios);
 }
 
-/** A cor da barrinha de um cabeçalho de secção, pelo texto do cabeçalho. */
-function corDoCabecalho(page: import("@playwright/test").Page, texto: string) {
-  return page
-    .getByRole("heading", { level: 2, name: texto, exact: true })
-    .evaluate((h) => getComputedStyle(h.previousElementSibling as Element).backgroundColor);
-}
-
 // ── cores ────────────────────────────────────────────────────
 
 test("'Esta semana' e 'Por começar' usam as cores neutras, não as dos estados", async ({
@@ -53,9 +46,17 @@ test("'Esta semana' e 'Por começar' usam as cores neutras, não as dos estados"
     vistos: [{ showUuid: "s-1", season: 1, episode: 1 }],
   });
   await page.goto("/series");
-  // o calendário chega depois do herói — e a cor mede-se quando assentar
-  await page.getByRole("heading", { level: 2, name: "Esta semana" }).waitFor({ timeout: 15000 });
-  await expect.poll(() => corDoCabecalho(page, "Esta semana")).toMatch(NEUTRA);
+  // o calendário chega depois do herói. Na casa da Mira o cabeçalho não
+  // leva cor nenhuma — a mira é só do ritual e do «sem sinal» (Regra da
+  // mira, Fase 3): a v2 punha-lhe uma barrinha, e a crítica apanhou-a vermelha
+  const semana = page.getByRole("heading", { level: 2, name: "Esta semana" });
+  await semana.waitFor({ timeout: 15000 });
+  const cores = await semana.evaluate((h) =>
+    [...(h.parentElement?.querySelectorAll("*") ?? [])]
+      .map((el) => getComputedStyle(el).backgroundColor)
+      .filter((c) => c !== "rgba(0, 0, 0, 0)"),
+  );
+  expect(cores).toEqual([]);
 
   await semear(page, { series: [{ uuid: "s-2", name: "Nunca Vista" }] });
   await page.goto("/library?vista=lista");

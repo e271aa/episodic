@@ -34,6 +34,8 @@ export default defineConfig({
      */
     colorScheme: "dark",
   },
+  /** as capturas da crítica (`tests/_critica`, fora do git) correm contra outro servidor */
+  testIgnore: ["**/_critica/**"],
 
   projects: [
     {

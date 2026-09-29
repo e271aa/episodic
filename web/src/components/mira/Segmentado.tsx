@@ -42,7 +42,7 @@ export default function Segmentado<T extends string>({
             onClick={() => onChange(o.valor)}
             className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[19px] px-2 text-[0.88rem] font-semibold transition-[background-color,box-shadow] duration-200 ${
               escolhido
-                ? "bg-segment text-label shadow-[0_1px_4px_rgba(0,0,0,0.14)]"
+                ? "bg-segment text-label shadow-[var(--m-seg-sombra)]"
                 : "text-label-2"
             }`}
           >

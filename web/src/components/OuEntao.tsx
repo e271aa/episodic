@@ -1,11 +1,12 @@
+import type { ReactNode } from "react";
 import Poster from "@/components/Poster";
 import { Grupo, Linha } from "@/components/mira/Grupo";
 
 export interface Alternativa {
   href: string;
   titulo: string;
-  /** o porquê e o quê: «Continuar · S03·E04», «Filme · 2024 · para ver» */
-  subtitulo: string;
+  /** o porquê e o quê: «Continuar · S03·E04» (o código em mono), «Para ver · filme de 2024» */
+  subtitulo: ReactNode;
   posterPath: string | null;
 }
 
@@ -32,7 +33,7 @@ export default function OuEntao({ alternativas }: { alternativas: Alternativa[] 
             titulo={a.titulo}
             subtitulo={a.subtitulo}
             antes={
-              <span className="relative block h-[52px] w-9 overflow-hidden rounded-lg bg-elevated">
+              <span className="relative block h-[52px] w-9 overflow-hidden rounded-[8px] bg-elevated">
                 <Poster path={a.posterPath} alt="" size="w185" fill sizes="36px" className="object-cover" />
               </span>
             }

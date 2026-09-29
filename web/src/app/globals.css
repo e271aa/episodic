@@ -34,6 +34,11 @@
   --m-glass-edge: rgba(255, 255, 255, 0.2);
   --m-glass-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
   --m-on-label: #000000; /* texto dentro da cápsula de ação */
+  /* A cápsula de ação à noite é o cinza da mira, não o branco puro: brilha
+     menos numa sala às escuras e liga a única ação à mira sem lhe dar cor
+     (escolhido pelo Ruben, Fase 3). 16,7:1 com o texto preto. */
+  --m-acao: #e5e5ea;
+  --m-seg-sombra: none;
   --m-track: rgba(255, 255, 255, 0.18); /* segmentos/trilho por ver */
   --m-tab-on: rgba(255, 255, 255, 0.14);
   /* estado */
@@ -55,13 +60,18 @@
   --m-fill-strong: rgba(118, 118, 128, 0.16);
   --m-separator: rgba(60, 60, 67, 0.18);
   --m-label: #000000;
-  --m-label-2: rgba(60, 60, 67, 0.6);
+  /* 76% e não os 60% do iOS: a 60% o texto secundário dava 3,1–3,4:1
+     (21 textos na crítica da Fase 3); a 76% dá 5,3 · 5,0 · 4,6:1 no grupo,
+     no fundo e no elevado */
+  --m-label-2: rgba(60, 60, 67, 0.76);
   --m-label-faint: #6c6c70;
   --m-label-3: rgba(60, 60, 67, 0.3);
   --m-glass: rgba(255, 255, 255, 0.76);
   --m-glass-edge: rgba(0, 0, 0, 0.08);
   --m-glass-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.25);
   --m-on-label: #ffffff;
+  --m-acao: #000000;
+  --m-seg-sombra: 0 1px 4px rgba(0, 0, 0, 0.14);
   --m-track: rgba(0, 0, 0, 0.12);
   --m-tab-on: rgba(0, 0, 0, 0.07);
   --m-por-marcar: #32ade6;
@@ -82,13 +92,15 @@
     --m-fill-strong: rgba(118, 118, 128, 0.16);
     --m-separator: rgba(60, 60, 67, 0.18);
     --m-label: #000000;
-    --m-label-2: rgba(60, 60, 67, 0.6);
+    --m-label-2: rgba(60, 60, 67, 0.76);
     --m-label-faint: #6c6c70;
     --m-label-3: rgba(60, 60, 67, 0.3);
     --m-glass: rgba(255, 255, 255, 0.76);
     --m-glass-edge: rgba(0, 0, 0, 0.08);
     --m-glass-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.25);
     --m-on-label: #ffffff;
+    --m-acao: #000000;
+    --m-seg-sombra: 0 1px 4px rgba(0, 0, 0, 0.14);
     --m-track: rgba(0, 0, 0, 0.12);
     --m-tab-on: rgba(0, 0, 0, 0.07);
     --m-por-marcar: #32ade6;
@@ -113,6 +125,7 @@
   --color-label-2: var(--m-label-2);
   --color-label-3: var(--m-label-3);
   --color-on-label: var(--m-on-label);
+  --color-acao: var(--m-acao);
   --color-track: var(--m-track);
   --color-glass: var(--m-glass);
   --color-por-marcar: var(--m-por-marcar);
@@ -220,18 +233,31 @@ body {
   --barra-fundo: max(12px, calc(env(safe-area-inset-bottom) - 6px));
 }
 
+/* A mira, em cores fixas: é uma carta de teste, não muda com o modo (os
+   tokens de estado, esses sim, mudam). Pela ordem da mira. */
+:root {
+  --mira-1: #e5e5ea;
+  --mira-2: #ffd60a;
+  --mira-3: #64d2ff;
+  --mira-4: #30d158;
+  --mira-5: #da5ce8;
+  --mira-6: #ff453a;
+  --mira-7: #0a84ff;
+  --mira-preto: #0b0b0d;
+}
+
 /* Barras de cor SMPTE — a assinatura visual da v2. A cor da app existe SÓ
    aqui: onde há progresso ou atividade, nunca como decoração ambiente. */
 :root {
   --bars: linear-gradient(
     90deg,
-    var(--color-smpte-gray) 0 14.28%,
-    var(--color-smpte-yellow) 0 28.57%,
-    #64d2ff 0 42.85%,
-    #30d158 0 57.14%,
-    #da5ce8 0 71.42%,
-    var(--color-smpte-red) 0 85.71%,
-    var(--color-smpte-blue) 0 100%
+    var(--mira-1) 0 14.28%,
+    var(--mira-2) 0 28.57%,
+    var(--mira-3) 0 42.85%,
+    var(--mira-4) 0 57.14%,
+    var(--mira-5) 0 71.42%,
+    var(--mira-6) 0 85.71%,
+    var(--mira-7) 0 100%
   );
 }
 .bars {
@@ -624,6 +650,74 @@ summary:focus-visible,
     opacity: 0;
   }
 }
+/* ─── A assinatura (Fase 3) ────────────────────────────────────────────
+   1. O ritual: cada segmento visto pinta a SUA fatia da mira, da esquerda
+      até ao episódio marcado, e apaga. Marcar é a ação mais repetida da
+      app, por isso é curto (480ms a revelar, 240 a apagar) e nunca bloqueia
+      nada — corre por cima, depois do toque.
+   2. A contagem rola 6px quando muda (3/9 → 4/9): o número é tabular, não
+      mexe a largura.
+   3. O fim de uma temporada é raro, e tem mais tempo: os segmentos ficam
+      acesos, «T1 ✓», e os da temporada seguinte constroem-se da esquerda. */
+@keyframes mira-fatia {
+  0% {
+    opacity: 1;
+    clip-path: inset(0 100% 0 0);
+  }
+  66% {
+    opacity: 1;
+    clip-path: inset(0 0 0 0);
+  }
+  100% {
+    opacity: 0;
+    clip-path: inset(0 0 0 0);
+  }
+}
+.mira-fatia {
+  animation: mira-fatia 720ms var(--ease-out) both;
+}
+@keyframes mira-fica {
+  0%,
+  70% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}
+.mira-fica {
+  animation: mira-fica 1100ms ease-out both;
+}
+@keyframes contagem-rola {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+}
+.contagem-rola {
+  display: inline-block;
+  animation: contagem-rola 160ms var(--ease-out) both;
+}
+@keyframes segmento-constroi {
+  from {
+    opacity: 0;
+    transform: scaleX(0.4);
+  }
+}
+.segmento-constroi {
+  transform-origin: left center;
+  animation: segmento-constroi 220ms var(--ease-out) both;
+}
+/* O diário no cabeçalho troca por opacidade */
+@keyframes diario-entra {
+  from {
+    opacity: 0;
+  }
+}
+.diario-entra {
+  animation: diario-entra 200ms ease-out both;
+}
+
 /* O menu do filtro abre como o do iOS: de 96% a 100%, a partir de cima. */
 @keyframes menu-abre {
   from {
@@ -640,8 +734,14 @@ summary:focus-visible,
   .page-enter,
   .poster-in,
   .undo-in,
-  .menu-abre {
+  .menu-abre,
+  .contagem-rola,
+  .segmento-constroi {
     animation-name: esvanecer;
+  }
+  /* a mira acende e apaga no sítio, sem varrer */
+  .mira-fatia {
+    animation-name: barra-luz;
   }
   .undo-out {
     animation-name: apagar;

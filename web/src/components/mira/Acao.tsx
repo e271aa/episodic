@@ -12,7 +12,8 @@ import type { ButtonHTMLAttributes, ReactNode } from "react";
 type Tipo = "principal" | "secundaria" | "contorno";
 
 const TIPOS: Record<Tipo, string> = {
-  principal: "bg-label text-on-label",
+  // à noite o cinza da mira, de dia o preto (o token `acao`, Fase 3)
+  principal: "bg-acao text-on-label",
   secundaria: "bg-fill-strong text-label",
   contorno: "bg-transparent text-label shadow-[inset_0_0_0_1.5px_var(--m-label-3)]",
 };

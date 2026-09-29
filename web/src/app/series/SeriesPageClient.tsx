@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { getWatchedForShow, kvGet, kvSet, markWatched, unmarkWatched, updateShow } from "@/lib/db";
+import { getAllWatched, getWatchedForShow, kvGet, kvSet, markWatched, unmarkWatched, updateShow } from "@/lib/db";
 import { loadShows, type ShowWithProgress } from "@/lib/shows";
 import { useFilmes, useNextUp, useSeries } from "@/lib/cache";
 import { buildUpcomingCalendar, type UpcomingEntry } from "@/lib/upcoming";
@@ -20,15 +20,16 @@ import {
 } from "@/lib/queue";
 import { pushUndo } from "@/lib/undo";
 import { curta } from "@/lib/datas";
-import WatchNextCard from "@/components/WatchNextCard";
 import TonightHero from "@/components/TonightHero";
 import OuEntao, { type Alternativa } from "@/components/OuEntao";
 import Poster from "@/components/Poster";
-import SectionHeader from "@/components/SectionHeader";
-import { Check, Search } from "lucide-react";
+import { Check, ChevronDown, Search } from "lucide-react";
 import { Bone } from "@/components/Skeleton";
 import TituloGrande from "@/components/mira/TituloGrande";
 import { Grupo, Linha } from "@/components/mira/Grupo";
+import Codigo from "@/components/mira/Codigo";
+import LinhaFila from "@/components/mira/LinhaFila";
+import DicaInstalar from "@/components/mira/DicaInstalar";
 
 // Preenche o id TMDB em falta, uma vez só. Sem ele, o Explorar volta a
 // sugerir séries que já tens sempre que o título guardado não bate com
@@ -74,6 +75,27 @@ export default function SeriesPage() {
   const hoje = new Date(now)
     .toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })
     .replace("-feira", "");
+  // O diário no cabeçalho (a assinatura, Fase 3): quantos episódios viste hoje.
+  // A noite acaba em «viste», não só em «falta». Lido uma vez; cada marcação
+  // soma, cada anulação tira.
+  const [vistosHoje, setVistosHoje] = useState(0);
+  useEffect(() => {
+    const dia = new Date(now).toDateString();
+    void getAllWatched().then((todos) =>
+      setVistosHoje(todos.filter((w) => new Date(w.watchedAt).toDateString() === dia).length),
+    );
+  }, [now]);
+  const rotulo = (
+    <>
+      {hoje}
+      {vistosHoje > 0 && (
+        <span key={vistosHoje} className="diario-entra" data-testid="diario">
+          {" · "}
+          <Codigo className="font-semibold">{vistosHoje}</Codigo> {vistosHoje === 1 ? "episódio" : "episódios"}
+        </span>
+      )}
+    </>
+  );
   // o esqueleto só depois de 300ms: abaixo disso é um piscar (estado B·E2)
   const [esqueleto, setEsqueleto] = useState(false);
   useEffect(() => {
@@ -241,11 +263,18 @@ export default function SeriesPage() {
         return map;
       });
 
+      setVistosHoje((n) => n + 1);
+      // «S01·E04 visto», e o nome por baixo; fechar uma temporada diz-se
+      const temporadaFechada = next ? next.episode.season > season : false;
+      const nestaTemporada = watched.filter((w) => w.season === season).length;
       pushUndo({
-        label: "Marcado como visto",
-        detail: `${show.name} · ${formatEpCode(season, episode)}`,
+        label: temporadaFechada
+          ? `T${season} completa · ${nestaTemporada} ${nestaTemporada === 1 ? "episódio" : "episódios"}`
+          : `${formatEpCode(season, episode)} visto`,
+        detail: show.name,
         undo: async () => {
           await unmarkWatched(showUuid, season, episode);
+          setVistosHoje((n) => Math.max(0, n - 1));
           setShows(
             (current) =>
               current?.map((s) =>
@@ -273,14 +302,14 @@ export default function SeriesPage() {
     // é só um piscar. Com a forma exata do cartão, para nada saltar.
     return (
       <main className="mx-auto w-full max-w-2xl px-4 pt-[max(12px,env(safe-area-inset-top))]">
-        <TituloGrande titulo="A seguir" rotulo={hoje} />
+        <TituloGrande titulo="A seguir" rotulo={rotulo} />
         {esqueleto && (
           <div className="mt-5 overflow-hidden rounded-[28px] bg-group" data-testid="esqueleto-casa">
             <Bone className="h-44 w-full rounded-none" />
             <div className="flex flex-col gap-3.5 px-[18px] pb-[18px] pt-4">
-              <Bone className="h-8 w-2/3 rounded-lg" />
-              <Bone className="h-5 w-1/2 rounded-md" />
-              <Bone className="h-1 w-full rounded-sm" />
+              <Bone className="h-8 w-2/3 rounded-[8px]" />
+              <Bone className="h-5 w-1/2 rounded-[6px]" />
+              <Bone className="h-1 w-full rounded-[2px]" />
               <Bone className="h-[52px] w-full rounded-full" />
             </div>
           </div>
@@ -297,15 +326,29 @@ export default function SeriesPage() {
     // TV Time (os amigos nunca o tiveram — Ronda 12, Fase 4).
     return (
       <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-[max(12px,env(safe-area-inset-top))]">
-        <TituloGrande titulo="A seguir" rotulo={hoje} />
-        {/* 132px como no desenho; num ecrã baixo (Safari com as barras à vista,
-            664px) 96, para as duas portas ficarem acima do degradê ao chegar */}
-        <div aria-hidden className="mt-5 grid h-[132px] grid-cols-7 overflow-hidden rounded-3xl [@media(max-height:700px)]:h-24" data-testid="mira-sem-sinal">
-          {["bg-smpte-gray", "bg-smpte-yellow", "bg-[#64d2ff]", "bg-[#30d158]", "bg-[#da5ce8]", "bg-smpte-red", "bg-smpte-blue"].map(
-            (c) => (
-              <span key={c} className={c} />
-            ),
-          )}
+        <TituloGrande titulo="A seguir" rotulo={rotulo} />
+        {/* A carta de teste: um dos dois sítios da mira (Regra da mira) — aqui
+            quer dizer «ainda não há nada a passar». Composta a sério, como a
+            SMPTE: as sete barras em cima, e por baixo a fila de acerto
+            (azul, preto, magenta, preto, ciano, preto, cinza). Cores fixas:
+            uma carta de teste não muda com o modo. 132px; num ecrã baixo
+            (Safari com as barras, 664px), 96, para as portas ficarem acima
+            do degradê ao chegar. */}
+        <div
+          aria-hidden
+          className="mt-5 grid h-[132px] grid-rows-[3fr_1fr] overflow-hidden rounded-[24px] shadow-[inset_0_0_0_0.5px_var(--m-separator)] [@media(max-height:700px)]:h-24"
+          data-testid="mira-sem-sinal"
+        >
+          <div className="grid grid-cols-7">
+            {[1, 2, 3, 4, 5, 6, 7].map((n) => (
+              <span key={n} style={{ background: `var(--mira-${n})` }} />
+            ))}
+          </div>
+          <div className="grid grid-cols-7">
+            {["--mira-7", "--mira-preto", "--mira-5", "--mira-preto", "--mira-3", "--mira-preto", "--mira-1"].map((c, i) => (
+              <span key={i} style={{ background: `var(${c})` }} />
+            ))}
+          </div>
         </div>
         <h2 className="mt-6 text-[1.65rem] font-bold leading-[1.1] text-label">Ainda sem sinal.</h2>
         <p className="mt-2 text-base leading-snug text-label-2">
@@ -331,6 +374,7 @@ export default function SeriesPage() {
           >
             Vens do TV Time? Importar
           </Link>
+          <DicaInstalar />
         </div>
       </main>
     );
@@ -348,20 +392,25 @@ export default function SeriesPage() {
     nextUp ? classifyQueue(shows, nextUp, now) : { active: [], stale: [], notStarted: [] };
 
   const queueCards = (list: ShowWithProgress[]) => (
-    <div className="mt-3 space-y-3">
+    <div className="mt-2 overflow-hidden rounded-[26px] bg-group">
       {list.map((show) => (
-        <WatchNextCard
+        <LinhaFila
           key={show.uuid}
           showUuid={show.uuid}
           showName={show.name}
           posterPath={show.posterPath}
           episode={nextUp!.get(show.uuid)!.episode}
+          watchedCount={show.watchedCount}
+          totalEpisodes={show.totalEpisodes}
           onCheck={(season, episode) => handleCheck(show.uuid, season, episode)}
         />
       ))}
     </div>
   );
 
+  // «Retomar» e «Por começar» fecham-se, como no TV Time: o título da secção
+  // é o botão, com a contagem em mono e o porquê numa linha por baixo (a 5b.4
+  // cortava-o a meio, «nenhu…»).
   const sectionToggle = (
     title: string,
     hint: string,
@@ -372,29 +421,37 @@ export default function SeriesPage() {
     <button
       onClick={onToggle}
       aria-expanded={open}
-      className="flex min-h-11 w-full cursor-pointer items-center gap-2 text-left"
+      className="flex min-h-11 w-full cursor-pointer items-center gap-3 px-1 text-left"
     >
-      <h2 className="font-display text-lg font-semibold text-dim">{title}</h2>
-      <span className="ep-code rounded-full bg-panel px-2 py-0.5 text-xs text-faint">
-        {count}
+      <span className="min-w-0 flex-1">
+        <h2 className="text-[1.3rem] font-bold leading-tight text-label">
+          {title} <Codigo className="text-[0.94rem] font-medium text-label-2">{count}</Codigo>
+        </h2>
+        <span className="block text-[0.88rem] leading-snug text-label-2">{hint}</span>
       </span>
-      <span className="flex-1 truncate text-xs text-faint">{hint}</span>
-      <svg
-        viewBox="0 0 24 24"
-        className={`h-4 w-4 shrink-0 text-faint transition-transform ${open ? "rotate-180" : ""}`}
+      <ChevronDown
         aria-hidden
-      >
-        <path
-          d="M6 9l6 6 6-6"
-          stroke="currentColor"
-          strokeWidth="2"
-          fill="none"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
+        strokeWidth={2.4}
+        className={`h-5 w-5 shrink-0 text-label-3 transition-transform duration-200 ${open ? "rotate-180" : ""}`}
+      />
     </button>
   );
+
+  // A linha de contexto do cartão: sempre presente e com a mesma altura, para
+  // o botão nunca saltar debaixo do polegar (crítica da Fase 3)
+  const contextoDe = (s: ShowWithProgress, tipo: "a-seguir" | "retomar" | "comecar") => {
+    if (tipo === "comecar") return "Ainda não viste nenhum episódio";
+    const ultimo = nextUp?.get(s.uuid)?.lastWatchedAt;
+    if (!ultimo) return tipo === "retomar" ? "Parada há mais de 30 dias" : "Na tua fila";
+    const dias = Math.max(
+      0,
+      Math.round((new Date(now).setHours(0, 0, 0, 0) - new Date(ultimo).setHours(0, 0, 0, 0)) / 864e5),
+    );
+    if (tipo === "retomar") return `Parada há ${dias} dias`;
+    if (dias === 0) return "Viste o anterior hoje";
+    if (dias === 1) return "Viste o anterior ontem";
+    return `Viste o anterior há ${dias} dias`;
+  };
 
   // O herói nunca deve estar vazio se há episódios por ver: quando não há nada
   // "ativo" (nada marcado há 30 dias), promove a série parada mais recente —
@@ -433,7 +490,13 @@ export default function SeriesPage() {
     alternativas.push({
       href: `/series/${s.uuid}`,
       titulo: s.name,
-      subtitulo: ep ? `${porque} · ${formatEpCode(ep.season, ep.episode)}` : porque,
+      subtitulo: ep ? (
+        <>
+          {porque} · <Codigo>{formatEpCode(ep.season, ep.episode)}</Codigo>
+        </>
+      ) : (
+        porque
+      ),
       posterPath: s.posterPath,
     });
   }
@@ -442,7 +505,14 @@ export default function SeriesPage() {
     alternativas.push({
       href: `/movies/${filmeParaVer.key}`,
       titulo: filmeParaVer.name,
-      subtitulo: ano ? `Filme · ${ano} · para ver` : "Filme · para ver",
+      // o estado primeiro: estreito, «Filme · 2023 · par…» cortava o que importa
+      subtitulo: ano ? (
+        <>
+          Para ver · filme de <Codigo>{ano}</Codigo>
+        </>
+      ) : (
+        "Para ver · filme"
+      ),
       posterPath: filmeParaVer.posterPath ?? null,
     });
   }
@@ -463,7 +533,7 @@ export default function SeriesPage() {
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 pt-[max(12px,env(safe-area-inset-top))] pb-8">
-      <TituloGrande titulo="A seguir" rotulo={hoje} direita={porEmDia} />
+      <TituloGrande titulo="A seguir" rotulo={rotulo} direita={porEmDia} />
       {nextUp === null ? (
         <div className="mt-5 space-y-3">
           {watching.slice(0, 1).map((s) => (
@@ -502,20 +572,16 @@ export default function SeriesPage() {
               episode={nextUp.get(heroShow.uuid)!.episode}
               watchedCount={heroShow.watchedCount}
               totalEpisodes={heroShow.totalEpisodes}
-              eyebrow={
-                heroKind === "retomar"
-                  ? "Retomar onde ficaste"
-                  : heroKind === "comecar"
-                    ? "Começar do início"
-                    : undefined
-              }
+              contexto={contextoDe(heroShow, heroKind)}
               onCheck={(season, episode) => handleCheck(heroShow.uuid, season, episode)}
             />
           </div>
           <OuEntao alternativas={alternativas} />
           {restActive.length > 0 && (
-            <section className="mt-6">
-<SectionHeader label="Continuar" meta={restActive.length} />
+            <section className="mt-8">
+              <h2 className="px-1 text-[1.3rem] font-bold leading-tight text-label">
+                Continuar <Codigo className="text-[0.94rem] font-medium text-label-2">{restActive.length}</Codigo>
+              </h2>
               {queueCards(restActive)}
             </section>
           )}
@@ -550,79 +616,63 @@ export default function SeriesPage() {
 
       {/* "Esta semana" — o que vem a seguir ao que estás a ver. Era um ecrã
           próprio ("A estrear") quase sempre vazio; aqui responde à pergunta
-          seguinte à do herói e não custa um destino na navegação. */}
+          seguinte à do cartão e não custa um destino na navegação. Sem cor
+          no cabeçalho: a v2 punha-lhe uma barrinha da mira, e a mira é só do
+          ritual e do «sem sinal» (Regra da mira). */}
       {upcoming && upcoming.length > 0 && (
         <section className="mt-8">
-          {/* O "meta" é um link, não só o número: sem isto, "/estrear" ficou
-              sem porta de entrada nenhuma depois de a Biblioteca perder o
-              cabeçalho onde vivia o atalho. Sem cor própria: um cabeçalho
-              usa as neutras da mira (tinha o ciano dos buracos). */}
-          <SectionHeader
-            label="Esta semana"
-            meta={
-              <Link
-                href="/estrear"
-                className="tap-44 relative hover:text-ink hover:underline"
-              >
-                {estaSemana.length > 0 ? `${estaSemana.length} · ver tudo` : "ver tudo"}
-              </Link>
-            }
-          />
+          <div className="flex items-center justify-between gap-3 px-1">
+            <h2 className="text-[1.3rem] font-bold leading-tight text-label">Esta semana</h2>
+            <Link
+              href="/estrear"
+              className="tap-44 relative text-[0.88rem] font-semibold text-label-2 active:opacity-70"
+            >
+              {estaSemana.length > 0 ? (
+                <>
+                  <Codigo>{estaSemana.length}</Codigo> · ver tudo
+                </>
+              ) : (
+                "ver tudo"
+              )}
+            </Link>
+          </div>
           {estaSemana.length === 0 ? (
-            <p className="mt-3 text-[0.9375rem] text-dim">
-              Nada esta semana — o próximo é {upcoming[0].show.name}, a{" "}
-              {curta(upcoming[0].episode.airDate as string)}.
+            <p className="mt-2 px-1 text-[0.88rem] leading-snug text-label-2">
+              Nada esta semana. O próximo é {upcoming[0].show.name}, a{" "}
+              <Codigo>{curta(upcoming[0].episode.airDate as string)}</Codigo>.
             </p>
           ) : (
-          <div className="-mx-4 mt-3 flex gap-3 overflow-x-auto px-4 pb-2">
-            {estaSemana.slice(0, 10).map(({ show, episode }) => (
-              <Link
-                key={`${show.uuid}-${episode.season}-${episode.episode}`}
-                href={`/series/${show.uuid}`}
-                className="ep-card w-[104px] shrink-0 overflow-hidden p-0"
-              >
-                <div className="relative h-[60px] w-full overflow-hidden bg-raised">
-                  {show.backdropPath || show.posterPath ? (
-                    <Poster
-                      path={show.backdropPath ?? show.posterPath}
-                      alt=""
-                      size="w342"
-                      fill
-                      sizes="104px"
-                      className="object-cover"
-                    />
-                  ) : null}
-                </div>
-                <div className="p-2">
-                  <p className="truncate text-[0.9375rem] font-semibold leading-tight">
-                    {show.name}
-                  </p>
-                  {/* duas linhas: num cartão de 104px o código e a data não
-                      cabem lado a lado, e truncar a data tira-lhe o sentido */}
-                  <p className="ep-code mt-0.5 truncate text-xs text-faint">
-                    {formatEpCode(episode.season, episode.episode)}
-                  </p>
-                  {episode.airDate && (
-                    <p className="ep-code truncate text-xs text-dim">
-                      {episode.airDate.slice(8, 10)}/{episode.airDate.slice(5, 7)}
-                    </p>
-                  )}
-                </div>
-              </Link>
-            ))}
-          </div>
+            <div className="mt-2 overflow-hidden rounded-[26px] bg-group">
+              {estaSemana.slice(0, 10).map(({ show, episode }) => (
+                <Linha
+                  key={`${show.uuid}-${episode.season}-${episode.episode}`}
+                  href={`/series/${show.uuid}`}
+                  alta
+                  titulo={show.name}
+                  subtitulo={
+                    <>
+                      <Codigo className="text-label">{formatEpCode(episode.season, episode.episode)}</Codigo>
+                      {episode.airDate && (
+                        <>
+                          {" · "}
+                          <Codigo>{curta(episode.airDate)}</Codigo>
+                        </>
+                      )}
+                    </>
+                  }
+                  antes={
+                    <span className="relative block h-[52px] w-9 overflow-hidden rounded-[8px] bg-elevated">
+                      <Poster path={show.posterPath} alt="" size="w185" fill sizes="36px" className="object-cover" />
+                    </span>
+                  }
+                />
+              ))}
+            </div>
           )}
         </section>
       )}
 
-      <p className="mt-10 text-center">
-        <Link
-          href="/library"
-          className="inline-flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] font-semibold text-dim hover:text-ink hover:underline"
-        >
-          Ver toda a biblioteca ({shows.length}) →
-        </Link>
-      </p>
+      <DicaInstalar />
     </main>
   );
 }

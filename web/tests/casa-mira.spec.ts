@@ -44,7 +44,7 @@ test("o progresso é da temporada, um segmento por episódio: 6/10", async ({ pa
   await expect(progresso.locator("i")).toHaveCount(10);
   await expect(progresso.locator('i[data-visto="true"]')).toHaveCount(6);
   await expect(page.getByTestId("cartao-casa")).toContainText("6/10");
-  await expect(progresso).toHaveAttribute("aria-label", "6/10 vistos na temporada 2");
+  await expect(page.getByRole("img", { name: "6 de 10 vistos na temporada 2" })).toBeVisible();
 
   // marcar acende mais um segmento
   await page.getByRole("button", { name: "Marcar visto" }).click();
@@ -88,28 +88,31 @@ test("com o texto a 150% num ecrã de 320, a arte sai do cartão e nada transbor
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
 });
 
-test("o aviso de anular é vidro, e «Anular» não é a cápsula branca da ação", async ({ page, tmdb }) => {
+test("o aviso de anular é vidro, e «Anular» não é a cápsula da ação", async ({ page, tmdb }) => {
   await serieAMeio(page, tmdb, [9, 10], 6);
   await page.getByRole("button", { name: "Marcar visto" }).click();
   const anular = page.getByTestId("undo-button");
   await expect(anular).toBeVisible();
+  // a cápsula da ação, à noite, é o cinza da mira (#e5e5ea — Fase 3)
+  const ACAO = "rgb(229, 229, 234)";
   const fundo = await anular.evaluate((el) => getComputedStyle(el).backgroundColor);
-  expect(fundo).not.toBe("rgb(255, 255, 255)");
-  // e há uma só cápsula branca à vista: o «Marcar visto»
-  const brancas = await page.evaluate(
-    () =>
-      [...document.querySelectorAll("button, a")].filter(
-        (el) => getComputedStyle(el).backgroundColor === "rgb(255, 255, 255)",
-      ).length,
+  expect(fundo).not.toBe(ACAO);
+  // e há uma só cápsula da ação à vista: o «Marcar visto»
+  const acoes = await page.evaluate(
+    (cor) =>
+      [...document.querySelectorAll("button, a")].filter((el) => getComputedStyle(el).backgroundColor === cor)
+        .length,
+    ACAO,
   );
-  expect(brancas).toBe(1);
+  expect(acoes).toBe(1);
 });
 
 test("a casa vazia é «sem sinal»: a mira, e as duas portas", async ({ page }) => {
   await semear(page, {});
   await page.goto("/series");
   await expect(page.getByRole("heading", { level: 1, name: "A seguir" })).toBeVisible();
-  await expect(page.getByTestId("mira-sem-sinal").locator("span")).toHaveCount(7);
+  // a carta de teste: as sete barras em cima, e a fila de acerto por baixo
+  await expect(page.getByTestId("mira-sem-sinal").locator("span")).toHaveCount(14);
   await expect(page.getByText("Ainda sem sinal.")).toBeVisible();
   await expect(page.getByRole("link", { name: "Procurar uma série" })).toBeVisible();
   await expect(page.getByRole("link", { name: /Importar/ })).toBeVisible();
