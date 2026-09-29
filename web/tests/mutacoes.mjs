@@ -20,7 +20,6 @@
 import { execFileSync, execSync } from "node:child_process";
 import { readFileSync, writeFileSync } from "node:fs";
 
-const DETALHE = "src/app/series/[uuid]/ShowPageClient.tsx";
 const BIBLIOTECA = "src/app/library/LibraryPageClient.tsx";
 const RUNS = "src/lib/episodeRuns.ts";
 const BURACOS = "src/lib/buracos.ts";
@@ -100,14 +99,14 @@ const MUTACOES = [
   {
     nome: "fase2/cabecalho-fixo",
     descricao: "o cabeçalho da temporada deixa de ser sticky",
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/PainelEpisodios.tsx",
     de: '<div className="sticky top-0 z-10 -mx-4 bg-tube px-4 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">',
     para: '<div className="-mx-4 bg-tube px-4 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">',
   },
   {
     nome: "fase2/visto-vs-por-ver",
     descricao: "visto e por ver voltam a desenhar-se iguais",
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/LinhaEpisodio.tsx",
     de: '        isSeen ? "opacity-60" : ""',
     para: '        isSeen ? "" : ""',
   },
@@ -135,42 +134,42 @@ const MUTACOES = [
   {
     nome: "fase4/altura-do-heroi",
     descricao: "o herói volta aos 420px fixos",
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/CabecalhoSerie.tsx",
     de: 'h-[min(52vh,420px)]',
     para: 'h-[420px]',
   },
   {
     nome: "fase4/uma-acao-preenchida",
     descricao: "as duas ações voltam a ser blocos brancos iguais",
-    ficheiro: DETALHE,
-    de: '              buracos.total > 0\n                ? "border border-line text-ink hover:border-ink/40 hover:bg-raised"\n                : "bg-ink text-tube hover:brightness-110"',
-    para: '              false\n                ? "border border-line text-ink hover:border-ink/40 hover:bg-raised"\n                : "bg-ink text-tube hover:brightness-110"',
+    ficheiro: "src/app/series/[uuid]/AcoesSerie.tsx",
+    de: '            buracos.total > 0\n              ? "border border-line text-ink hover:border-ink/40 hover:bg-raised"\n              : "bg-ink text-tube hover:brightness-110"',
+    para: '            false\n              ? "border border-line text-ink hover:border-ink/40 hover:bg-raised"\n              : "bg-ink text-tube hover:brightness-110"',
   },
   {
     nome: "fase4/progresso-no-heroi",
     descricao: "a barra do herói deixa de seguir o progresso",
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/CabecalhoSerie.tsx",
     de: 'style={{ width: `${percent ?? 0}%`, background: accent }}',
     para: 'style={{ width: "0%", background: accent }}',
   },
   {
     nome: "fase4/pastilha-para-o-ecra",
     descricao: "abrir a última temporada deixa-a fora do ecrã",
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/useSerie.ts",
     de: '    chipAberto.current?.scrollIntoView({',
     para: '    if (openSeason !== null) return;\n    chipAberto.current?.scrollIntoView({',
   },
   {
     nome: "fase4/separadores-acessiveis",
     descricao: "os separadores perdem o aria-controls",
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/ShowPageClient.tsx",
     de: '              aria-controls={`painel-${id}`}',
     para: "",
   },
   {
     nome: "fase4/separadores-com-setas",
     descricao: "as setas deixam de andar entre separadores",
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/ShowPageClient.tsx",
     de: "                if (!delta) return;",
     para: "                if (!delta) return;\n                if (delta) return;",
   },
@@ -230,7 +229,7 @@ const MUTACOES = [
   {
     nome: "r12/total-atualiza",
     descricao: "o total guardado volta a ficar preso ao valor do import",
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/useSerie.ts",
     de: "        if (total !== atual.totalEpisodes) {",
     para: "        if (false) {",
   },
@@ -463,7 +462,7 @@ const MUTACOES = [
   {
     nome: "r12-fase5b/genero-por-traduzir",
     descricao: "os géneros do detalhe voltam a aparecer em inglês",
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/CabecalhoSerie.tsx",
     de: ".map(translateGenre)\n    .join",
     para: ".join",
   },
@@ -716,7 +715,7 @@ const MUTACOES = [
   {
     nome: "r12-fase5b3/detalhe-vazio-no-fim",
     descricao: "o detalhe volta a reservar o espaço da dock outra vez — 188px de nada no fim",
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/ShowPageClient.tsx",
     // com a linha do comentário: sem ela, a âncora batia primeiro no <main>
     // do ecrã de carregamento, que tem a mesma classe
     de: '    // temporadas fechadas (medido — Ronda 12, Fase 5b.3)\n    <main className="mx-auto w-full max-w-2xl">',
@@ -728,7 +727,7 @@ const MUTACOES = [
     // debaixo da dock. Prova que o teste mede o que está livre, não a ordem.
     nome: "r12-fase5b3/secundaria-debaixo-da-dock",
     descricao: "a ação secundária do detalhe volta a ficar debaixo da dock ao chegar",
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/AcoesSerie.tsx",
     de: 'className="page-enter mt-4 rounded-2xl border border-line bg-raised/60 p-4"',
     para: 'className="page-enter mt-20 rounded-2xl border border-line bg-raised/60 p-4"',
   },
@@ -904,7 +903,7 @@ const MUTACOES = [
   {
     nome: "r12-fase5d/traco-sem-ciano",
     descricao: 'com buracos, o traço do detalhe volta a não ser ciano',
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/CabecalhoSerie.tsx",
     de: 'buracos.total > 0 ? "var(--color-smpte-cyan)" : accent',
     para: 'accent',
   },
@@ -946,7 +945,7 @@ const MUTACOES = [
   {
     nome: "r12-fase5d/separadores-alargam-a-pagina",
     descricao: 'a 150%, os separadores do detalhe voltam a alargar a página',
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/ShowPageClient.tsx",
     de: 'className="mt-6 flex gap-1 overflow-x-auto border-b border-line [scrollbar-width:none]"',
     para: 'className="mt-6 flex gap-1 border-b border-line"',
   },
@@ -1004,7 +1003,7 @@ const MUTACOES = [
   {
     nome: "r12-fase5e/data-iso-no-detalhe",
     descricao: 'o detalhe volta a mostrar a atividade em ISO cru',
-    ficheiro: DETALHE,
+    ficheiro: "src/app/series/[uuid]/useSerie.ts",
     de: '      first: curta(dates[0]),',
     para: '      first: dates[0].slice(0, 10),',
   },
@@ -1202,14 +1201,14 @@ const MUTACOES = [
   {
     nome: "r12-f2/data-iso-no-episodio",
     descricao: "a data de cada episódio volta a sair em ISO",
-    ficheiro: "src/app/series/[uuid]/ShowPageClient.tsx",
+    ficheiro: "src/app/series/[uuid]/LinhaEpisodio.tsx",
     de: "{porExtenso(metaEp.airDate)}</span>",
     para: "{metaEp.airDate}</span>",
   },
   {
     nome: "r12-f2/data-iso-na-estreia",
     descricao: "a Estreia no Sobre volta a sair em ISO",
-    ficheiro: "src/app/series/[uuid]/ShowPageClient.tsx",
+    ficheiro: "src/app/series/[uuid]/PainelSobre.tsx",
     de: "{porExtenso(show.firstAired)}",
     para: "{show.firstAired}",
   },
