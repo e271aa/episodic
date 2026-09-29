@@ -1,10 +1,11 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import Link from "next/link";
 import { createList } from "@/lib/db";
 import { recursoListas, useListas } from "@/lib/cache";
-import { LibraryIcon } from "@/components/icons";
+import { ListVideo } from "lucide-react";
+import { Grupo, Linha } from "@/components/mira/Grupo";
+import Acao from "@/components/mira/Acao";
 import { CardsBone } from "@/components/Skeleton";
 
 /**
@@ -33,7 +34,7 @@ export default function ListasConteudo() {
 
   return (
     <div className="flex flex-1 flex-col">
-      <p className="text-[0.9375rem] text-dim">
+      <p className="text-[0.88rem] text-label-2">
         Junta séries e filmes como quiseres — maratonas, favoritos, o que for.
       </p>
 
@@ -50,46 +51,35 @@ export default function ListasConteudo() {
           value={name}
           onChange={(e) => setName(e.target.value)}
           placeholder="Nome da nova lista…"
-          className="min-h-11 min-w-0 flex-1 rounded-full border border-line bg-panel px-5 text-base outline-none transition-colors focus:border-ink"
+          className="min-h-11 min-w-0 flex-1 rounded-[22px] bg-fill px-4 text-base text-label outline-none placeholder:text-label-2"
         />
-        <button
-          type="submit"
-          disabled={creating || !name.trim()}
-          className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-ink px-5 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
-        >
+        <Acao type="submit" tipo="secundaria" grande={false} disabled={creating || !name.trim()}>
           Criar
-        </button>
+        </Acao>
       </form>
 
       {lists === null ? (
         <CardsBone count={3} height="h-16" />
       ) : lists.length === 0 ? (
         <div className="mt-16 flex flex-col items-center text-center">
-          <LibraryIcon className="h-12 w-12 text-faint" />
-          <p className="mt-4 max-w-sm font-display font-semibold">Ainda sem listas</p>
-          <p className="mt-2 max-w-sm text-[0.9375rem] text-dim">
+          <ListVideo aria-hidden className="h-12 w-12 text-label-3" strokeWidth={1.5} />
+          <p className="mt-4 max-w-sm text-[1.18rem] font-semibold text-label">Ainda sem listas</p>
+          <p className="mt-2 max-w-sm text-[0.88rem] text-label-2">
             Cria a primeira acima — depois adiciona séries e filmes a partir da
             página de cada um.
           </p>
         </div>
       ) : (
-        <div className="mt-6 flex flex-col gap-2">
+        <Grupo className="mt-6">
           {lists.map((list) => (
-            <Link
+            <Linha
               key={list.id}
               href={`/listas/${list.id}`}
-              className="ep-card ep-card-hover flex items-center gap-3 p-4"
-            >
-              <span className="min-w-0 flex-1">
-                <span className="block font-display font-semibold text-ink">{list.name}</span>
-                <span className="ep-code block text-xs text-dim">
-                  {list.items.length} {list.items.length === 1 ? "item" : "itens"}
-                </span>
-              </span>
-              <span className="text-faint">→</span>
-            </Link>
+              titulo={list.name}
+              depois={<span className="ep-code">{list.items.length}</span>}
+            />
           ))}
-        </div>
+        </Grupo>
       )}
     </div>
   );

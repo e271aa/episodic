@@ -16,6 +16,7 @@ export default function MenuFiltro<T extends string>({
   onChange,
   rotulo,
   simples = false,
+  alinhar = "esquerda",
 }: {
   opcoes: { valor: T; nome: string; contagem?: number }[];
   valor: T;
@@ -23,6 +24,8 @@ export default function MenuFiltro<T extends string>({
   /** o que o leitor de ecrã diz, ex. «Filtrar séries» */
   rotulo: string;
   simples?: boolean;
+  /** de que lado do gatilho a lista se alinha — `direita` para o que está encostado à margem direita */
+  alinhar?: "esquerda" | "direita";
 }) {
   const [aberto, setAberto] = useState(false);
   const raiz = useRef<HTMLDivElement>(null);
@@ -71,7 +74,9 @@ export default function MenuFiltro<T extends string>({
           id={idLista}
           role="menu"
           aria-label={rotulo}
-          className="vidro menu-abre absolute left-0 top-full z-40 mt-2 min-w-56 overflow-hidden rounded-[14px] py-1"
+          className={`vidro menu-abre absolute top-full z-40 mt-2 min-w-56 overflow-hidden rounded-[14px] py-1 ${
+            alinhar === "direita" ? "right-0" : "left-0"
+          }`}
         >
           {opcoes.map((o) => {
             const escolhida = o.valor === valor;

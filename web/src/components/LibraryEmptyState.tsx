@@ -1,9 +1,13 @@
 "use client";
 
+import { Tv } from "lucide-react";
+import Acao from "@/components/mira/Acao";
+
 type Segment = "series" | "filmes";
 type SeriesFilter =
   | "tudo"
   | "a-ver"
+  | "retomar"
   | "por-comecar"
   | "completas"
   | "para-ver"
@@ -31,8 +35,8 @@ export default function LibraryEmptyState({
   const filtrado = segment === "series" && filter !== "tudo";
   return (
     <div className="mt-12 flex flex-col items-center px-6 text-center">
-      <span className="bars mb-4 h-11 w-11 rounded-full opacity-40" aria-hidden />
-      <p className="font-display font-semibold">
+      <Tv aria-hidden className="mb-4 h-11 w-11 text-label-3" strokeWidth={1.5} />
+      <p className="text-[1.18rem] font-semibold text-label">
         {query
           ? `Nada na tua biblioteca para “${query}”`
           : filtrado
@@ -41,7 +45,7 @@ export default function LibraryEmptyState({
               ? "Ainda não há séries"
               : "Ainda não há filmes"}
       </p>
-      <p className="mt-1 max-w-xs text-[0.9375rem] text-dim">
+      <p className="mt-1 max-w-xs text-[0.88rem] text-label-2">
         {query
           ? "Procura no catálogo em baixo para o adicionares."
           : filtrado
@@ -53,20 +57,14 @@ export default function LibraryEmptyState({
               : "Procura pelo nome para adicionares o primeiro."}
       </p>
       {!filtrado && !query && (
-        <button
-          onClick={onProcurar}
-          className="mt-5 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110"
-        >
+        <Acao onClick={onProcurar} className="mt-5">
           {segment === "series" ? "Procurar uma série" : "Procurar um filme"}
-        </button>
+        </Acao>
       )}
       {filtrado && !query && (
-        <button
-          onClick={onClearFilter}
-          className="mt-5 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110"
-        >
+        <Acao onClick={onClearFilter} className="mt-5">
           Ver tudo
-        </button>
+        </Acao>
       )}
     </div>
   );

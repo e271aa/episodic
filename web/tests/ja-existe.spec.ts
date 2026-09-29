@@ -31,9 +31,7 @@ function ler<T>(page: Pagina, store: "movies" | "shows") {
 
 async function procurarNoCatalogo(page: Pagina, rota: string, termo: string) {
   await page.goto(rota);
-  await page.getByRole("button", { name: "Procurar na biblioteca" }).click();
   await page.locator('input[type="search"]').fill(termo);
-  await page.getByRole("button", { name: "Ver resultados" }).click();
   await page.getByTestId("remote-search-button").click();
 }
 
@@ -81,9 +79,8 @@ test("marcar visto na pesquisa um filme que já está em 'para ver' marca esse, 
   expect(filmes[0].watchedAt).not.toBeNull();
 
   // e aprendeu o nome português: a pesquisa local já o encontra
-  await page.getByRole("button", { name: "Procurar na biblioteca" }).click();
   await page.locator('input[type="search"]').fill("condenados");
-  await expect(page.getByText("1 filmes na biblioteca")).toBeVisible();
+  await expect(page.locator('a[href="/movies/0b6f-uuid-do-tvtime"]')).toBeVisible();
 });
 
 test("um filme já visto aparece como visto, sem botões para o duplicar", async ({

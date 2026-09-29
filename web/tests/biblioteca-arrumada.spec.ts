@@ -53,9 +53,9 @@ test("uma série seguida sem nada visto não conta como 'a ver'", async ({ page 
   // A secção e a pastilha do filtro têm de dizer o mesmo número — foi por
   // dizerem coisas diferentes sobre os mesmos episódios que a Fase 1 existiu.
   await expect(seccoes(page)).toHaveText([/Em curso3/, /Por começar4/]);
-  await page.getByRole("button", { name: "Filtros" }).click();
-  await expect(page.getByRole("button", { name: "Em curso 3" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Por começar 4" })).toBeVisible();
+  await page.getByRole("button", { name: /^Filtrar séries/ }).click();
+  await expect(page.getByRole("menuitemradio", { name: /^Em curso\s*3$/ })).toBeVisible();
+  await expect(page.getByRole("menuitemradio", { name: /^Por começar\s*4$/ })).toBeVisible();
 });
 
 test("as completas ficam dobradas, e a escolha de as abrir aguenta uma recarga", async ({

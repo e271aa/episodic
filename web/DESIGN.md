@@ -209,6 +209,38 @@ metadados em texto corrido. Os três separadores saíram.
   anular). `SheetPanel agrupada` troca o degrau da folha e dos grupos
   (`--m-folha`, `--m-folha-grupo`) — as outras folhas passam a ela na Fase 8.
 
+## A Biblioteca (Fase 5)
+
+«Onde está aquela série?» — a resposta acaba quase sempre em abrir uma e
+recuar, por isso **filtro, separador, ordem, pesquisa e o sítio onde se ia
+vivem no URL** (`tipo`, `filtro`, `ordem`, `decada`, `q`) e sobrevivem ao
+recuar. Trocar de separador empilha uma entrada; o resto substitui-a com
+`history.replaceState` (não `router.replace`: descarta a navegação pendente).
+
+De cima para baixo: `TituloGrande` («Biblioteca», com «Todas · 138» na barra
+compacta), a pesquisa (44px, raio 22, `fill`, 16px para o iOS não ampliar), o
+`Segmentado` (Séries `138` · Filmes `266` · Listas), o `MenuFiltro` («Em curso ·
+9 ▾») à esquerda e, encostados à direita, a década (filmes) e a ordenação em
+texto («Última vista ▾»).
+
+- **`Cartaz`** (`components/mira/`): capa 2:3 raio 12 **sem nada por cima**
+  (a barra de 3px vai por baixo, no trilho `label` a 14%, cor = estado); nome a
+  13/600 em duas linhas no máximo; por baixo uma linha em mono — `completa`, o
+  próximo código ou `vistos/total`, e nos filmes o ano. Sem capa: `group` com fio
+  `separator`, o ícone de TV a 22px em `label-3` e o nome a 12/600 (o cartaz lê-se).
+- **Retomar:** seguida, por acabar e **sem marcar há mais de 30 dias**
+  (`estaParada`, a mesma regra da casa). Não se guarda: ao marcar um episódio a
+  série volta a «Em curso» sozinha. «Em curso» é só o que se está a ver.
+- **Secções** («Em curso 12»): 17/600 e a contagem em mono, **sem cor**, coladas
+  por baixo da barra compacta (`--topo-barra`). «Completas» dobra-se a partir de 12.
+- **Uma cápsula preenchida**: só no vazio («Procurar uma série») e em «Procurar “x”
+  em todas as séries» quando não há nada local; nos outros casos, `secundaria`.
+- Três colunas (quatro/cinco só acima de 640px). Já não há «Cartazes grandes /
+  pequenos / Lista».
+- **Armadilha:** um `fixed` dentro de `.page-enter` só funciona se a animação
+  **não deixar transform no fim** (`backwards`, nunca `both`): foi o que impediu a
+  barra compacta de prender ao topo até à Fase 5.
+
 ## Movimento
 - **Curvas:** `--ease-out` = `cubic-bezier(0.23, 1, 0.32, 1)` para o que entra e
   responde; `--ease-drawer` = `cubic-bezier(0.32, 0.72, 0, 1)`, a do iOS, para o

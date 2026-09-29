@@ -224,6 +224,9 @@ body {
 }
 
 :root {
+  /* Onde acaba a barra compacta do `TituloGrande` (área segura + o nome e o
+     resumo): é aí que os cabeçalhos de secção se colam ao rolar. */
+  --topo-barra: calc(max(12px, env(safe-area-inset-top)) + 3.4rem);
   /* Espaço que a dock ocupa mesmo: a pílula (44px de alvo + 6px de padding
      de cada lado + 1px de contorno de cada lado) mais o respiro por baixo,
      que no iPhone tem de acomodar a barra de gestos. O <main> reserva isto —
@@ -338,13 +341,14 @@ summary:focus-visible,
     transform: translateY(0);
   }
 }
-/* Nota para quem puser aqui algo `position: fixed`: este elemento tem um
-   `transform` aplicado pela animação, e um transform — mesmo identidade —
-   torna-o o bloco de referência dos descendentes fixos. Um elemento fixo
-   dentro de uma página NÃO se posiciona pelo viewport. A barra flutuante da
-   Biblioteca resolve isto com um portal para o body (ver LibraryControls). */
+/* `backwards`, e não `both`: com `both` a animação deixa o último fotograma
+   aplicado, e um transform — mesmo identidade, mesmo `none` no WebKit — torna
+   este elemento o bloco de referência dos descendentes `fixed`. A barra
+   compacta do `TituloGrande` ficava presa à página em vez do ecrã e rolava com
+   ela (Fase 5, medido: y = −1462 aos 1500px de scroll). Sem preenchimento
+   no fim, o estado de repouso é o do próprio elemento: sem transform. */
 .page-enter {
-  animation: page-enter 220ms var(--ease-out) both;
+  animation: page-enter 220ms var(--ease-out) backwards;
 }
 
 /* O "ritual" de marcar um episódio: o círculo salta e um anel de luz

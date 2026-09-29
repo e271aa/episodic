@@ -36,14 +36,14 @@ test("com movimento reduzido, o que se desloca passa a só desvanecer — não d
 
   // um cartão com transição de contorno, sombra e posição: fica a de cor,
   // sai a de posição
-  await page.goto("/library?tipo=listas");
-  const cartao = await page
-    .locator(".ep-card")
-    .first()
-    .evaluate((el) => {
-      const css = getComputedStyle(el);
-      return { propriedades: css.transitionProperty, segundos: parseFloat(css.transitionDuration) };
-    });
+  // (a regra vive na classe; um cartão de exemplo dispensa procurar um ecrã que o tenha)
+  const cartao = await page.evaluate(() => {
+    const el = document.createElement("div");
+    el.className = "ep-card";
+    document.body.append(el);
+    const css = getComputedStyle(el);
+    return { propriedades: css.transitionProperty, segundos: parseFloat(css.transitionDuration) };
+  });
   expect(cartao.propriedades).not.toContain("transform");
   expect(cartao.propriedades).toContain("border-color");
   expect(cartao.segundos).toBeGreaterThan(0.1);
@@ -66,11 +66,12 @@ test("sem movimento reduzido, as páginas continuam a entrar a subir", async ({ 
 
 // ── as folhas ────────────────────────────────────────────────
 
+/** A folha de exemplo: o «···» do detalhe de uma série (a Biblioteca já não tem folhas). */
 async function abrirFiltros(page: import("@playwright/test").Page) {
-  await semear(page, { series: [{ uuid: "s-1", name: "Serie Um" }] });
-  await page.goto("/library");
-  await page.getByRole("button", { name: "Filtros e ordenação" }).click();
-  const folha = page.getByRole("dialog", { name: "Filtros e ordenação" });
+  await semear(page, { series: [{ uuid: "s-1", name: "Serie Um", totalEpisodes: 3 }] });
+  await page.goto("/series/s-1");
+  await page.getByTestId("menu-serie").click();
+  const folha = page.getByRole("dialog");
   await expect(folha).toBeVisible();
   return folha;
 }
@@ -107,9 +108,9 @@ test("a folha sobe do fundo com a curva da gaveta, e desce pelo mesmo caminho, m
 }) => {
   // Entrava como uma página (6px a subir) e desaparecia de golpe ao fechar.
   // Vem de onde veio o toque — a barra de baixo — e volta para lá.
-  await semear(page, { series: [{ uuid: "s-1", name: "Serie Um" }] });
-  await page.goto("/library");
-  await page.getByRole("button", { name: "Filtros e ordenação" }).click();
+  await semear(page, { series: [{ uuid: "s-1", name: "Serie Um", totalEpisodes: 3 }] });
+  await page.goto("/series/s-1");
+  await page.getByTestId("menu-serie").click();
   const entrada = await transicoesDoPainel(page);
   expect(entrada?.length).toBeGreaterThan(0);
   expect(entrada![0].deY).toBeGreaterThan(100); // parte de baixo do ecrã
@@ -164,9 +165,9 @@ test("um arrasto curto e lento não fecha: a folha volta ao sítio", async ({ pa
 
 test("com movimento reduzido, a folha aparece a desvanecer, sem subir", async ({ page }) => {
   await page.emulateMedia({ reducedMotion: "reduce" });
-  await semear(page, { series: [{ uuid: "s-1", name: "Serie Um" }] });
-  await page.goto("/library");
-  await page.getByRole("button", { name: "Filtros e ordenação" }).click();
+  await semear(page, { series: [{ uuid: "s-1", name: "Serie Um", totalEpisodes: 3 }] });
+  await page.goto("/series/s-1");
+  await page.getByTestId("menu-serie").click();
   const propriedades = await page.evaluate(() =>
     document
       .querySelector('[role="dialog"] [data-folha]')!

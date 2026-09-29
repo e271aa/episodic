@@ -1,11 +1,19 @@
 "use client";
 
 import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { kvGet, kvSet, type StoredMovie } from "@/lib/db";
 import type { ShowWithProgress } from "@/lib/shows";
-import { recursoFilmes, recursoSeries, useFilmes, useListas, useSeries } from "@/lib/cache";
+import {
+  recursoFilmes,
+  recursoSeries,
+  useFilmes,
+  useListas,
+  useNextUp,
+  useSeries,
+} from "@/lib/cache";
+import { formatEpCode } from "@/lib/watchnext";
+import { estaParada } from "@/lib/queue";
 import { backfillMovies, backfillShows } from "@/lib/backfill";
 import { curarNumeracao } from "@/lib/numeracao";
 import { usePref } from "@/lib/prefs";
@@ -22,23 +30,25 @@ import {
   letterLabel,
   periodLabel,
 } from "@/lib/grouping";
-import SectionHeader from "@/components/SectionHeader";
 import StickySectionHeader from "@/components/StickySectionHeader";
 import ShowPoster from "@/components/ShowPoster";
 import MovieCard from "@/components/MovieCard";
 import ShowResultCard from "@/components/ShowResultCard";
 import MovieResultCard from "@/components/MovieResultCard";
 import LibraryEmptyState from "@/components/LibraryEmptyState";
-import LibraryControls from "@/components/LibraryControls";
 import ListasConteudo from "@/components/ListasConteudo";
-import SheetPanel from "@/components/SheetPanel";
+import Acao from "@/components/mira/Acao";
+import MenuFiltro from "@/components/mira/MenuFiltro";
+import Segmentado from "@/components/mira/Segmentado";
+import TituloGrande from "@/components/mira/TituloGrande";
 import { PosterGridBone, TitleBone } from "@/components/Skeleton";
-import { ChevronDownIcon, SearchIcon } from "@/components/icons";
+import { ChevronDown, Search } from "lucide-react";
 
 type Segment = "series" | "filmes" | "listas";
 type SeriesFilter =
   | "tudo"
   | "a-ver"
+  | "retomar"
   | "por-comecar"
   | "completas"
   | "para-ver"
@@ -50,42 +60,23 @@ type MovieSort = "vistos" | "recentes" | "antigos" | "az";
 type SeriesSort = "vistos" | "progresso" | "az" | "adicionadas";
 
 const SERIES_SORTS: { id: SeriesSort; label: string }[] = [
-  { id: "vistos", label: "Vistos há pouco" },
+  { id: "vistos", label: "Última vista" },
   { id: "progresso", label: "Mais episódios vistos" },
   { id: "az", label: "A–Z" },
-  { id: "adicionadas", label: "Adicionadas há pouco" },
+  { id: "adicionadas", label: "Adicionada" },
 ];
 
 const MOVIE_SORTS: { id: MovieSort; label: string }[] = [
-  { id: "vistos", label: "Vistos há pouco" },
+  { id: "vistos", label: "Última vista" },
   { id: "recentes", label: "Estreia mais recente" },
   { id: "antigos", label: "Estreia mais antiga" },
   { id: "az", label: "A–Z" },
 ];
 
-/**
- * Quão junto se arruma a biblioteca. Dois cartazes por linha mostram bem a
- * arte, mas com 136 séries e 239 filmes é muito rolar para pouca coisa;
- * a lista troca a arte por velocidade a procurar.
- *
- * É preferência de apresentação, não de navegação — por isso vive no
- * `usePref` e não no URL, ao contrário do filtro e da ordem, que se
- * partilham e sobrevivem ao gesto de recuar.
- */
-type Densidade = "grande" | "compacta" | "lista";
-const DENSIDADES: readonly Densidade[] = ["grande", "compacta", "lista"];
-
-const DENSIDADE_LABEL: Record<Densidade, string> = {
-  grande: "Cartazes grandes",
-  compacta: "Cartazes pequenos",
-  lista: "Lista",
-};
-
-const CLASSE_GRELHA: Record<Densidade, string> = {
-  grande: "grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4",
-  compacta: "grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-6",
-  lista: "flex flex-col",
-};
+/** Três colunas (B·3), com 18px entre linhas e 10px entre colunas. A escolha
+ *  de «Cartazes grandes / pequenos / Lista» saiu: o desenho não a tem, e a
+ *  procura por nome passou a ser a pesquisa, sempre à vista no topo. */
+const CLASSE_GRELHA = "grid grid-cols-3 gap-x-2.5 gap-y-[18px] sm:grid-cols-4 md:grid-cols-5";
 
 /** A ordem por que as secções de estado aparecem, e a cor de cada uma.
  *  "Em curso" é o próprio branco-projetor — a mesma regra da barra de
@@ -103,22 +94,13 @@ const CLASSE_GRELHA: Record<Densidade, string> = {
  *  o que já acabou. */
 const ESTADOS = [
   "Em curso",
+  "Retomar",
   "Por começar",
   "Para ver",
   "Completas",
   "Já não sigo",
   "Arquivadas",
 ];
-const CINZA = "var(--color-faint)";
-const COR_ESTADO: Record<string, string> = {
-  "Em curso": "var(--color-ink)",
-  "Por começar": CINZA,
-  Completas: "var(--color-smpte-magenta)",
-  "Para ver": CINZA,
-  "Já não sigo": CINZA,
-  Arquivadas: CINZA,
-};
-
 /** A partir de quantas séries é que a secção das completas se dobra. Abaixo
  *  disto, o botão de abrir custa mais do que a lista que esconde. */
 const DOBRAR_A_PARTIR_DE = 12;
@@ -139,6 +121,12 @@ function norm(text: string): string {
 const SERIES_SORT_IDS = new Set(SERIES_SORTS.map((s) => s.id));
 const MOVIE_SORT_IDS = new Set(MOVIE_SORTS.map((s) => s.id));
 
+const completa = (s: ShowWithProgress) =>
+  s.totalEpisodes != null && s.watchedCount >= s.totalEpisodes;
+/** Seguida, com episódios vistos e por acabar — parada ou não. */
+const aMeio = (s: ShowWithProgress) =>
+  s.followed && !s.archived && !completa(s) && s.watchedCount > 0;
+
 function LibraryContent() {
   const router = useRouter();
   const params = useSearchParams();
@@ -150,7 +138,7 @@ function LibraryContent() {
   const rawFiltro = params.get("filtro") as SeriesFilter | null;
   const filter: SeriesFilter =
     rawFiltro &&
-    ["a-ver", "por-comecar", "completas", "para-ver", "arquivadas", "parei"].includes(
+    ["a-ver", "retomar", "por-comecar", "completas", "para-ver", "arquivadas", "parei"].includes(
       rawFiltro,
     )
       ? rawFiltro
@@ -173,18 +161,25 @@ function LibraryContent() {
       : "vistos";
   const decade = Number(params.get("decada")) || null;
 
+  // Trocar de separador empilha uma entrada (o gesto de recuar volta ao
+  // anterior); filtro, ordem e pesquisa **substituem** a atual. Substituem-se
+  // com `history.replaceState` (o Next integra-o em `useSearchParams`) e não
+  // com `router.replace`: este entra numa fila de navegações em que uma nova
+  // descarta a anterior ainda pendente — escrever, tocar numa série e
+  // recuar chegava a perder a pesquisa. E lê-se o URL de agora, não o do
+  // último render, para dois toques seguidos não se pisarem.
   const setParams = useCallback(
     (patch: Record<string, string | null>, push = false) => {
-      const next = new URLSearchParams(params);
+      const next = new URLSearchParams(window.location.search);
       for (const [key, value] of Object.entries(patch)) {
         if (value === null) next.delete(key);
         else next.set(key, value);
       }
       const url = next.size > 0 ? `/library?${next}` : "/library";
       if (push) router.push(url, { scroll: false });
-      else router.replace(url, { scroll: false });
+      else window.history.replaceState(null, "", url);
     },
-    [params, router],
+    [router],
   );
 
   // Da cache partilhada, e não de uma leitura só desta página: ao voltar de
@@ -194,19 +189,25 @@ function LibraryContent() {
   const shows = useSeries();
   const movies = useFilmes();
   const listas = useListas();
-  const [query, setQuery] = useState("");
-  // A pesquisa e os filtros saíram do cabeçalho; vivem atrás dos ícones da
-  // barra flutuante e abrem por cima do conteúdo.
-  const [pesquisaAberta, setPesquisaAberta] = useState(false);
-  // 3 colunas por omissão (escolhido pelo Ruben a 27-09): com 2 colunas de
-  // cartazes grandes, 138 séries davam ~25.000px para rolar. A escolha de
-  // cada um fica guardada — muda só para quem nunca a mexeu.
-  const [densidade, setDensidade] = usePref<Densidade>(
-    "biblioteca-densidade",
-    "compacta",
-    DENSIDADES,
+  // «Parada» = sem marcar há mais de 30 dias, a mesma regra do «Retomar» da
+  // casa (`estaParada`). Fixa-se ao abrir: uma série não muda de secção a meio
+  // de uma visita.
+  const [agora] = useState(() => Date.now());
+  const parada = useCallback(
+    (s: ShowWithProgress) => aMeio(s) && estaParada(s.lastWatchedAt || null, agora),
+    [agora],
   );
-  const [filtrosAbertos, setFiltrosAbertos] = useState(false);
+  // O próximo episódio de cada série, se a fila do «A seguir» já o calculou
+  const nextUp = useNextUp();
+  const proximo = (s: ShowWithProgress): string | null => {
+    const e = nextUp?.get(s.uuid)?.episode;
+    return e ? formatEpCode(e.season, e.episode) : null;
+  };
+  // O que se procurou também vive no URL (`q`): «onde está aquela série?» acaba
+  // quase sempre em abri-la e recuar, e a pesquisa não pode ter-se perdido.
+  // O estado local é a fonte de verdade enquanto se escreve; o URL segue-o.
+  const [query, setQuery] = useState(() => params.get("q") ?? "");
+  const campoPesquisa = useRef<HTMLInputElement>(null);
   /**
    * As completas dobradas. É `usePref` e não estado local pela mesma razão
    * que a densidade: quem as fechou não as quer abertas outra vez ao voltar
@@ -273,15 +274,14 @@ function LibraryContent() {
 
   const filteredShows = useMemo(() => {
     if (!shows) return [];
-    const complete = (s: ShowWithProgress) =>
-      s.totalEpisodes != null && s.watchedCount >= s.totalEpisodes;
+    const complete = completa;
     let list = shows;
     if (filter === "a-ver") {
-      // Sem as que ainda não começaram: têm balde próprio, e a conta da
-      // pastilha tem de dizer o mesmo que a banda da secção.
-      list = list.filter(
-        (s) => s.followed && !s.archived && !complete(s) && s.watchedCount > 0,
-      );
+      // Sem as paradas (têm balde próprio, «Retomar») nem as que ainda não
+      // começaram: a conta da pastilha tem de dizer o mesmo que a secção.
+      list = list.filter((s) => aMeio(s) && !parada(s));
+    } else if (filter === "retomar") {
+      list = list.filter(parada);
     } else if (filter === "por-comecar") {
       list = list.filter(
         (s) => s.followed && !s.archived && !complete(s) && s.watchedCount === 0,
@@ -310,7 +310,7 @@ function LibraryContent() {
       sorted.sort((a, b) => b.addedAt.localeCompare(a.addedAt));
     }
     return sorted;
-  }, [shows, filter, q, seriesSort]);
+  }, [shows, filter, q, seriesSort, parada]);
 
   // Ano do filme: preferimos a estreia; sem ela, o ano em que o viste (um
   // filme "para ver" pode não ter nenhuma das duas ainda)
@@ -361,13 +361,11 @@ function LibraryContent() {
   }, [movies, q, decade, movieSort, movieFilter]);
 
   const counts = useMemo(() => {
-    const complete = (s: ShowWithProgress) =>
-      s.totalEpisodes != null && s.watchedCount >= s.totalEpisodes;
+    const complete = completa;
     return {
       tudo: shows?.length ?? 0,
-      "a-ver":
-        shows?.filter((s) => s.followed && !s.archived && !complete(s) && s.watchedCount > 0)
-          .length ?? 0,
+      "a-ver": shows?.filter((s) => aMeio(s) && !parada(s)).length ?? 0,
+      retomar: shows?.filter(parada).length ?? 0,
       "por-comecar":
         shows?.filter((s) => s.followed && !s.archived && !complete(s) && s.watchedCount === 0)
           .length ?? 0,
@@ -376,7 +374,7 @@ function LibraryContent() {
       arquivadas: shows?.filter((s) => s.archived).length ?? 0,
       parei: shows?.filter((s) => !s.followed && !s.inWatchlist).length ?? 0,
     } as Record<SeriesFilter, number>;
-  }, [shows]);
+  }, [shows, parada]);
 
   const movieCounts = useMemo(
     () => ({
@@ -408,12 +406,16 @@ function LibraryContent() {
 
   // Mudar o texto invalida os resultados remotos anteriores (é um evento,
   // não um efeito — o estado deriva diretamente da ação do utilizador)
-  const handleQueryChange = useCallback((value: string) => {
-    setQuery(value);
-    setRemote(null);
-    setRemoteMovies(null);
-    setRemoteError(null);
-  }, []);
+  const handleQueryChange = useCallback(
+    (value: string) => {
+      setQuery(value);
+      setRemote(null);
+      setRemoteMovies(null);
+      setRemoteError(null);
+      setParams({ q: value.trim() ? value : null });
+    },
+    [setParams],
+  );
 
   // Trocar de segmento também invalida: os resultados eram do outro catálogo.
   // push (e não replace) para o gesto de recuar voltar ao segmento anterior.
@@ -450,7 +452,8 @@ function LibraryContent() {
     if (s.totalEpisodes && s.watchedCount >= s.totalEpisodes) return "Completas";
     // "Em curso" e não "A ver": ao lado de "Para ver" liam-se quase iguais
     // (Ronda 12, Fase 5 — palavra escolhida pelo Ruben).
-    return s.watchedCount === 0 ? "Por começar" : "Em curso";
+    if (s.watchedCount === 0) return "Por começar";
+    return parada(s) ? "Retomar" : "Em curso";
   };
 
   const showGroups = useMemo(
@@ -465,7 +468,7 @@ function LibraryContent() {
             az: (s: ShowWithProgress) => letterLabel(s.name),
             progresso: null,
           }[seriesSort]),
-    [filteredShows, seriesSort, filter, q],
+    [filteredShows, seriesSort, filter, q, parada],
   );
 
   const movieGroups = useMemo(
@@ -483,42 +486,128 @@ function LibraryContent() {
   /** resultados remotos do segmento atual — null enquanto ninguém pesquisou */
   const searched = segment === "series" ? remote : remoteMovies;
 
-  const FILTERS: { id: SeriesFilter; label: string }[] = [
-    { id: "tudo", label: "Tudo" },
-    { id: "a-ver", label: "Em curso" },
-    { id: "por-comecar", label: "Por começar" },
-    { id: "completas", label: "Completas" },
-    { id: "para-ver", label: "Para ver" },
-    { id: "arquivadas", label: "Arquivadas" },
-    { id: "parei", label: "Já não sigo" },
-  ];
+  const FILTERS: { valor: SeriesFilter; nome: string; contagem: number }[] = (
+    [
+      ["tudo", "Todas"],
+      ["a-ver", "Em curso"],
+      ["retomar", "Retomar"],
+      ["por-comecar", "Por começar"],
+      ["completas", "Completas"],
+      ["para-ver", "Para ver"],
+      ["arquivadas", "Arquivadas"],
+      ["parei", "Já não sigo"],
+    ] as const
+  ).map(([valor, nome]) => ({ valor, nome, contagem: counts[valor] }));
 
-  const MOVIE_FILTERS: { id: MovieFilter; label: string }[] = [
-    { id: "todos", label: "Todos" },
-    { id: "vistos", label: "Vistos" },
-    { id: "para-ver", label: "Para ver" },
-  ];
+  const MOVIE_FILTERS: { valor: MovieFilter; nome: string; contagem: number }[] = (
+    [
+      ["todos", "Todos"],
+      ["vistos", "Vistos"],
+      ["para-ver", "Para ver"],
+    ] as const
+  ).map(([valor, nome]) => ({ valor, nome, contagem: movieCounts[valor] }));
+
+  // A linha que a barra compacta mostra quando o título grande sai do ecrã
+  // («Todas · 138»): o filtro em que se está e quantas séries mostra.
+  const resumo =
+    segment === "listas"
+      ? `Listas · ${listas?.length ?? 0}`
+      : `${
+          (segment === "series" ? FILTERS : MOVIE_FILTERS).find(
+            (f) => f.valor === (segment === "series" ? filter : movieFilter),
+          )?.nome
+        } · ${showing}`;
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-5 pt-10 pb-8">
-      <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Biblioteca</h1>
+    <main className="mx-auto w-full max-w-2xl px-4 pt-[max(12px,env(safe-area-inset-top))] pb-8">
+      <TituloGrande titulo="Biblioteca" resumo={resumo} />
 
-      <LibraryControls
-        segment={segment}
-        counts={{
-          series: shows?.length ?? 0,
-          filmes: movies?.length ?? 0,
-          listas: listas?.length ?? 0,
-        }}
-        onSegment={changeSegment}
-        onSearch={() => setPesquisaAberta(true)}
-        onFilters={() => setFiltrosAbertos(true)}
-        filtrosAtivos={
-          segment === "series"
-            ? filter !== "tudo" || seriesSort !== "vistos"
-            : movieFilter !== "todos" || movieSort !== "vistos" || decade !== null
-        }
+      {segment !== "listas" && (
+        <div className="relative mt-3">
+          <Search
+            aria-hidden
+            className="pointer-events-none absolute left-3.5 top-1/2 h-[18px] w-[18px] -translate-y-1/2 text-label-2"
+            strokeWidth={2.2}
+          />
+          <input
+            ref={campoPesquisa}
+            type="search"
+            aria-label="Procurar na biblioteca"
+            value={query}
+            onChange={(e) => handleQueryChange(e.target.value)}
+            placeholder="Procurar na biblioteca"
+            enterKeyHint="search"
+            className="min-h-11 w-full rounded-[22px] bg-fill py-2 pl-10 pr-4 text-base text-label outline-none placeholder:text-label-2"
+            data-testid="search-input"
+          />
+        </div>
+      )}
+
+      <Segmentado
+        className="mt-3"
+        rotulo="Tipo de biblioteca"
+        valor={segment}
+        onChange={changeSegment}
+        opcoes={[
+          { valor: "series", nome: "Séries", contagem: shows?.length ?? 0 },
+          { valor: "filmes", nome: "Filmes", contagem: movies?.length ?? 0 },
+          { valor: "listas", nome: "Listas" },
+        ]}
       />
+
+      {segment !== "listas" && (
+        <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
+          {segment === "series" ? (
+            <MenuFiltro
+              rotulo="Filtrar séries"
+              valor={filter}
+              opcoes={FILTERS}
+              onChange={(v) => setParams({ filtro: v === "tudo" ? null : v })}
+            />
+          ) : (
+            <MenuFiltro
+              rotulo="Filtrar filmes"
+              valor={movieFilter}
+              opcoes={MOVIE_FILTERS}
+              onChange={(v) => setParams({ filtro: v === "todos" ? null : v })}
+            />
+          )}
+          <div className="ml-auto flex items-center gap-1">
+            {segment === "filmes" && decades.length > 1 && (
+              <MenuFiltro
+                simples
+                alinhar="direita"
+                rotulo="Década"
+                valor={decade === null ? "todas" : String(decade)}
+                opcoes={[
+                  { valor: "todas", nome: "Todas as décadas" },
+                  ...decades.map((d) => ({ valor: String(d), nome: decadeLabel(d) })),
+                ]}
+                onChange={(v) => setParams({ decada: v === "todas" ? null : v })}
+              />
+            )}
+            {segment === "series" ? (
+              <MenuFiltro
+                simples
+                alinhar="direita"
+                rotulo="Ordenar séries"
+                valor={seriesSort}
+                opcoes={SERIES_SORTS.map((o) => ({ valor: o.id, nome: o.label }))}
+                onChange={(v) => setParams({ ordem: v === "vistos" ? null : v })}
+              />
+            ) : (
+              <MenuFiltro
+                simples
+                alinhar="direita"
+                rotulo="Ordenar filmes"
+                valor={movieSort}
+                opcoes={MOVIE_SORTS.map((o) => ({ valor: o.id, nome: o.label }))}
+                onChange={(v) => setParams({ ordem: v === "vistos" ? null : v })}
+              />
+            )}
+          </div>
+        </div>
+      )}
 
       {segment === "listas" ? (
         <div className="mt-4">
@@ -536,11 +625,7 @@ function LibraryContent() {
                 const dobrada = dobravel && completas === "dobradas";
                 return (
                   <section key={g.label}>
-                    <StickySectionHeader
-                      label={g.label}
-                      count={g.items.length}
-                      color={COR_ESTADO[g.label]}
-                    />
+                    <StickySectionHeader label={g.label} count={g.items.length} />
                     {dobravel && (
                       <button
                         onClick={() =>
@@ -548,24 +633,25 @@ function LibraryContent() {
                         }
                         aria-expanded={!dobrada}
                         data-testid="dobrar-completas"
-                        className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-1 text-left text-[0.9375rem] text-dim transition-colors hover:bg-raised"
+                        className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-xl px-1 text-left text-[0.88rem] text-label-2 transition-colors active:bg-fill"
                       >
                         <span className="flex-1">
                           {dobrada
                             ? `Ver as ${g.items.length} que já acabaste`
                             : "Esconder as que já acabaste"}
                         </span>
-                        <ChevronDownIcon
-                          className={`h-4 w-4 shrink-0 text-faint transition-transform ${
+                        <ChevronDown
+                          aria-hidden
+                          className={`h-4 w-4 shrink-0 transition-transform ${
                             dobrada ? "" : "rotate-180"
                           }`}
                         />
                       </button>
                     )}
                     {!dobrada && (
-                      <div className={CLASSE_GRELHA[densidade]}>
+                      <div className={CLASSE_GRELHA}>
                         {g.items.map((s, i) => (
-                          <ShowPoster key={s.uuid} show={s} index={i} densidade={densidade} />
+                          <ShowPoster key={s.uuid} show={s} index={i} proximo={proximo(s)} />
                         ))}
                       </div>
                     )}
@@ -574,9 +660,9 @@ function LibraryContent() {
               })}
             </div>
           ) : (
-            <div className={`mt-3 ${CLASSE_GRELHA[densidade]}`} data-testid="library-grid">
+            <div className={`mt-3 ${CLASSE_GRELHA}`} data-testid="library-grid">
               {filteredShows.map((s, i) => (
-                <ShowPoster key={s.uuid} show={s} index={i} densidade={densidade} />
+                <ShowPoster key={s.uuid} show={s} index={i} proximo={proximo(s)} />
               ))}
             </div>
           )
@@ -585,30 +671,18 @@ function LibraryContent() {
             {movieGroups.map((g) => (
               <section key={g.label}>
                 <StickySectionHeader label={g.label} count={g.items.length} />
-                <div className={CLASSE_GRELHA[densidade]}>
+                <div className={CLASSE_GRELHA}>
                   {g.items.map((m, i) => (
-                    <MovieCard
-                      key={m.key}
-                      movie={m}
-                      index={i}
-                      onChanged={reloadMovies}
-                      densidade={densidade}
-                    />
+                    <MovieCard key={m.key} movie={m} index={i} onChanged={reloadMovies} />
                   ))}
                 </div>
               </section>
             ))}
           </div>
         ) : (
-          <div className={`mt-3 ${CLASSE_GRELHA[densidade]}`} data-testid="library-grid">
+          <div className={`mt-3 ${CLASSE_GRELHA}`} data-testid="library-grid">
             {filteredMovies.map((m, i) => (
-              <MovieCard
-                key={m.key}
-                movie={m}
-                index={i}
-                onChanged={reloadMovies}
-                densidade={densidade}
-              />
+              <MovieCard key={m.key} movie={m} index={i} onChanged={reloadMovies} />
             ))}
           </div>
         )
@@ -618,43 +692,41 @@ function LibraryContent() {
           segment={segment}
           filter={filter}
           onClearFilter={() => setParams({ filtro: null, decada: null })}
-          onProcurar={() => setPesquisaAberta(true)}
+          onProcurar={() => campoPesquisa.current?.focus()}
         />
       )}
 
       {/* Adicionar o que ainda não tens — o catálogo do segmento onde estás */}
       {q && (
-        <div className="mt-6 border-t border-line pt-5">
+        <div className="mt-6 border-t-[0.5px] border-separator pt-5">
           {searched === null ? (
-            <button
+            <Acao
+              // sem nada na biblioteca, adicionar é a ação óbvia (a cápsula);
+              // com resultados, é uma saída discreta
+              tipo={showing === 0 ? "principal" : "secundaria"}
+              grande={showing === 0}
               onClick={() => void searchRemote()}
               disabled={remoteBusy}
-              className={`flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full text-[0.9375rem] font-semibold transition active:scale-95 disabled:opacity-50 ${
-                // sem nada na biblioteca, adicionar é a ação óbvia — deixa de
-                // ser um botão discreto no fundo da página
-                showing === 0
-                  ? "bg-ink text-tube hover:brightness-110"
-                  : "border border-line text-dim hover:border-ink hover:text-ink"
-              }`}
+              className="w-full"
               data-testid="remote-search-button"
             >
               {remoteBusy && (
-                <span className="spinner h-4 w-4 rounded-full border-2 border-line border-t-ink" />
+                <span className="spinner h-4 w-4 rounded-full border-2 border-separator border-t-label" />
               )}
               {remoteBusy
                 ? "A procurar…"
                 : segment === "series"
                   ? `Procurar “${query.trim()}” em todas as séries`
                   : `Procurar “${query.trim()}” em todos os filmes`}
-            </button>
+            </Acao>
           ) : (
             <>
-              <SectionHeader
-                label={segment === "series" ? "Séries encontradas" : "Filmes encontrados"}
-              />
+              <h2 className="text-[1.3rem] font-bold text-label">
+                {segment === "series" ? "Séries encontradas" : "Filmes encontrados"}
+              </h2>
               <div className="mt-3 flex flex-col gap-3" data-testid="search-results">
                 {searched.length === 0 && !remoteError && (
-                  <p className="text-center text-[0.9375rem] text-dim">
+                  <p className="text-center text-[0.88rem] text-label-2">
                     Sem resultados. Tenta o nome original
                     {segment === "series" ? " da série" : " do filme"}.
                   </p>
@@ -677,189 +749,10 @@ function LibraryContent() {
             </>
           )}
           {remoteError && (
-            <p className="page-enter mt-3 text-center text-[0.9375rem] text-danger">{remoteError}</p>
+            <p className="page-enter mt-3 text-center text-[0.88rem] text-danger">{remoteError}</p>
           )}
         </div>
       )}
-
-
-      {/* A pesquisa sobe por cima de tudo: enquanto se procura, procurar é a
-          única coisa que interessa no ecrã. */}
-      <SheetPanel
-        titulo="Procurar"
-        aberto={pesquisaAberta}
-        onFechar={() => setPesquisaAberta(false)}
-      >
-        <div className="relative">
-          <SearchIcon className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-faint" />
-          <input
-            type="search"
-            aria-label="Procurar na biblioteca"
-            autoFocus
-            value={query}
-            onChange={(e) => handleQueryChange(e.target.value)}
-            placeholder="Procurar na biblioteca…"
-            className="min-h-12 w-full rounded-full border border-line bg-tube py-2.5 pl-10 pr-4 outline-none transition-colors focus:border-ink"
-            data-testid="search-input"
-          />
-        </div>
-        <p className="mt-3 text-[0.9375rem] text-dim">
-          {q
-            ? `${showing} ${segment === "series" ? "séries" : "filmes"} na biblioteca`
-            : "Escreve para filtrar o que já tens. Procurar títulos novos é o passo seguinte, no fim da lista."}
-        </p>
-        {q && (
-          <button
-            onClick={() => setPesquisaAberta(false)}
-            className="mt-4 flex min-h-12 w-full cursor-pointer items-center justify-center rounded-full bg-ink text-[0.9375rem] font-semibold text-tube transition active:scale-95"
-          >
-            Ver resultados
-          </button>
-        )}
-      </SheetPanel>
-
-      <SheetPanel
-        titulo="Filtros e ordenação"
-        aberto={filtrosAbertos}
-        onFechar={() => setFiltrosAbertos(false)}
-      >
-        {segment === "series" && (
-          <>
-            <SectionHeader label="Mostrar" />
-            <div className="mt-3 flex flex-wrap gap-2">
-              {FILTERS.map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => setParams({ filtro: f.id === "tudo" ? null : f.id })}
-                  className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
-                    filter === f.id
-                      ? "border-ink/60 bg-raised text-ink"
-                      : "border-line text-dim hover:border-ink hover:text-ink"
-                  }`}
-                >
-                  {f.label}
-                  <span
-                    className={`ep-code text-xs ${filter === f.id ? "text-dim" : "text-faint"}`}
-                  >
-                    {counts[f.id]}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <SectionHeader label="Ordenar por" className="mt-6" />
-            <div className="mt-3 flex flex-wrap gap-2">
-              {SERIES_SORTS.map((o) => (
-                <button
-                  key={o.id}
-                  onClick={() => setParams({ ordem: o.id === "vistos" ? null : o.id })}
-                  className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
-                    seriesSort === o.id
-                      ? "border-ink/60 bg-raised text-ink"
-                      : "border-line text-dim hover:border-ink hover:text-ink"
-                  }`}
-                >
-                  {o.label}
-                </button>
-              ))}
-            </div>
-          </>
-        )}
-
-        {segment === "filmes" && (
-          <>
-            <SectionHeader label="Mostrar" />
-            <div className="mt-3 flex flex-wrap gap-2">
-              {MOVIE_FILTERS.map((f) => (
-                <button
-                  key={f.id}
-                  onClick={() => setParams({ filtro: f.id === "todos" ? null : f.id })}
-                  className={`flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
-                    movieFilter === f.id
-                      ? "border-ink/60 bg-raised text-ink"
-                      : "border-line text-dim hover:border-ink hover:text-ink"
-                  }`}
-                >
-                  {f.label}
-                  <span
-                    className={`ep-code text-xs ${movieFilter === f.id ? "text-dim" : "text-faint"}`}
-                  >
-                    {movieCounts[f.id]}
-                  </span>
-                </button>
-              ))}
-            </div>
-            <SectionHeader label="Ordenar por" className="mt-6" />
-            <div className="mt-3 flex flex-wrap gap-2">
-              {MOVIE_SORTS.map((o) => (
-                <button
-                  key={o.id}
-                  onClick={() => setParams({ ordem: o.id === "vistos" ? null : o.id })}
-                  className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
-                    movieSort === o.id
-                      ? "border-ink/60 bg-raised text-ink"
-                      : "border-line text-dim hover:border-ink hover:text-ink"
-                  }`}
-                >
-                  {o.label}
-                </button>
-              ))}
-            </div>
-            {decades.length > 1 && (
-              <>
-                <SectionHeader label="Década" className="mt-6" />
-                <div className="mt-3 flex flex-wrap gap-2">
-                  <button
-                    onClick={() => setParams({ decada: null })}
-                    className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
-                      decade === null
-                        ? "border-ink/60 bg-raised text-ink"
-                        : "border-line text-dim hover:border-ink hover:text-ink"
-                    }`}
-                  >
-                    Todas
-                  </button>
-                  {decades.map((d) => (
-                    <button
-                      key={d}
-                      onClick={() => setParams({ decada: d === decade ? null : String(d) })}
-                      className={`ep-code min-h-11 cursor-pointer rounded-full border px-3.5 text-sm transition active:scale-95 ${
-                        decade === d
-                          ? "border-ink/60 bg-raised text-ink"
-                          : "border-line text-dim hover:border-ink hover:text-ink"
-                      }`}
-                    >
-                      {decadeLabel(d)}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </>
-        )}
-
-        {/* Vista fica fora do `segment`: é a mesma escolha para séries e
-            filmes, e mudá-la ao passar de um para o outro seria uma
-            surpresa. A barra flutuante já tem quatro alvos — cabia lá um
-            quinto, mas isto não é uma coisa que se mexa a toda a hora. */}
-        <SectionHeader label="Vista" className="mt-6" />
-        <div className="mt-3 flex flex-wrap gap-2">
-          {DENSIDADES.map((d) => (
-            <button
-              key={d}
-              onClick={() => setDensidade(d)}
-              aria-pressed={densidade === d}
-              className={`min-h-11 cursor-pointer rounded-full border px-3.5 text-[0.9375rem] transition active:scale-95 ${
-                densidade === d
-                  ? "border-ink/60 bg-raised text-ink"
-                  : "border-line text-dim hover:border-ink hover:text-ink"
-              }`}
-            >
-              {DENSIDADE_LABEL[d]}
-            </button>
-          ))}
-        </div>
-
-      </SheetPanel>
     </main>
   );
 }

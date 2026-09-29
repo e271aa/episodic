@@ -44,7 +44,7 @@ test("os filmes 'para ver' aparecem por omissão, e o número bate certo", async
     ],
   });
   await page.goto("/library?tipo=filmes");
-  await expect(page.getByRole("button", { name: /^Filmes/ })).toContainText("5");
+  await expect(page.getByRole("radio", { name: /^Filmes/ })).toContainText("5");
   for (const nome of ["Visto Um", "Visto Tres", "Guardado Um", "Guardado Dois"])
     await expect(page.locator("p", { hasText: nome }).first()).toBeVisible();
 });
@@ -55,7 +55,7 @@ test("as Listas são o terceiro separador da Biblioteca", async ({ page }) => {
     listas: [{ id: "l-1", name: "Fim de semana", items: [{ kind: "show", refId: "s-1" }] }],
   });
   await page.goto("/library");
-  await page.getByRole("button", { name: /^Listas/ }).click();
+  await page.getByRole("radio", { name: /^Listas/ }).click();
   await expect(page).toHaveURL(/tipo=listas/);
   await page.getByRole("link", { name: /Fim de semana/ }).click();
   await expect(page).toHaveURL(/\/listas\/l-1$/);
@@ -68,8 +68,8 @@ test("/listas leva ao separador das Listas", async ({ page }) => {
   await expect(page.getByRole("link", { name: /Fim de semana/ })).toBeVisible();
 });
 
-test("com três separadores, a barra da Biblioteca cabe a 320px", async ({ page }) => {
-  // com os números do Ruben (138 · 266 · 3): são eles que apertam a barra
+test("com três separadores, o controlo segmentado cabe a 320px", async ({ page }) => {
+  // com os números do Ruben (138 · 266 · 3): são eles que apertam a linha
   await page.setViewportSize({ width: 320, height: 700 });
   await semear(page, {
     series: Array.from({ length: 138 }, (_, i) => ({ uuid: `s-${i}`, name: `Serie ${i}` })),
@@ -78,19 +78,12 @@ test("com três separadores, a barra da Biblioteca cabe a 320px", async ({ page 
   });
   await page.goto("/library");
   for (const nome of [/^Séries/, /^Filmes/, /^Listas/]) {
-    const separador = page.getByRole("button", { name: nome });
+    const separador = page.getByRole("radio", { name: nome });
     await separador.waitFor();
     // uma linha só — "Séries 138" partido em dois seria a avaria
     expect((await separador.boundingBox())!.height).toBeLessThan(50);
   }
+  const grupo = (await page.getByRole("radiogroup", { name: "Tipo de biblioteca" }).boundingBox())!;
+  expect(grupo.x + grupo.width).toBeLessThanOrEqual(320);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
-  // A barra é `fixed` (vive num portal) e não alarga o documento — o que
-  // transborda é o conteúdo DENTRO dela: os separadores não encolhem abaixo
-  // do texto e empurravam a pesquisa e a ordenação para fora da pílula.
-  const ordenar = (await page.getByRole("button", { name: "Filtros e ordenação" }).boundingBox())!;
-  const barra = (await page
-    .getByRole("button", { name: "Filtros e ordenação" })
-    .locator("..")
-    .boundingBox())!;
-  expect(ordenar.x + ordenar.width).toBeLessThanOrEqual(barra.x + barra.width);
 });

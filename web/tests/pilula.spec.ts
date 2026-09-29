@@ -39,8 +39,8 @@ test("na Biblioteca, nem o separador ativo nem a barra são a cápsula branca da
   // branca — a branca é só a ação principal (Regra da ação)
   await semear(page, { series: [{ uuid: "s-1", name: "Serie Um" }] });
   await page.goto("/library");
-  const separador = page.getByRole("button", { name: /^Séries/ });
-  await expect(separador).toHaveAttribute("aria-pressed", "true");
+  const separador = page.getByRole("radio", { name: /^Séries/ });
+  await expect(separador).toHaveAttribute("aria-checked", "true");
   // a transição de cor dura 150ms — esperar que assente antes de ler
   await page.waitForTimeout(300);
   expect(await fundo(separador)).not.toBe(BRANCO);
@@ -48,14 +48,13 @@ test("na Biblioteca, nem o separador ativo nem a barra são a cápsula branca da
   expect(await fundo(page.locator('nav a[aria-current="page"]'))).not.toBe("rgb(255, 255, 255)");
 });
 
-test("uma escolha na folha de filtros não é uma pílula branca", async ({ page }) => {
+test("o menu de filtro da Biblioteca não é uma pílula branca", async ({ page }) => {
   await semear(page, { series: [{ uuid: "s-1", name: "Serie Um" }] });
   await page.goto("/library");
-  await page.getByRole("button", { name: "Filtros e ordenação" }).click();
-  const escolhida = page.getByRole("dialog").getByRole("button", { name: /^Tudo/ });
-  await escolhida.waitFor();
+  const filtro = page.getByRole("button", { name: /^Filtrar séries/ });
   await page.waitForTimeout(300);
-  expect(await fundo(escolhida)).not.toBe(BRANCO);
+  expect(await fundo(filtro)).not.toBe(BRANCO);
+  expect(await fundo(filtro)).not.toBe("rgb(255, 255, 255)");
 });
 
 test("no Pôr em dia, o filtro escolhido não é uma pílula branca", async ({ page }) => {

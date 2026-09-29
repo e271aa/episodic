@@ -37,9 +37,7 @@ test("os botões do Pôr em dia ficam por cima da dock, não por baixo", async (
   expect(await tapadoPelaDock(page, '[aria-label="Saltar — ainda não vi"]')).toBe(false);
 });
 
-test("o painel de filtros abre por cima do ecrã, mesmo com a página a meio", async ({
-  page,
-}) => {
+test("o menu de filtro abre dentro do ecrã, mesmo depois de a página ter rolado", async ({ page }) => {
   await semear(page, {
     series: Array.from({ length: 30 }, (_, i) => ({
       uuid: `s-${i}`,
@@ -48,19 +46,18 @@ test("o painel de filtros abre por cima do ecrã, mesmo com a página a meio", a
   });
   await page.goto("/library");
   await page.locator('a[href="/series/s-29"]').waitFor();
+  // rola-se até ao fundo e volta-se ao filtro
   await page.evaluate(() => window.scrollTo(0, 2000));
-  // a barra está colada ao topo (Ronda 12, F4): os filtros alcançam-se a meio da página
-  await page.getByRole("button", { name: "Filtros e ordenação" }).click();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.getByRole("button", { name: /^Filtrar séries/ }).click();
 
-  // `position: fixed` dentro de um antepassado com `transform` deixa de ser
-  // relativo ao ecrã e passa a sê-lo à página — o painel abria no sítio certo
-  // de um ecrã que já não estava à vista, a 2000px de scroll daqui.
-  const painel = page.getByRole("dialog", { name: "Filtros e ordenação" });
-  const caixa = await painel.boundingBox();
+  const menu = page.getByRole("menu", { name: "Filtrar séries" });
+  const caixa = await menu.boundingBox();
   const ecra = page.viewportSize()!;
   expect(caixa).not.toBeNull();
   expect(caixa!.y).toBeGreaterThanOrEqual(0);
-  expect(caixa!.y).toBeLessThan(ecra.height);
+  expect(caixa!.y + caixa!.height).toBeLessThanOrEqual(ecra.height);
+  expect(caixa!.x + caixa!.width).toBeLessThanOrEqual(ecra.width);
 });
 
 test("o Explorar abre em grelha, não no baralho", async ({ page, tmdb }) => {

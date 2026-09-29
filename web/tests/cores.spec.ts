@@ -23,40 +23,39 @@ test("a cor de um cabeçalho de secção nunca é verde, ciano ou magenta", () =
   }
 });
 
-test("na Biblioteca, 'Em curso' é o branco-projetor e 'Para ver' é cinza — não verde nem ciano", async ({
+test("na Biblioteca, a barra de uma série a meio é neutra e a de uma em dia é verde — nunca ciano", async ({
   page,
 }) => {
   await semear(page, {
     series: [
-      { uuid: "s-curso", name: "Em Curso", totalEpisodes: 10 },
-      { uuid: "s-ver", name: "Para Ver", followed: false, inWatchlist: true },
+      { uuid: "s-curso", name: "Em Curso", totalEpisodes: 10, status: "Returning Series" },
+      { uuid: "s-dia", name: "Em Dia", totalEpisodes: 1, status: "Returning Series" },
     ],
-    vistos: [{ showUuid: "s-curso", season: 1, episode: 1 }],
+    vistos: [
+      { showUuid: "s-curso", season: 1, episode: 1 },
+      { showUuid: "s-dia", season: 1, episode: 1 },
+    ],
   });
   await page.goto("/library");
-  const barra = (rotulo: string) =>
+  const cor = (uuid: string) =>
     page
-      .getByRole("heading", { name: rotulo, exact: true })
-      .locator("xpath=preceding-sibling::span[1]");
+      .locator(`a[href="/series/${uuid}"] [style*="width"]`)
+      .evaluate((el) => getComputedStyle(el).backgroundColor);
 
-  const corCurso = await barra("Em curso").evaluate((el) => getComputedStyle(el).backgroundColor);
-  const corVer = await barra("Para ver").evaluate((el) => getComputedStyle(el).backgroundColor);
-
-  // rgb(55, 200, 55) seria o verde SMPTE; rgb(63, 210, 200) seria o ciano
-  expect(corCurso).not.toBe("rgb(55, 200, 55)");
-  expect(corVer).not.toBe("rgb(63, 210, 200)");
-});
-
-test("o hover de um cartão já não acende o âmbar da v1", async ({ page }) => {
-  await semear(page, { listas: [{ id: "l-1", name: "Uma lista" }] });
-  await page.goto("/listas");
-  const cartao = page.locator(".ep-card-hover").first();
-  await cartao.waitFor();
-  await cartao.hover();
-  // a cor transita em 180ms — ler já a seguir apanha um valor a meio caminho
-  await page.waitForTimeout(300);
-  const cor = await cartao.evaluate((el) => getComputedStyle(el).borderColor);
-  expect(cor).not.toContain("255, 170, 51");
+  // a meio de ver: só progresso, sem cor de estado (o `label`, branco à noite)
+  expect(await cor("s-curso")).toBe("rgb(255, 255, 255)");
+  // em dia, e a série continua: o verde do estado (#30d158)
+  expect(await cor("s-dia")).toBe("rgb(48, 209, 88)");
+  // e os cabeçalhos das secções não levam cor nenhuma
+  const cores = await page
+    .getByRole("heading", { level: 2, name: /Em curso|Completas/ })
+    .first()
+    .evaluate((h) =>
+      [...(h.parentElement?.querySelectorAll("*") ?? [])]
+        .map((el) => getComputedStyle(el).backgroundColor)
+        .filter((c) => c !== "rgba(0, 0, 0, 0)"),
+    );
+  expect(cores).toEqual([]);
 });
 
 test("a barra de progresso da grelha já não tem brilho — só a cor com significado", async ({
@@ -70,7 +69,7 @@ test("a barra de progresso da grelha já não tem brilho — só a cor com signi
     ],
   });
   await page.goto("/library");
-  const barra = page.locator('a[href="/series/s-completa"] .h-1 > div').first();
+  const barra = page.locator('a[href="/series/s-completa"] [style*="width"]').first();
   await barra.waitFor();
   const sombra = await barra.evaluate((el) => getComputedStyle(el).boxShadow);
   expect(sombra).toBe("none");

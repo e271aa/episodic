@@ -15,6 +15,16 @@ export type NextUpMap = Map<string, QueueEntry>;
 // Série sem episódios vistos há mais de 30 dias sai da fila principal
 export const STALE_MS = 30 * 24 * 60 * 60 * 1000;
 
+/**
+ * «Parada»: a última marcação foi há mais de 30 dias. É **uma só regra** para a
+ * casa («Retomar») e para a Biblioteca («Retomar» também): duas regras davam
+ * duas listas diferentes para o mesmo nome. Não se guarda em lado nenhum — ao
+ * voltar a marcar um episódio a série deixa de estar parada sozinha.
+ */
+export function estaParada(lastWatchedAt: string | null | undefined, now: number): boolean {
+  return !!lastWatchedAt && now - Date.parse(lastWatchedAt) > STALE_MS;
+}
+
 // A fila calculada persiste entre visitas: mostra-se logo a última versão
 // conhecida e recalcula-se em segundo plano (stale-while-revalidate).
 const NEXTUP_CACHE_KEY = "nextup-cache";
@@ -74,7 +84,7 @@ export function classifyQueue(
     if (!entry) continue;
     if (show.watchedCount === 0) {
       notStarted.push(show);
-    } else if (entry.lastWatchedAt && now - Date.parse(entry.lastWatchedAt) > STALE_MS) {
+    } else if (estaParada(entry.lastWatchedAt, now)) {
       stale.push(show);
     } else {
       active.push(show);

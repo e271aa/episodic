@@ -58,19 +58,20 @@ test("'Esta semana' e 'Por começar' usam as cores neutras, não as dos estados"
   );
   expect(cores).toEqual([]);
 
-  await semear(page, { series: [{ uuid: "s-2", name: "Nunca Vista" }] });
-  await page.goto("/library?vista=lista");
-  await page.getByRole("heading", { level: 2, name: /Por começar/ }).first().waitFor();
-  await expect
-    .poll(() =>
-      page
-        .getByRole("heading", { level: 2, name: /Por começar/ })
-        .first()
-        .evaluate((h) => getComputedStyle(h.previousElementSibling as Element).backgroundColor),
-    )
-    // o cinza da Biblioteca, o mesmo de "Para ver" e "Já não sigo" — o
-    // `faint` da Mira, modo noite (#8e8e93; era #8a8880 na v2)
-    .toBe("rgb(142, 142, 147)");
+  // e na Biblioteca é igual: nenhum cabeçalho de secção leva cor
+  await semear(page, {
+    series: [{ uuid: "s-2", name: "Nunca Vista" }, { uuid: "s-3", name: "A Meio", totalEpisodes: 4 }],
+    vistos: [{ showUuid: "s-3", season: 1, episode: 1 }],
+  });
+  await page.goto("/library");
+  const secao = page.getByRole("heading", { level: 2, name: /Por começar/ }).first();
+  await secao.waitFor();
+  const coresBiblioteca = await secao.evaluate((h) =>
+    [...(h.parentElement?.querySelectorAll("*") ?? [])]
+      .map((el) => getComputedStyle(el).backgroundColor)
+      .filter((c) => c !== "rgba(0, 0, 0, 0)"),
+  );
+  expect(coresBiblioteca).toEqual([]);
 });
 
 test("no detalhe, com buracos para trás, o traço do estado é o ciano dos buracos", async ({

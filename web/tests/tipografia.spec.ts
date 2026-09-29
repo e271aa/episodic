@@ -83,19 +83,15 @@ test("com a raiz do documento maior, o corpo de texto cresce com ela", async ({
   expect(depois).toBeGreaterThan(antes * 1.3);
 });
 
-test("à raiz de hoje (16px), o tamanho do texto não muda um pixel", async ({
-  page,
-}) => {
-  // A prova de que a letra do Ruben fica como está: à raiz que ele já tem,
-  // o valor tem de bater certo com o antigo `text-[15px]`.
+test("o nome de um cartaz da Biblioteca é a 13px na base do iPhone (17px)", async ({ page }) => {
+  // B·3: o título do cartaz a 13/600. Em rem, para seguir o Dynamic Type.
   await semear(page, { series: [{ uuid: "s-1", name: "Serie Um", totalEpisodes: 5 }] });
   await page.goto("/library");
   const alvo = page.locator("p", { hasText: "Serie Um" }).first();
   await alvo.waitFor();
-  // a base fora do iOS passou a 17 (Mira); a prova é à raiz de 16
   await page.evaluate(() => {
-    document.documentElement.style.fontSize = "16px";
+    document.documentElement.style.fontSize = "17px";
   });
-  const tamanho = await alvo.evaluate((el) => getComputedStyle(el).fontSize);
-  expect(tamanho).toBe("15px");
+  const tamanho = parseFloat(await alvo.evaluate((el) => getComputedStyle(el).fontSize));
+  expect(tamanho).toBeCloseTo(13, 0);
 });

@@ -154,9 +154,7 @@ test("'A seguir' é só a fila: seguir uma série diz 'Seguida', e a Biblioteca 
     /^Em curso/,
   );
 
-  await page.getByRole("button", { name: "Procurar na biblioteca" }).click();
   await page.locator('input[type="search"]').fill("serie nova");
-  await page.getByRole("button", { name: "Ver resultados" }).click();
   await page.getByTestId("remote-search-button").click();
   await page.getByRole("button", { name: "Seguir" }).click();
   await expect(page.getByRole("button", { name: "Seguida" })).toBeVisible();
@@ -432,15 +430,15 @@ test("/listas não transborda a 320px", async ({ page }) => {
 test("abrir uma folha move o foco para dentro; fechar devolve-o ao botão", async ({
   page,
 }) => {
-  // Sem gestão de foco: abrir "Filtros e ordenação" deixava o foco no botão
-  // por trás do véu, e fechar não o devolvia a lado nenhum (Ronda 12, Fase
-  // 4, achado #13).
-  await semear(page, { series: [{ uuid: "s-1", name: "Serie Um" }] });
-  await page.goto("/library");
+  // Sem gestão de foco: abrir uma folha (o «···» do detalhe) deixava o foco
+  // no botão por trás do véu, e fechar não o devolvia a lado nenhum (Ronda
+  // 12, Fase 4, achado #13).
+  await semear(page, { series: [{ uuid: "s-1", name: "Serie Um", totalEpisodes: 3 }] });
+  await page.goto("/series/s-1");
   // Ativado pelo teclado (foco + Enter), não por clique: no WebKit um
   // clique de rato não deixa o <button> focado, e é o caso de quem usa
   // teclado que este teste prova.
-  const gatilho = page.getByRole("button", { name: "Filtros e ordenação" });
+  const gatilho = page.getByTestId("menu-serie");
   await gatilho.focus();
   await gatilho.press("Enter");
 
@@ -481,8 +479,7 @@ test("os campos de texto têm um rótulo a sério, não só placeholder", async 
   expect(await temRotuloAsSerio(page.getByPlaceholder("Nome da nova lista…"))).toBe(true);
 
   await page.goto("/library");
-  await page.getByRole("button", { name: "Procurar na biblioteca" }).click();
-  expect(await temRotuloAsSerio(page.getByPlaceholder("Procurar na biblioteca…"))).toBe(true);
+  expect(await temRotuloAsSerio(page.getByPlaceholder("Procurar na biblioteca"))).toBe(true);
 
   await page.goto("/explorar?procurar=1");
   expect(await temRotuloAsSerio(page.getByPlaceholder("Procurar uma série…"))).toBe(true);
