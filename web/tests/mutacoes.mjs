@@ -444,7 +444,7 @@ const MUTACOES = [
     descricao: "a barra de progresso da grelha volta a ter o brilho decorativo",
     ficheiro: POSTER_CARD,
     de: "            <div className=\"absolute inset-x-0 bottom-0 h-1 bg-black/50\">\n              {/* Sem brilho: a cor já tem significado (Bars Rule), o halo à\n                  volta dela é só decoração a mais (Ronda 12, Fase 5b). */}\n              <div\n                className=\"h-full transition-[width] duration-[240ms] ease-out\"\n                style={{ width: `${progress}%`, background: barColor ?? undefined }}",
-    para: "            <div className=\"absolute inset-x-0 bottom-0 h-1 bg-black/50\">\n              <div\n                className=\"h-full transition-[width] duration-[240ms] ease-out\"\n                style={{ width: `${progress}%`, background: barColor ?? undefined, boxShadow: barColor ? `0 0 6px ${barColor}b3` : undefined }}",
+    para: "            <div className=\"absolute inset-x-0 bottom-0 h-1 bg-black/50\">\n              <div\n                className=\"h-full transition-[width] duration-[240ms] ease-out\"\n                style={{ width: `${progress}%`, background: barColor ?? undefined, boxShadow: barColor ? `0 0 6px color-mix(in srgb, ${barColor} 70%, transparent)` : undefined }}",
   },
   {
     nome: "r12-fase5b/em-curso-verde",
