@@ -478,8 +478,8 @@ const MUTACOES = [
     nome: "r12-fase5b/import-vocabulario-de-computador",
     descricao: "o import volta a dizer 'clica' em vez de 'toca'",
     ficheiro: IMPORT_PAGINA,
-    de: "Arrasta o ZIP para aqui, ou toca para escolher",
-    para: "Arrasta o ZIP para aqui, ou clica para escolher",
+    de: "Toca para escolher o ZIP",
+    para: "Clica para escolher o ZIP",
   },
   {
     nome: "r12-fase5b/scroll-fantasma-margem-cancelada",
