@@ -76,7 +76,15 @@ test("com o texto a 150% num ecrã de 320, a arte sai do cartão e nada transbor
   });
   await expect(arte).toBeHidden();
   await expect(page.getByRole("heading", { level: 2, name: "Severance" })).toBeVisible();
-  await expect(page.getByRole("heading", { level: 1, name: "A seguir" })).toBeVisible();
+  const titulo = page.getByRole("heading", { level: 1, name: "A seguir" });
+  await expect(titulo).toBeVisible();
+  // numa linha só: o «Pôr em dia» passa para baixo em vez de o espremer
+  // («A / seguir», visto na captura da Fase 2)
+  const { altura, linha } = await titulo.evaluate((el) => ({
+    altura: el.getBoundingClientRect().height,
+    linha: parseFloat(getComputedStyle(el).lineHeight),
+  }));
+  expect(altura).toBeLessThan(linha * 1.5);
   expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
 });
 
