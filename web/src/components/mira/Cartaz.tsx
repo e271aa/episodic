@@ -50,6 +50,7 @@ export default function Cartaz({
   grande = false,
   fluida = false,
   rodape,
+  onAbrir,
 }: {
   /** sem `href` o cartaz não leva a lado nenhum (no Explorar, a capa ainda não tem detalhe) */
   href?: string;
@@ -68,6 +69,8 @@ export default function Cartaz({
   fluida?: boolean;
   /** a ação por baixo (fora da ligação): uma só por cartaz no Explorar */
   rodape?: ReactNode;
+  /** sem `href`, tocar na capa faz isto (no Explorar, abre a ficha) */
+  onAbrir?: () => void;
 }) {
   const barra =
     progresso?.total
@@ -156,6 +159,15 @@ export default function Cartaz({
         <Link href={href} className="group block cursor-pointer transition-transform active:scale-[0.97]">
           {corpo}
         </Link>
+      ) : onAbrir ? (
+        <button
+          type="button"
+          onClick={onAbrir}
+          aria-label={`Abrir ${nome}`}
+          className="block w-full cursor-pointer text-left transition-transform active:scale-[0.97]"
+        >
+          {corpo}
+        </button>
       ) : (
         <div>{corpo}</div>
       )}

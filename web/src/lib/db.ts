@@ -505,6 +505,18 @@ export async function countWatched(): Promise<number> {
 }
 
 /**
+ * Ver um episódio é começar a ver a série: se estava só em «Para ver»
+ * (`inWatchlist` sem `followed`), passa a seguida e sai dessa lista. Não mexe
+ * numa série que deixaste de seguir — essa só volta com um «Seguir» à mão.
+ */
+async function comecarASeguir(showUuid: string): Promise<void> {
+  const show = await getShow(showUuid);
+  if (show && show.inWatchlist && !show.followed) {
+    await updateShow(showUuid, { followed: true, inWatchlist: false });
+  }
+}
+
+/**
  * `at` só é passado por quem está a REPOR uma marcação antiga (o anular da
  * reparação da Fase P): sem ele, desfazer devolvia o episódio com a data de
  * hoje e a data original perdia-se — que é precisamente o que "reverter" não
@@ -537,6 +549,8 @@ export async function markWatched(
     watchedAt,
     at: new Date().toISOString(),
   });
+  // repor uma marcação antiga (`at`) não é ver nada agora
+  if (!at) await comecarASeguir(showUuid);
 }
 
 /**
@@ -577,6 +591,7 @@ export async function markWatchedMany(
     } satisfies EpisodeOp);
   }
   await tx.done;
+  await comecarASeguir(showUuid);
   if (typeof window !== "undefined") {
     void import("./autosync").then((m) => m.scheduleFlush());
   }

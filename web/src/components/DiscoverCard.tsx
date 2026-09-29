@@ -2,6 +2,9 @@
 
 import { useState } from "react";
 import Cartaz from "@/components/mira/Cartaz";
+import Poster from "@/components/Poster";
+import SheetPanel from "@/components/SheetPanel";
+import StreamingBadges from "@/components/StreamingBadges";
 import { CheckIcon, PlusIcon } from "@/components/icons";
 import type { DiscoverItem } from "@/lib/tmdb";
 
@@ -36,6 +39,7 @@ export default function DiscoverCard({
   fluida?: boolean;
 }) {
   const [estado, setEstado] = useState<Estado>("idle");
+  const [ficha, setFicha] = useState(false);
 
   const guardar = async () => {
     setEstado("a-guardar");
@@ -57,48 +61,77 @@ export default function DiscoverCard({
   const botao =
     "flex min-h-11 w-full cursor-pointer items-center justify-center gap-1.5 rounded-full text-[0.9375rem] font-semibold transition-transform active:scale-95";
 
+  const acoes = (
+    <div className="flex flex-col">
+      {estado === "idle" && onFollow && (
+        <>
+          <button onClick={() => void seguir()} className={`${botao} bg-fill text-label`}>
+            Seguir
+          </button>
+          <button onClick={() => void guardar()} className={`${botao} text-label-2`}>
+            Para ver
+          </button>
+        </>
+      )}
+      {estado === "idle" && !onFollow && (
+        <button onClick={() => void guardar()} className={`${botao} bg-fill text-label`}>
+          <PlusIcon className="h-4 w-4" />
+          Para ver
+        </button>
+      )}
+      {estado === "a-guardar" && (
+        <span className={`${botao} bg-fill text-label-2 opacity-60`} aria-busy>
+          A guardar…
+        </span>
+      )}
+      {(estado === "guardado" || estado === "seguida") && (
+        <span
+          role="status"
+          className={`${botao} cursor-default shadow-[inset_0_0_0_1px_var(--color-label-3)] text-label-2 active:scale-100`}
+        >
+          <CheckIcon className="check-pop h-4 w-4" />
+          {estado === "seguida" ? "Seguida" : "Na lista"}
+        </span>
+      )}
+    </div>
+  );
+
   return (
-    <Cartaz
-      grande
-      fluida={fluida}
-      nome={item.name}
-      capa={item.posterPath}
-      indice={index}
-      legenda={legenda}
-      rodape={
-        <div className="mt-2 flex flex-col">
-          {estado === "idle" && onFollow && (
-            <>
-              <button onClick={() => void seguir()} className={`${botao} bg-fill text-label`}>
-                Seguir
-              </button>
-              <button onClick={() => void guardar()} className={`${botao} text-label-2`}>
-                Para ver
-              </button>
-            </>
-          )}
-          {estado === "idle" && !onFollow && (
-            <button onClick={() => void guardar()} className={`${botao} bg-fill text-label`}>
-              <PlusIcon className="h-4 w-4" />
-              Para ver
-            </button>
-          )}
-          {estado === "a-guardar" && (
-            <span className={`${botao} bg-fill text-label-2 opacity-60`} aria-busy>
-              A guardar…
-            </span>
-          )}
-          {(estado === "guardado" || estado === "seguida") && (
-            <span
-              role="status"
-              className={`${botao} cursor-default shadow-[inset_0_0_0_1px_var(--color-label-3)] text-label-2 active:scale-100`}
-            >
-              <CheckIcon className="check-pop h-4 w-4" />
-              {estado === "seguida" ? "Seguida" : "Na lista"}
-            </span>
-          )}
+    <>
+      <Cartaz
+        grande
+        fluida={fluida}
+        nome={item.name}
+        capa={item.posterPath}
+        indice={index}
+        legenda={legenda}
+        onAbrir={() => setFicha(true)}
+        rodape={<div className="mt-2">{acoes}</div>}
+      />
+      {/* A ficha: sinopse e onde ver, sem guardar nada só por espreitar */}
+      <SheetPanel titulo={item.name} aberto={ficha} onFechar={() => setFicha(false)} agrupada>
+        <div className="px-5 pb-4">
+          <div className="flex gap-4">
+            <div className="relative aspect-2/3 w-[104px] shrink-0 overflow-hidden rounded-xl bg-group">
+              <Poster path={item.posterPath} alt="" fill sizes="104px" className="object-cover" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-[1.375rem] font-bold leading-tight text-label">{item.name}</p>
+              <p className="ep-code mt-1 text-[0.8125rem] text-label-2">
+                {[item.kind === "movie" ? "Filme" : "Série", item.year].filter(Boolean).join(" · ")}
+                {item.rating > 0 && ` · ★ ${item.rating.toFixed(1)}`}
+              </p>
+            </div>
+          </div>
+          <p className="mt-4 text-[0.9375rem] leading-relaxed text-label">
+            {item.overview ?? "Sem sinopse disponível."}
+          </p>
+          <div className="mt-4">
+            <StreamingBadges kind={item.kind} tmdbId={item.tmdbId} variant="linha" />
+          </div>
+          <div className="mt-4">{acoes}</div>
         </div>
-      }
-    />
+      </SheetPanel>
+    </>
   );
 }

@@ -220,6 +220,12 @@ faixas, **Listas**.
   só contorno `label-3`, sem preenchimento. Dispensar saiu do cartaz — é na
   Triagem. **Exceção:** os resultados de uma pesquisa de séries têm «Seguir» +
   «Para ver» (quem procura pelo nome já costuma estar a ver).
+- **Tocar na capa** abre a ficha (folha agrupada): sinopse, «Onde ver» e a
+  mesma ação. Espreitar não guarda nada — a série só entra na biblioteca com
+  «Para ver» / «Seguir».
+- **Ver o primeiro episódio** de uma série que estava só em «Para ver» passa-a
+  a seguida (`comecarASeguir`, em `db.ts`): sai de «Para ver» e vai para «Em
+  curso». Não mexe em «Já não sigo» nem na reposição de marcações antigas.
 - **Ver tudo** dobra a faixa num mosaico de 3 colunas; a pesquisa é sempre
   mosaico (numa faixa, «matrix» eram 2400px).
 - **Triagem** = o baralho, a ecrã cheio com «‹ Explorar» para fechar. A

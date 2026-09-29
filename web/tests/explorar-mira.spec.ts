@@ -112,3 +112,55 @@ test("sem ligação: diz-o, desliga a pesquisa, e as listas continuam; com rede 
   await expect(page.getByRole("searchbox")).toBeEnabled();
   await expect(page.getByText("Sugestao 1").first()).toBeVisible();
 });
+
+test("marcar um episódio tira a série de «Para ver» e põe-na em curso", async ({ page, tmdb }) => {
+  tmdb.tvmaze[495] = [3];
+  await semear(page, {
+    series: [
+      {
+        uuid: "s-1",
+        name: "Guardada",
+        tvmazeId: 495,
+        numeracao: "tvmaze",
+        totalEpisodes: 3,
+        followed: false,
+        inWatchlist: true,
+      },
+    ],
+  });
+  await page.goto("/library?filtro=para-ver");
+  await expect(page.getByText("Guardada").first()).toBeVisible();
+
+  await page.goto("/series/s-1");
+  await page.getByTestId("ep-1-1").click();
+  await expect(page.getByTestId("ep-1-1")).toHaveAttribute("aria-pressed", "true");
+
+  await page.goto("/library?filtro=para-ver");
+  await page.getByRole("heading", { level: 1, name: "Biblioteca" }).waitFor();
+  await expect(page.getByText("Guardada")).toHaveCount(0);
+  await page.goto("/library?filtro=a-ver");
+  await expect(page.getByText("Guardada").first()).toBeVisible();
+});
+
+test("tocar na capa abre a ficha da sugestão, sem a guardar; dá para guardar lá de dentro", async ({
+  page,
+  tmdb,
+}) => {
+  tmdb.tendencias = [{ ...sugestoes(1)[0], overview: "Uma sinopse de teste." }];
+  await semear(page, {});
+  await page.goto("/explorar");
+
+  await page.getByRole("button", { name: "Abrir Sugestao 1" }).click();
+  const ficha = page.getByRole("dialog");
+  await expect(ficha.getByText("Uma sinopse de teste.")).toBeVisible();
+  await expect(ficha.getByText("Onde ver", { exact: false }).first()).toBeVisible();
+
+  // só espreitar não guarda nada
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByText("Na lista", { exact: true })).toHaveCount(0);
+
+  await page.getByRole("button", { name: "Abrir Sugestao 1" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Para ver" }).click();
+  await expect(page.getByRole("dialog").getByText("Na lista", { exact: true })).toBeVisible();
+});
