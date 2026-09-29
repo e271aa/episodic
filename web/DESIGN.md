@@ -395,11 +395,14 @@ Diretos e táteis: respondem ao toque encolhendo 3% em 120ms.
   herói, e à esquerda do título nos outros (`CabecalhoEcra`). Nunca um texto
   no canto superior direito. Recuar desfaz a navegação — nunca empurra uma
   página nova.
-- **Biblioteca:** três separadores na barra flutuante — Séries · Filmes ·
-  Listas; as contagens só a partir de 360px de largura. A barra esconde-se
-  ao rolar para baixo e volta ao rolar para cima, como a do Safari
-  (escolhido pelo Ruben, Ronda 12, 5d); escondida não se toca, e o teclado
-  trá-la de volta. Abre em 3 colunas de cartazes (a vista "compacta"), com
+- **Biblioteca:** três separadores — Séries · Filmes · Listas — mais a
+  pesquisa e os filtros, numa pílula **no topo, por baixo do título, colada
+  ao topo ao rolar** (`sticky`). Esteve a flutuar em baixo (5b.3) e depois a
+  esconder-se ao rolar (5d, Ruben); ao chegar continuavam a ser duas barras
+  com a dock e tapavam o título da segunda fila, por isso o Ruben escolheu
+  tirá-la de lá (F4, 29-09): em baixo fica só a dock. As contagens só a
+  partir de 360px de largura. Abre em 3 colunas de cartazes (a vista
+  "compacta"), com
   o título à vista. Nos filmes, os "para ver" vêm primeiro, numa secção
   própria.
 
@@ -443,6 +446,14 @@ por um aviso que sobe logo acima da dock (pela mesma medida, `--dock-h`),
 sem ressalto, e desce pelo mesmo caminho, com uma barra que se esvazia
 enquanto a anulação ainda é possível. A casa deixa-lhe espaço por baixo do
 "Marcar visto": o aviso nunca tapa a ação que o fez aparecer.
+
+### Títulos
+Mostra-se o **título original** — o que o TV Time exportou, o que o Ruben
+conhece (`Severance`, não `Separação`) — no Explorar e na pesquisa, tal como
+na biblioteca. Só se o original for em alfabeto latino: o de "Attack on
+Titan" é `進撃の巨人`, e aí fica o título em português. O outro nome fica
+guardado como alias, para o "já está na biblioteca?" bater nos dois
+(`lib/titulos.ts`).
 
 ### Movimento
 - **Curvas:** `--ease-out` = `cubic-bezier(0.23, 1, 0.32, 1)` (o `ease-out`
@@ -513,7 +524,7 @@ com um círculo tracejado, e não se podem marcar.
   vermelho SMPTE (`#e6483c`); o `#e8564a` do "não" do baralho passou ao
   SMPTE na 5e.
 - **Don't** pôr cor numa ação só para a destacar: é a pílula branca que
-  destaca.
+  destaca. (O "Pôr em dia" da casa levava o disco SMPTE; saiu na F4.)
 - **Don't** escrever texto no azul de sinal.
 - **Don't** baixar um campo de texto dos 16px.
 - **Don't** fazer um modo claro.
