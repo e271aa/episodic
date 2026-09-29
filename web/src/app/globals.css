@@ -1,34 +1,173 @@
 @import "tailwindcss";
 
-/* Episodic é dark-first: a app vive no escuro, como quem vê séries.
-   O tema aplica-se via classe .dark no <html>. */
-@custom-variant dark (&:where(.dark, .dark *));
+/* ─────────────────────────────────────────────────────────────────────────
+   A MIRA (Ronda 14) — «uma app que parece ter vindo com o iPhone, e só a
+   mira de cor diz que é a nossa». Fonte: design_handoff_mira/README.md.
+
+   Dois modos, noite e claro. O tema vem do sistema (`prefers-color-scheme`)
+   a menos que a pessoa o fixe em Perfil › Aparência, que põe
+   `data-theme="noite" | "claro"` no <html> antes do primeiro paint
+   (script em layout.tsx). Os valores vivem em `--m-*`, e os tokens do
+   Tailwind apontam para eles — por isso trocam com o tema.
+
+   Os nomes antigos (tube, panel, raised, ink, dim, faint, line) continuam a
+   existir e apontam para os papéis novos: os ecrãs que ainda não foram
+   refeitos mudam de cor sem mudar de código, e são refeitos um a um.
+   ───────────────────────────────────────────────────────────────────────── */
+:root {
+  color-scheme: dark;
+  --m-bg: #000000;
+  --m-group: #1c1c1e;
+  --m-elevated: #2c2c2e;
+  --m-segment: #636366;
+  --m-chip: #48484a;
+  --m-fill: rgba(120, 120, 128, 0.24);
+  --m-fill-strong: rgba(120, 120, 128, 0.3);
+  --m-separator: rgba(84, 84, 88, 0.55);
+  --m-label: #ffffff;
+  --m-label-2: rgba(235, 235, 245, 0.6);
+  /* texto terciário: sólido e AA (6.0:1 no bg, 5.0:1 no group). O
+     `label-3` do iOS (30–40%) é só para contornos e chevrons, nunca texto */
+  --m-label-faint: #8e8e93;
+  --m-label-3: rgba(235, 235, 245, 0.34);
+  --m-glass: rgba(44, 44, 48, 0.7);
+  --m-glass-edge: rgba(255, 255, 255, 0.2);
+  --m-glass-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
+  --m-on-label: #000000; /* texto dentro da cápsula de ação */
+  --m-track: rgba(255, 255, 255, 0.18); /* segmentos/trilho por ver */
+  --m-tab-on: rgba(255, 255, 255, 0.14);
+  /* estado */
+  --m-por-marcar: #64d2ff;
+  --m-por-marcar-texto: #64d2ff;
+  --m-em-dia: #30d158;
+  --m-terminada: #da5ce8;
+  --m-danger: #ff453a;
+}
+
+:root[data-theme="claro"] {
+  color-scheme: light;
+  --m-bg: #f2f2f7;
+  --m-group: #ffffff;
+  --m-elevated: #e5e5ea;
+  --m-segment: #ffffff;
+  --m-chip: #d1d1d6;
+  --m-fill: rgba(118, 118, 128, 0.12);
+  --m-fill-strong: rgba(118, 118, 128, 0.16);
+  --m-separator: rgba(60, 60, 67, 0.18);
+  --m-label: #000000;
+  --m-label-2: rgba(60, 60, 67, 0.6);
+  --m-label-faint: #6c6c70;
+  --m-label-3: rgba(60, 60, 67, 0.3);
+  --m-glass: rgba(255, 255, 255, 0.76);
+  --m-glass-edge: rgba(0, 0, 0, 0.08);
+  --m-glass-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.25);
+  --m-on-label: #ffffff;
+  --m-track: rgba(0, 0, 0, 0.12);
+  --m-tab-on: rgba(0, 0, 0, 0.07);
+  --m-por-marcar: #32ade6;
+  --m-por-marcar-texto: #0077a8;
+  --m-em-dia: #34c759;
+  --m-terminada: #af52de;
+  --m-danger: #ff3b30;
+}
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="noite"]) {
+    color-scheme: light;
+    --m-bg: #f2f2f7;
+    --m-group: #ffffff;
+    --m-elevated: #e5e5ea;
+    --m-segment: #ffffff;
+    --m-chip: #d1d1d6;
+    --m-fill: rgba(118, 118, 128, 0.12);
+    --m-fill-strong: rgba(118, 118, 128, 0.16);
+    --m-separator: rgba(60, 60, 67, 0.18);
+    --m-label: #000000;
+    --m-label-2: rgba(60, 60, 67, 0.6);
+    --m-label-faint: #6c6c70;
+    --m-label-3: rgba(60, 60, 67, 0.3);
+    --m-glass: rgba(255, 255, 255, 0.76);
+    --m-glass-edge: rgba(0, 0, 0, 0.08);
+    --m-glass-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.25);
+    --m-on-label: #ffffff;
+    --m-track: rgba(0, 0, 0, 0.12);
+    --m-tab-on: rgba(0, 0, 0, 0.07);
+    --m-por-marcar: #32ade6;
+    --m-por-marcar-texto: #0077a8;
+    --m-em-dia: #34c759;
+    --m-terminada: #af52de;
+    --m-danger: #ff3b30;
+  }
+}
 
 @theme inline {
-  /* v2 "Esta noite" — o tubo desligado, não a sala escura da v1 */
-  --color-tube: #101014; /* fundo — preto quente, sem tinta azul */
-  --color-panel: #17171d; /* superfícies (cartões, nav) */
-  --color-raised: #1f1f27; /* superfícies elevadas / hover */
-  --color-ink: #f5f3ee; /* texto principal — branco-projetor */
-  --color-dim: #a5a29a; /* texto secundário */
-  --color-faint: #8a8880; /* texto terciário — ≥4.5:1 AA contra panel/raised/tube */
-  --color-line: rgba(245, 243, 238, 0.08); /* contornos */
+  /* papéis da Mira */
+  --color-bg: var(--m-bg);
+  --color-group: var(--m-group);
+  --color-elevated: var(--m-elevated);
+  --color-segment: var(--m-segment);
+  --color-chip: var(--m-chip);
+  --color-fill: var(--m-fill);
+  --color-fill-strong: var(--m-fill-strong);
+  --color-separator: var(--m-separator);
+  --color-label: var(--m-label);
+  --color-label-2: var(--m-label-2);
+  --color-label-3: var(--m-label-3);
+  --color-on-label: var(--m-on-label);
+  --color-track: var(--m-track);
+  --color-glass: var(--m-glass);
+  --color-por-marcar: var(--m-por-marcar);
+  --color-por-marcar-texto: var(--m-por-marcar-texto);
+  --color-em-dia: var(--m-em-dia);
+  --color-terminada: var(--m-terminada);
 
-  --color-danger: #e5484d;
+  /* os nomes de antes, a apontar para os papéis novos (ver acima) */
+  --color-tube: var(--m-bg);
+  --color-panel: var(--m-group);
+  --color-raised: var(--m-elevated);
+  --color-ink: var(--m-label);
+  --color-dim: var(--m-label-2);
+  --color-faint: var(--m-label-faint);
+  --color-line: var(--m-separator);
+  --color-danger: var(--m-danger);
 
-  /* As barras SMPTE como tokens (Ronda 12, Fase 5e): estavam escritas à mão
-     em 12 sítios, e o audit contava-as como cor fora do sistema. */
-  --color-smpte-gray: #c8c8c8;
-  --color-smpte-yellow: #e6c832;
-  --color-smpte-cyan: #3fd2c8;
-  --color-smpte-green: #37c837;
-  --color-smpte-magenta: #d24bd2;
-  --color-smpte-red: #e6483c;
-  --color-smpte-blue: #3c46e6;
+  /* A mira — as sete barras, pela ordem da mira. Só no ritual de marcar e
+     na casa vazia («sem sinal»); o resto da cor é estado, nunca decoração. */
+  --color-smpte-gray: #e5e5ea;
+  --color-smpte-yellow: #ffd60a;
+  --color-smpte-cyan: var(--m-por-marcar);
+  --color-smpte-green: var(--m-em-dia);
+  --color-smpte-magenta: var(--m-terminada);
+  --color-smpte-red: #ff453a;
+  --color-smpte-blue: #0a84ff;
 
-  --font-display: var(--font-archivo);
-  --font-body: var(--font-schibsted);
-  --font-code: var(--font-spline-mono);
+  /* Letra do sistema: SF Pro, SF Mono, SF Rounded. As três fontes da v2
+     (Archivo, Schibsted, Spline) deixam de ser carregadas. */
+  --font-display: -apple-system, BlinkMacSystemFont, "SF Pro Display", system-ui, sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+  --font-code: ui-monospace, "SF Mono", Menlo, monospace;
+  --font-rounded: ui-rounded, "SF Pro Rounded", -apple-system, system-ui, sans-serif;
+}
+
+/* O espaço em px, não em rem. O texto segue o tamanho do sistema (abaixo);
+   se o espaço o seguisse também, o alvo de 44px do Ruben — corpo a 15px —
+   passava a 41 (Ronda 14, Fase 0). O iOS faz o mesmo: a letra cresce, as
+   margens não. */
+@theme {
+  --spacing: 4px;
+}
+
+/* Dynamic Type. No Safari do iOS (e na PWA instalada), `-apple-system-body`
+   é o tamanho de texto do sistema — medido no iPhone do Ruben: 15px. Tudo o
+   que está em rem cresce e encolhe com ele. Só no iOS: o WebKit do Mac (e o
+   dos testes) dá-lhe 13px, o tamanho do macOS, e encolhia tudo. Fora do iOS
+   a base é a do iPhone por omissão. */
+html {
+  font-size: 17px;
+}
+@supports (-webkit-touch-callout: none) {
+  html {
+    font: -apple-system-body;
+  }
 }
 
 /* Curvas de movimento (Ronda 12, Fase 6). As do browser são fracas: o
@@ -41,9 +180,10 @@
 }
 
 body {
-  background: var(--color-tube);
-  color: var(--color-ink);
-  font-family: var(--font-body), system-ui, sans-serif;
+  background: var(--color-bg);
+  color: var(--color-label);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
 }
 
 /* O iOS amplia a página sozinho ao tocar num campo com fonte abaixo de 16px,
@@ -68,7 +208,16 @@ body {
      que no iPhone tem de acomodar a barra de gestos. O <main> reserva isto —
      estava fixo em 64px contra uma dock de 74px, e a última linha de
      cartazes ficava por baixo dela. */
-  --dock-h: calc(3.5rem + 2px + max(1rem, env(safe-area-inset-bottom)));
+  --dock-h: calc(var(--barra-h) + var(--barra-fundo) + 10px);
+  /* A barra de separadores da Mira: 64px de cápsula a 28px do fundo; cada
+     página reserva ~110px por baixo (README da Mira). Em px: não cresce com
+     o texto — a 150% os nomes saem e ficam só os ícones. */
+  --barra-h: 64px;
+  /* Os «28px do fundo» do desenho vêm do iPhone com barra de gestos: a área
+     segura de baixo mede 34px e a barra fica 6px dentro dela. Onde não há
+     área segura (o Safari com a barra de endereço em baixo), fica a 12px —
+     com 28 fixos subia sem razão e tapava ações que antes se viam. */
+  --barra-fundo: max(12px, calc(env(safe-area-inset-bottom) - 6px));
 }
 
 /* Barras de cor SMPTE — a assinatura visual da v2. A cor da app existe SÓ
@@ -76,13 +225,13 @@ body {
 :root {
   --bars: linear-gradient(
     90deg,
-    #c8c8c8 0 14.28%,
-    #e6c832 0 28.57%,
-    #3fd2c8 0 42.85%,
-    #37c837 0 57.14%,
-    #d24bd2 0 71.42%,
-    #e6483c 0 85.71%,
-    #3c46e6 0 100%
+    var(--color-smpte-gray) 0 14.28%,
+    var(--color-smpte-yellow) 0 28.57%,
+    #64d2ff 0 42.85%,
+    #30d158 0 57.14%,
+    #da5ce8 0 71.42%,
+    var(--color-smpte-red) 0 85.71%,
+    var(--color-smpte-blue) 0 100%
   );
 }
 .bars {
@@ -99,18 +248,25 @@ body {
   margin-bottom: calc(-1 * (var(--dock-h) + 0.5rem));
 }
 
-/* Cartão base reutilizável — profundidade consistente em toda a app */
+/* O grupo da Mira: no fluxo, a profundidade é só tom (bg → group →
+   elevated), sem sombra nem contorno. O nome `.ep-card` fica, para os ecrãs
+   que ainda não foram refeitos o herdarem já. */
 .ep-card {
-  border-radius: 1.25rem;
-  border: 1px solid var(--color-line);
-  background: var(--color-panel);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 24px -12px rgba(0, 0, 0, 0.45);
-  transition: border-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+  border-radius: 26px;
+  background: var(--color-group);
+  transition: transform 120ms var(--ease-out), background-color 160ms ease;
 }
-/* Sem cor no hover — o Inverted Action Rule não deixa marca própria, e o
-   âmbar aqui era sobra da v1 (Ronda 12, Fase 5b). Só a sombra sobe. */
-.ep-card-hover:hover {
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 12px 28px -10px rgba(0, 0, 0, 0.55);
+.ep-card-hover:active {
+  transform: scale(0.98);
+}
+
+/* Vidro — só para o que flutua por cima (a barra, os botões sobre a arte, o
+   aviso). Medido no iPhone do Ruben: 60 fps a rolar com 4 camadas (Fase 0). */
+.vidro {
+  background: var(--color-glass);
+  -webkit-backdrop-filter: blur(20px) saturate(1.6);
+  backdrop-filter: blur(20px) saturate(1.6);
+  box-shadow: inset 0 0 0 0.5px var(--m-glass-edge), var(--m-glass-shadow);
 }
 
 /* Foco visível e consistente, só para navegação por teclado (:focus-visible
@@ -465,10 +621,23 @@ summary:focus-visible,
     opacity: 0;
   }
 }
+/* O menu do filtro abre como o do iOS: de 96% a 100%, a partir de cima. */
+@keyframes menu-abre {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-4px);
+  }
+}
+.menu-abre {
+  transform-origin: top left;
+  animation: menu-abre 160ms var(--ease-out) both;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .page-enter,
   .poster-in,
-  .undo-in {
+  .undo-in,
+  .menu-abre {
     animation-name: esvanecer;
   }
   .undo-out {

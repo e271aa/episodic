@@ -84,7 +84,9 @@ test("cada destino da dock tem nome para o VoiceOver, mesmo só com o ícone à 
   for (const nome of ["A seguir", "Explorar", "Biblioteca", "Perfil"]) {
     await expect(dock.getByRole("link", { name: nome, exact: true })).toHaveCount(1);
   }
-  // e à vista continua a ser só o ícone nos inativos (o desenho não muda)
+  // A barra da Mira (Ronda 14) mostra os quatro nomes à vista — já não só o
+  // ícone nos inativos. O nome continua a ser o do link.
   const rotulo = dock.locator('a[href="/library"] span');
-  expect(await rotulo.evaluate((el) => el.getBoundingClientRect().width)).toBeLessThanOrEqual(1);
+  await expect(rotulo).toBeVisible();
+  await expect(rotulo).toHaveText("Biblioteca");
 });

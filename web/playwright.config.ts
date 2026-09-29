@@ -26,6 +26,13 @@ export default defineConfig({
      * em cache da corrida anterior.
      */
     serviceWorkers: "block",
+    /**
+     * A app tem dois modos desde a Mira (Ronda 14) e segue o do sistema. O
+     * Playwright abre em claro por omissão — e a suite, escrita para o escuro,
+     * passou a testar o claro sem ninguém o pedir. Corre em noite, o modo de
+     * quem vê séries à noite; o claro tem testes próprios, que o pedem.
+     */
+    colorScheme: "dark",
   },
 
   projects: [

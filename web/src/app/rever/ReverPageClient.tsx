@@ -108,7 +108,10 @@ export default function ReverPage() {
     );
 
   return (
-    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-8 pb-8">
+    // `pt-4` e não `pt-8`: com a base da Mira (17px) o cartão cresceu 10px e as
+    // saídas passavam para baixo da barra ao chegar (Ronda 14, Fase 1). O ecrã
+    // é refeito por inteiro na Fase 8.
+    <main className="mx-auto flex w-full max-w-2xl flex-1 flex-col px-4 pt-4 pb-8">
       <CabecalhoEcra titulo="Rever a biblioteca" voltar="Voltar ao perfil" fallback="/profile" />
       {/* Duas linhas, não três: "uma de cada vez, e tudo se anula" já o
           dizem o contador e o aviso de anular, e a linha a mais empurrava a

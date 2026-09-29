@@ -10,8 +10,8 @@ export default function manifest(): MetadataRoute.Manifest {
     start_url: "/series",
     display: "standalone",
     orientation: "portrait",
-    background_color: "#101014",
-    theme_color: "#101014",
+    background_color: "#000000",
+    theme_color: "#000000",
     lang: "pt",
     categories: ["entertainment", "lifestyle"],
     icons: [

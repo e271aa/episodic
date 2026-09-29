@@ -34,7 +34,9 @@ test("no Explorar, 'Para ver' é contorno, não uma pílula branca", async ({ pa
   expect(await fundo(paraVer)).not.toBe(BRANCO);
 });
 
-test("na Biblioteca, o separador ativo não é branco — a dock é", async ({ page }) => {
+test("na Biblioteca, nem o separador ativo nem a barra são a cápsula branca da ação", async ({ page }) => {
+  // Mira (Ronda 14): o separador ativo da barra é uma cápsula de vidro, não a
+  // branca — a branca é só a ação principal (Regra da ação)
   await semear(page, { series: [{ uuid: "s-1", name: "Serie Um" }] });
   await page.goto("/library");
   const separador = page.getByRole("button", { name: /^Séries/ });
@@ -42,7 +44,8 @@ test("na Biblioteca, o separador ativo não é branco — a dock é", async ({ p
   // a transição de cor dura 150ms — esperar que assente antes de ler
   await page.waitForTimeout(300);
   expect(await fundo(separador)).not.toBe(BRANCO);
-  expect(await fundo(page.locator('nav a[aria-current="page"]'))).toBe(BRANCO);
+  expect(await fundo(page.locator('nav a[aria-current="page"]'))).not.toBe(BRANCO);
+  expect(await fundo(page.locator('nav a[aria-current="page"]'))).not.toBe("rgb(255, 255, 255)");
 });
 
 test("uma escolha na folha de filtros não é uma pílula branca", async ({ page }) => {

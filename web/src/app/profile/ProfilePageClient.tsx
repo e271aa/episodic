@@ -5,6 +5,7 @@ import Link from "next/link";
 import { clearAllData } from "@/lib/db";
 import { loadProfileStats, type ProfileStats } from "@/lib/stats";
 import CloudAccount from "@/components/CloudAccount";
+import EscolhaAparencia from "@/components/mira/EscolhaAparencia";
 import ProfileCard from "@/components/ProfileCard";
 import Poster from "@/components/Poster";
 import SectionHeader from "@/components/SectionHeader";
@@ -212,6 +213,13 @@ export default function ProfilePage() {
           </span>
           <span className="text-faint">→</span>
         </Link>
+      </section>
+
+      {/* Aparência (Ronda 14, Mira). Por agora aqui; o Perfil é refeito na
+          Fase 7 e ela passa para Definições. */}
+      <section className="mt-3">
+        <h2 className="mb-2 px-1 text-[0.88rem] font-semibold text-label-2">Aparência</h2>
+        <EscolhaAparencia />
       </section>
 
       <CloudAccount onSynced={() => void loadProfileStats().then(setStats)} />

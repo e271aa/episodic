@@ -332,18 +332,19 @@ test("as primeiras capas da Biblioteca e do Explorar não têm loading=lazy", as
 
 // ── manifest: a cor de tema da v1 ────────────────────────────
 
-test("o manifest usa a cor do tubo desligado da v2, não a da v1", async ({ page }) => {
+test("o manifest usa o preto da Mira, não a cor de uma versão antiga", async ({ page }) => {
+  // v1: #0b0e14 · v2: #101014 · Mira (Ronda 14): o preto do modo noite do iOS
   const resposta = await page.request.get("/manifest.webmanifest");
   const manifest = await resposta.json();
-  expect(manifest.theme_color).toBe("#101014");
-  expect(manifest.background_color).toBe("#101014");
+  expect(manifest.theme_color).toBe("#000000");
+  expect(manifest.background_color).toBe("#000000");
 });
 
 // ── #17 (Fase 5b.1) · o vermelho de perigo só ao confirmar ──
 
 function ehCorDoTexto(cor: string) {
-  // #e5484d
-  return cor === "rgb(229, 72, 77)";
+  // o vermelho de perigo do iOS, modo noite: #ff453a (Mira, Ronda 14)
+  return cor === "rgb(255, 69, 58)";
 }
 
 test("'Apagar lista' só fica vermelho depois do primeiro toque", async ({ page }) => {
@@ -497,11 +498,12 @@ test("a dock não parte o rótulo do separador ativo a 320px", async ({ page }) 
   await semear(page, {});
   await page.setViewportSize({ width: 320, height: 700 });
   await page.goto("/series");
-  const ativo = page.locator('nav a[href="/series"]');
-  await ativo.waitFor();
-  const altura = (await ativo.boundingBox())!.height;
-  // uma pílula de um alvo de toque só, não duas linhas de texto
-  expect(altura).toBeLessThan(50);
+  // Na barra da Mira o separador tem sempre a altura da barra; o que não pode
+  // é o nome partir em duas linhas — mede-se o nome, a uma linha de texto
+  const rotulo = page.locator('nav a[href="/series"] span');
+  await rotulo.waitFor();
+  const altura = (await rotulo.boundingBox())!.height;
+  expect(altura).toBeLessThan(16);
   const doc = await page.evaluate(() => document.documentElement.scrollWidth);
   expect(doc).toBeLessThanOrEqual(320);
 });

@@ -35,8 +35,13 @@ test("o título do herói usa os 36px do Display, não os 40px da v1", async ({
   await page.goto("/series");
   const titulo = page.getByRole("heading", { level: 1, name: "Serie Um" });
   await titulo.waitFor();
-  const tamanho = await titulo.evaluate((el) => getComputedStyle(el).fontSize);
-  expect(tamanho).toBe("36px");
+  // em rem (cresce com o texto do sistema): 2.25 × a raiz — 36px a 16, e
+  // 38,25 a 17, a base da Mira fora do iOS (Ronda 14)
+  const { tamanho, raiz } = await titulo.evaluate((el) => ({
+    tamanho: parseFloat(getComputedStyle(el).fontSize),
+    raiz: parseFloat(getComputedStyle(document.documentElement).fontSize),
+  }));
+  expect(tamanho).toBeCloseTo(2.25 * raiz, 1);
 });
 
 test("nenhum texto usa o degrau de 17px, nem desce dos 11px do Código", async ({
@@ -87,6 +92,10 @@ test("à raiz de hoje (16px), o tamanho do texto não muda um pixel", async ({
   await page.goto("/library");
   const alvo = page.locator("p", { hasText: "Serie Um" }).first();
   await alvo.waitFor();
+  // a base fora do iOS passou a 17 (Mira); a prova é à raiz de 16
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "16px";
+  });
   const tamanho = await alvo.evaluate((el) => getComputedStyle(el).fontSize);
   expect(tamanho).toBe("15px");
 });

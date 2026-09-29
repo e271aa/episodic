@@ -8,9 +8,11 @@ import { serieCompleta, type Catalogo } from "./apoio/tmdb";
  * e os que o Ruben escolheu a 28-09.
  */
 
-const CIANO = "rgb(63, 210, 200)";
+// o «por marcar» da Mira, modo noite (#64d2ff)
+const CIANO = "rgb(100, 210, 255)";
 /** as 4 neutras da mira — cinza, amarelo, vermelho, azul */
-const NEUTRA = /^rgb\((200, 200, 200|230, 200, 50|230, 72, 60|60, 70, 230)\)$/;
+// as quatro neutras da mira (Mira, Ronda 14): cinza, amarelo, vermelho, azul
+const NEUTRA = /^rgb\((229, 229, 234|255, 214, 10|255, 69, 58|10, 132, 255)\)$/;
 const TINTA = "rgb(245, 243, 238)";
 
 const diaDaqui = (dias: number) => new Date(Date.now() + dias * 864e5).toISOString().slice(0, 10);
@@ -65,8 +67,9 @@ test("'Esta semana' e 'Por começar' usam as cores neutras, não as dos estados"
         .first()
         .evaluate((h) => getComputedStyle(h.previousElementSibling as Element).backgroundColor),
     )
-    // o cinza da Biblioteca, o mesmo de "Para ver" e "Já não sigo"
-    .toBe("rgb(138, 136, 128)");
+    // o cinza da Biblioteca, o mesmo de "Para ver" e "Já não sigo" — o
+    // `faint` da Mira, modo noite (#8e8e93; era #8a8880 na v2)
+    .toBe("rgb(142, 142, 147)");
 });
 
 test("no detalhe, com buracos para trás, o traço do estado é o ciano dos buracos", async ({
