@@ -190,9 +190,11 @@ test("no Perfil, a série-farol pede 44px, não a página inteira", async ({ pag
 test("na fila secundária, a capa pede o tamanho que mostra (36px na Mira)", async ({ page, tmdb }) => {
   const hoje = new Date().toISOString();
   const ha60Dias = new Date(Date.now() - 60 * 864e5).toISOString();
+  const ha90Dias = new Date(Date.now() - 90 * 864e5).toISOString();
   for (const [id, nome] of [
     [500, "Ativa"],
     [501, "Parada"],
+    [502, "Mais Parada"],
   ] as const) {
     Object.assign(tmdb.series, serieCompleta(id, nome, [9]).series);
     Object.assign(tmdb.episodios, serieCompleta(id, nome, [9]).episodios);
@@ -201,10 +203,13 @@ test("na fila secundária, a capa pede o tamanho que mostra (36px na Mira)", asy
     series: [
       { uuid: "s-ativa", name: "Ativa", tmdbId: 500, numeracao: "tmdb" },
       { uuid: "s-parada", name: "Parada", tmdbId: 501, numeracao: "tmdb" },
+      // a «Parada» sobe para o «Ou então» e sai do Retomar: esta fica lá
+      { uuid: "s-mais-parada", name: "Mais Parada", tmdbId: 502, numeracao: "tmdb" },
     ],
     vistos: [
       { showUuid: "s-ativa", season: 1, episode: 1, watchedAt: hoje },
       { showUuid: "s-parada", season: 1, episode: 1, watchedAt: ha60Dias },
+      { showUuid: "s-mais-parada", season: 1, episode: 1, watchedAt: ha90Dias },
     ],
     kv: {
       "nextup-cache": {
@@ -216,6 +221,10 @@ test("na fila secundária, a capa pede o tamanho que mostra (36px na Mira)", asy
           episode: { season: 1, episode: 2, name: "Dois", airDate: "2020-01-01" },
           lastWatchedAt: ha60Dias,
         },
+        "s-mais-parada": {
+          episode: { season: 1, episode: 2, name: "Dois", airDate: "2020-01-01" },
+          lastWatchedAt: ha90Dias,
+        },
       },
     },
   });
@@ -224,8 +233,7 @@ test("na fila secundária, a capa pede o tamanho que mostra (36px na Mira)", asy
   const toggle = page.getByRole("button", { name: /^Retomar/ });
   await toggle.waitFor();
   await toggle.click();
-  // dentro da secção "Retomar" — não a capa de 32px do "Ou então", que já
-  // tem `sizes` certo e também aponta para a mesma série parada
+  // dentro da secção "Retomar" — não a capa do "Ou então"
   const secaoRetomar = page.locator("section", {
     has: page.getByRole("heading", { name: "Retomar" }),
   });

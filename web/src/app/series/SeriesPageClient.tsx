@@ -479,6 +479,13 @@ export default function SeriesPage() {
       ...notStartedRest.map((s) => ["começar", s] as const),
     ] as const
   )[0];
+  // A que sobe para o «Ou então» sai da secção de baixo, como a do cartão:
+  // a mesma série duas vezes na casa lia-se como um erro (Ruben, 29-09).
+  const naOuEntao = outraSerie?.[1].uuid;
+  const semOuEntao = (lista: ShowWithProgress[]) => lista.filter((s) => s.uuid !== naOuEntao);
+  const continuarLista = semOuEntao(restActive);
+  const retomarLista = semOuEntao(staleRest);
+  const porComecarLista = semOuEntao(notStartedRest);
   const filmeParaVer = (filmes ?? [])
     .filter((m) => !m.watchedAt)
     .sort((a, b) => (b.addedAt ?? "").localeCompare(a.addedAt ?? ""))[0];
@@ -577,40 +584,40 @@ export default function SeriesPage() {
             />
           </div>
           <OuEntao alternativas={alternativas} />
-          {restActive.length > 0 && (
+          {continuarLista.length > 0 && (
             <section className="mt-8">
               <h2 className="px-1 text-[1.3rem] font-bold leading-tight text-label">
-                Continuar <Codigo className="text-[0.94rem] font-medium text-label-2">{restActive.length}</Codigo>
+                Continuar <Codigo className="text-[0.94rem] font-medium text-label-2">{continuarLista.length}</Codigo>
               </h2>
-              {queueCards(restActive)}
+              {queueCards(continuarLista)}
             </section>
           )}
         </>
       )}
 
-      {staleRest.length > 0 && (
+      {retomarLista.length > 0 && (
         <section className="mt-8">
           {sectionToggle(
             "Retomar",
             "paradas há mais de 30 dias",
-            staleRest.length,
+            retomarLista.length,
             showStale,
             () => setShowStale((v) => !v),
           )}
-          {showStale && queueCards(staleRest)}
+          {showStale && queueCards(retomarLista)}
         </section>
       )}
 
-      {notStartedRest.length > 0 && (
+      {porComecarLista.length > 0 && (
         <section className="mt-8">
           {sectionToggle(
             "Por começar",
             "segues, mas ainda não viste nenhum episódio",
-            notStartedRest.length,
+            porComecarLista.length,
             showNotStarted,
             () => setShowNotStarted((v) => !v),
           )}
-          {showNotStarted && queueCards(notStartedRest)}
+          {showNotStarted && queueCards(porComecarLista)}
         </section>
       )}
 

@@ -94,3 +94,32 @@ test("sem filme para ver nem outra série, não há 'Ou então'", async ({ page,
   await casa(page, tmdb, { comFilme: false, comOutraSerie: false });
   await expect(page.getByTestId("ou-entao")).toHaveCount(0);
 });
+
+test("a série do 'Ou então' não aparece outra vez na lista de baixo", async ({ page, tmdb }) => {
+  // Escolhido pelo Ruben a 29-09: a mesma série duas vezes na casa lia-se
+  // como um erro. Como o cartão grande, a que sobe para o «Ou então» sai da
+  // secção de baixo — e a contagem da secção diz as que lá ficam.
+  const series = [
+    [510, "s-a", "Severance"],
+    [511, "s-b", "The Bear"],
+    [512, "s-c", "Andor"],
+  ] as const;
+  for (const [id, , nome] of series) {
+    Object.assign(tmdb.series, serieCompleta(id, nome, [9]).series);
+    Object.assign(tmdb.episodios, serieCompleta(id, nome, [9]).episodios);
+  }
+  // a ordem da fila é a da última marcação: A, depois B, depois C
+  const quando = (h: number) => new Date(Date.now() - h * 3_600_000).toISOString();
+  await semear(page, {
+    series: series.map(([id, uuid, name]) => ({ uuid, name, tmdbId: id, numeracao: "tmdb" as const })),
+    vistos: series.map(([, uuid], i) => ({ showUuid: uuid, season: 1, episode: 1, watchedAt: quando(i + 1) })),
+    kv: { "nextup-cache": Object.fromEntries(series.map(([, uuid], i) => [uuid, proximo(quando(i + 1))])) },
+  });
+  await page.goto("/series");
+  await page.getByRole("heading", { level: 2, name: "Severance" }).waitFor();
+
+  await expect(page.getByTestId("ou-entao").locator('a[href="/series/s-b"]')).toBeVisible();
+  await expect(page.locator('main a[href="/series/s-b"]')).toHaveCount(1);
+  await expect(page.locator('main a[href="/series/s-c"]')).toHaveCount(1);
+  await expect(page.getByRole("heading", { name: /^Continuar/ })).toContainText("1");
+});
