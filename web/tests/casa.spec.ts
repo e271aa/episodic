@@ -54,7 +54,7 @@ async function casa(
     },
   });
   await page.goto("/series");
-  await page.getByRole("heading", { level: 1, name: "Severance" }).waitFor();
+  await page.getByRole("heading", { level: 2, name: "Severance" }).waitFor();
 }
 
 test("por baixo do herói: outra série e o filme mais recente da lista, à vista", async ({
@@ -64,16 +64,24 @@ test("por baixo do herói: outra série e o filme mais recente da lista, à vist
   await casa(page, tmdb);
   const ouEntao = page.getByTestId("ou-entao");
   await expect(ouEntao).toBeVisible();
-  await expect(ouEntao.locator('a[href="/series/s-parada"]')).toContainText("retomar");
+  // o porquê e o episódio, à Mira: «Retomar · S01·E02»
+  await expect(ouEntao.locator('a[href="/series/s-parada"]')).toContainText(/Retomar · S\d{2}·E\d{2}/);
   await expect(ouEntao.locator('a[href="/movies/f-novo"]')).toContainText("Past Lives");
   // o mais recente da lista, não um filme já visto nem o mais antigo
   await expect(ouEntao.locator('a[href="/movies/f-antigo"]')).toHaveCount(0);
   await expect(ouEntao.locator('a[href="/movies/f-visto"]')).toHaveCount(0);
 
-  // na primeira dobra, acima da dock — não enterrado por baixo dela
+  // Na primeira dobra (escolha do Ruben, 27-09). O cartão da Mira é mais alto
+  // do que o herói da v2: num ecrã baixo (664px, o Safari com as barras) só o
+  // título «Ou então» cabe acima da barra — diz que há mais. No iPhone dele
+  // (15 Pro Max, 430×932, app instalada) cabe inteiro.
+  const barra = async () => (await page.locator("nav > div.vidro").boundingBox())!;
+  const titulo = (await ouEntao.getByRole("heading", { name: "Ou então" }).boundingBox())!;
+  expect(titulo.y + titulo.height).toBeLessThanOrEqual((await barra()).y);
+  await page.setViewportSize({ width: 430, height: 932 });
+  await page.waitForTimeout(200);
   const caixa = (await ouEntao.boundingBox())!;
-  const dock = (await page.locator("nav").boundingBox())!;
-  expect(caixa.y + caixa.height).toBeLessThanOrEqual(dock.y);
+  expect(caixa.y + caixa.height).toBeLessThanOrEqual((await barra()).y);
 });
 
 test("tocar numa alternativa abre-a — não marca nada", async ({ page, tmdb }) => {

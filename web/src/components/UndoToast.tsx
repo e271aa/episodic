@@ -1,5 +1,6 @@
 "use client";
 
+import { Check } from "lucide-react";
 import { useEffect, useState } from "react";
 import { usePathname } from "next/navigation";
 import {
@@ -73,33 +74,42 @@ export default function UndoToast() {
           // a chave reinicia a animação a cada ação nova, para a contagem
           // recomeçar em vez de continuar a do aviso anterior
           key={mostrado.id}
-          className={`${top ? "undo-in pointer-events-auto" : "undo-out"} overflow-hidden rounded-2xl border border-line bg-raised shadow-lg shadow-black/50`}
+          className={`${top ? "undo-in pointer-events-auto" : "undo-out"} vidro overflow-hidden rounded-[24px]`}
           data-testid={top ? "undo-toast" : "undo-toast-a-sair"}
           // a sair já não se anula nada: nem toque, nem teclado
           inert={!top}
         >
-          <div className="flex items-center gap-3 p-3">
+          {/* O aviso da Mira: vidro, raio 24, o ✓ num círculo, e «Anular»
+              como ação secundária — a cápsula branca é só a ação principal
+              do ecrã (Regra da ação), e esta é a de voltar atrás. */}
+          <div className="flex min-h-[58px] items-center gap-3 py-2 pl-3 pr-2">
+            <span
+              aria-hidden
+              className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-label text-on-label"
+            >
+              <Check className="h-3.5 w-3.5" strokeWidth={3} />
+            </span>
             <div className="min-w-0 flex-1">
-              <p className="truncate text-[0.9375rem] font-medium">
+              <p className="truncate text-[0.94rem] font-semibold text-label">
                 {mostrado.label}
                 {behind > 0 && (
-                  <span className="ep-code ml-2 text-xs text-faint">+{behind}</span>
+                  <span className="ep-code ml-2 text-xs font-medium text-label-2">+{behind}</span>
                 )}
               </p>
               {mostrado.detail && (
-                <p className="ep-code mt-0.5 truncate text-xs text-dim">{mostrado.detail}</p>
+                <p className="ep-code mt-0.5 truncate text-xs text-label-2">{mostrado.detail}</p>
               )}
             </div>
             <button
               onClick={() => undoLast()}
-              className="flex min-h-11 shrink-0 cursor-pointer items-center rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95"
+              className="flex min-h-11 shrink-0 cursor-pointer items-center rounded-full bg-fill-strong px-4 text-[0.94rem] font-semibold text-label transition active:scale-95"
               data-testid="undo-button"
             >
               Anular
             </button>
           </div>
           <div
-            className="undo-drain h-[3px] bg-ink/70"
+            className="undo-drain h-[2px] bg-label/60"
             style={{ animationDuration: `${GRACE_MS}ms` }}
           />
         </div>

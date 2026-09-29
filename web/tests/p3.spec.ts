@@ -219,7 +219,7 @@ test("no WatchNextCard (a fila secundária), a capa pede 56px", async ({ page, t
     },
   });
   await page.goto("/series");
-  await page.getByRole("heading", { level: 1, name: "Ativa" }).waitFor();
+  await page.getByRole("heading", { level: 2, name: "Ativa" }).waitFor();
   const toggle = page.getByRole("button", { name: /^Retomar/ });
   await toggle.waitFor();
   await toggle.click();

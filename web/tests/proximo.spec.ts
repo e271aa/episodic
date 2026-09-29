@@ -60,7 +60,7 @@ test("no detalhe, o próximo é o que vem depois do último visto — não o pri
 test("na casa, o herói propõe o mesmo episódio", async ({ page, tmdb }) => {
   await naruto(page, tmdb, 10);
   await page.goto("/series");
-  await page.getByRole("heading", { level: 1, name: "Naruto" }).waitFor();
+  await page.getByRole("heading", { level: 2, name: "Naruto" }).waitFor();
   const heroi = page.locator("main");
   await expect(heroi).toContainText("S03·E11");
   await expect(heroi).not.toContainText("S02·E20");

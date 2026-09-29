@@ -48,8 +48,10 @@ export default function TituloGrande({
         <span className="text-base font-semibold text-label">{titulo}</span>
         {resumo && <span className="ep-code text-[0.7rem] text-label-2">{resumo}</span>}
       </div>
-      <header className="flex items-end justify-between gap-3 pt-2">
-        <div className="min-w-0">
+      {/* `flex-wrap`: com texto grande a ação do lado passa para baixo, em vez
+          de espremer o título em duas linhas («A / seguir» a 320px e 150%) */}
+      <header className="flex flex-wrap items-end justify-between gap-x-3 gap-y-2 pt-2">
+        <div className="min-w-0 max-w-full">
           {rotulo && (
             <p className="text-[0.76rem] font-semibold uppercase tracking-[0.02em] text-label-2">
               {rotulo}

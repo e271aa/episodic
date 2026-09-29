@@ -328,12 +328,12 @@ summary:focus-visible,
 }
 @keyframes check-ring {
   from {
-    opacity: 0.55;
-    transform: scale(0.6);
+    opacity: 0.8;
+    transform: scale(1);
   }
   to {
     opacity: 0;
-    transform: scale(1.9);
+    transform: scale(2.6);
   }
 }
 .check-pop {
@@ -344,8 +344,8 @@ summary:focus-visible,
   position: absolute;
   inset: 0;
   border-radius: 9999px;
-  background: var(--color-ink);
-  animation: check-ring 420ms var(--ease-out) both;
+  border: 2px solid currentColor;
+  animation: check-ring 520ms var(--ease-out) 40ms both;
   pointer-events: none;
 }
 
@@ -434,7 +434,7 @@ summary:focus-visible,
     opacity: 1;
     clip-path: inset(0 100% 0 0);
   }
-  60% {
+  66% {
     opacity: 1;
     clip-path: inset(0 0 0 0);
   }
@@ -454,22 +454,25 @@ summary:focus-visible,
   background: var(--bars);
   opacity: 0;
   pointer-events: none;
-  animation: barra-acende 620ms ease-out;
+  /* README da Mira: revela-se em 620ms e apaga em 320ms, a partir dos 40ms */
+  animation: barra-acende 940ms ease-out 40ms both;
 }
 @keyframes episodio-entra {
   from {
     opacity: 0;
-    filter: blur(4px);
+    filter: blur(6px);
+    transform: translateY(8px);
   }
 }
 @keyframes episodio-sai {
   to {
     opacity: 0;
-    filter: blur(4px);
+    filter: blur(6px);
+    transform: translateY(-8px);
   }
 }
 .episodio-entra {
-  animation: episodio-entra 220ms var(--ease-out) 60ms both;
+  animation: episodio-entra 240ms var(--ease-out) 40ms both;
 }
 .episodio-sai {
   animation: episodio-sai 160ms var(--ease-out) both;

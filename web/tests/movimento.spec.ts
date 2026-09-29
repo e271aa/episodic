@@ -296,7 +296,7 @@ async function casaComSerie(
     },
   });
   await page.goto("/series");
-  await page.getByRole("heading", { level: 1, name: "Severance" }).waitFor();
+  await page.getByRole("heading", { level: 2, name: "Severance" }).waitFor();
 }
 
 /** As animações de um nome a correr agora na página. */
@@ -330,7 +330,8 @@ test("anular não festeja: o episódio volta, mas a barra não acende", async ({
   await casaComSerie(page, tmdb);
   await page.getByRole("button", { name: "Marcar visto" }).click();
   await expect(page.locator("main")).toContainText("S01·E03");
-  await page.waitForTimeout(900); // a barra já apagou
+  // a barra já apagou: a mira da Mira dura 40 + 620 + 320 = 980ms (README)
+  await page.waitForTimeout(1100);
   await page.getByTestId("undo-button").click();
   await expect(page.locator("main")).toContainText("S01·E02");
   expect(await aCorrer(page, "barra-acende")).toBe(0);

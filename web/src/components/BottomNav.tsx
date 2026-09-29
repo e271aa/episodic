@@ -55,7 +55,10 @@ export default function BottomNav() {
           (`-z-10`) e sem apanhar toques. */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[110px] bg-gradient-to-t from-bg via-bg/85 to-transparent"
+        // a altura é a da reserva de cada página (`--dock-h` + 8px): mais alto, o
+        // degradê desbotava o que já está fora da reserva — as cápsulas da casa
+        // vazia ficavam cinzentas (Ronda 14, Fase 2; o mesmo que na 5b.4)
+        className="pointer-events-none absolute inset-x-0 bottom-0 -z-10 h-[calc(var(--dock-h)+8px)] bg-gradient-to-t from-bg via-bg/85 to-transparent"
       />
       {/* A barra da Mira (Ronda 14): cápsula de vidro de 64px, quatro colunas
           iguais, os quatro nomes à vista — a v2 escondia três e o VoiceOver

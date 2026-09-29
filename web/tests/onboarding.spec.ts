@@ -31,10 +31,12 @@ test("o onboarding diz onde está o Seguir, e o que fazer a meio de uma série",
 }) => {
   await semear(page, {});
   await page.goto("/series");
-  const passos = page.locator("main ol");
-  await expect(passos).toContainText("pesquisa");
-  await expect(passos).toContainText("Seguir");
-  await expect(passos).toContainText("Já vais a meio");
+  // Mira (Ronda 14): os quatro passos deram lugar a «Ainda sem sinal.» e a
+  // uma nota curta — que continua a dizer o que a 5c exigiu
+  const dicas = page.getByTestId("dicas-primeiro-uso");
+  await expect(dicas).toContainText("pesquisa");
+  await expect(dicas).toContainText("Seguir");
+  await expect(dicas).toContainText("Já vais a meio");
 });
 
 test("o passo 02 é verdade: marcar só o último que se viu oferece os de trás", async ({

@@ -25,8 +25,10 @@ import TonightHero from "@/components/TonightHero";
 import OuEntao, { type Alternativa } from "@/components/OuEntao";
 import Poster from "@/components/Poster";
 import SectionHeader from "@/components/SectionHeader";
-import { CheckIcon, SearchIcon } from "@/components/icons";
-import { Bone, CardsBone, TitleBone } from "@/components/Skeleton";
+import { Check, Search } from "lucide-react";
+import { Bone } from "@/components/Skeleton";
+import TituloGrande from "@/components/mira/TituloGrande";
+import { Grupo, Linha } from "@/components/mira/Grupo";
 
 // Preenche o id TMDB em falta, uma vez só. Sem ele, o Explorar volta a
 // sugerir séries que já tens sempre que o título guardado não bate com
@@ -68,6 +70,16 @@ export default function SeriesPage() {
   const [showNotStarted, setShowNotStarted] = useState(false);
   // instante de referência para o corte de 30 dias, fixado ao montar
   const [now] = useState(() => Date.now());
+  // «TERÇA, 29 DE SETEMBRO» por cima do título (em maiúsculas pelo CSS)
+  const hoje = new Date(now)
+    .toLocaleDateString("pt-PT", { weekday: "long", day: "numeric", month: "long" })
+    .replace("-feira", "");
+  // o esqueleto só depois de 300ms: abaixo disso é um piscar (estado B·E2)
+  const [esqueleto, setEsqueleto] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setEsqueleto(true), 300);
+    return () => clearTimeout(t);
+  }, []);
   // "A estrear" era um ecrã à parte e quase sempre vazio. A mesma informação
   // aqui responde à pergunta seguinte à do herói: "e depois?".
   const [upcoming, setUpcoming] = useState<UpcomingEntry[] | null>(null);
@@ -256,89 +268,70 @@ export default function SeriesPage() {
   );
 
   if (shows === null) {
+    // A carregar (estado B·E2 da Mira): o título aparece logo; o esqueleto
+    // só se a base local demorar mais de 300ms — abaixo disso um esqueleto
+    // é só um piscar. Com a forma exata do cartão, para nada saltar.
     return (
-      <main className="mx-auto w-full max-w-2xl px-4 py-8">
-        <TitleBone />
-        {/* o herói é grande: o esqueleto tem de o anunciar, senão o salto
-            quando os dados chegam é enorme */}
-        <Bone className="mt-6 aspect-4/5 w-full rounded-3xl sm:aspect-video" />
-        <CardsBone count={2} height="h-[104px]" />
+      <main className="mx-auto w-full max-w-2xl px-4 pt-[max(12px,env(safe-area-inset-top))]">
+        <TituloGrande titulo="A seguir" rotulo={hoje} />
+        {esqueleto && (
+          <div className="mt-5 overflow-hidden rounded-[28px] bg-group" data-testid="esqueleto-casa">
+            <Bone className="h-44 w-full rounded-none" />
+            <div className="flex flex-col gap-3.5 px-[18px] pb-[18px] pt-4">
+              <Bone className="h-8 w-2/3 rounded-lg" />
+              <Bone className="h-5 w-1/2 rounded-md" />
+              <Bone className="h-1 w-full rounded-sm" />
+              <Bone className="h-[52px] w-full rounded-full" />
+            </div>
+          </div>
+        )}
       </main>
     );
   }
 
   if (shows.length === 0) {
-    // Primeira utilização — o ecrã vazio é o onboarding. Começava por
-    // "importa o ZIP do TV Time", que os amigos nunca tiveram (Ronda 12,
-    // Fase 4): o primeiro passo é o que toda a gente pode fazer, e importar
-    // fica como segunda porta, para quem vem de lá.
-    const steps = [
-      {
-        n: "01",
-        title: "Procura o que andas a ver",
-        // o Seguir está na pesquisa — os cartazes do Explorar só têm "Para
-        // ver", e dizer só "toca em Seguir" mandava procurá-lo onde não há
-        text: "Pelo nome, na pesquisa. Toca em Seguir e a série entra na tua fila.",
-      },
-      {
-        n: "02",
-        title: "Já vais a meio?",
-        text: "Marca o último episódio que viste: a app oferece-se para marcar os de trás.",
-      },
-      {
-        n: "03",
-        title: "Marca à medida que vês",
-        text: "A fila “A seguir” diz-te sempre qual é o próximo episódio.",
-      },
-      {
-        n: "04",
-        title: "Guarda o resto para depois",
-        text: "O que queres ver um dia fica em “Para ver”, fora da fila.",
-      },
-    ];
-    // As duas portas logo a seguir ao título, e os passos por baixo a
-    // explicar: centrado no ecrã, "Procurar uma série" ficava desbotado pelo
-    // degradê da dock e "Vens do TV Time?" debaixo dela (Ronda 12, 5b.4).
+    // Primeira utilização (estado B·E1 da Mira): «sem sinal». É um dos dois
+    // sítios onde a mira aparece — aqui quer dizer que ainda não há nada a
+    // passar. As duas portas ficam na zona do polegar, acima da barra: a
+    // primeira é a que toda a gente pode fazer; importar é para quem vem do
+    // TV Time (os amigos nunca o tiveram — Ronda 12, Fase 4).
     return (
-      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-10 pb-6">
-        <div className="text-center">
-          <p className="ep-code text-sm tracking-[0.3em] text-dim">EPISODIC</p>
-          <h1 className="mt-3 font-display text-3xl font-bold">
-            Tudo o que vês, num só sítio
-          </h1>
-          <p className="mt-3 text-dim">
-            O teu registo de séries: o que viste, o que falta, o que vem a seguir.
-          </p>
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-[max(12px,env(safe-area-inset-top))]">
+        <TituloGrande titulo="A seguir" rotulo={hoje} />
+        {/* 132px como no desenho; num ecrã baixo (Safari com as barras à vista,
+            664px) 96, para as duas portas ficarem acima do degradê ao chegar */}
+        <div aria-hidden className="mt-5 grid h-[132px] grid-cols-7 overflow-hidden rounded-3xl [@media(max-height:700px)]:h-24" data-testid="mira-sem-sinal">
+          {["bg-smpte-gray", "bg-smpte-yellow", "bg-[#64d2ff]", "bg-[#30d158]", "bg-[#da5ce8]", "bg-smpte-red", "bg-smpte-blue"].map(
+            (c) => (
+              <span key={c} className={c} />
+            ),
+          )}
         </div>
-
-        <div className="mt-8 flex flex-col items-center gap-2">
+        <h2 className="mt-6 text-[1.65rem] font-bold leading-[1.1] text-label">Ainda sem sinal.</h2>
+        <p className="mt-2 text-base leading-snug text-label-2">
+          Segue uma série e o próximo episódio aparece aqui, todas as noites. Se vens do TV Time,
+          trazes o histórico inteiro, com as datas originais.
+        </p>
+        {/* O que a Ronda 12 aprendeu com o primeiro uso de um amigo (5c, P1 #6):
+            dizer onde está o Seguir, e o que fazer a quem já vai a meio */}
+        <p className="mt-2 text-[0.88rem] leading-snug text-label-2" data-testid="dicas-primeiro-uso">
+          O Seguir está na pesquisa. Já vais a meio de uma série? Marca o último episódio que
+          viste: a app oferece-se para marcar os de trás.
+        </p>
+        <div className="mt-auto flex flex-col gap-2.5 pb-4 pt-8">
           <Link
             href="/explorar?procurar=1"
-            className="flex min-h-12 cursor-pointer items-center rounded-full bg-ink px-6 font-semibold text-tube transition hover:brightness-110 active:scale-95"
+            className="flex min-h-[52px] cursor-pointer items-center justify-center rounded-full bg-label text-base font-semibold text-on-label transition-transform active:scale-[0.97]"
           >
             Procurar uma série
           </Link>
           <Link
             href="/import"
-            className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim transition hover:text-ink"
+            className="flex min-h-[52px] cursor-pointer items-center justify-center rounded-full bg-fill-strong text-base font-semibold text-label transition-transform active:scale-[0.97]"
           >
-            Vens do TV Time? Importar o histórico
+            Vens do TV Time? Importar
           </Link>
         </div>
-
-        <ol className="mt-10 space-y-4">
-          {steps.map((step) => (
-            <li key={step.n} className="flex items-start gap-4">
-              <span className="ep-code mt-0.5 shrink-0 text-lg font-bold text-ink">
-                {step.n}
-              </span>
-              <div>
-                <p className="font-display font-semibold">{step.title}</p>
-                <p className="mt-0.5 text-[0.9375rem] text-dim">{step.text}</p>
-              </div>
-            </li>
-          ))}
-        </ol>
       </main>
     );
   }
@@ -435,106 +428,91 @@ export default function SeriesPage() {
   const alternativas: Alternativa[] = [];
   if (outraSerie) {
     const [tipo, s] = outraSerie;
-    // só o porquê ("retomar"): o código do episódio não cabia num cartão de
-    // meia largura e ficava cortado ("retomar · S01…"); vê-se ao abrir
+    const ep = nextUp?.get(s.uuid)?.episode;
+    const porque = tipo === "continuar" ? "Continuar" : tipo === "retomar" ? "Retomar" : "Começar";
     alternativas.push({
       href: `/series/${s.uuid}`,
       titulo: s.name,
-      rotulo: tipo,
+      subtitulo: ep ? `${porque} · ${formatEpCode(ep.season, ep.episode)}` : porque,
       posterPath: s.posterPath,
     });
   }
   if (filmeParaVer) {
+    const ano = filmeParaVer.releaseDate?.slice(0, 4);
     alternativas.push({
       href: `/movies/${filmeParaVer.key}`,
       titulo: filmeParaVer.name,
-      rotulo: "filme",
+      subtitulo: ano ? `Filme · ${ano} · para ver` : "Filme · para ver",
       posterPath: filmeParaVer.posterPath ?? null,
     });
   }
 
+  // «Pôr em dia» ao lado do título: quantas SÉRIES têm episódios por ver.
+  // Sem o disco da mira — cor numa ação é o que a Regra da ação proíbe (F4).
+  const porEmDia =
+    queue.length > 0 ? (
+      <Link
+        href="/em-dia"
+        aria-label={`Pôr em dia: ${queue.length} ${queue.length === 1 ? "série" : "séries"} com episódios por ver`}
+        className="inline-flex min-h-11 cursor-pointer items-center gap-2 rounded-full bg-fill px-4 text-[0.88rem] font-semibold text-label transition-transform active:scale-[0.97]"
+      >
+        Pôr em dia
+        <span className="ep-code font-medium text-label-2">{queue.length}</span>
+      </Link>
+    ) : undefined;
+
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 py-8">
+    <main className="mx-auto w-full max-w-2xl px-4 pt-[max(12px,env(safe-area-inset-top))] pb-8">
+      <TituloGrande titulo="A seguir" rotulo={hoje} direita={porEmDia} />
       {nextUp === null ? (
-        <>
-          <p className="ep-code text-xs tracking-[0.3em] text-dim">EPISODIC</p>
-          <h1 className="mt-1 font-display text-3xl font-bold">Séries</h1>
-          <div className="mt-6 space-y-3">
-            {watching.slice(0, 3).map((s) => (
-              <Bone key={s.uuid} className="h-[104px] w-full rounded-2xl" />
-            ))}
-          </div>
-        </>
+        <div className="mt-5 space-y-3">
+          {watching.slice(0, 1).map((s) => (
+            <Bone key={s.uuid} className="h-[360px] w-full rounded-[28px]" />
+          ))}
+        </div>
       ) : queue.length === 0 ? (
-        <>
-          <p className="ep-code text-xs tracking-[0.3em] text-dim">EPISODIC</p>
-          <h1 className="mt-1 font-display text-3xl font-bold">Séries</h1>
-          <div className="ep-card mt-6 flex items-center gap-3 p-4">
-            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-raised text-ink">
-              {watching.length === 0 ? (
-                <SearchIcon className="h-5 w-5" />
-              ) : (
-                <CheckIcon className="h-5 w-5" />
-              )}
-            </span>
-            {/* Sem nenhuma série seguida, "estás em dia" era falso: não há
-                nada na fila porque nada entrou nela. Quem só guardou
-                séries em "Para ver" ficava aqui sem saber porquê. */}
-            {watching.length === 0 ? (
-              <>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[0.9375rem] font-medium">Ainda não segues nenhuma série</p>
-                  <p className="text-xs text-dim">
-                    Segue uma e ela entra aqui. O que está em “Para ver” fica fora da fila.
-                  </p>
-                </div>
-                <Link
-                  href="/explorar?procurar=1"
-                  className="-mr-2 inline-flex min-h-11 shrink-0 cursor-pointer items-center px-2 text-[0.9375rem] font-semibold text-ink hover:underline"
-                >
-                  Procurar
-                </Link>
-              </>
-            ) : (
-              <>
-                <div className="min-w-0 flex-1">
-                  <p className="text-[0.9375rem] font-medium">Estás em dia</p>
-                  <p className="text-xs text-dim">
-                    Nenhum episódio por ver nas séries que segues.
-                  </p>
-                </div>
-                <Link
-                  href="/library"
-                  className="-mr-2 inline-flex min-h-11 shrink-0 cursor-pointer items-center px-2 text-[0.9375rem] font-semibold text-ink hover:underline"
-                >
-                  Biblioteca
-                </Link>
-              </>
-            )}
-          </div>
-        </>
+        <Grupo className="mt-5">
+          {/* Sem nenhuma série seguida, "estás em dia" era falso: não há nada
+              na fila porque nada entrou nela. Quem só guardou séries em
+              "Para ver" ficava aqui sem saber porquê. */}
+          {watching.length === 0 ? (
+            <Linha
+              alta
+              href="/explorar?procurar=1"
+              antes={<Search aria-hidden className="h-6 w-6 text-label-2" strokeWidth={1.8} />}
+              titulo="Ainda não segues nenhuma série"
+              subtitulo="Segue uma e ela entra aqui. O que está em «Para ver» fica fora da fila."
+            />
+          ) : (
+            <Linha
+              alta
+              href="/library"
+              antes={<Check aria-hidden className="h-6 w-6 text-em-dia" strokeWidth={2.2} />}
+              titulo="Estás em dia"
+              subtitulo="Nenhum episódio por ver nas séries que segues."
+            />
+          )}
+        </Grupo>
       ) : (
         <>
-          <TonightHero
-            key={heroShow.uuid}
-            showUuid={heroShow.uuid}
-            showName={heroShow.name}
-            backdropPath={heroShow.backdropPath}
-            posterPath={heroShow.posterPath}
-            episode={nextUp.get(heroShow.uuid)!.episode}
-            watchedCount={heroShow.watchedCount}
-            totalEpisodes={heroShow.totalEpisodes}
-            seriesPorVer={queue.length}
-            eyebrow={
-              heroKind === "a-seguir"
-                ? "Esta noite"
-                : heroKind === "retomar"
+          <div className="mt-5">
+            <TonightHero
+              key={heroShow.uuid}
+              show={heroShow}
+              episode={nextUp.get(heroShow.uuid)!.episode}
+              watchedCount={heroShow.watchedCount}
+              totalEpisodes={heroShow.totalEpisodes}
+              eyebrow={
+                heroKind === "retomar"
                   ? "Retomar onde ficaste"
-                  : "Começar do início"
-            }
-            alternativas={<OuEntao alternativas={alternativas} />}
-            onCheck={(season, episode) => handleCheck(heroShow.uuid, season, episode)}
-          />
+                  : heroKind === "comecar"
+                    ? "Começar do início"
+                    : undefined
+              }
+              onCheck={(season, episode) => handleCheck(heroShow.uuid, season, episode)}
+            />
+          </div>
+          <OuEntao alternativas={alternativas} />
           {restActive.length > 0 && (
             <section className="mt-6">
 <SectionHeader label="Continuar" meta={restActive.length} />

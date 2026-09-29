@@ -143,7 +143,9 @@ test("o Importar tem saída, e o texto é verdade num iPhone", async ({ page }) 
   expect(texto).not.toContain("gdpr.tvtime.com");
 });
 
-test("no herói, o texto pequeno sobre a arte não é o cinzento apagado", async ({ page, tmdb }) => {
+test("na casa, nenhum texto fica por cima da arte", async ({ page, tmdb }) => {
+  // O F2 subia o contraste da eyebrow sobre o backdrop; a Mira resolveu-o de
+  // raiz: a arte fica em cima, sozinha, e o texto por baixo, no cartão.
   const c = serieCompleta(711, "Alfa", [3]);
   Object.assign(tmdb.series, c.series);
   Object.assign(tmdb.episodios, c.episodios);
@@ -152,21 +154,16 @@ test("no herói, o texto pequeno sobre a arte não é o cinzento apagado", async
     vistos: [{ showUuid: "s-1", season: 1, episode: 1 }],
   });
   await page.goto("/series");
-  const eyebrow = page.getByText("Esta noite", { exact: true });
-  await expect(eyebrow).toBeVisible();
-  // o browser devolve a cor em oklab/color-mix: pinta-se num canvas preto e lê-se o pixel
-  const canal = await eyebrow.evaluate((el) => {
-    const c = document.createElement("canvas");
-    c.width = c.height = 1;
-    const x = c.getContext("2d")!;
-    x.fillStyle = "#000";
-    x.fillRect(0, 0, 1, 1);
-    x.fillStyle = getComputedStyle(el).color;
-    x.fillRect(0, 0, 1, 1);
-    return x.getImageData(0, 0, 1, 1).data[0];
-  });
-  // o cinzento apagado (dim) tem o vermelho a ~130; sobre a arte pede-se mais
-  expect(canal).toBeGreaterThanOrEqual(200);
+  const cartao = page.getByTestId("cartao-casa");
+  await expect(cartao.getByRole("heading", { level: 2, name: "Alfa" })).toBeVisible();
+  const arte = (await cartao.locator("a[aria-hidden]").first().boundingBox())!;
+  const textos = await cartao.evaluate((el) =>
+    [...el.querySelectorAll("h2, p, span")]
+      .filter((t) => t.textContent?.trim())
+      .map((t) => t.getBoundingClientRect())
+      .map((r) => ({ top: r.top, bottom: r.bottom })),
+  );
+  for (const t of textos) expect(t.top).toBeGreaterThanOrEqual(arte.y + arte.height - 1);
 });
 
 test("o foco por teclado vê-se em summary (\"Ver em tabela\")", async ({ page }) => {

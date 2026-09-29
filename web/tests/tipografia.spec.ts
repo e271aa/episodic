@@ -17,7 +17,7 @@ import { serieCompleta } from "./apoio/tmdb";
  * é essa igualdade que prova que a letra MENOR do Ruben não muda.
  */
 
-test("o título do herói usa os 36px do Display, não os 40px da v1", async ({
+test("o nome da série na casa é o Título 1 da Mira (1,65rem — 28px a 17), não os 40px da v1", async ({
   page,
   tmdb,
 }) => {
@@ -33,15 +33,15 @@ test("o título do herói usa os 36px do Display, não os 40px da v1", async ({
     },
   });
   await page.goto("/series");
-  const titulo = page.getByRole("heading", { level: 1, name: "Serie Um" });
+  const titulo = page.getByRole("heading", { level: 2, name: "Serie Um" });
   await titulo.waitFor();
-  // em rem (cresce com o texto do sistema): 2.25 × a raiz — 36px a 16, e
-  // 38,25 a 17, a base da Mira fora do iOS (Ronda 14)
+  // em rem (cresce com o texto do sistema): 1,65 × a raiz — 28px a 17, a
+  // base da Mira fora do iOS (Ronda 14)
   const { tamanho, raiz } = await titulo.evaluate((el) => ({
     tamanho: parseFloat(getComputedStyle(el).fontSize),
     raiz: parseFloat(getComputedStyle(document.documentElement).fontSize),
   }));
-  expect(tamanho).toBeCloseTo(2.25 * raiz, 1);
+  expect(tamanho).toBeCloseTo(1.65 * raiz, 1);
 });
 
 test("nenhum texto usa o degrau de 17px, nem desce dos 11px do Código", async ({
