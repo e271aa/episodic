@@ -82,3 +82,119 @@ test("horas por ano: o destaque é o ano com mais horas, não o último", async 
   const cartao = page.locator("section", { hasText: "Horas por ano" });
   await expect(cartao.getByTestId("leitura")).toContainText("2021");
 });
+
+// ── F2: os P2 objetivos ──
+
+test("a dock cabe no ecrã com o texto a 150%", async ({ page }) => {
+  await semear(page, { series: [{ uuid: "s-1", name: "Alfa" }] });
+  // a biblioteca é o rótulo ativo mais comprido: é onde a dock mais se estica
+  await page.goto("/library");
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "150%";
+  });
+  const fora = await page.evaluate(() =>
+    [...document.querySelectorAll("nav a")].map((a) => a.getBoundingClientRect().right - innerWidth),
+  );
+  for (const excesso of fora) expect(excesso).toBeLessThanOrEqual(0);
+});
+
+test("o detalhe de filme não alarga o ecrã com o texto a 150%", async ({ page }) => {
+  await semear(page, {
+    series: [],
+    filmes: [{ key: "tvtime-278", name: "The Shawshank Redemption", releaseDate: "1994-09-23", watchedAt: "2024-05-04T21:00:00.000Z" }],
+  });
+  await page.goto("/movies/tvtime-278");
+  await page.getByRole("heading", { level: 1 }).waitFor();
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "150%";
+  });
+  const l = await page.evaluate(() => ({ doc: document.documentElement.scrollWidth, janela: innerWidth }));
+  expect(l.doc).toBeLessThanOrEqual(l.janela);
+});
+
+test("o detalhe da série não mostra datas em ISO (episódios nem Estreia)", async ({ page, tmdb }) => {
+  const s = serieCompleta(710, "Datas", [3]);
+  Object.assign(tmdb.series, s.series);
+  Object.assign(tmdb.episodios, s.episodios);
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Datas", tmdbId: 710, numeracao: "tmdb", firstAired: "2020-01-01" }],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1 }],
+  });
+  await page.goto("/series/s-1");
+  await page.getByTestId("tab-episodios").waitFor();
+  const iso = /\b\d{4}-\d{2}-\d{2}\b/;
+  await page.getByTestId("season-1").click();
+  await expect(page.getByText("1 de janeiro de 2020").first()).toBeVisible();
+  expect(await page.locator("main").innerText()).not.toMatch(iso);
+  await page.getByTestId("tab-sobre").click();
+  await expect(page.getByText("Estreia")).toBeVisible();
+  await expect(page.getByText("1 de janeiro de 2020")).toBeVisible();
+  expect(await page.locator("main").innerText()).not.toMatch(iso);
+});
+
+test("o Importar tem saída, e o texto é verdade num iPhone", async ({ page }) => {
+  await page.goto("/import");
+  await expect(page.getByRole("button", { name: "Voltar ao perfil" })).toBeVisible();
+  const texto = await page.locator("main").innerText();
+  expect(texto).not.toContain("Arrasta");
+  expect(texto).not.toContain("gdpr.tvtime.com");
+});
+
+test("no herói, o texto pequeno sobre a arte não é o cinzento apagado", async ({ page, tmdb }) => {
+  const c = serieCompleta(711, "Alfa", [3]);
+  Object.assign(tmdb.series, c.series);
+  Object.assign(tmdb.episodios, c.episodios);
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Alfa", tmdbId: 711, numeracao: "tmdb", posterPath: "/cartaz.jpg", totalEpisodes: 3 }],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1 }],
+  });
+  await page.goto("/series");
+  const eyebrow = page.getByText("Esta noite", { exact: true });
+  await expect(eyebrow).toBeVisible();
+  // o browser devolve a cor em oklab/color-mix: pinta-se num canvas preto e lê-se o pixel
+  const canal = await eyebrow.evaluate((el) => {
+    const c = document.createElement("canvas");
+    c.width = c.height = 1;
+    const x = c.getContext("2d")!;
+    x.fillStyle = "#000";
+    x.fillRect(0, 0, 1, 1);
+    x.fillStyle = getComputedStyle(el).color;
+    x.fillRect(0, 0, 1, 1);
+    return x.getImageData(0, 0, 1, 1).data[0];
+  });
+  // o cinzento apagado (dim) tem o vermelho a ~130; sobre a arte pede-se mais
+  expect(canal).toBeGreaterThanOrEqual(200);
+});
+
+test("o foco por teclado vê-se em summary (\"Ver em tabela\")", async ({ page }) => {
+  await semear(page, {
+    series: [{ uuid: "s-a", name: "Alfa" }],
+    vistos: [...eps("s-a", 2021, 3, 2), ...eps("s-a", 2022, 3, 2)],
+  });
+  await page.goto("/estatisticas");
+  await page.locator("summary").first().waitFor();
+  // por teclado, como quem usa um teclado: Tab até lá chegar
+  for (let i = 0; i < 40; i++) {
+    await page.keyboard.press("Tab");
+    if (await page.evaluate(() => document.activeElement?.tagName === "SUMMARY")) break;
+  }
+  const contorno = await page.evaluate(() => {
+    const el = document.activeElement!;
+    const c = getComputedStyle(el);
+    return { tag: el.tagName, estilo: c.outlineStyle, largura: c.outlineWidth };
+  });
+  expect(contorno.tag).toBe("SUMMARY");
+  // o contorno do sistema (2px sólido), não o que o browser põe por omissão
+  expect(contorno.estilo).toBe("solid");
+  expect(contorno.largura).toBe("2px");
+});
+
+test("a primeira capa de uma lista não carrega em lazy (é a maior da dobra)", async ({ page }) => {
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Alfa", posterPath: "/cartaz.jpg" }],
+    listas: [{ id: "l-1", name: "Lista", items: [{ kind: "show", refId: "s-1" }] }],
+  });
+  await page.goto("/listas/l-1");
+  const img = page.locator('a[href="/series/s-1"] img').first();
+  await expect(img).toHaveAttribute("loading", "eager");
+});

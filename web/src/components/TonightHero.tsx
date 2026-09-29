@@ -152,7 +152,7 @@ export default function TonightHero({
           `pb-6`, sem "Ou então", tapava a parte de baixo do botão durante os
           7 segundos da janela (medido na Fase 6). */}
       <div className="relative flex min-h-[calc(100dvh-var(--dock-h)-5rem)] flex-col justify-end px-5 pb-16">
-        <p className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-dim [font-stretch:80%]">
+        <p className="font-display text-xs font-semibold uppercase tracking-[0.2em] text-ink/85 [font-stretch:80%]">
           {eyebrow}
         </p>
         {/* `py-1 -my-1`: o título tem 39px de caixa (40px de letra com
@@ -228,7 +228,7 @@ function BlocoEpisodio({ episode }: { episode: MetaEpisode }) {
           {formatEpCode(episode.season, episode.episode)}
         </span>
         {episode.airDate && (
-          <span className="ep-code text-[0.9375rem] text-faint">{episode.airDate.slice(0, 4)}</span>
+          <span className="ep-code text-[0.9375rem] text-ink/70">{episode.airDate.slice(0, 4)}</span>
         )}
       </div>
       <p className="mt-2 text-[0.9375rem] font-medium text-ink">{episode.name}</p>

@@ -27,6 +27,8 @@ export interface SerieSemeada {
   numeracao?: "tmdb" | "tvmaze";
   /** minutos de um episódio típico — ver `StoredShow.runtime` */
   runtime?: number | null;
+  /** data de estreia (ISO) — ver `StoredShow.firstAired` */
+  firstAired?: string | null;
   followed?: boolean;
   inWatchlist?: boolean;
   archived?: boolean;
@@ -95,6 +97,7 @@ function registos(semente: Semente): Registos {
       genres: s.genres ?? null,
       ...(s.numeracao ? { numeracao: s.numeracao } : {}),
       ...(s.runtime !== undefined ? { runtime: s.runtime } : {}),
+      ...(s.firstAired !== undefined ? { firstAired: s.firstAired } : {}),
       followed: s.followed ?? true,
       inWatchlist: s.inWatchlist ?? false,
       archived: s.archived ?? false,

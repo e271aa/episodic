@@ -219,7 +219,7 @@ export default function ListaPage() {
         </p>
       ) : (
         <div className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-          {items.map((item) => {
+          {items.map((item, i) => {
             return (
               <div key={`${item.kind}-${item.refId}`} className="group relative">
                 <Link href={item.href} className="block cursor-pointer active:scale-[0.97]">
@@ -230,6 +230,8 @@ export default function ListaPage() {
                         alt={item.name}
                         fill
                         sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
+                        // as três da primeira fila estão na dobra: uma delas é o LCP
+                        priority={i < 3}
                         className="object-cover"
                       />
                     ) : (

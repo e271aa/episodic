@@ -204,7 +204,9 @@ export default function MoviePage() {
             </div>
           )}
           <div className="min-w-0 flex-1 pb-1">
-            <h1 className="font-display text-2xl font-bold leading-tight [font-stretch:110%]">{movie.name}</h1>
+            {/* `break-words`: a 150% "Redemption" media 231px numa coluna de 174 e
+                empurrava o ecrã para os 423px (Ronda 12, F2) */}
+            <h1 className="font-display text-2xl font-bold leading-tight break-words [font-stretch:110%]">{movie.name}</h1>
             {metaBits.length > 0 && (
               <p className="ep-code mt-1 truncate text-xs text-dim">{metaBits.join("  ·  ")}</p>
             )}

@@ -13,6 +13,7 @@ import type { TvTimeExport } from "@/lib/tvtime/types";
 import { importExport } from "@/lib/db";
 import { isCloudConfigured } from "@/lib/supabase";
 import { avisoDePrivacidade } from "@/lib/textoImportar";
+import CabecalhoEcra from "@/components/CabecalhoEcra";
 import { TvIcon } from "@/components/icons";
 
 // Ficheiros que sabemos ler: v2 (séries+episódios), v1 (filmes), reações.
@@ -117,9 +118,9 @@ export default function ImportPage() {
        logo no primeiro contacto com a app. 7rem + a dock cobrem os 182px e
        acompanham a área segura do aparelho. */
     <main className="mx-auto max-w-xl px-4 pt-10 pb-[calc(var(--dock-h)+7rem)]">
-      <h1 className="font-display text-2xl font-bold">Importar do TV Time</h1>
+      <CabecalhoEcra titulo="Importar do TV Time" voltar="Voltar ao perfil" fallback="/profile" />
       <p className="mt-2 text-[0.9375rem] text-dim">
-        Envia o ZIP do export GDPR (gdpr.tvtime.com) — ou os CSVs extraídos.{" "}
+        Escolhe o ZIP do export GDPR que o TV Time te deu — ou os CSVs extraídos.{" "}
         {avisoDePrivacidade(isCloudConfigured())}
       </p>
 
@@ -133,7 +134,7 @@ export default function ImportPage() {
       >
         <TvIcon className="h-10 w-10 text-faint" />
         <span className="mt-3 font-medium">
-          Arrasta o ZIP para aqui, ou toca para escolher
+          Toca para escolher o ZIP
         </span>
         <span className="ep-code mt-1 text-xs text-faint">.zip ou .csv</span>
         <input

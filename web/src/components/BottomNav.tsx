@@ -62,10 +62,14 @@ export default function BottomNav() {
               key={href}
               href={href}
               aria-current={active ? "page" : undefined}
-              className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-[0.9375rem] font-medium transition-colors active:scale-95 ${
+              className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-full px-3 py-2 text-[min(0.9375rem,18px)] font-medium transition-colors active:scale-95 ${
                 active ? "bg-ink text-tube" : "text-dim hover:text-ink"
               }`}
             >
+              {/* `px-3` e o rótulo com teto de 18px (Ronda 12, F2): com o texto
+                  a 150% a dock chegava aos 419px num ecrã de 390 e saía dele
+                  (medido, 13 de 18 ecrãs; o detalhe de filme "alargava" só
+                  por causa dela). Nos tamanhos normais fica igual. */}
               <Icon className="h-[18px] w-[18px] shrink-0" />
               {/* whitespace-nowrap: a 320px, "A seguir" quebrava em duas
                   linhas e a pílula do separador ativo crescia para 61px

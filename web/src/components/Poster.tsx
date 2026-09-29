@@ -77,8 +77,10 @@ export default function Poster({
         width={fill ? undefined : width}
         height={fill ? undefined : height}
         sizes={sizes}
-        priority={priority}
-        loading={priority ? undefined : "lazy"}
+        // `priority` está descontinuado no Next 16; os docs mandam usar
+        // `loading="eager"` + `fetchPriority` (Ronda 12, F2)
+        loading={priority ? "eager" : "lazy"}
+        fetchPriority={priority ? "high" : undefined}
         onLoad={() => setLoaded(true)}
         onError={() => setFalhou(true)}
         draggable={draggable}

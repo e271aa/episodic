@@ -26,7 +26,7 @@ import Poster from "@/components/Poster";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import { Bone, CardsBone, DetailHeaderBone } from "@/components/Skeleton";
 import { ArrowLeftIcon, CheckIcon, ChevronDownIcon } from "@/components/icons";
-import { curta } from "@/lib/datas";
+import { curta, porExtenso } from "@/lib/datas";
 import { translateGenre } from "@/lib/stats";
 
 /**
@@ -84,7 +84,7 @@ function EpisodeRow({
           {metaEp?.name ?? `Episódio ${epNumber}`}
         </span>
         {metaEp?.airDate && (
-          <span className="ep-code block text-xs text-faint">{metaEp.airDate}</span>
+          <span className="ep-code block text-xs text-faint">{porExtenso(metaEp.airDate)}</span>
         )}
       </span>
     </button>
@@ -1058,7 +1058,7 @@ export default function ShowPage() {
               {show.firstAired && (
                 <div>
                   <dt className="text-xs uppercase tracking-wide text-faint">Estreia</dt>
-                  <dd className="ep-code mt-0.5">{show.firstAired}</dd>
+                  <dd className="ep-code mt-0.5">{porExtenso(show.firstAired)}</dd>
                 </div>
               )}
               {show.status && (
