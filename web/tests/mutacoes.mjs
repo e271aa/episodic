@@ -1199,7 +1199,7 @@ const MUTACOES = [
     nome: "r12-f2/dock-sai-do-ecra-a-150",
     descricao: "a dock volta a ter px-4 e o rótulo sem teto: sai do ecrã com o texto a 150%",
     ficheiro: "src/components/BottomNav.tsx",
-    de: "px-3 py-2 text-[min(0.9375rem,18px)]",
+    de: "px-[min(0.75rem,12px)] py-2 text-[min(0.9375rem,18px)]",
     para: "px-4 py-2 text-[0.9375rem]",
   },
   {
@@ -1327,6 +1327,34 @@ const MUTACOES = [
     ficheiro: "src/lib/titulos.ts",
     de: "if (original && LATINO.test(original)) {",
     para: "if (original) {",
+  },
+  {
+    nome: "r12-f5/contagens-em-px",
+    descricao: "as contagens da Biblioteca voltam a depender da largura em px, e a 150% alargam a página",
+    ficheiro: "src/components/LibraryControls.tsx",
+    de: "ep-code hidden text-xs @[22.5rem]:inline",
+    para: "ep-code hidden text-xs min-[360px]:inline",
+  },
+  {
+    nome: "r12-f5/separador-sem-teto",
+    descricao: "o rótulo dos separadores da Biblioteca perde o teto em px",
+    ficheiro: "src/components/LibraryControls.tsx",
+    de: "text-[min(0.9375rem,17px)]",
+    para: "text-[0.9375rem]",
+  },
+  {
+    nome: "r12-f5/dock-sem-teto-de-espaco",
+    descricao: "o espaço da dock volta a crescer com o texto: sai do ecrã a 320px e 150%",
+    ficheiro: "src/components/BottomNav.tsx",
+    de: "px-[min(0.75rem,12px)]",
+    para: "px-3",
+  },
+  {
+    nome: "r12-f5/perfil-sem-min-w",
+    descricao: "a linha dos números do Perfil perde o min-w-0 e alarga o ecrã a 150%",
+    ficheiro: "src/app/profile/ProfilePageClient.tsx",
+    de: "<div className=\"min-w-0 flex-1 pl-5\">\n            <p className=\"ep-code text-2xl font-bold text-ink\">{stats.movies}</p>",
+    para: "<div className=\"flex-1 pl-5\">\n            <p className=\"ep-code text-2xl font-bold text-ink\">{stats.movies}</p>",
   },
 ];
 

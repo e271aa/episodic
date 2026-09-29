@@ -137,20 +137,21 @@ export default function ProfilePage() {
 
         {/* Contadores — números lado a lado, não três caixas com borda própria */}
         <div className="flex items-stretch p-5">
-          <div className="flex-1">
+          {/* `min-w-0`: sem isto, a 150% de texto a linha passava o ecrã (F5) */}
+          <div className="min-w-0 flex-1">
             <p className="ep-code text-2xl font-bold text-ink">{stats.shows}</p>
             <p className="text-xs text-dim">
               séries · {stats.following} {stats.following === 1 ? "seguida" : "seguidas"}
             </p>
           </div>
           <div className="w-px shrink-0 bg-line" aria-hidden />
-          <div className="flex-1 pl-5">
+          <div className="min-w-0 flex-1 pl-5">
             <p className="ep-code text-2xl font-bold text-ink">{stats.movies}</p>
             <p className="text-xs text-dim">filmes</p>
           </div>
           <div className="w-px shrink-0 bg-line" aria-hidden />
-          <Link href="/library" className="flex flex-1 flex-col justify-center pl-5">
-            <p className="font-display text-[0.9375rem] font-semibold text-ink hover:underline">
+          <Link href="/library" className="flex min-w-0 flex-1 flex-col justify-center pl-5">
+            <p className="font-display text-[0.9375rem] font-semibold text-ink break-words hover:underline">
               Biblioteca
             </p>
             <p className="text-xs text-faint">ver tudo →</p>

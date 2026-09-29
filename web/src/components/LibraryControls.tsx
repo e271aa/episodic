@@ -38,7 +38,9 @@ export default function LibraryControls({
     <>
       <div
         data-testid="barra-biblioteca"
-        className="sticky top-[env(safe-area-inset-top)] z-30 -mx-5 mt-3 bg-tube/90 px-5 py-2 backdrop-blur-lg"
+        // `@container`: as contagens dependem da largura **em rem**, não em px —
+        // a 150% de texto a barra ficava com 503px num ecrã de 390 (medido, F5)
+        className="@container sticky top-[env(safe-area-inset-top)] z-30 -mx-5 mt-3 bg-tube/90 px-5 py-2 backdrop-blur-lg"
       >
       <div className="flex h-[52px] items-center gap-1 rounded-full border border-line bg-raised/92 px-1">
         {(
@@ -54,7 +56,7 @@ export default function LibraryControls({
             key={id}
             onClick={() => onSegment(id)}
             aria-pressed={segment === id}
-            className={`flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-[0.9375rem] font-semibold transition ${
+            className={`flex h-11 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-full text-[min(0.9375rem,17px)] font-semibold transition ${
               segment === id ? "bg-ink/[0.14] text-ink" : "text-dim hover:text-ink"
             }`}
           >
@@ -63,7 +65,7 @@ export default function LibraryControls({
                 os números do Ruben (138 · 266 · 3), a 320px empurravam a
                 pesquisa e a ordenação 36px para fora da barra (medido). */}
             <span
-              className={`ep-code hidden text-xs min-[360px]:inline ${segment === id ? "text-dim" : "text-faint"}`}
+              className={`ep-code hidden text-xs @[22.5rem]:inline ${segment === id ? "text-dim" : "text-faint"}`}
             >
               {total}
             </span>
@@ -75,14 +77,14 @@ export default function LibraryControls({
             <button
               onClick={onSearch}
               aria-label="Procurar na biblioteca"
-              className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-95"
+              className="flex h-11 w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-95"
             >
               <SearchIcon className="h-[18px] w-[18px]" />
             </button>
             <button
               onClick={onFilters}
               aria-label="Filtros e ordenação"
-              className="relative flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-95"
+              className="relative flex h-11 w-[44px] shrink-0 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-95"
             >
               <SortIcon className="h-[18px] w-[18px]" />
               {filtrosAtivos && (

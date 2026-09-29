@@ -85,7 +85,8 @@ test("horas por ano: o destaque é o ano com mais horas, não o último", async 
 
 // ── F2: os P2 objetivos ──
 
-test("a dock cabe no ecrã com o texto a 150%", async ({ page }) => {
+for (const largura of [390, 320]) test(`a dock cabe no ecrã com o texto a 150% (${largura}px)`, async ({ page }) => {
+  await page.setViewportSize({ width: largura, height: 664 });
   await semear(page, { series: [{ uuid: "s-1", name: "Alfa" }] });
   // a biblioteca é o rótulo ativo mais comprido: é onde a dock mais se estica
   await page.goto("/library");
@@ -96,6 +97,8 @@ test("a dock cabe no ecrã com o texto a 150%", async ({ page }) => {
     [...document.querySelectorAll("nav a")].map((a) => a.getBoundingClientRect().right - innerWidth),
   );
   for (const excesso of fora) expect(excesso).toBeLessThanOrEqual(0);
+  const esquerda = await page.evaluate(() => Math.min(...[...document.querySelectorAll("nav a")].map((a) => a.getBoundingClientRect().left)));
+  expect(esquerda).toBeGreaterThanOrEqual(0);
 });
 
 test("o detalhe de filme não alarga o ecrã com o texto a 150%", async ({ page }) => {
@@ -274,4 +277,40 @@ test("Explorar: os títulos aparecem no original, como na biblioteca (o TV Time)
   await expect(page.getByText("Severance").first()).toBeVisible();
   await expect(page.getByText("Separação")).toHaveCount(0);
   await expect(page.getByText("Ataque dos Titãs").first()).toBeVisible();
+});
+
+// ── F5: o que a medição a 320px e a 150% achou ──
+for (const largura of [390, 320]) {
+  test(`Biblioteca: a barra do topo cabe com o texto a 150% (${largura}px)`, async ({ page }) => {
+    await page.setViewportSize({ width: largura, height: 664 });
+    await semear(page, {
+      series: Array.from({ length: 138 }, (_, i) => ({ uuid: `s-${i}`, name: `Serie ${i}` })),
+      filmes: Array.from({ length: 266 }, (_, i) => ({ key: `f-${i}`, name: `Filme ${i}` })),
+    });
+    await page.goto("/library");
+    await page.getByTestId("barra-biblioteca").waitFor();
+    await page.evaluate(() => {
+      document.documentElement.style.fontSize = "150%";
+    });
+    await page.waitForTimeout(200);
+    const filtros = (await page.getByRole("button", { name: "Filtros e ordenação" }).boundingBox())!;
+    expect(filtros.x + filtros.width).toBeLessThanOrEqual(largura);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(largura);
+  });
+}
+
+test("Perfil: a linha dos números cabe a 320px com o texto a 150%", async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 664 });
+  await semear(page, {
+    series: [{ uuid: "s-1", name: "Alfa" }],
+    filmes: [{ key: "f-1", name: "Filme", watchedAt: "2024-05-04T21:00:00.000Z" }],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1 }],
+  });
+  await page.goto("/profile");
+  await page.getByText("ver tudo →").waitFor();
+  await page.evaluate(() => {
+    document.documentElement.style.fontSize = "150%";
+  });
+  await page.waitForTimeout(200);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
 });
