@@ -943,7 +943,7 @@ const MUTACOES = [
     nome: "r12-fase5d/estrear-corta-o-nome",
     descricao: 'o A estrear volta a cortar o nome da série',
     ficheiro: ESTREAR,
-    de: '<p className="font-semibold leading-snug [overflow-wrap:anywhere]">{show.name}</p>',
+    de: '<p className="font-semibold leading-snug break-words">{show.name}</p>',
     para: '<p className="truncate font-semibold">{show.name}</p>',
   },
   {
