@@ -126,6 +126,19 @@ export default function SheetPanel({
     return () => clearTimeout(t);
   }, [aFechar]);
 
+  // Com a folha aberta a página de trás não rola: o dedo a rolar a folha
+  // "passava" para a página, a barra do Safari recolhia e ficava um vão em
+  // baixo. Repõe-se o que lá estava ao fechar.
+  useEffect(() => {
+    if (!montada) return;
+    const el = document.documentElement;
+    const antes = el.style.overflow;
+    el.style.overflow = "hidden";
+    return () => {
+      el.style.overflow = antes;
+    };
+  }, [montada]);
+
   // Arrastar a cabeça para baixo. Escreve direto no `style` do painel — um
   // re-render por movimento do dedo é trabalho a mais onde um frame perdido
   // se sente logo. A captura do ponteiro só começa quando o dedo se mexe de
@@ -190,7 +203,7 @@ export default function SheetPanel({
         ref={painelRef}
         tabIndex={-1}
         data-folha
-        className={`folha absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto rounded-t-3xl pb-[calc(var(--dock-h)+1rem)] outline-none ${
+        className={`folha absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto overscroll-contain rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+1.5rem)] outline-none ${
           agrupada ? "folha-agrupada" : "border-t border-line bg-panel"
         }`}
       >

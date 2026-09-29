@@ -235,3 +235,29 @@ test("sem id do IMDb não há ligação inventada", async ({ page, tmdb }) => {
   await expect(page.getByRole("dialog").getByText("Sem sinopse disponível.")).toBeVisible();
   await expect(page.getByRole("link", { name: /IMDb/ })).toHaveCount(0);
 });
+
+test("com a ficha aberta a página de trás não rola (deixava um vão em baixo ao rolar)", async ({
+  page,
+  tmdb,
+}) => {
+  tmdb.tendencias = sugestoes(9);
+  await semear(page, {
+    listas: [1, 2, 3, 4, 5, 6].map((n) => ({ id: `l-${n}`, name: `Lista ${n}`, items: [] })),
+  });
+  await page.setViewportSize({ width: 390, height: 600 });
+  await page.goto("/explorar");
+  await page.getByRole("button", { name: "Abrir Sugestao 1" }).waitFor();
+  await page.getByRole("button", { name: "Abrir Sugestao 1" }).click();
+  await page.getByRole("dialog").waitFor();
+
+  // (o WebKit móvel não deixa simular a roda: mede-se o que a impede)
+  const overflow = () => page.evaluate(() => getComputedStyle(document.documentElement).overflowY);
+  expect(await overflow()).toBe("hidden");
+  const painel = page.locator("[data-folha]");
+  expect(await painel.evaluate((el) => getComputedStyle(el).overscrollBehaviorY)).toBe("contain");
+
+  // e fechada, a página volta a rolar
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(await overflow()).not.toBe("hidden");
+});
