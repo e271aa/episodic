@@ -1,6 +1,22 @@
 // Estatísticas avançadas — padrões no tempo que o Perfil não mostra:
 // maratonas, dia da semana preferido, sequência de dias seguidos.
-import { getAllWatched, getShows, type StoredShow, type WatchedEpisode } from "./db";
+import {
+  getAllWatched,
+  getImportMeta,
+  getShows,
+  type ImportMeta,
+  type StoredShow,
+  type WatchedEpisode,
+} from "./db";
+import {
+  horasPorAno,
+  porMesAno,
+  segundosPorEpisodio,
+  seriesMaisVistas,
+  type HorasDeUmAno,
+  type MapaAnoMes,
+  type SerieVista,
+} from "./graficos";
 
 export interface BingeDay {
   date: string; // YYYY-MM-DD
@@ -21,6 +37,12 @@ export interface AdvancedStats {
   perWeekday: WeekdayBar[];
   busiestMonth: { month: string; count: number } | null;
   distinctShowsWatchedInADay: { date: string; count: number } | null;
+  /** episódios por mês, em cada ano (só data certa) */
+  mapa: MapaAnoMes;
+  /** as séries com mais episódios vistos */
+  maisVistas: SerieVista[];
+  /** horas por ano — estimadas, só data certa */
+  horasAno: HorasDeUmAno[];
 }
 
 const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -30,14 +52,18 @@ function dateOnly(iso: string): string {
 }
 
 export async function loadAdvancedStats(): Promise<AdvancedStats> {
-  const [watched, shows] = await Promise.all([getAllWatched(), getShows()]);
-  return computeAdvancedStats(watched, shows);
+  const [watched, shows, meta] = await Promise.all([getAllWatched(), getShows(), getImportMeta()]);
+  return computeAdvancedStats(watched, shows, meta);
 }
 
 export function computeAdvancedStats(
   watched: WatchedEpisode[],
   shows: StoredShow[],
+  meta: ImportMeta | null = null,
 ): AdvancedStats {
+  // o total e as séries mais vistas contam TODOS os episódios; só o que é
+  // sobre quando se viu (abaixo) fica com os de data certa
+  const todos = watched;
   const showName = new Map(shows.map((s) => [s.uuid, s.name]));
 
   // Tudo aqui é sobre QUANDO — e um episódio sem data certa não sabe quando.
@@ -160,5 +186,8 @@ export function computeAdvancedStats(
     perWeekday,
     busiestMonth,
     distinctShowsWatchedInADay,
+    mapa: porMesAno(watched),
+    maisVistas: seriesMaisVistas(todos, shows),
+    horasAno: horasPorAno(watched, segundosPorEpisodio(meta, shows, todos)),
   };
 }

@@ -1146,6 +1146,41 @@ const MUTACOES = [
     de: 'className="mt-2 -my-1 flex min-h-11 items-center"',
     para: 'className="mt-2 -my-1 block py-1"',
   },
+  {
+    nome: "r12-fase7/degrau-do-mes-fraco-some",
+    descricao: "um mês com poucos episódios cai no degrau 0 e some do mapa",
+    ficheiro: "src/lib/graficos.ts",
+    de: "  return 1;\n}",
+    para: "  return 0;\n}",
+  },
+  {
+    nome: "r12-fase7/mais-vistas-sem-ordem",
+    descricao: "as séries mais vistas deixam de vir por ordem de episódios",
+    ficheiro: "src/lib/graficos.ts",
+    de: ".sort((a, b) => b[1] - a[1] || ",
+    para: ".sort((a, b) => 0 || ",
+  },
+  {
+    nome: "r12-fase7/horas-ignoram-a-duracao",
+    descricao: "o que se marcou depois do import vale a média, não a duração da série",
+    ficheiro: "src/lib/graficos.ts",
+    de: "return minutos ? minutos * 60 : media;",
+    para: "return media;",
+  },
+  {
+    nome: "r12-fase7/horas-por-ano-com-um-ano",
+    descricao: "as horas por ano aparecem mesmo com um só ano (um gráfico de uma coluna)",
+    ficheiro: ESTATISTICAS,
+    de: "stats.horasAno.length > 1",
+    para: "stats.horasAno.length > 0",
+  },
+  {
+    nome: "r12-fase7/plural-de-um",
+    descricao: "\"1 episódio\" volta a ser \"1 episódios\"",
+    ficheiro: "src/lib/graficos.ts",
+    de: "return n === 1 ? singular : pluralForma;",
+    para: "return pluralForma;",
+  },
 ];
 
 const filtro = process.argv[2];

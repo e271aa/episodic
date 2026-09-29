@@ -84,8 +84,9 @@ test("'Melhor maratona' aparece a partir de 2 episódios no mesmo dia", async ({
     ],
   });
   await page.goto("/estatisticas");
-  await expect(page.getByText("Melhor maratona")).toBeVisible();
-  await expect(page.getByText("2", { exact: true })).toBeVisible();
+  const maratona = page.locator("section", { hasText: "Melhor maratona" });
+  await expect(maratona).toBeVisible();
+  await expect(maratona).toContainText("2 episódios");
 });
 
 test("a Biblioteca vazia usa 'seguir' para séries, não 'adicionar' — o glossário do PRODUCT.md", async ({

@@ -1,0 +1,74 @@
+"use client";
+
+import { useState } from "react";
+import { degrau, plural, type MapaAnoMes } from "@/lib/graficos";
+import { Tabela } from "@/components/Colunas";
+
+const MESES = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho", "agosto", "setembro", "outubro", "novembro", "dezembro"];
+/** as cinco tintas: uma cor só, mais clara ou mais escura (sequencial) */
+const TINTAS = ["bg-ink/[0.06]", "bg-ink/25", "bg-ink/45", "bg-ink/70", "bg-ink"];
+
+const leitura = (ano: number, mes: number, n: number) =>
+  `${MESES[mes]} de ${ano} · ${n} ${plural(n, "episódio", "episódios")}`;
+
+/**
+ * Quando viste: uma linha por ano, uma célula por mês (Ronda 12, Fase 7).
+ * Uma cor só, em quatro degraus (a escala sequencial dos gráficos:
+ * uma tinta, mais escura = mais); nada de cores de estado. Cada célula é um
+ * botão — tocar diz o mês e o número, e a tabela por baixo tem tudo.
+ */
+export default function MapaDeCalor({ mapa }: { mapa: MapaAnoMes }) {
+  // por omissão, o mês mais forte: o gráfico abre já a dizer alguma coisa
+  let melhor = { ano: 0, mes: 0, n: -1 };
+  for (const a of mapa.anos)
+    a.meses.forEach((n, mes) => {
+      if (n > melhor.n) melhor = { ano: a.ano, mes, n };
+    });
+  const [escolhido, setEscolhido] = useState<{ ano: number; mes: number } | null>(null);
+  const foco = escolhido ?? { ano: melhor.ano, mes: melhor.mes };
+  const focoN = mapa.anos.find((a) => a.ano === foco.ano)?.meses[foco.mes] ?? 0;
+
+  return (
+    <div>
+      <p className="ep-code min-h-4 text-xs text-dim" aria-live="polite" data-testid="leitura">
+        {leitura(foco.ano, foco.mes, focoN)}
+      </p>
+      <div className="mt-3 flex flex-col gap-[3px]" role="group" aria-label="Episódios por mês e por ano">
+        <div className="flex items-center gap-[3px]" aria-hidden>
+          <span className="w-8 shrink-0" />
+          {MESES.map((m) => (
+            <span key={m} className="ep-code flex-1 text-center text-[0.6875rem] text-faint">
+              {m[0].toUpperCase()}
+            </span>
+          ))}
+        </div>
+        {mapa.anos.map((a) => (
+          <div key={a.ano} className="flex items-center gap-[3px]">
+            <span className="ep-code w-8 shrink-0 text-[0.6875rem] text-faint">{a.ano}</span>
+            {a.meses.map((n, mes) => {
+              const ativo = foco.ano === a.ano && foco.mes === mes;
+              return (
+                <button
+                  key={mes}
+                  type="button"
+                  data-degrau={degrau(n, mapa.maximo)}
+                  onClick={() => setEscolhido({ ano: a.ano, mes })}
+                  aria-label={leitura(a.ano, mes, n)}
+                  aria-pressed={ativo}
+                  className={`aspect-square min-w-0 flex-1 cursor-pointer rounded-[4px] ${
+                    TINTAS[degrau(n, mapa.maximo)]
+                  } ${ativo ? "outline-2 outline-offset-1 outline-ink" : ""}`}
+                />
+              );
+            })}
+          </div>
+        ))}
+      </div>
+      <Tabela
+        colunaCabecalho="Ano"
+        valorCabecalho="Episódios"
+        linhas={mapa.anos.map((a) => [String(a.ano), String(a.total)])}
+      />
+    </div>
+  );
+}

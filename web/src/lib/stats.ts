@@ -9,6 +9,7 @@ import {
   type StoredShow,
   type WatchedEpisode,
 } from "./db";
+import { segundosPorEpisodio } from "./graficos";
 
 export interface GenreSlice {
   name: string;
@@ -59,17 +60,14 @@ function horasDeAntena(
   shows: StoredShow[],
   watched: WatchedEpisode[],
 ): number | null {
+  // a regra de quanto vale cada episódio vive em `graficos.ts`, e é a mesma
+  // que reparte as horas por ano nas Estatísticas — uma só conta
+  const valor = segundosPorEpisodio(meta, shows, watched);
   const corte = meta?.importedAt ?? null;
-  const base = meta?.totalSeriesRuntimeSec ?? 0;
-  const importados = corte ? watched.filter((w) => w.watchedAt <= corte).length : 0;
-  const media = base > 0 && importados > 0 ? base / importados : null;
-  const duracao = new Map(shows.map((s) => [s.uuid, s.runtime ?? null]));
-
-  let segundos = base;
+  let segundos = meta?.totalSeriesRuntimeSec ?? 0;
   for (const w of watched) {
     if (corte && w.watchedAt <= corte) continue;
-    const minutos = duracao.get(w.showUuid);
-    const s = minutos ? minutos * 60 : media;
+    const s = valor(w);
     if (s) segundos += s;
   }
   return segundos > 0 ? Math.round(segundos / 3600) : null;

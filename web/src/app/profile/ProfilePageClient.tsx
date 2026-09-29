@@ -12,6 +12,8 @@ import { Panel, PanelRow } from "@/components/Panel";
 import { Bone } from "@/components/Skeleton";
 import IntegrityCheck from "@/components/IntegrityCheck";
 import { porExtenso } from "@/lib/datas";
+import { plural } from "@/lib/graficos";
+import Colunas from "@/components/Colunas";
 
 // Mesmo formato do TV Time: "2 meses · 25 dias · 7 horas"
 function splitHours(totalHours: number) {
@@ -57,7 +59,6 @@ export default function ProfilePage() {
 
   const time = stats.hours !== null ? splitHours(stats.hours) : null;
   const topShowPosterPath = stats.topShow?.posterPath ?? null;
-  const maxYear = Math.max(1, ...stats.perYear.map((y) => y.count));
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
@@ -79,16 +80,16 @@ export default function ProfilePage() {
             {time.months > 0 && (
               <span className="flex items-baseline gap-1.5">
                 <span className="ep-code text-5xl font-bold text-ink">{time.months}</span>
-                <span className="text-[0.9375rem] text-dim">meses</span>
+                <span className="text-[0.9375rem] text-dim">{plural(time.months, "mês", "meses")}</span>
               </span>
             )}
             <span className="flex items-baseline gap-1.5">
               <span className="ep-code text-5xl font-bold text-ink">{time.days}</span>
-              <span className="text-[0.9375rem] text-dim">dias</span>
+              <span className="text-[0.9375rem] text-dim">{plural(time.days, "dia", "dias")}</span>
             </span>
             <span className="flex items-baseline gap-1.5">
               <span className="ep-code text-5xl font-bold text-ink">{time.hours}</span>
-              <span className="text-[0.9375rem] text-dim">horas</span>
+              <span className="text-[0.9375rem] text-dim">{plural(time.hours, "hora", "horas")}</span>
             </span>
           </div>
         ) : (
@@ -183,20 +184,20 @@ export default function ProfilePage() {
         {stats.perYear.length > 1 && (
           <div className="p-5">
             <SectionHeader label="Por ano" meta={`${stats.perYear.length} anos`} />
-            <div className="mt-4 flex items-end justify-between gap-1.5">
-              {stats.perYear.map((y) => (
-                <div key={y.year} className="flex flex-1 flex-col items-center gap-1.5">
-                  <span className="ep-code text-[0.6875rem] text-faint">{y.count}</span>
-                  <div
-                    className="w-full rounded-t-sm bg-ink/80"
-                    style={{ height: `${Math.max(4, (y.count / maxYear) * 72)}px` }}
-                    title={`${y.year}: ${y.count} episódios`}
-                  />
-                  <span className="ep-code text-[0.6875rem] text-faint">
-                    {String(y.year).slice(2)}
-                  </span>
-                </div>
-              ))}
+            <div className="mt-3">
+              <Colunas
+                titulo="Episódios por ano"
+                destaque="ultima"
+                colunaCabecalho="Ano"
+                valorCabecalho="Episódios"
+                dados={stats.perYear.map((y) => ({
+                  chave: y.year,
+                  nome: String(y.year),
+                  rotulo: String(y.year).slice(2),
+                  valor: y.count,
+                  leitura: `${y.year} · ${y.count} ${plural(y.count, "episódio", "episódios")}`,
+                }))}
+              />
             </div>
           </div>
         )}

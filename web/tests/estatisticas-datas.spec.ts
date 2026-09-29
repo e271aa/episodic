@@ -35,5 +35,8 @@ test("um dia de marcação em massa não aparece como a maior maratona", async (
 
   const binge = page.getByText("A maior parte foi de");
   await expect(binge).toContainText("Maratona Real");
-  await expect(page.getByText("98", { exact: true })).toHaveCount(0);
+  // os 98 continuam nos totais (e por isso nas séries mais vistas), mas a
+  // maratona não é deles
+  const cartaoMaratona = page.locator("section", { hasText: "Melhor maratona" });
+  await expect(cartaoMaratona.getByText("98", { exact: true })).toHaveCount(0);
 });
