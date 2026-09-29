@@ -1,6 +1,11 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Só no `next dev`: a pré-visualização da Mira abre-se no iPhone pelo IP do
+  // Mac na rede de casa. Sem isto, o Next 16 recusa os recursos de dev a
+  // qualquer origem que não seja `localhost` e a página nunca hidrata — vê-se,
+  // mas nenhum botão responde (medido a 29-09: `http://192.168.1.163:3300`).
+  allowedDevOrigins: ["127.0.0.1", "192.168.*.*"],
   // Capas otimizadas pela Vercel: AVIF/WebP, tamanho certo por pedido, cache
   // na edge — em vez de 227+ JPEGs pesados a virem sempre do TMDB/TVmaze.
   images: {
