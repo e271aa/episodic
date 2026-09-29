@@ -87,8 +87,8 @@ export default function BottomNav() {
               />
               <span
                 // piso de 10px: a 0,59rem, com o texto do Ruben (15px), davam 8,85px —
-                  // o iOS mantém os nomes da barra à volta dos 10pt
-                  className={`hidden whitespace-nowrap text-[max(10px,0.59rem)] leading-none @[3.4rem]:block ${
+                // o iOS mantém os nomes da barra à volta dos 10pt
+                className={`hidden whitespace-nowrap text-[max(10px,0.59rem)] leading-none @[3.4rem]:block ${
                   active ? "font-semibold" : "font-medium"
                 }`}
               >
