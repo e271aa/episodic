@@ -3,8 +3,8 @@ import { semear } from "./apoio/semear";
 
 /**
  * Ronda 14, Fase 1 — as fundações da Mira: tema noite/claro, Dynamic Type,
- * espaço em px, a barra de separadores e as primitivas (vistas na vitrine
- * `/mira`, que só tem dados de exemplo).
+ * espaço em px, a barra de separadores e as primitivas — nos ecrãs onde
+ * vivem (a vitrine `/mira` saiu na Fase 12).
  */
 
 const fundoDoCorpo = (page: import("@playwright/test").Page) =>
@@ -13,7 +13,8 @@ const fundoDoCorpo = (page: import("@playwright/test").Page) =>
 test("Aparência: «Claro» fica escolhido depois de recarregar, sem piscar, e a barra de estado acompanha", async ({
   page,
 }) => {
-  await page.goto("/mira");
+  await semear(page, {});
+  await page.goto("/profile/definicoes");
   expect(await fundoDoCorpo(page)).toBe("rgb(0, 0, 0)");
   await page.getByRole("radio", { name: "Claro" }).click();
   await expect.poll(() => fundoDoCorpo(page)).toBe("rgb(242, 242, 247)");
@@ -44,9 +45,10 @@ test("Aparência: «Claro» fica escolhido depois de recarregar, sem piscar, e a
 test.describe("com o sistema em modo claro", () => {
   test.use({ colorScheme: "light" });
   test("«Automático» segue o sistema, e a ação principal passa a preta", async ({ page }) => {
-    await page.goto("/mira");
+    await semear(page, {});
+    await page.goto("/library");
     expect(await fundoDoCorpo(page)).toBe("rgb(242, 242, 247)");
-    const acao = page.getByRole("button", { name: "Marcar visto" });
+    const acao = page.getByRole("button", { name: "Procurar uma série" });
     expect(await acao.evaluate((el) => getComputedStyle(el).backgroundColor)).toBe("rgb(0, 0, 0)");
   });
 });
@@ -54,18 +56,27 @@ test.describe("com o sistema em modo claro", () => {
 test("Dynamic Type só no iOS: fora dele a base é 17px, não os 13 do macOS", async ({ page }) => {
   // O WebKit do Mac (o dos testes) dá 13px a `-apple-system-body`; sem a
   // guarda `@supports (-webkit-touch-callout)` a app encolhia toda.
-  await page.goto("/mira");
+  await semear(page, {});
+  await page.goto("/series");
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).fontSize)).toBe("17px");
 });
 
-test("os alvos de toque ficam em 44px mesmo com o texto do sistema pequeno", async ({ page }) => {
+test("os alvos de toque ficam em 44px mesmo com o texto do sistema pequeno", async ({ page, tmdb }) => {
   // O Ruben tem o corpo a 15px. Com o espaço em rem, `min-h-11` dava 41px.
-  await page.goto("/mira");
-  await page.evaluate(() => {
-    document.documentElement.style.fontSize = "15px";
-  });
-  const pequena = page.getByRole("button", { name: "Para ver" });
-  expect((await pequena.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+  const texto15 = () =>
+    page.evaluate(() => {
+      document.documentElement.style.fontSize = "15px";
+    });
+  tmdb.tendencias = [{ id: 701, name: "Tendencia", poster_path: "/cartaz.jpg", backdrop_path: null, overview: "", first_air_date: "2022-01-01", vote_average: 7 }];
+  await semear(page, {});
+  await page.goto("/explorar");
+  await texto15();
+  // o cartaz entra a 0,98 de escala (`poster-in`): mede-se em repouso
+  const pequena = page.getByRole("button", { name: "Para ver" }).first();
+  await expect.poll(async () => (await pequena.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+
+  await page.goto("/profile/definicoes");
+  await texto15();
   const segmento = page.getByRole("radio", { name: "Noite" });
   expect((await segmento.boundingBox())!.height).toBeGreaterThanOrEqual(38);
   const grupo = page.getByRole("radiogroup", { name: "Aparência" });
@@ -94,7 +105,8 @@ test("a barra de separadores mostra os quatro nomes; a 320px com texto a 150% fi
 });
 
 test("o segmentado é uma escolha (rádio), e a escolha não é a cápsula branca da ação", async ({ page }) => {
-  await page.goto("/mira");
+  await semear(page, {});
+  await page.goto("/library");
   const filmes = page.getByRole("radio", { name: /^Filmes/ });
   await filmes.click();
   await expect(filmes).toHaveAttribute("aria-checked", "true");
@@ -105,19 +117,25 @@ test("o segmentado é uma escolha (rádio), e a escolha não é a cápsula branc
 });
 
 test("o filtro abre como um menu, com o foco na escolha, e fecha com Esc", async ({ page }) => {
-  await page.goto("/mira");
+  await semear(page, {
+    series: [
+      { uuid: "s-1", name: "Alfa" },
+      { uuid: "s-2", name: "Beta" },
+    ],
+    vistos: [{ showUuid: "s-1", season: 1, episode: 1 }],
+  });
+  await page.goto("/library");
   const botao = page.getByRole("button", { name: /^Filtrar séries/ });
-  await expect(botao).toContainText("Em curso");
+  await expect(botao).toContainText("Todas");
   await botao.click();
   const menu = page.getByRole("menu", { name: "Filtrar séries" });
   await expect(menu).toBeVisible();
-  await expect(menu.getByRole("menuitemradio")).toHaveCount(6);
-  await expect(menu.getByRole("menuitemradio", { name: /Em curso/ })).toBeFocused();
+  await expect(menu.getByRole("menuitemradio", { name: /Todas/ })).toBeFocused();
   await page.keyboard.press("Escape");
   await expect(menu).toBeHidden();
 
   await botao.click();
-  await page.getByRole("menuitemradio", { name: /Completas/ }).click();
-  await expect(botao).toContainText("Completas");
+  await page.getByRole("menuitemradio", { name: /Por começar/ }).click();
+  await expect(botao).toContainText("Por começar");
   await expect(page.getByRole("menu")).toBeHidden();
 });

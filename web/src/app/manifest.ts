@@ -17,7 +17,7 @@ export default function manifest(): MetadataRoute.Manifest {
     icons: [
       { src: "/icon-192.png", sizes: "192x192", type: "image/png" },
       { src: "/icon-512.png", sizes: "512x512", type: "image/png" },
-      // "maskable" — o mesmo desenho serve, pois o motivo está na zona segura central
+      // "maskable" — o mesmo desenho serve: a carta de teste vai de ponta a ponta e lê-se recortada
       { src: "/icon-192.png", sizes: "192x192", type: "image/png", purpose: "maskable" },
       { src: "/icon-512.png", sizes: "512x512", type: "image/png", purpose: "maskable" },
     ],

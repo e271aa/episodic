@@ -54,6 +54,22 @@ test("a linha da Triagem abre o baralho e fecha de volta ao Explorar", async ({ 
   await expect(page.getByText("1 / 4")).toHaveCount(0);
 });
 
+test("na Triagem, a pastilha de onde veio o cartaz é só texto: a mira não é decoração", async ({ page, tmdb }) => {
+  // Fase 12: a barrinha de cor sorteada pelo título da secção (`sectionColor`,
+  // da v2) tinha sobrevivido aqui — a Regra da mira só a deixa no ritual e na
+  // casa vazia.
+  tmdb.tendencias = sugestoes(2);
+  await semear(page, {});
+  await page.goto("/explorar");
+  await page.getByRole("button", { name: /Triagem/ }).click();
+  const origem = page.getByTestId("origem-triagem").first();
+  await expect(origem).toContainText("Em tendência");
+  const pintados = await origem.evaluate((el) =>
+    [...el.querySelectorAll("*")].filter((c) => getComputedStyle(c).backgroundColor !== "rgba(0, 0, 0, 0)").length,
+  );
+  expect(pintados).toBe(0);
+});
+
 test("«Ver tudo» abre a secção em mosaico e «Ver menos» volta à faixa", async ({ page, tmdb }) => {
   tmdb.tendencias = sugestoes(9);
   await semear(page, {});

@@ -217,7 +217,7 @@ export default function SwipeCard({
             {showName}
           </h2>
           <div className="mt-2 flex items-center gap-2.5">
-            <span className="ep-code rounded-full bg-acao px-3 py-1 text-[0.88rem] font-semibold text-on-label">
+            <span className="ep-code vidro rounded-full px-3 py-1 text-[0.88rem] font-semibold text-label">
               {formatEpCode(episode.season, episode.episode)}
             </span>
             {episode.airDate && (
@@ -231,9 +231,12 @@ export default function SwipeCard({
           </p>
           {/* onde é que este episódio cai na série — sem isto, "visto" decide-se
               às cegas: é o próximo por ver, mas não se sabe de quantos */}
-          <p className="ep-code mt-2 text-[0.76rem] text-label-2">
-            {watchedCount}
-            {totalEpisodes ? `/${totalEpisodes}` : ""} vistos até agora
+          <p className="mt-2 text-[0.76rem] text-label-2">
+            <span className="ep-code">
+              {watchedCount}
+              {totalEpisodes ? `/${totalEpisodes}` : ""}
+            </span>{" "}
+            vistos até agora
           </p>
         </div>
       </div>

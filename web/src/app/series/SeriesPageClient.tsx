@@ -364,7 +364,7 @@ export default function SeriesPage() {
         <div className="mt-auto flex flex-col gap-2.5 pb-4 pt-5">
           <Link
             href="/explorar?procurar=1"
-            className="flex min-h-[52px] cursor-pointer items-center justify-center rounded-full bg-label text-base font-semibold text-on-label transition-transform active:scale-[0.97]"
+            className="flex min-h-[52px] cursor-pointer items-center justify-center rounded-full bg-acao text-base font-semibold text-on-label transition-transform active:scale-[0.97]"
           >
             Procurar uma série
           </Link>

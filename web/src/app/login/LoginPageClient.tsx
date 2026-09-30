@@ -4,7 +4,8 @@ import { Suspense, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { isCloudConfigured } from "@/lib/supabase";
 import { signInWithEmail, signInWithPassword, verifyEmailCode } from "@/lib/cloud";
-import { TvIcon, ArrowLeftIcon } from "@/components/icons";
+import { TvIcon } from "@/components/icons";
+import { RECUAR, IconeRecuar } from "@/components/CabecalhoEcra";
 import Acao from "@/components/mira/Acao";
 import BotaoVoltar from "@/components/BotaoVoltar";
 
@@ -24,9 +25,9 @@ function BotaoDeSair() {
     <BotaoVoltar
       label="Voltar"
       fallback="/series"
-      className="absolute left-4 top-[max(1rem,env(safe-area-inset-top))] flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-fill text-label transition active:scale-90"
+      className={`absolute left-4 top-[max(1rem,env(safe-area-inset-top))] ${RECUAR}`}
     >
-      <ArrowLeftIcon className="h-5 w-5" />
+      <IconeRecuar />
     </BotaoVoltar>
   );
 }

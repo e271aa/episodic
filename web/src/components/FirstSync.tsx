@@ -87,7 +87,7 @@ export default function FirstSync() {
 
   return (
     <div className="fixed inset-0 z-[60] flex flex-col items-center justify-center bg-tube px-8 text-center">
-      <div className="bars h-14 w-14 animate-pulse rounded-2xl" aria-hidden />
+      <div className="spinner h-8 w-8 rounded-full border-[3px] border-label/20 border-t-label" aria-hidden />
 
       {estado.fase === "erro" ? (
         <>
@@ -99,7 +99,7 @@ export default function FirstSync() {
           <div className="mt-6 flex gap-3">
             <button
               onClick={() => void correr()}
-              className="min-h-11 cursor-pointer rounded-full bg-ink px-6 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110"
+              className="min-h-11 cursor-pointer rounded-full bg-acao px-6 text-[0.9375rem] font-semibold text-on-label transition-transform active:scale-[0.97]"
             >
               Tentar outra vez
             </button>

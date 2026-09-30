@@ -12,7 +12,8 @@ import SwipeCard from "@/components/SwipeCard";
 import SwipeCoach, { EM_DIA_COACH_KEY } from "@/components/SwipeCoach";
 import Acao from "@/components/mira/Acao";
 import BotaoVoltar from "@/components/BotaoVoltar";
-import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
+import { CheckIcon } from "@/components/icons";
+import { RECUAR, IconeRecuar } from "@/components/CabecalhoEcra";
 import { Bone, TitleBone } from "@/components/Skeleton";
 import UmAUm from "./UmAUm";
 
@@ -173,13 +174,13 @@ function EmDiaContent() {
 
   return (
     <main className="tela-cheia mx-auto flex w-full max-w-md flex-col overflow-hidden px-4 pt-[max(0.5rem,env(safe-area-inset-top))]">
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-3">
         <BotaoVoltar
           label="Voltar às séries"
           fallback="/series"
-          className="-ml-2 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-label transition active:scale-90"
+          className={RECUAR}
         >
-          <ArrowLeftIcon className="h-5 w-5" />
+          <IconeRecuar />
         </BotaoVoltar>
         <h1 className="text-[1.65rem] leading-[1.1] font-bold text-label">Pôr em dia</h1>
       </div>

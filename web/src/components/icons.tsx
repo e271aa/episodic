@@ -143,10 +143,3 @@ export function PlusIcon(props: SVGProps<SVGSVGElement>) {
   );
 }
 
-export function ArrowLeftIcon(props: SVGProps<SVGSVGElement>) {
-  return (
-    <Icon {...props}>
-      <path d="M19 12H5M12 19l-7-7 7-7" />
-    </Icon>
-  );
-}

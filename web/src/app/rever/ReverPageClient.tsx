@@ -192,8 +192,9 @@ export default function ReverPage() {
                 >
                   {atual.show.name}
                 </Link>
-                <p className="ep-code mt-1 text-[0.88rem] text-label-2">
-                  {atual.vistos} de {atual.estreados} estreados
+                <p className="mt-1 text-[0.88rem] text-label-2">
+                  <span className="ep-code">{atual.vistos}</span> de{" "}
+                  <span className="ep-code">{atual.estreados}</span> estreados
                 </p>
                 {/* O glossário (PRODUCT.md): "por marcar" é só o que está
                     ATRÁS do último visto; o que vem depois é "por ver". Dizia
@@ -201,14 +202,15 @@ export default function ReverPage() {
                     à frente (Ronda 12, 5b.4, P1 #4). `paraTras` é o início
                     de `porMarcar` — os dois estão pela mesma ordem. */}
                 {atual.paraTras.length > 0 && (
-                  <p className="ep-code text-[0.88rem] text-label-2">
-                    {atual.paraTras.length} por marcar · {temporadasDe(atual.paraTras)}
+                  <p className="text-[0.88rem] text-label-2">
+                    <span className="ep-code">{atual.paraTras.length}</span> por marcar ·{" "}
+                    <span className="ep-code">{temporadasDe(atual.paraTras)}</span>
                   </p>
                 )}
                 {atual.porMarcar.length > atual.paraTras.length && (
-                  <p className="ep-code text-[0.88rem] text-label-2">
-                    {atual.porMarcar.length - atual.paraTras.length} por ver ·{" "}
-                    {temporadasDe(atual.porMarcar.slice(atual.paraTras.length))}
+                  <p className="text-[0.88rem] text-label-2">
+                    <span className="ep-code">{atual.porMarcar.length - atual.paraTras.length}</span> por ver ·{" "}
+                    <span className="ep-code">{temporadasDe(atual.porMarcar.slice(atual.paraTras.length))}</span>
                   </p>
                 )}
               </div>

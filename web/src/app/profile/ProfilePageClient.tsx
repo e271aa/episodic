@@ -177,7 +177,7 @@ export default function ProfilePage() {
         <section className="mt-6">
           <h2 className="mb-2 px-1 text-base font-semibold text-label">O teu espetro</h2>
           <div className="rounded-[26px] bg-group px-[18px] py-4">
-            <div className="flex h-3 overflow-hidden rounded-full">
+            <div data-testid="espetro" className="flex h-3 overflow-hidden rounded-full">
               {stats.genres.map((g) => (
                 <div
                   key={g.name}

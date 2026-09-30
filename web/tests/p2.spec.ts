@@ -12,7 +12,6 @@ import { serieCompleta, type Catalogo } from "./apoio/tmdb";
 const CIANO = "rgb(100, 210, 255)";
 /** as 4 neutras da mira — cinza, amarelo, vermelho, azul */
 // as quatro neutras da mira (Mira, Ronda 14): cinza, amarelo, vermelho, azul
-const NEUTRA = /^rgb\((229, 229, 234|255, 214, 10|255, 69, 58|10, 132, 255)\)$/;
 const TINTA = "rgb(245, 243, 238)";
 
 const diaDaqui = (dias: number) => new Date(Date.now() + dias * 864e5).toISOString().slice(0, 10);
@@ -295,11 +294,12 @@ test("o ✓ de cada cartaz 'para ver' é um círculo escuro sobre a arte, não u
   expect(fundo).toMatch(/(\/ 0?\.\d+\)|, 0?\.\d+\))$/);
 });
 
-test("o espetro de géneros usa só as 4 neutras da mira, e o resto vai para 'Outros'", async ({
+test("o espetro de géneros: 4 géneros e o resto em 'Outros', sem as cores de estado", async ({
   page,
 }) => {
   // Verde, ciano e magenta já querem dizer estados — num espetro de géneros
-  // mentiam. Escolhido pelo Ruben: 4 géneros + Outros.
+  // mentiam. Escolhido pelo Ruben: 4 géneros + Outros. Desde a Fase 12 da Mira
+  // os degraus são de uma só cor neutra (`polimento.spec`), não as da mira.
   const generos = ["Drama", "Comedy", "Crime", "Animation", "Documentary", "Mystery"];
   await semear(page, {
     series: generos.map((g, i) => ({ uuid: `s-${i}`, name: `Serie ${i}`, genres: [g] })),
@@ -318,5 +318,4 @@ test("o espetro de géneros usa só as 4 neutras da mira, e o resto vai para 'Ou
   for (const estado of ["rgb(55, 200, 55)", CIANO, "rgb(210, 75, 210)"]) {
     expect(cores).not.toContain(estado);
   }
-  for (const cor of cores.slice(0, 4)) expect(cor).toMatch(NEUTRA);
 });

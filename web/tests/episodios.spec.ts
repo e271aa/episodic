@@ -87,7 +87,8 @@ test("visto e por ver distinguem-se sem depender só do círculo", async ({ page
 test("o cabeçalho da temporada fica fixo ao rolar a lista", async ({ page, tmdb }) => {
   await serieCom(page, tmdb, 60, Array.from({ length: 50 }, (_, i) => i + 1));
 
-  const cabecalho = page.getByText("Temporada 1", { exact: true });
+  const cabecalho = page.getByTestId("cabecalho-temporada");
+  await expect(cabecalho).toContainText("T1");
   await expect(cabecalho).toBeVisible();
 
   await page.evaluate(() => window.scrollTo(0, 1000));

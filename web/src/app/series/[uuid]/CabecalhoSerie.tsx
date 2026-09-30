@@ -55,14 +55,16 @@ export default function CabecalhoSerie({
             className="object-cover"
           />
         )}
-        {/* Escuro em cima à noite, claro de dia (a barra de estado lê-se por
-            cima da arte nos dois modos), e no fim o próprio fundo — noite ou claro. */}
+        {/* Só em baixo, para o próprio fundo — noite ou claro. Em cima nada: na
+            PWA a página começa abaixo da barra de estado, e os círculos de
+            vidro leem-se sozinhos sobre qualquer arte (Fase 12). */}
         <div
           aria-hidden
-          className="pointer-events-none absolute inset-0"
+          data-testid="veu-heroi"
+            className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "linear-gradient(to bottom, var(--m-heroi-topo) 0, transparent 25%, transparent 55%, var(--color-bg) 100%)",
+              "linear-gradient(to bottom, transparent 55%, var(--color-bg) 100%)",
           }}
         />
       </div>

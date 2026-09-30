@@ -3,7 +3,6 @@
 import { useRef, useState } from "react";
 import Poster from "@/components/Poster";
 import type { DiscoverItem } from "@/lib/tmdb";
-import { sectionColor } from "@/components/SectionHeader";
 
 export interface DeckItem {
   item: DiscoverItem;
@@ -20,33 +19,19 @@ const NO = "var(--color-smpte-red)";
 
 
 /**
- * Cartão do Explorar em modo cartões.
- *
- * Duas apresentações, mesma física:
- *  - `variante="cartao"`  → objeto com bordas, 2:3, para o layout A
- *  - `variante="bordo"`   → de bordo a bordo, recortado, para o layout B
- *
- * O progresso do baralho vive no cartão (faixa SMPTE + contador mono) em vez
- * de numa linha própria acima dele: poupa 30px e põe o "onde vou" onde os
- * olhos já estão.
+ * Cartão da Triagem: de bordo a bordo, recortado. (A variante «cartão», com
+ * a faixa da mira como progresso, saiu na Fase 12 — nenhum ecrã a usava.)
  */
 export default function DiscoverSwipeCard({
   deckItem,
   active,
   depth,
-  posicao,
-  total,
-  variante = "cartao",
   mostrarTipo = false,
   onDecide,
 }: {
   deckItem: DeckItem;
   active: boolean;
   depth: number;
-  /** 1-based, para o contador */
-  posicao: number;
-  total: number;
-  variante?: "cartao" | "bordo";
   /** a pesquisa mistura séries e filmes — sem isto não se sabe qual é qual */
   mostrarTipo?: boolean;
   onDecide: (guardar: boolean) => void;
@@ -96,8 +81,6 @@ export default function DiscoverSwipeCard({
     ? `translateX(${leaving === "right" ? 600 : -600}px) rotate(${leaving === "right" ? 24 : -24}deg)`
     : `translateX(${drag.x}px) rotate(${rotate}deg) ${depth > 0 ? rest : ""}`;
 
-  const bordo = variante === "bordo";
-  const cor = sectionColor(sectionTitle);
   // O rating só aparece quando diz alguma coisa. A app evita transformar
   // tudo em números: abaixo de 8,0 não ajuda a decidir, é ruído.
   const nota = item.rating && item.rating >= 8 ? item.rating.toFixed(1).replace(".", ",") : null;
@@ -116,11 +99,7 @@ export default function DiscoverSwipeCard({
       onPointerCancel={endDrag}
     >
       <div
-        className={
-          bordo
-            ? "relative h-full overflow-hidden bg-group"
-            : "ep-card relative h-full overflow-hidden"
-        }
+        className="relative h-full overflow-hidden bg-group"
         style={{
           boxShadow: committed
             ? `0 0 0 3px ${drag.x > 0 ? YES : NO}, 0 18px 40px -12px rgba(0,0,0,.7)`
@@ -148,9 +127,7 @@ export default function DiscoverSwipeCard({
         <div
           className="pointer-events-none absolute inset-0"
           style={{
-            background: bordo
-              ? `linear-gradient(to top,var(--color-tube) 2%,color-mix(in srgb, var(--color-tube) 85%, transparent) 26%,color-mix(in srgb, var(--color-tube) 15%, transparent) 52%,color-mix(in srgb, var(--color-tube) 55%, transparent) 100%)`
-              : `linear-gradient(to top,var(--color-tube) 0%,color-mix(in srgb, var(--color-tube) 72%, transparent) 38%,transparent 68%)`,
+            background: `linear-gradient(to top,var(--color-tube) 2%,color-mix(in srgb, var(--color-tube) 85%, transparent) 26%,color-mix(in srgb, var(--color-tube) 15%, transparent) 52%,color-mix(in srgb, var(--color-tube) 55%, transparent) 100%)`,
           }}
         />
 
@@ -162,22 +139,6 @@ export default function DiscoverSwipeCard({
           className="pointer-events-none absolute inset-0"
           style={{ backgroundColor: NO, opacity: no * 0.28 }}
         />
-
-        {/* Progresso do baralho: faixa SMPTE no topo (cartão) — cor só onde
-            há progresso, como manda o sistema. */}
-        {!bordo && (
-          <>
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-label/[0.14]">
-              <div
-                className="bars h-full"
-                style={{ width: `${(posicao / Math.max(total, 1)) * 100}%` }}
-              />
-            </div>
-            <div className="ep-code pointer-events-none absolute right-4 top-4 vidro rounded-full px-2.5 py-1 text-[0.7rem] text-label">
-              {posicao} / {total}
-            </div>
-          </>
-        )}
 
         {/* Selos do lado contrário ao movimento */}
         <div
@@ -210,18 +171,11 @@ export default function DiscoverSwipeCard({
         </div>
 
         <div
-          className={`pointer-events-none relative flex h-full flex-col justify-end ${
-            bordo ? "px-5 pb-[13rem]" : "p-5"
-          }`}
+          className="pointer-events-none relative flex h-full flex-col justify-end px-5 pb-[13rem]"
         >
           {/* De onde veio isto — sem as filas lado a lado é a única pista do
-              porquê. A barrinha de cor liga o cartão à secção de origem. */}
-          <p className="flex max-w-full items-center gap-2 self-start truncate vidro rounded-full py-1 pl-2 pr-3 text-[0.76rem] font-semibold text-label">
-            <span
-              aria-hidden
-              className="h-[3px] w-5 shrink-0 rounded-full"
-              style={{ backgroundColor: cor }}
-            />
+              porquê. Só texto: a mira não é decoração (Fase 12). */}
+          <p data-testid="origem-triagem" className="flex max-w-full items-center gap-2 self-start truncate vidro rounded-full py-1 pl-2 pr-3 text-[0.76rem] font-semibold text-label">
             <span className="truncate">
               {sectionTitle}
               {sectionReason ? ` · ${sectionReason}` : ""}
@@ -229,9 +183,7 @@ export default function DiscoverSwipeCard({
           </p>
 
           <h2
-            className={`mt-2 font-bold leading-[1.1] text-label ${
-              bordo ? "text-4xl leading-[1.02]" : "text-2xl"
-            }`}
+            className="mt-2 text-4xl font-bold leading-[1.02] text-label"
           >
             {item.name}
           </h2>
@@ -248,7 +200,7 @@ export default function DiscoverSwipeCard({
 
           {item.overview && (
             <p
-              className={`mt-2 text-[0.88rem] text-label-2 ${bordo ? "line-clamp-3 text-base" : "line-clamp-2"}`}
+              className="mt-2 line-clamp-3 text-base text-label-2"
             >
               {item.overview}
             </p>

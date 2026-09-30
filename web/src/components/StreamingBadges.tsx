@@ -27,7 +27,7 @@ function Badges({ data }: { data: StreamingAvailability }) {
           );
         })}
       </div>
-      <p className="ep-code mt-1.5 text-[0.6875rem] text-faint">Dados da JustWatch, via TMDB</p>
+      <p className="mt-1.5 text-[0.72rem] text-faint">Dados da JustWatch, via TMDB</p>
     </>
   );
 }
@@ -209,9 +209,7 @@ export default function StreamingBadges({
 
   return (
     <div className="mt-4">
-      <p className="font-display text-xs font-semibold uppercase tracking-[0.15em] text-dim [font-stretch:80%]">
-        Onde ver em Portugal
-      </p>
+      <h2 className="text-base font-semibold text-label">Onde ver em Portugal</h2>
       <Badges data={data} />
     </div>
   );

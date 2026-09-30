@@ -207,8 +207,8 @@ export default function ListaPage() {
           )
         }
       />
-      <p className="ep-code mt-1 text-[0.76rem] text-label-2">
-        {items.length} {items.length === 1 ? "item" : "itens"}
+      <p className="mt-1 text-[0.76rem] text-label-2">
+        <span className="ep-code">{items.length}</span> {items.length === 1 ? "item" : "itens"}
       </p>
 
       {items.length === 0 ? (

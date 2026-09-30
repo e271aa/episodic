@@ -107,7 +107,7 @@ export default function Cartaz({
         {acao && (
           <>
             {acao.selo && (
-              <span className="vidro ep-code absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[0.6875rem] font-semibold uppercase tracking-wide text-label">
+              <span data-testid="selo-cartaz" className="vidro absolute left-1.5 top-1.5 rounded-md px-1.5 py-0.5 text-[0.72rem] font-semibold text-label">
                 {acao.selo}
               </span>
             )}

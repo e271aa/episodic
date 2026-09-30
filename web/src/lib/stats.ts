@@ -73,12 +73,13 @@ function horasDeAntena(
   return segundos > 0 ? Math.round(segundos / 3600) : null;
 }
 
-// Só as 4 barras neutras da mira: verde, ciano e magenta já querem dizer
-// estados (em dia, buracos, terminada), e num espetro de géneros mentiam
-// (Bars Rule; escolhido pelo Ruben, Ronda 12, 5d). Os 4 géneros mais vistos
-// ficam com as cores, o resto junta-se em "Outros", num cinza esbatido.
-const SPECTRUM = ["var(--color-smpte-yellow)", "var(--color-smpte-red)", "var(--color-smpte-blue)", "var(--color-smpte-gray)"];
-const OUTROS_COLOR = "var(--color-faint)";
+// Uma cor só, a neutra, em degraus — a regra dos gráficos da Mira: a mira é
+// o ritual e a casa vazia, não quantidade (decidido pelo Ruben na Fase 12; na
+// Ronda 12 eram as quatro barras neutras da mira). Os 4 géneros mais vistos
+// descem de 85% a 35%; o resto junta-se em "Outros", o degrau mais apagado.
+const degrau = (pct: number) => `color-mix(in srgb, var(--color-label) ${pct}%, transparent)`;
+const SPECTRUM = [degrau(85), degrau(62), degrau(45), degrau(32)];
+const OUTROS_COLOR = degrau(18);
 
 // Nomes de género dos fornecedores muitas vezes vêm em inglês (sobretudo
 // TVmaze) — traduz para pt-PT e assim fundem-se com os que já vêm traduzidos.

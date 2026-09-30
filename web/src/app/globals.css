@@ -44,7 +44,6 @@
   --m-acao: #e5e5ea;
   --m-seg-sombra: none;
   --m-track: rgba(255, 255, 255, 0.18); /* segmentos/trilho por ver */
-  --m-heroi-topo: rgba(0, 0, 0, 0.45); /* a arte por baixo da barra de estado */
   --m-tab-on: rgba(255, 255, 255, 0.14);
   /* estado */
   --m-por-marcar: #64d2ff;
@@ -80,7 +79,6 @@
   --m-acao: #000000;
   --m-seg-sombra: 0 1px 4px rgba(0, 0, 0, 0.14);
   --m-track: rgba(0, 0, 0, 0.12);
-  --m-heroi-topo: rgba(242, 242, 247, 0.72); /* barra de estado escura: aclara a arte, não a escurece */
   --m-tab-on: rgba(0, 0, 0, 0.07);
   --m-por-marcar: #005f86;
   --m-por-marcar-texto: #005f86;
@@ -112,7 +110,6 @@
     --m-acao: #000000;
     --m-seg-sombra: 0 1px 4px rgba(0, 0, 0, 0.14);
     --m-track: rgba(0, 0, 0, 0.12);
-    --m-heroi-topo: rgba(242, 242, 247, 0.72); /* barra de estado escura: aclara a arte, não a escurece */
     --m-tab-on: rgba(0, 0, 0, 0.07);
     --m-por-marcar: #005f86;
     --m-por-marcar-texto: #005f86;
@@ -302,9 +299,6 @@ body {
   background: var(--color-group);
   transition: transform 120ms var(--ease-out), background-color 160ms ease;
 }
-.ep-card-hover:active {
-  transform: scale(0.98);
-}
 
 /* Vidro — só para o que flutua por cima (a barra, os botões sobre a arte, o
    aviso). Medido no iPhone do Ruben: 60 fps a rolar com 4 camadas (Fase 0). */
@@ -476,33 +470,10 @@ summary:focus-visible,
    curva é o `ease-out` do browser de propósito: é a da maquete escolhida.
    O episódio troca com um desfoque curto: o desfoque junta os dois estados
    num só, em vez de se verem dois textos a trocar. */
-@keyframes barra-acende {
-  0% {
-    opacity: 1;
-    clip-path: inset(0 100% 0 0);
-  }
-  66% {
-    opacity: 1;
-    clip-path: inset(0 0 0 0);
-  }
-  100% {
-    opacity: 0;
-    clip-path: inset(0 0 0 0);
-  }
-}
 @keyframes barra-luz {
   50% {
     opacity: 0.8;
   }
-}
-.barra-acende {
-  position: absolute;
-  inset: 0;
-  background: var(--bars);
-  opacity: 0;
-  pointer-events: none;
-  /* README da Mira: revela-se em 620ms e apaga em 320ms, a partir dos 40ms */
-  animation: barra-acende 940ms ease-out 40ms both;
 }
 @keyframes episodio-entra {
   from {
@@ -776,11 +747,6 @@ summary:focus-visible,
   .undo-out {
     animation-name: apagar;
   }
-  /* o ritual: a barra acende e apaga no sítio; o episódio só desvanece */
-  .barra-acende {
-    animation-name: barra-luz;
-    animation-duration: 500ms;
-  }
   .episodio-entra {
     animation-name: esvanecer;
   }
@@ -811,21 +777,4 @@ summary:focus-visible,
     transition-property: opacity, color, background-color, border-color, box-shadow,
       outline-color !important;
   }
-}
-
-/* /diagnostico: a mesma lista a rolar com mais ou menos camadas de vidro. O palco
-   é irmão das camadas; `data-fase` diz quais estão à vista (só as 4 grandes têm
-   a app de hoje; as pequenas são o selo e o botão de cada cartaz). */
-.diag-palco[data-fase="sem"] ~ .diag-vidro,
-.diag-palco[data-fase="sem"] ~ .diag-extras .diag-vidro {
-  -webkit-backdrop-filter: none;
-  backdrop-filter: none;
-}
-.diag-palco:not([data-fase]) ~ .diag-extras,
-.diag-palco[data-fase="quatro"] ~ .diag-extras,
-.diag-palco[data-fase="sem"] ~ .diag-extras {
-  display: none;
-}
-.diag-palco[data-fase="dezasseis"] ~ .diag-extras > :nth-child(n + 13) {
-  display: none;
 }

@@ -1,20 +1,20 @@
-<svg width="512" height="512" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-  <defs>
-    <radialGradient id="glow" cx="50%" cy="46%" r="52%">
-      <stop offset="0%" stop-color="#ffaa33" stop-opacity="0.32"/>
-      <stop offset="55%" stop-color="#ffaa33" stop-opacity="0.06"/>
-      <stop offset="100%" stop-color="#ffaa33" stop-opacity="0"/>
-    </radialGradient>
-  </defs>
-  <!-- A sala escura (fundo a preencher toda a área — seguro para máscara adaptativa) -->
-  <rect width="512" height="512" fill="#0b0e14"/>
-  <rect width="512" height="512" fill="url(#glow)"/>
-  <!-- O brilho da televisão: triângulo de "play" âmbar, cantos arredondados,
-       dentro da zona segura (centro) para máscaras adaptativas -->
-  <path d="M206 168 L206 344 L358 256 Z"
-        fill="#ffaa33"
-        stroke="#ffaa33"
-        stroke-width="34"
-        stroke-linejoin="round"
-        stroke-linecap="round"/>
+<svg width="512" height="512" viewBox="0 0 7 4" preserveAspectRatio="none" shape-rendering="crispEdges" xmlns="http://www.w3.org/2000/svg">
+  <!-- «Sem sinal», a carta de teste da casa vazia (Fase 12, a 2b): as sete
+       barras da mira em 3/4 da altura e, por baixo, a fila de acerto (azul,
+       preto, magenta, preto, ciano, preto, cinza). De ponta a ponta, sem
+       cantos: o iOS e as máscaras do Android recortam-nos. Cores fixas. -->
+  <rect x="0" y="0" width="1" height="3" fill="#e5e5ea"/>
+  <rect x="1" y="0" width="1" height="3" fill="#ffd60a"/>
+  <rect x="2" y="0" width="1" height="3" fill="#64d2ff"/>
+  <rect x="3" y="0" width="1" height="3" fill="#30d158"/>
+  <rect x="4" y="0" width="1" height="3" fill="#da5ce8"/>
+  <rect x="5" y="0" width="1" height="3" fill="#ff453a"/>
+  <rect x="6" y="0" width="1" height="3" fill="#0a84ff"/>
+  <rect x="0" y="3" width="1" height="1" fill="#0a84ff"/>
+  <rect x="1" y="3" width="1" height="1" fill="#0b0b0d"/>
+  <rect x="2" y="3" width="1" height="1" fill="#da5ce8"/>
+  <rect x="3" y="3" width="1" height="1" fill="#0b0b0d"/>
+  <rect x="4" y="3" width="1" height="1" fill="#64d2ff"/>
+  <rect x="5" y="3" width="1" height="1" fill="#0b0b0d"/>
+  <rect x="6" y="3" width="1" height="1" fill="#e5e5ea"/>
 </svg>

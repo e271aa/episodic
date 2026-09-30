@@ -7,7 +7,8 @@ import { pushUndo } from "@/lib/undo";
 import type { MetaEpisode } from "@/lib/metadata";
 import SwipeCard from "@/components/SwipeCard";
 import BotaoVoltar from "@/components/BotaoVoltar";
-import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
+import { CheckIcon } from "@/components/icons";
+import { RECUAR, IconeRecuar } from "@/components/CabecalhoEcra";
 import { Bone, TitleBone } from "@/components/Skeleton";
 import { useSerie } from "@/app/series/[uuid]/useSerie";
 
@@ -101,13 +102,13 @@ export default function UmAUm({ uuid }: { uuid: string }) {
 
   return (
     <main className="tela-cheia mx-auto flex w-full max-w-md flex-col overflow-hidden px-4 pt-[max(0.5rem,env(safe-area-inset-top))]">
-      <div className="flex shrink-0 items-center gap-2">
+      <div className="flex shrink-0 items-center gap-3">
         <BotaoVoltar
           label="Voltar à série"
           fallback={voltar}
-          className="-ml-2 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-label-2 transition active:scale-90"
+          className={RECUAR}
         >
-          <ArrowLeftIcon className="h-5 w-5" />
+          <IconeRecuar />
         </BotaoVoltar>
         <div className="min-w-0">
           <h1 className="text-[1.3rem] leading-tight font-bold">Pôr em dia</h1>

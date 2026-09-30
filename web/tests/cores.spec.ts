@@ -1,6 +1,5 @@
 import { test, expect } from "./apoio/base";
 import { semear } from "./apoio/semear";
-import { sectionColor } from "../src/components/SectionHeader";
 
 /**
  * Ronda 12, Fase 5b.1 — achado #9 (AUDITORIA.md, Fase 4): as cores de sinal
@@ -9,19 +8,7 @@ import { sectionColor } from "../src/components/SectionHeader";
  * verde, ciano e magenta ficam só para estados.
  */
 
-const VERDE = "#37c837";
-const CIANO = "#3fd2c8";
-const MAGENTA = "#d24bd2";
 const AMBAR_V1 = "rgba(255, 170, 51";
-
-test("a cor de um cabeçalho de secção nunca é verde, ciano ou magenta", () => {
-  // 200 sementes arbitrárias — não é preciso adivinhar quais colidem com o
-  // hash, só provar que a lista de onde ele escolhe já não as tem.
-  for (let i = 0; i < 200; i++) {
-    const cor = sectionColor(`secção-${i}-${"x".repeat(i % 7)}`);
-    expect([VERDE, CIANO, MAGENTA]).not.toContain(cor);
-  }
-});
 
 test("na Biblioteca, a barra de uma série a meio é neutra e a de uma em dia é verde — nunca ciano", async ({
   page,

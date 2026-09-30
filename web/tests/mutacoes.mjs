@@ -58,7 +58,6 @@ const CASA = "src/app/series/SeriesPageClient.tsx";
 const EXPLORAR = "src/app/explorar/ExplorarPageClient.tsx";
 const LISTA = "src/app/listas/[id]/ListaPageClient.tsx";
 const AVISO = "src/components/UndoToast.tsx";
-const SECTION_HEADER = "src/components/SectionHeader.tsx";
 const CSS = "src/app/globals.css";
 const POSTER_CARD = "src/components/PosterCard.tsx";
 const LIBRARY = "src/app/library/LibraryPageClient.tsx";
@@ -85,7 +84,6 @@ const VIEW_TOGGLE = "src/components/ViewModeToggle.tsx";
 const TEXTO_IMPORTAR = "src/lib/textoImportar.ts";
 const ADVANCED_STATS = "src/lib/advancedStats.ts";
 const VAZIO_BIBLIOTECA = "src/components/LibraryEmptyState.tsx";
-const WATCHNEXT_CARD = "src/components/WatchNextCard.tsx";
 const LAYOUT = "src/app/layout.tsx";
 const POSTER = "src/components/Poster.tsx";
 const CASA_CASCA = "src/app/series/page.tsx";
@@ -116,12 +114,12 @@ const RETIRADAS = {
   "r12-fase5b3/secundaria-debaixo-da-dock": "o cartão da ação secundária do detalhe (`mt-20`) já não existe; a reserva da dock é medida por `r12-fase5e/filme-reserva-a-dock` e pelos testes da Fase 4",
   "r12-fecho/estrear-data-come-a-linha": "a data do A estrear passou para a linha de baixo (Fase 8); já não compete com o nome — o nome a quebrar é `r12-fase5d/estrear-corta-o-nome`",
   "r12-f5/perfil-sem-min-w": "as três colunas de números do Perfil saíram (Fase 7): o `Contador` é uma grelha, sem `flex-1`",
-  "r12-fase5b/cabecalhos-6-cores": "a `SectionHeader` já não está em nenhum ecrã; só o `sectionColor` vive na barrinha do cartão da Triagem, um resto da v2 que a Regra da mira não prevê (para a Fase 12 decidir); os cabeçalhos das secções da Biblioteca são `r14-f10/seccao-com-cor`",
-  "r12-fase5b/hover-ambar-volta": "o único uso do `.ep-card-hover` é o `WatchNextCard`, que já nenhum ecrã importa (código morto — apagar na Fase 12); num ecrã tátil não há hover",
-  "r12-fase5e/sizes-fila": "o `WatchNextCard` já não é importado por ecrã nenhum (código morto); a fila da casa é `LinhaFila`, coberta por `p3.spec`",
+  "r12-fase5b/cabecalhos-6-cores": "a `SectionHeader` e o `sectionColor` saíram na Fase 12 (a barrinha da Triagem era decoração: `explorar-mira.spec`, «a pastilha de onde veio»); os cabeçalhos das secções da Biblioteca são `r14-f10/seccao-com-cor`",
+  "r12-fase5b/hover-ambar-volta": "o `.ep-card-hover` e o `WatchNextCard` saíram na Fase 12 (código morto); num ecrã tátil não há hover",
+  "r12-fase5e/sizes-fila": "o `WatchNextCard` saiu na Fase 12 (código morto); a fila da casa é `LinhaFila`, coberta por `p3.spec`",
   "r12-fase5b/maratona-1-episodios": "equivalente: «Melhor maratona» com um só episódio já não aparece (`decisao.spec`, «superada pela 5e»), por isso o singular é inalcançável",
   "r12-fase6/ritual-festeja-o-anular": "equivalente com a Fase 3: o ritual só corre enquanto o otimista está aceso (`ritual={otimista || fim ? marcacoes : 0}`), por isso contar uma marcação a mais ao anular não se vê; o risco a sério é `r14-f3/anular-reacende`",
-  "r12-fase6/ritual-reduzido-varre": "a classe `.barra-acende` já não é usada por nenhum componente (o ritual é `data-ritual` em `Segmentos`); com movimento reduzido, o que se guarda é `r12-fase6/ritual-sem-barra`"
+  "r12-fase6/ritual-reduzido-varre": "a classe `.barra-acende` saiu na Fase 12 (o ritual é `data-ritual` em `Segmentos`); com movimento reduzido, o que se guarda é `r12-fase6/ritual-sem-barra`"
 };
 
 /**
@@ -441,8 +439,8 @@ const MUTACOES = [
     nome: "r12-fase5/remover-invisivel",
     descricao: "o ✕ da capa volta a só aparecer com hover (num ecrã tátil nunca aparece)",
     ficheiro: "src/components/mira/Cartaz.tsx",
-    de: "className=\"vidro tap-44 absolute bottom-1.5 right-1.5",
-    para: "className=\"vidro tap-44 opacity-0 absolute bottom-1.5 right-1.5",
+    de: "className=\"group/marcar absolute bottom-0 right-0 flex h-11 w-11",
+    para: "className=\"group/marcar opacity-0 absolute bottom-0 right-0 flex h-11 w-11",
   },
   {
     nome: "r12-fase5/aviso-mudo",
@@ -584,8 +582,8 @@ const MUTACOES = [
     nome: "r12-fase5b2/heroi-volta-a-40px",
     descricao: "o nome da série na casa volta a fugir da rampa (40px em vez do Título 1)",
     ficheiro: "src/components/TonightHero.tsx",
-    de: "line-clamp-3 text-[1.65rem]",
-    para: "line-clamp-3 text-[2.5rem]",
+    de: "line-clamp-3 wrap-anywhere text-[1.65rem]",
+    para: "line-clamp-3 wrap-anywhere text-[2.5rem]",
   },
   {
     nome: "r12-fase5b2/texto-volta-a-px",
@@ -606,7 +604,7 @@ const MUTACOES = [
     nome: "r12-fase5b3/recuar-volta-a-texto",
     descricao: "recuar volta a ser um texto em vez do círculo com seta",
     ficheiro: CABECALHO,
-    de: '        <ArrowLeftIcon className="h-5 w-5" />',
+    de: "        <IconeRecuar />",
     para: "        {voltar}",
   },
   {
@@ -687,8 +685,8 @@ const MUTACOES = [
     ficheiro: "src/app/series/[uuid]/ShowPageClient.tsx",
     // com a linha do comentário: sem ela, a âncora batia primeiro no <main>
     // do ecrã de carregamento, que tem a mesma classe
-    de: '    // temporadas fechadas (medido — Ronda 12, Fase 5b.3)\n    <main className="mx-auto w-full max-w-2xl">',
-    para: '    // temporadas fechadas (medido — Ronda 12, Fase 5b.3)\n    <main className="mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]">',
+    de: '    <main className="mx-auto w-full max-w-2xl pb-6">',
+    para: '    <main className="mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]">',
   },
   // ── Ronda 12, Fase 5c: os 6 P1 da crítica 5b.4 ─────────────
   {
@@ -732,8 +730,8 @@ const MUTACOES = [
     nome: "r12-fase5c/rever-por-marcar-junta-tudo",
     descricao: "o Rever volta a chamar 'por marcar' ao que está à frente do último visto",
     ficheiro: REVER_PAGINA,
-    de: '{atual.paraTras.length} por marcar · {temporadasDe(atual.paraTras)}',
-    para: '{atual.porMarcar.length} por marcar · {temporadasDe(atual.porMarcar)}',
+    de: '<span className="ep-code">{atual.paraTras.length}</span> por marcar ·{" "}\n                    <span className="ep-code">{temporadasDe(atual.paraTras)}</span>',
+    para: '<span className="ep-code">{atual.porMarcar.length}</span> por marcar ·{" "}\n                    <span className="ep-code">{temporadasDe(atual.porMarcar)}</span>',
   },
   {
     nome: "r12-fase5c/baralho-serie-pequena",
@@ -753,7 +751,7 @@ const MUTACOES = [
     nome: "r12-fase5c/onboarding-portas-no-fundo",
     descricao: "as duas portas do primeiro uso voltam a ficar debaixo do degradê da barra",
     ficheiro: "src/app/series/SeriesPageClient.tsx",
-    de: "<div className=\"mt-auto flex flex-col gap-2.5 pb-4 pt-8\">",
+    de: "<div className=\"mt-auto flex flex-col gap-2.5 pb-4 pt-5\">",
     para: "<div className=\"mt-auto flex flex-col gap-2.5 pb-4 pt-40\">",
   },
   // Retirada na Ronda 14 (Mira, Fase 2): «r12-fase5c/onboarding-seguir-sem-onde» — a casa vazia da Mira já não tem os quatro passos; o mesmo bug (não dizer onde está o Seguir) é a `r14-f2/dicas-perdidas`
@@ -905,14 +903,14 @@ const MUTACOES = [
     nome: "r12-fase5d/visto-em-branco",
     descricao: "o ✓ de cada cartaz volta a ser a pílula branca",
     ficheiro: "src/components/mira/Cartaz.tsx",
-    de: "className=\"vidro tap-44 absolute bottom-1.5 right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-label transition-transform",
-    para: "className=\"tap-44 absolute bottom-1.5 right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-label text-bg shadow-md transition-transform",
+    de: "<span className=\"vidro flex h-8 w-8 items-center justify-center rounded-full text-label transition-transform",
+    para: "<span className=\"flex h-8 w-8 items-center justify-center rounded-full bg-label text-bg shadow-md transition-transform",
   },
   {
     nome: "r12-fase5d/espetro-com-estados",
     descricao: 'o espetro de géneros volta a usar verde, ciano e magenta',
     ficheiro: STATS_PERFIL,
-    de: 'const SPECTRUM = ["var(--color-smpte-yellow)", "var(--color-smpte-red)", "var(--color-smpte-blue)", "var(--color-smpte-gray)"];',
+    de: "const SPECTRUM = [degrau(85), degrau(62), degrau(45), degrau(32)];",
     para: 'const SPECTRUM = ["var(--color-smpte-red)", "var(--color-smpte-yellow)", "var(--color-smpte-green)", "var(--color-smpte-cyan)", "var(--color-smpte-blue)", "var(--color-smpte-magenta)"];',
   },
   // ── Ronda 12, Fase 8: o que o Safari do iOS mostrou ────────
@@ -1119,8 +1117,8 @@ const MUTACOES = [
     nome: "r12-f2/data-iso-no-episodio",
     descricao: "a data de cada episódio volta a sair em ISO",
     ficheiro: "src/app/series/[uuid]/LinhaEpisodio.tsx",
-    de: "{porExtenso(metaEp.airDate)}</Codigo>",
-    para: "{metaEp.airDate}</Codigo>",
+    de: "{porExtenso(metaEp.airDate)}</span>",
+    para: "{metaEp.airDate}</span>",
   },
   {
     nome: "r12-f2/data-iso-na-estreia",
@@ -1203,8 +1201,8 @@ const MUTACOES = [
     nome: "r12-f3/preto-solto-na-lista",
     descricao: "o ✕ da lista volta a ter texto branco solto (`text-white`) em vez do token",
     ficheiro: "src/components/mira/Cartaz.tsx",
-    de: "rounded-full text-label transition-transform active:scale-90",
-    para: "rounded-full text-white transition-transform active:scale-90",
+    de: "rounded-full text-label transition-transform group-active/marcar:scale-90",
+    para: "rounded-full text-white transition-transform group-active/marcar:scale-90",
   },
   {
     nome: "r12-f4/disco-volta-ao-pora-em-dia",
@@ -1521,8 +1519,8 @@ const MUTACOES = [
     nome: "r14-f10/segmentado-alarga",
     descricao: "cada segmento passa a ter a largura do texto e, a 150% em 320px, alarga a página",
     ficheiro: "src/components/mira/Segmentado.tsx",
-    de: "flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[19px]",
-    para: "flex shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-[19px]",
+    de: "flex min-w-0 flex-1 cursor-pointer items-center before:",
+    para: "flex shrink-0 whitespace-nowrap cursor-pointer items-center before:",
   },
 ];
 

@@ -177,8 +177,16 @@ export default function PainelEpisodios({
                   que temporada se estava, numa lista que pode ter dezenas de
                   linhas. Rente ao topo, por baixo da barra de estado. */}
               <div className="sticky top-0 z-10 -mx-4 flex min-h-11 items-center justify-between gap-3 bg-bg px-5 pt-[max(0px,env(safe-area-inset-top))]">
-                <p className="truncate text-[0.76rem] font-semibold tracking-[0.02em] text-label-2 uppercase">
-                  {season.name}
+                {/* O código, não o nome do fornecedor: vinha «5ª TEMPORADA», «4.ª
+                    TEMPORADA» ou «TEMPORADA 3» consoante a fonte (Fase 12). */}
+                <p data-testid="cabecalho-temporada" className="truncate text-[0.88rem] font-semibold text-label-2">
+                  {season.number === 0 ? (
+                    "Especiais"
+                  ) : (
+                    <span className="ep-code text-label">T{season.number}</span>
+                  )}
+                  {season.episodeCount > 0 &&
+                    ` · ${season.episodeCount} ${season.episodeCount === 1 ? "episódio" : "episódios"}`}
                 </p>
                 {!complete && season.episodeCount > 0 && (
                   <button

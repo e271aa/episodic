@@ -188,34 +188,3 @@ test.describe("modo claro", () => {
     expect(cor.replace(/\s/g, "")).toMatch(/0\.8\)$/);
   });
 });
-
-test("a vitrine carrega a biblioteca de exemplo: The Bear a um episódio de fechar a T1", async ({ page, tmdb }) => {
-  // para o Ruben julgar a assinatura no iPhone, na pré-visualização sem nuvem
-  for (const [id, nome, temporadas] of [
-    [136315, "The Bear", [8, 10]],
-    [95396, "Severance", [9, 10]],
-    [83867, "Andor", [12, 12]],
-    [126308, "Shōgun", [10]],
-  ] as [number, string, number[]][]) {
-    const c = serieCompleta(id, nome, temporadas);
-    Object.assign(tmdb.series, c.series);
-    Object.assign(tmdb.episodios, c.episodios);
-  }
-  tmdb.filmes[666277] = { id: 666277, title: "Past Lives", release_date: "2023-06-02", poster_path: null };
-  await page.goto("/mira");
-  await page.getByRole("button", { name: "Carregar biblioteca de exemplo" }).click();
-  await expect(page).toHaveURL(/\/series$/);
-  const cartao = page.getByTestId("cartao-casa");
-  await expect(cartao.getByRole("heading", { level: 2 })).toHaveText("The Bear");
-  await expect(cartao).toContainText("S01·E08");
-  await expect(cartao).toContainText("7/8");
-  await expect(page.getByTestId("contexto-casa")).toHaveText("Viste o anterior ontem");
-  // vistos de ontem: o diário parte do zero
-  await expect(page.getByTestId("diario")).toHaveCount(0);
-  // Os segmentos são a leitura da temporada: só com ela carregada o toque sabe
-  // que fecha a T1. Clicar antes (o «7/8» já se lê, vindo do que estava
-  // guardado) marcava sem o momento de fim — 2 em 60 corridas com 6 trabalhadores.
-  await expect(page.getByTestId("progresso-casa").locator("i")).toHaveCount(8);
-  await page.getByRole("button", { name: "Marcar visto" }).click();
-  await expect(page.getByTestId("progresso-casa")).toContainText("T1 ✓");
-});

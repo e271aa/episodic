@@ -103,7 +103,8 @@ Aparência: **Automático** · **Noite** · **Claro**, guardado neste aparelho
   camadas — não é um custo. **Camadas grandes à vista: no máximo 4** (guarda em
   `tests/medidas.spec.ts`). Os pequenos — o selo e o botão de cada cartaz «Para
   ver» da Biblioteca › Filmes — somam duas por cartaz (9 à vista com 3 filmes
-  por ver) e não têm medida no iPhone: `/diagnostico` mede 4, 16 e 28 camadas.
+  por ver). Medido no iPhone (Fase 11, `/diagnostico`, que já saiu): 28 camadas
+  a rolar sem custo — ficam.
 
 ### Regra da mira
 A mira (sete cores, pela ordem da mira — `--mira-1` a `--mira-7`, **fixas**: uma
@@ -151,7 +152,8 @@ SF Pro, SF Mono e SF Rounded — **nenhuma fonte carregada**.
 ## Primitivas (`src/components/mira/`)
 
 Tudo o que os ecrãs usam sai daqui — é aqui que a assinatura se define (Fase 3)
-e se herda (Fases 4–8). Vitrine em `/mira` (só dados de exemplo; sai na Fase 12).
+e se herda (Fases 4–8). (A vitrine `/mira` saiu na Fase 12: as primitivas
+testam-se nos ecrãs onde vivem.)
 
 - **`Grupo` + `Linha`** — a lista agrupada: raio 26, linhas de 50px (64 com
   capa), fio de 0,5px que começa depois do conteúdo à esquerda, chevron quando
@@ -188,7 +190,8 @@ e se herda (Fases 4–8). Vitrine em `/mira` (só dados de exemplo; sai na Fase 
 ## O detalhe da série (Fase 4)
 
 Uma coluna só (B·2a): a arte de ponta a ponta (290px, nunca mais de 40% do
-ecrã) com o degradê para o fundo, dois círculos de vidro por cima (recuar e
+ecrã) com o degradê para o fundo **só em baixo** (o de cima saiu na Fase 12: na
+PWA a página começa abaixo da barra de estado, e só lavava a arte), dois círculos de vidro por cima (recuar e
 **«···»**), o título grande onde o degradê já é fundo e uma linha de
 metadados em texto corrido. Os três separadores saíram.
 
@@ -326,12 +329,15 @@ um mapa vazio lê-se como avaria. Entre blocos, 12px (`mt-3`); entre secções, 
 ## Os restantes ecrãs (Fase 8)
 
 Herdam as primitivas, sem inventar. **Sub-ecrãs** (Lista, A estrear, Rever,
-Importar, Verificar): `CabecalhoEcra` (círculo de recuar + título 28px), texto
+Importar, Verificar): `CabecalhoEcra` (círculo de recuar + título 28px; o
+círculo é `fill` com o ‹ da série — `RECUAR` e `IconeRecuar`, os mesmos no Pôr
+em dia e no Entrar), texto
 secundário a 14/`label-2`, blocos em `group` raio 26 (22 dentro de um grupo,
 `fill`), ações em `Acao` (44px em cartões, 52 a ação do ecrã). **Filme**: o
 herói da série. **Folhas**: só a agrupada. **Entrar**: campos `group` raio 22, sem
-a mira. **Baralho** (Pôr em dia, Triagem): botões `vidro`; o ✓ é a cápsula da ação;
-o progresso é `label`, não a mira.
+a mira. **Baralho** (Pôr em dia, Triagem): botões `vidro`; o ✓ é a cápsula da ação
+(o código do episódio vai em `vidro`, não noutra cápsula); o progresso é
+`label`, não a mira; a pastilha «de onde veio» da Triagem é só texto.
 
 ## Contraste (Fase 9)
 
@@ -341,11 +347,14 @@ sobre `bg`, `group`, `elevated` e sobre `fill`) e **3:1** para o que se vê sem 
 ler (pontos e barras de estado, anéis e chevrons em `label-3`). Em claro, o
 verde, o azul e o roxo de estado e o vermelho do erro são as versões escuras
 (o `#34c759` do iOS dava 2:1 sobre o fundo); o `label-3` sobe a 42% (noite) e
-58% (claro): é UI, nunca texto. O degradê de cima do herói (`--m-heroi-topo`)
-escurece a arte à noite e **aclara-a de dia**, para a barra de estado (escura)
-se ler. **Fica por medir com a PWA instalada (Fase 11):** `statusBarStyle: "black"` e o
-ecrã de arranque — o manifesto só tem uma cor (`#000000`) e o iOS não a troca por
-modo. `/diagnostico` lê no aparelho a área segura, a barra de estado e o texto.
+58% (claro): é UI, nunca texto. **Os círculos de vidro sobre a arte leem-se
+sozinhos**, sem degradê: o ícone sobre a pior arte (branca à noite, preta de
+dia) dá ≥5,3:1 (`contraste.spec`); o degradê de cima saiu na Fase 12.
+
+**Lido na PWA instalada (Fase 11):** com `statusBarStyle: "black"` a página começa
+abaixo da barra de estado (área segura de cima 0) e fica. O ecrã de arranque (o
+manifesto só tem uma cor, `#000000`, e o iOS não a troca por modo) fica para a
+mudança de alojamento.
 
 ## Medidas no telemóvel (Fase 11)
 
@@ -432,7 +441,10 @@ esquerda** (`segmento-constroi`, 220ms, 15ms entre cada).
 
 ### 2. A gramática de TV
 - **`Codigo`** (`ep-code`): SF Mono, tabular — **só** para códigos (`S02·E07`,
-  `T1`), contagens (`6/10`, `12`) e datas. **Nunca nomes**: em mono, um nome
+  `T1`), contagens (`6/10`, `12`) e datas curtas. Numa frase, só o número vai a
+  mono: «`3` itens», «`2` por marcar · `T1`», «`5/19` vistos até agora»; uma data
+  por extenso («26 de junho de 2024») é texto. O cabeçalho de uma temporada é
+  «`T2` · 10 episódios», não o nome do fornecedor («5ª TEMPORADA»). **Nunca nomes**: em mono, um nome
   lê-se como máquina de escrever (estava assim no aviso de anular). No texto
   corrido, os códigos são destacados sozinhos (`comCodigos` no aviso).
 - **`Segmentos`**: um segmento por episódio da temporada, `label` os vistos,
@@ -448,8 +460,9 @@ linha própria, por cima do título (com o diário, empurravam o «Pôr em dia»
 ### 4. «Sem sinal», a carta de teste
 A casa vazia é uma carta SMPTE composta a sério: as sete barras em cima (3/4)
 e a fila de acerto por baixo (azul, preto, magenta, preto, ciano, preto,
-cinza), raio 24 com fio de 0,5px. Cores fixas. O mesmo desenho é candidato ao
-ícone da app (Fase 2b, na Fase 12).
+cinza), raio 24 com fio de 0,5px. Cores fixas. **É o ícone da app** (a Fase 2b, feita
+na 12): o mesmo desenho de ponta a ponta, sem cantos — o iOS recorta-os
+(`app/icon.svg` → `apple-icon.png` 180, `icon-192/512.png`; `icone.spec`).
 
 ### O que acompanha a assinatura
 - A **linha de contexto** do cartão («Viste o anterior ontem», «Parada há 42
@@ -468,7 +481,9 @@ O outro nome fica como alias (`lib/titulos.ts`).
 
 ## Gráficos (Estatísticas e Perfil)
 - **Uma cor só, a neutra** (`label` com opacidade); nada da mira (é estado, não
-  quantidade). O destaque vai a `label` cheio; o resto a 35%.
+  quantidade). Também «O teu espetro» (Fase 12, decidido pelo Ruben): 85 · 62 ·
+  45 · 32% e «Outros» a 18%. Uma guarda (`polimento.spec`) lê o código: a mira só
+  vive em `Segmentos` e na casa vazia. O destaque vai a `label` cheio; o resto a 35%.
 - **Mapa de calor em quatro degraus** (20 · 35 · 55 · 85%) mais o vazio (6%),
   por **quartis** dos meses com alguma coisa; o mês mais forte sempre no topo.
 - **Tocar, não pairar;** leitura fixa em `aria-live`; **sempre** «Ver em tabela».

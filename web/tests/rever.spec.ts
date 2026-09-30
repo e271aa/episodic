@@ -217,3 +217,12 @@ test("a linha do cartão usa o glossário: 'por marcar' é o de trás, 'por ver'
   await expect(cartao).toContainText("2 por ver · T1");
   await expect(cartao).not.toContainText("por marcar");
 });
+
+test("as contagens em mono, as palavras não: «2 por marcar · T1»", async ({ page, tmdb }) => {
+  // Fase 12: as linhas do cartão eram frases inteiras em mono espaçado
+  await semearBiblioteca(page, tmdb);
+  await page.goto("/rever");
+  const linha = page.getByText(/por marcar ·/).first();
+  await expect(linha).toBeVisible();
+  expect(await linha.evaluate((el) => /mono|menlo/i.test(getComputedStyle(el).fontFamily))).toBe(false);
+});

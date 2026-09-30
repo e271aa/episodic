@@ -1,4 +1,5 @@
 import { test, expect } from "./apoio/base";
+import { semear } from "./apoio/semear";
 
 /**
  * Ronda 14, Fase 9 — contraste nos dois modos, medido nos valores que o
@@ -32,7 +33,7 @@ for (const { nome, sistema, escolha } of MODOS) {
   test(`contraste em ${nome}: texto AA e gráficos 3:1 sobre as superfícies`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: sistema });
     if (escolha) await page.addInitScript((v) => localStorage.setItem("aparencia", v), escolha);
-    await page.goto("/mira");
+    await page.goto("/profile/definicoes");
     if (escolha) await expect(page.locator("html")).toHaveAttribute("data-theme", escolha);
     const medidas = await page.evaluate(
       ({ texto, grafico, superficies }) => {
@@ -84,21 +85,57 @@ for (const { nome, sistema, escolha } of MODOS) {
   });
 }
 
-test("o degradê de cima da arte segue o modo: escuro à noite, claro de dia (a barra de estado lê-se)", async ({
-  page,
-}) => {
-  const luz = async (modo: "dark" | "light") => {
+/**
+ * Fase 12 — o degradê de cima do herói saiu. Era para a arte passar por baixo
+ * da barra de estado, mas na PWA a página começa abaixo dela (área segura de
+ * cima 0, lido no iPhone): só lavava o topo da arte — 72% de branco de dia. O
+ * que fica por cima da arte são os círculos de vidro, e esses leem-se sozinhos.
+ */
+for (const [nome, abrir] of [
+  ["série", async (page: import("@playwright/test").Page) => {
+    await semear(page, { series: [{ uuid: "s-1", name: "Severance", backdropPath: "/fundo.jpg" }] });
+    await page.goto("/series/s-1");
+  }],
+  ["filme", async (page: import("@playwright/test").Page) => {
+    await semear(page, { filmes: [{ key: "f-1", name: "Past Lives", watchedAt: null }] });
+    await page.goto("/movies/f-1");
+  }],
+] as const) {
+  test(`${nome}: o topo da arte fica sem véu, nos dois modos`, async ({ page }) => {
+    await abrir(page);
+    for (const modo of ["dark", "light"] as const) {
+      await page.emulateMedia({ colorScheme: modo });
+      const veu = await page.getByTestId("veu-heroi").evaluate((el) => getComputedStyle(el).backgroundImage);
+      // a primeira cor do degradê é a do topo: transparente
+      const topo = veu.match(/rgba?\([^)]*\)|transparent/)![0];
+      expect(topo === "transparent" || /,\s*0\)$/.test(topo), `${modo}: ${veu}`).toBe(true);
+    }
+  });
+}
+
+for (const modo of ["dark", "light"] as const) {
+  test(`o ícone do círculo de vidro lê-se sobre a pior arte, sem degradê (${modo})`, async ({ page }) => {
     await page.emulateMedia({ colorScheme: modo });
-    await page.goto("/mira");
-    return page.evaluate(() => {
-      const el = document.createElement("i");
-      el.style.color = "var(--m-heroi-topo)";
-      document.body.appendChild(el);
-      const [r, g, b] = getComputedStyle(el).color.match(/[\d.]+/g)!.map(Number);
-      el.remove();
-      return (r + g + b) / 3;
-    });
-  };
-  expect(await luz("dark")).toBeLessThan(40);
-  expect(await luz("light")).toBeGreaterThan(200);
-});
+    await page.goto("/profile/definicoes");
+    const r = await page.evaluate((modo) => {
+      const ler = (v: string) => {
+        const el = document.createElement("i");
+        el.style.color = `var(${v})`;
+        document.body.appendChild(el);
+        const m = getComputedStyle(el).color.match(/[\d.]+/g)!.map(Number);
+        el.remove();
+        return [m[0], m[1], m[2], m[3] ?? 1];
+      };
+      const lin = (c: number) => ((c /= 255) <= 0.04045 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4);
+      const lum = (c: number[]) => 0.2126 * lin(c[0]) + 0.7152 * lin(c[1]) + 0.0722 * lin(c[2]);
+      const vidro = ler("--m-glass");
+      // a pior arte: branca à noite (ícone branco), preta de dia (ícone preto)
+      const arte = modo === "dark" ? 255 : 0;
+      const fundo = vidro.slice(0, 3).map((c) => c * vidro[3] + arte * (1 - vidro[3]));
+      const icone = ler("--m-label");
+      const [a, b] = [lum(icone), lum(fundo)];
+      return (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05);
+    }, modo);
+    expect(r).toBeGreaterThanOrEqual(4.5);
+  });
+}

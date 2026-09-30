@@ -61,7 +61,7 @@ export default function LinhaEpisodio({
           {metaEp?.name ?? `Episódio ${epNumber}`}
         </span>
         {metaEp?.airDate && (
-          <Codigo className="block text-[0.7rem] text-label-2">{porExtenso(metaEp.airDate)}</Codigo>
+          <span className="block text-[0.76rem] text-label-2">{porExtenso(metaEp.airDate)}</span>
         )}
       </span>
       <span aria-hidden className="flex h-11 w-11 shrink-0 items-center justify-center">

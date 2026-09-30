@@ -169,10 +169,11 @@ export default function MoviePage() {
           )}
           <div
             aria-hidden
+            data-testid="veu-heroi"
             className="pointer-events-none absolute inset-0"
             style={{
               background:
-                "linear-gradient(to bottom, var(--m-heroi-topo) 0, transparent 25%, transparent 55%, var(--color-bg) 100%)",
+                "linear-gradient(to bottom, transparent 55%, var(--color-bg) 100%)",
             }}
           />
         </div>

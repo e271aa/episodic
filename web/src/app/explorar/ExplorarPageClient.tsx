@@ -137,9 +137,6 @@ function Baralho({
           deckItem={deckItem}
           active={i === 0}
           depth={i}
-          posicao={cursor + 1 + i}
-          total={total}
-          variante="bordo"
           mostrarTipo={mostrarTipo}
           onDecide={(quero) => decidir(deckItem, quero)}
         />

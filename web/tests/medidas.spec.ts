@@ -114,10 +114,10 @@ for (const [largura, escala] of [
  * guarda-se o que se consegue garantir: nenhum ecrã passa das 4 camadas grandes
  * à vista, a rolar ou com uma folha aberta. As pequenas (selo e botão de cada
  * cartaz «Para ver» da Biblioteca › Filmes: 2 por cartaz) medem-se no iPhone
- * com `/diagnostico`.
+ * com `/diagnostico` (lido a 30-09; saiu na Fase 12).
  */
 const MAX_CAMADAS_DE_VIDRO = 4;
-/** as pequenas (o selo e o botão de cada cartaz, <2% do ecrã) contam-se à parte: ver «/diagnostico» */
+/** as pequenas (o selo e o botão de cada cartaz, <2% do ecrã) contam-se à parte: no iPhone, 28 camadas não custaram (Fase 11) */
 const AREA_DE_CAMADA_GRANDE = 0.02;
 
 test("nenhum ecrã tem mais de 4 camadas de vidro à vista", async ({ page, tmdb }) => {
