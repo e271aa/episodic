@@ -21,7 +21,7 @@ export function Panel({
 }) {
   return (
     <div
-      className={`divide-y divide-line overflow-hidden rounded-3xl border border-line bg-panel ${className}`}
+      className={`divide-y-[0.5px] divide-separator overflow-hidden rounded-[26px] bg-group ${className}`}
     >
       {children}
     </div>
@@ -54,7 +54,7 @@ export function PanelRow({
 }) {
   const interativa = href !== undefined || onClick !== undefined;
   const classe = `flex min-h-[60px] w-full items-center gap-4 px-5 py-3.5 text-left transition-colors ${
-    interativa ? "cursor-pointer hover:bg-raised" : ""
+    interativa ? "cursor-pointer active:bg-fill" : ""
   }`;
 
   const conteudo = (

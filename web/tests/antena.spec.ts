@@ -54,7 +54,8 @@ test("cresce com o que se marca depois do import", async ({ page }) => {
   });
   const cartao = await tempoDeAntena(page);
   // 10h do import + 2 × 1h (média) + 2 × 30 min = 13h
-  await expect(cartao).toContainText("0dias13horas");
+  await expect(cartao).toContainText("13 h");
+  await expect(cartao).toContainText("0 dias e 13 horas");
 });
 
 test("um amigo sem TV Time também tem tempo de antena", async ({ page }) => {
@@ -64,7 +65,8 @@ test("um amigo sem TV Time também tem tempo de antena", async ({ page }) => {
   });
   const cartao = await tempoDeAntena(page);
   // 4 × 45 min = 3h
-  await expect(cartao).toContainText("0dias3horas");
+  await expect(cartao).toContainText("3 h");
+  await expect(cartao).toContainText("0 dias e 3 horas");
   await expect(cartao).not.toContainText("importares");
 });
 

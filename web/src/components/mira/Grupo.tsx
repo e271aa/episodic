@@ -39,6 +39,7 @@ export function Linha({
   onClick,
   chevron = Boolean(href),
   alta = false,
+  quebra = false,
 }: {
   titulo: ReactNode;
   subtitulo?: ReactNode;
@@ -49,6 +50,8 @@ export function Linha({
   chevron?: boolean;
   /** 64px em vez de 50 — para linhas com capa ou duas linhas de texto */
   alta?: boolean;
+  /** o subtítulo pode ocupar mais de uma linha (uma data e uma série) */
+  quebra?: boolean;
 }) {
   const corpo = (
     <>
@@ -57,10 +60,12 @@ export function Linha({
         <span className="min-w-0 flex-1">
           <span className="block truncate text-base text-label">{titulo}</span>
           {subtitulo && (
-            <span className="mt-0.5 block truncate text-[0.88rem] text-label-2">{subtitulo}</span>
+            <span className={`mt-0.5 block text-[0.88rem] text-label-2 ${quebra ? "" : "truncate"}`}>
+              {subtitulo}
+            </span>
           )}
         </span>
-        {depois && <span className="shrink-0 text-[0.88rem] text-label-2">{depois}</span>}
+        {depois && <span className="max-w-[55%] shrink-0 text-right text-[0.88rem] text-label-2">{depois}</span>}
         {chevron && <ChevronRight aria-hidden className="h-4 w-4 shrink-0 text-label-3" strokeWidth={2.4} />}
       </span>
     </>

@@ -162,7 +162,7 @@ test("'A seguir' é só a fila: seguir uma série diz 'Seguida', e a Biblioteca 
   await expect(page.locator("main").getByText("A seguir", { exact: true })).toHaveCount(0);
 
   await page.goto("/profile");
-  await expect(page.getByText(/séries · 3 seguidas/)).toBeVisible();
+  await expect(page.getByText("3 seguidas")).toBeVisible();
 });
 
 // ── #3 · o primeiro uso de um amigo ──────────────────────────
@@ -368,7 +368,7 @@ test("'Apagar lista' só fica vermelho depois do primeiro toque", async ({ page 
 
 test("'Apagar dados locais' só fica vermelho depois do primeiro toque", async ({ page }) => {
   await semear(page, {});
-  await page.goto("/profile");
+  await page.goto("/profile/definicoes");
   const linha = page.getByText("Apagar dados locais");
   await expect(linha).toBeVisible();
   const corAntes = await linha.evaluate((el) => getComputedStyle(el).color);

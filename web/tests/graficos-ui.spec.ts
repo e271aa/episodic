@@ -33,8 +33,8 @@ async function semearVarios(page: import("@playwright/test").Page) {
 
 test("mapa de calor: um mês por célula, o mais forte à cabeça, e a tabela diz o mesmo", async ({ page }) => {
   await semearVarios(page);
-  await page.goto("/estatisticas");
-  const mapa = page.locator("section", { hasText: "Quando viste" });
+  await page.goto("/profile");
+  const mapa = page.locator("section", { hasText: "Por mês" });
   const forte = mapa.getByRole("button", { name: "março de 2021 · 8 episódios" });
   await expect(forte).toHaveAttribute("data-degrau", "4");
   await expect(mapa.getByRole("button", { name: "abril de 2021 · 2 episódios" })).toHaveAttribute("data-degrau", "2");
@@ -49,8 +49,8 @@ test("mapa de calor: um mês por célula, o mais forte à cabeça, e a tabela di
 
 test("as séries mais vistas: por ordem, e cada uma leva à sua página", async ({ page }) => {
   await semearVarios(page);
-  await page.goto("/estatisticas");
-  const cartao = page.locator("section", { hasText: "As séries que mais viste" });
+  await page.goto("/profile");
+  const cartao = page.locator("section", { hasText: "Mais vistas" });
   const ligacoes = cartao.getByRole("link");
   await expect(ligacoes).toHaveCount(3);
   await expect(ligacoes.nth(0)).toContainText("Alfa");
@@ -85,7 +85,7 @@ test("horas por ano: com um só ano não há gráfico", async ({ page }) => {
 
 test("dia da semana: o preferido fica em destaque e a leitura diz qual é", async ({ page }) => {
   await semearVarios(page);
-  await page.goto("/estatisticas");
+  await page.goto("/profile");
   const cartao = page.locator("section", { hasText: "Dia da semana" });
   await expect(cartao.getByTestId("leitura")).toBeVisible();
   await expect(cartao.getByRole("button")).toHaveCount(7);

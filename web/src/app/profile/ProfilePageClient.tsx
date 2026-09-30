@@ -1,117 +1,164 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
+import Image from "next/image";
 import Link from "next/link";
-import { clearAllData } from "@/lib/db";
 import { loadProfileStats, type ProfileStats } from "@/lib/stats";
-import CloudAccount from "@/components/CloudAccount";
-import EscolhaAparencia from "@/components/mira/EscolhaAparencia";
-import ProfileCard from "@/components/ProfileCard";
-import Poster from "@/components/Poster";
-import SectionHeader from "@/components/SectionHeader";
-import { Panel, PanelRow } from "@/components/Panel";
+import { loadAdvancedStats, type AdvancedStats } from "@/lib/advancedStats";
+import { isCloudConfigured } from "@/lib/supabase";
+import { useIdentidade } from "@/components/ProfileCard";
+import TituloGrande from "@/components/mira/TituloGrande";
+import { Grupo, Linha } from "@/components/mira/Grupo";
+import { Contador, Destaque } from "@/components/mira/Widget";
+import TempoDeAntena from "@/components/mira/TempoDeAntena";
 import { Bone } from "@/components/Skeleton";
-import IntegrityCheck from "@/components/IntegrityCheck";
-import { porExtenso } from "@/lib/datas";
-import { plural } from "@/lib/graficos";
 import Colunas from "@/components/Colunas";
+import MapaDeCalor from "@/components/MapaDeCalor";
+import { plural } from "@/lib/graficos";
+import { milhares } from "@/lib/numeros";
 
-// Mesmo formato do TV Time: "2 meses · 25 dias · 7 horas"
-function splitHours(totalHours: number) {
-  return {
-    months: Math.floor(totalHours / 720),
-    days: Math.floor((totalHours % 720) / 24),
-    hours: Math.floor(totalHours % 24),
-  };
-}
+const DIAS = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quinta-feira", "Sexta-feira", "Sábado"];
 
 export default function ProfilePage() {
-  const [stats, setStats] = useState<ProfileStats | null>(null);
-  const [confirmClear, setConfirmClear] = useState(false);
+  const [dados, setDados] = useState<{ stats: ProfileStats; avancadas: AdvancedStats } | null>(null);
+  const { perfil } = useIdentidade();
 
   useEffect(() => {
-    void loadProfileStats().then(setStats);
+    void Promise.all([loadProfileStats(), loadAdvancedStats()]).then(([stats, avancadas]) =>
+      setDados({ stats, avancadas }),
+    );
   }, []);
 
-  // A confirmação é agora um estado do painel, não um segundo clique no mesmo
-  // botão: "clica outra vez" obrigava a ler o botão que se acabou de premir.
-  const handleClear = useCallback(async () => {
-    await clearAllData();
-    setConfirmClear(false);
-    setStats(await loadProfileStats());
-  }, []);
-
-  if (stats === null) {
+  if (dados === null) {
     return (
       <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
-        {/* a sombra do que vem: cartão de identidade, tempo de antena,
-            os três contadores e a série-farol */}
-        <Bone className="h-52 w-full rounded-3xl" />
-        <Bone className="mt-3 h-36 w-full rounded-3xl" />
+        <TituloGrande titulo="Perfil" />
+        {/* a sombra do que vem: identidade, tempo de antena, os três
+            contadores e o mapa */}
+        <Bone className="mt-4 h-[72px] w-full rounded-[26px]" />
+        <Bone className="mt-3 h-36 w-full rounded-[26px]" />
         <div className="mt-3 grid grid-cols-3 gap-3">
           {[0, 1, 2].map((i) => (
-            <Bone key={i} className="h-24 rounded-2xl" />
+            <Bone key={i} className="h-[88px] rounded-[22px]" />
           ))}
         </div>
-        <Bone className="mt-3 h-28 w-full rounded-2xl" />
+        <Bone className="mt-3 h-44 w-full rounded-[26px]" />
       </main>
     );
   }
 
-  const time = stats.hours !== null ? splitHours(stats.hours) : null;
-  const topShowPosterPath = stats.topShow?.posterPath ?? null;
+  const { stats, avancadas } = dados;
+  const nome = perfil?.displayName?.trim() || (isCloudConfigured() ? "Sem nome" : "Neste aparelho");
+  const desde = [
+    stats.firstYear ? `Desde ${stats.firstYear}` : null,
+    stats.importedAt ? "importado do TV Time" : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+
+  // sem um único episódio marcado não há gráficos: um mapa todo vazio lê-se
+  // como avaria, e o Tempo de antena já diz quando começa a contar
+  const marcados = avancadas.perWeekday.reduce((n, w) => n + w.count, 0);
+  const diaPreferido = avancadas.perWeekday.reduce((m, w) => (w.count > m.count ? w : m), avancadas.perWeekday[0]);
+  const maisVista = avancadas.maisVistas[0];
+  const maisNaLista = avancadas.maisVistas[0]?.count ?? 1;
 
   return (
     <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
-      <h1 className="sr-only">Perfil</h1>
-      {/* Quem és — antes de quanto viste */}
-      <ProfileCard />
+      <TituloGrande titulo="Perfil" />
 
-      {/* Herói — tempo de antena, o "cartão de estação" do utilizador. É o
-          único número de que a pessoa se orgulha ao abrir esta página, e
-          tinha de ser o maior; o resto abaixo já não compete com ele por
-          cartões do mesmo peso, são linhas dentro do mesmo painel. */}
-      <section className="relative mt-3 overflow-hidden rounded-3xl border border-line bg-gradient-to-b from-panel to-tube p-6">
-        <div className="bars absolute inset-x-0 top-0 h-[3px]" />
-        <p className="font-display text-xs font-semibold uppercase tracking-[0.3em] text-dim [font-stretch:75%]">
-          Tempo de antena
-        </p>
-        {time ? (
-          <div className="mt-3 flex flex-wrap items-baseline gap-x-5 gap-y-1">
-            {time.months > 0 && (
-              <span className="flex items-baseline gap-1.5">
-                <span className="ep-code text-5xl font-bold text-ink">{time.months}</span>
-                <span className="text-[0.9375rem] text-dim">{plural(time.months, "mês", "meses")}</span>
-              </span>
-            )}
-            <span className="flex items-baseline gap-1.5">
-              <span className="ep-code text-5xl font-bold text-ink">{time.days}</span>
-              <span className="text-[0.9375rem] text-dim">{plural(time.days, "dia", "dias")}</span>
-            </span>
-            <span className="flex items-baseline gap-1.5">
-              <span className="ep-code text-5xl font-bold text-ink">{time.hours}</span>
-              <span className="text-[0.9375rem] text-dim">{plural(time.hours, "hora", "horas")}</span>
-            </span>
+      <Grupo className="mt-4">
+        <Linha
+          href="/profile/definicoes"
+          alta
+          antes={<Avatar nome={nome} url={perfil?.avatarUrl ?? null} />}
+          titulo={<span className="text-base font-semibold">{nome}</span>}
+          subtitulo={desde || "Os teus dados vivem neste aparelho"}
+        />
+      </Grupo>
+
+      <TempoDeAntena
+        horas={stats.hours}
+        porAno={avancadas.horasAno.map((h) => ({ ano: h.ano, horas: h.horas }))}
+      />
+
+      <div className="mt-3 grid grid-cols-3 gap-3">
+        <Contador
+          valor={milhares(stats.shows)}
+          rotulo={plural(stats.shows, "série", "séries")}
+          sub={`${stats.following} ${stats.following === 1 ? "seguida" : "seguidas"}`}
+          href="/library"
+        />
+        <Contador valor={milhares(stats.episodes)} rotulo={plural(stats.episodes, "episódio", "episódios")} />
+        <Contador
+          valor={milhares(stats.movies)}
+          rotulo={plural(stats.movies, "filme", "filmes")}
+          href="/library?tipo=filmes"
+        />
+      </div>
+
+      {marcados > 0 && (
+        <>
+          {avancadas.mapa.anos.length > 0 && (
+            <section className="mt-3 rounded-[26px] bg-group px-[18px] py-4">
+              <MapaDeCalor mapa={avancadas.mapa} titulo="Por mês" />
+            </section>
+          )}
+
+          <div className="mt-3 grid grid-cols-2 gap-3">
+            <Destaque rotulo="Dia preferido" valor={DIAS[diaPreferido.weekday]} />
+            {maisVista && <Destaque rotulo="Mais vista" valor={maisVista.name} href={`/series/${maisVista.uuid}`} />}
           </div>
-        ) : (
-          <p className="mt-3 text-[0.9375rem] text-dim">
-            Começa a contar com o primeiro episódio que marcares.
-          </p>
-        )}
-        <p className="ep-code mt-3 text-xs text-faint">
-          {stats.episodes.toLocaleString("pt-PT")} episódios
-          {stats.firstYear ? ` · no ar desde ${stats.firstYear}` : ""}
-        </p>
-      </section>
 
-      {/* Tudo o resto — um painel só, secções separadas por linha, não por
-          cartão. Nenhuma delas precisa de competir visualmente com o tempo
-          de antena, precisam só de estar arrumadas. */}
-      <section className="mt-3 divide-y divide-line rounded-3xl border border-line bg-panel">
-        {stats.genres.length > 0 && (
-          <div className="p-5">
-            <SectionHeader label="O teu espetro" />
-            <div className="mt-3 flex h-3 overflow-hidden rounded-full">
+          {avancadas.maisVistas.length > 0 && (
+            <Grupo titulo="Mais vistas" className="mt-6">
+              <ol className="px-4 py-1.5">
+                {avancadas.maisVistas.map((s, i) => (
+                  <li key={s.uuid}>
+                    <Link href={`/series/${s.uuid}`} className="flex min-h-11 items-center gap-3 py-1">
+                      <span className="ep-code w-4 shrink-0 text-xs text-faint">{i + 1}</span>
+                      <span className="min-w-0 flex-1">
+                        <span className="block truncate text-base font-semibold text-label">{s.name}</span>
+                        <span
+                          className={`mt-1 block h-2 rounded-r-[4px] ${i === 0 ? "bg-label" : "bg-label/35"}`}
+                          style={{ width: `${Math.max(2, (s.count / maisNaLista) * 100)}%` }}
+                          aria-hidden
+                        />
+                      </span>
+                      <span className="ep-code w-10 shrink-0 text-right text-xs text-label-2">{s.count}</span>
+                    </Link>
+                  </li>
+                ))}
+              </ol>
+            </Grupo>
+          )}
+
+          <section className="mt-6">
+            <h2 className="mb-2 px-1 text-base font-semibold text-label">Dia da semana</h2>
+            <div className="rounded-[26px] bg-group px-[18px] py-4">
+              <Colunas
+                titulo="Episódios por dia da semana"
+                destaque="maior"
+                colunaCabecalho="Dia"
+                valorCabecalho="Episódios"
+                dados={avancadas.perWeekday.map((w) => ({
+                  chave: w.weekday,
+                  nome: DIAS[w.weekday],
+                  rotulo: w.label,
+                  valor: w.count,
+                  leitura: `${DIAS[w.weekday]} · ${w.count} ${plural(w.count, "episódio", "episódios")}`,
+                }))}
+              />
+            </div>
+          </section>
+        </>
+      )}
+
+      {stats.genres.length > 0 && (
+        <section className="mt-6">
+          <h2 className="mb-2 px-1 text-base font-semibold text-label">O teu espetro</h2>
+          <div className="rounded-[26px] bg-group px-[18px] py-4">
+            <div className="flex h-3 overflow-hidden rounded-full">
               {stats.genres.map((g) => (
                 <div
                   key={g.name}
@@ -122,188 +169,35 @@ export default function ProfilePage() {
             </div>
             <ul className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5">
               {stats.genres.map((g) => (
-                <li key={g.name} className="flex items-center gap-1.5 text-[0.9375rem]">
-                  <span
-                    className="h-2.5 w-2.5 shrink-0 rounded-sm"
-                    style={{ background: g.color }}
-                    aria-hidden
-                  />
-                  <span className="text-dim">{g.name}</span>
+                <li key={g.name} className="flex items-center gap-1.5 text-[0.88rem]">
+                  <span className="h-2.5 w-2.5 shrink-0 rounded-sm" style={{ background: g.color }} aria-hidden />
+                  <span className="text-label-2">{g.name}</span>
                   <span className="ep-code text-xs text-faint">{Math.round(g.pct)}%</span>
                 </li>
               ))}
             </ul>
           </div>
-        )}
+        </section>
+      )}
 
-        {/* Contadores — números lado a lado, não três caixas com borda própria */}
-        <div className="flex items-stretch p-5">
-          {/* `min-w-0`: sem isto, a 150% de texto a linha passava o ecrã (F5) */}
-          <div className="min-w-0 flex-1">
-            <p className="ep-code text-2xl font-bold text-ink">{stats.shows}</p>
-            <p className="text-xs text-dim">
-              séries · {stats.following} {stats.following === 1 ? "seguida" : "seguidas"}
-            </p>
-          </div>
-          <div className="w-px shrink-0 bg-line" aria-hidden />
-          <div className="min-w-0 flex-1 pl-5">
-            <p className="ep-code text-2xl font-bold text-ink">{stats.movies}</p>
-            <p className="text-xs text-dim">filmes</p>
-          </div>
-          <div className="w-px shrink-0 bg-line" aria-hidden />
-          <Link href="/library" className="flex min-w-0 flex-1 flex-col justify-center pl-5">
-            <p className="font-display text-[0.9375rem] font-semibold text-ink break-words hover:underline">
-              Biblioteca
-            </p>
-            <p className="text-xs text-faint">ver tudo →</p>
-          </Link>
-        </div>
-
-        {stats.topShow && (
-          <Link
-            href={`/series/${stats.topShow.uuid}`}
-            className="flex items-center gap-4 p-5 transition-colors hover:bg-raised"
-          >
-            {topShowPosterPath ? (
-              <div className="relative h-16 w-11 shrink-0 overflow-hidden rounded-lg shadow-md shadow-black/40">
-                <Poster path={topShowPosterPath} alt="" size="w185" fill sizes="44px" className="object-cover" />
-              </div>
-            ) : (
-              <div className="h-16 w-11 shrink-0 rounded-lg bg-raised" />
-            )}
-            <div className="min-w-0 flex-1">
-              <p className="text-xs uppercase tracking-[0.15em] text-faint">A tua série</p>
-              <p className="mt-0.5 truncate font-display text-[0.9375rem] font-semibold text-ink">
-                {stats.topShow.name}
-              </p>
-            </div>
-            <p className="ep-code shrink-0 text-xs text-faint">
-              {stats.topShow.count} EP
-            </p>
-          </Link>
-        )}
-
-        {stats.perYear.length > 1 && (
-          <div className="p-5">
-            <SectionHeader label="Por ano" meta={`${stats.perYear.length} anos`} />
-            <div className="mt-3">
-              <Colunas
-                titulo="Episódios por ano"
-                destaque="ultima"
-                colunaCabecalho="Ano"
-                valorCabecalho="Episódios"
-                dados={stats.perYear.map((y) => ({
-                  chave: y.year,
-                  nome: String(y.year),
-                  rotulo: String(y.year).slice(2),
-                  valor: y.count,
-                  leitura: `${y.year} · ${y.count} ${plural(y.count, "episódio", "episódios")}`,
-                }))}
-              />
-            </div>
-          </div>
-        )}
-
-        <Link
-          href="/estatisticas"
-          className="flex items-center justify-between p-5 transition-colors hover:bg-raised"
-        >
-          <span className="font-display font-semibold text-ink">
-            Estatísticas completas
-          </span>
-          <span className="text-faint">→</span>
-        </Link>
-      </section>
-
-      {/* Aparência (Ronda 14, Mira). Por agora aqui; o Perfil é refeito na
-          Fase 7 e ela passa para Definições. */}
-      <section className="mt-3">
-        <h2 className="mb-2 px-1 text-[0.88rem] font-semibold text-label-2">Aparência</h2>
-        <EscolhaAparencia />
-      </section>
-
-      <CloudAccount onSynced={() => void loadProfileStats().then(setStats)} />
-
-      <section className="mt-8">
-        {/* Cor fixada à mão: a que sai do rótulo "Dados" calhava no vermelho
-            SMPTE, ao lado do "Apagar dados locais". Ter o mesmo vermelho a
-            marcar uma secção e a assinalar perigo tira o significado ao
-            segundo — e o significado é a única razão de haver cor nesta app. */}
-        <SectionHeader label="Dados" color="var(--color-smpte-blue)" />
-        <Panel className="mt-3">
-          <PanelRow
-            titulo="Importar do TV Time"
-            detalhe={
-              stats.importedAt
-                ? `Última importação a ${porExtenso(stats.importedAt)}`
-                : "Traz o histórico do export GDPR"
-            }
-            href="/import"
-            fim="→"
-          />
-          {/* Duas coisas diferentes, de propósito em linhas separadas: o que
-              só tu sabes (se viste uma série) e o que a app sabe que está
-              mal (repetidos, episódios contados duas vezes). */}
-          <PanelRow
-            titulo="Rever a biblioteca"
-            detalhe="Séries atrás do que já estreou — só tu sabes se as viste"
-            href="/rever"
-            fim="→"
-          />
-          <IntegrityCheck />
-          {/* O vermelho só acende quando a destruição está mesmo a um toque.
-              Em repouso é uma linha como as outras — a app tem um único
-              acento de perigo e não pode estar sempre ligado, ou deixa de
-              querer dizer alguma coisa. */}
-          {confirmClear ? (
-            <div className="px-5 py-4">
-              <p className="font-display text-[0.9375rem] font-semibold text-danger">
-                Apagar tudo o que está neste dispositivo?
-              </p>
-              <p className="mt-0.5 text-xs text-dim">
-                Séries, filmes, episódios marcados e listas. Não há como voltar
-                atrás{" "}
-                {stats.importedAt
-                  ? "— terias de importar o TV Time outra vez."
-                  : "daqui."}
-              </p>
-              <div className="mt-3 flex gap-2">
-                {/* text-tube e não text-ink: branco sobre o vermelho dá 3,3:1,
-                    abaixo do mínimo para 15px. Escuro sobre cor é, além
-                    disso, o que os botões primários da app já fazem. */}
-                <button
-                  onClick={() => void handleClear()}
-                  className="min-h-11 flex-1 cursor-pointer rounded-full bg-danger px-4 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95"
-                >
-                  Apagar tudo
-                </button>
-                <button
-                  onClick={() => setConfirmClear(false)}
-                  className="min-h-11 flex-1 cursor-pointer rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-dim transition hover:border-ink hover:text-ink"
-                >
-                  Manter
-                </button>
-              </div>
-            </div>
-          ) : (
-            // Sem `perigo`: em repouso é uma linha como as outras — o
-            // vermelho só acende no painel de confirmação, acima
-            // (Ronda 12, Fase 4, achado #17).
-            <PanelRow
-              titulo="Apagar dados locais"
-              detalhe="Limpa esta cópia — a da cloud, se tiveres sessão, fica"
-              onClick={() => setConfirmClear(true)}
-            />
-          )}
-        </Panel>
-      </section>
-
-      <p className="mt-10 text-center text-xs leading-relaxed text-faint">
-        Episodic — os teus dados vivem neste dispositivo
-        <br />e na cloud, se iniciares sessão.
-        <br />
-        Metadados por TVmaze e TMDB.
-      </p>
+      <Grupo className="mt-6">
+        <Linha href="/estatisticas" titulo="Mais estatísticas" subtitulo="Horas por ano, maratonas e sequências" alta />
+      </Grupo>
     </main>
+  );
+}
+
+/** O avatar de 48px: a foto, ou a inicial do nome em SF Rounded. */
+function Avatar({ nome, url }: { nome: string; url: string | null }) {
+  return (
+    <span className="relative mr-1 flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-chip">
+      {url ? (
+        <Image src={url} alt="" fill sizes="48px" className="object-cover" />
+      ) : (
+        <span aria-hidden className="font-rounded text-xl font-semibold text-label">
+          {nome.trim()[0]?.toUpperCase() ?? "?"}
+        </span>
+      )}
+    </span>
   );
 }

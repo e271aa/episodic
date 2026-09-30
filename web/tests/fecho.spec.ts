@@ -51,7 +51,7 @@ test("mapa de calor: cada mês é um alvo de pelo menos 24px (WCAG 2.5.8)", asyn
     series: [{ uuid: "s-a", name: "Alfa" }],
     vistos: [...eps("s-a", 2021, 3, 4), ...eps("s-a", 2022, 5, 2)],
   });
-  await page.goto("/estatisticas");
+  await page.goto("/profile");
   const celula = page.getByRole("button", { name: "março de 2021 · 4 episódios" });
   const caixa = (await celula.boundingBox())!;
   expect(caixa.width).toBeGreaterThanOrEqual(24);
@@ -63,8 +63,8 @@ test("mapa de calor: com meses parecidos, não fica tudo no degrau de cima", asy
   // linear até ao máximo, eram todos degrau 3 ou 4, uma parede creme
   const vistos = [15, 16, 17, 18, 15, 16, 17, 18, 15, 16, 17, 18].flatMap((n, i) => eps("s-a", 2021, i + 1, n));
   await semear(page, { series: [{ uuid: "s-a", name: "Alfa" }], vistos });
-  await page.goto("/estatisticas");
-  const celulas = page.locator("section", { hasText: "Quando viste" }).locator("button[data-degrau]");
+  await page.goto("/profile");
+  const celulas = page.locator("section", { hasText: "Por mês" }).locator("button[data-degrau]");
   // esperar pelo cartão: o evaluateAll não espera, e lia 0 células
   await expect(celulas).toHaveCount(12);
   const degraus = await celulas
@@ -173,7 +173,7 @@ test("o foco por teclado vê-se em summary (\"Ver em tabela\")", async ({ page }
     series: [{ uuid: "s-a", name: "Alfa" }],
     vistos: [...eps("s-a", 2021, 3, 2), ...eps("s-a", 2022, 3, 2)],
   });
-  await page.goto("/estatisticas");
+  await page.goto("/profile");
   await page.locator("summary").first().waitFor();
   // por teclado, como quem usa um teclado: Tab até lá chegar
   for (let i = 0; i < 40; i++) {
@@ -289,7 +289,7 @@ test("Perfil: a linha dos números cabe a 320px com o texto a 150%", async ({ pa
     vistos: [{ showUuid: "s-1", season: 1, episode: 1 }],
   });
   await page.goto("/profile");
-  await page.getByText("ver tudo →").waitFor();
+  await page.getByText("Tempo de antena").waitFor();
   await page.evaluate(() => {
     document.documentElement.style.fontSize = "150%";
   });

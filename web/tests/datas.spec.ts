@@ -10,7 +10,7 @@ const CRUA = /\d{4}-\d{2}-\d{2}/;
 
 test("a última importação no Perfil não aparece em ISO cru", async ({ page }) => {
   await semear(page, { kv: { "import-meta": { importedAt: "2026-07-11T10:00:00.000Z" } } });
-  await page.goto("/profile");
+  await page.goto("/profile/definicoes");
   const texto = page.getByText(/Última importação/);
   await expect(texto).toBeVisible();
   await expect(texto).not.toHaveText(CRUA);
@@ -24,7 +24,7 @@ test("a data de um filme repetido, na verificação, não aparece em ISO cru", a
       { key: "tmdb-900", name: "Duna", tmdbId: 900, watchedAt: null },
     ],
   });
-  await page.goto("/profile");
+  await page.goto("/profile/definicoes");
   await page.getByRole("button", { name: "Verificar" }).click();
   const linha = page.locator('[data-testid="filmes-repetidos"] li').first();
   await expect(linha).toBeVisible();

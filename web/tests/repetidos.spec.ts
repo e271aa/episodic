@@ -27,7 +27,7 @@ function ler<T>(page: Pagina, store: "movies" | "shows" | "lists") {
 }
 
 async function verificar(page: Pagina) {
-  await page.goto("/profile");
+  await page.goto("/profile/definicoes");
   await page.getByRole("button", { name: /Verificar biblioteca/ }).click();
 }
 

@@ -267,6 +267,35 @@ texto («Última vista ▾»).
   **não deixar transform no fim** (`backwards`, nunca `both`): foi o que impediu a
   barra compacta de prender ao topo até à Fase 5.
 
+## O Perfil (Fase 7)
+
+«Quanto já vi?» — widgets de **tamanhos diferentes**, não cartões iguais (B·5).
+De cima para baixo: `TituloGrande` («Perfil»), a linha de identidade (avatar de
+48px com a inicial em SF Rounded, nome, «Desde 2014 · importado do TV Time»,
+chevron → **Definições**), o **Tempo de antena**, os três `Contador`es, **Por
+mês**, dois `Destaque`s, «Mais vistas», «Dia da semana», «O teu espetro» e a linha
+«Mais estatísticas». Sem um episódio marcado só ficam a identidade, o Tempo de
+antena («Começa a contar…») e os contadores: um mapa vazio lê-se como avaria.
+
+- **Tempo de antena** (`TempoDeAntena`): as horas em SF Rounded 43px (`2 781 h`,
+  `milhares()` — o pt-PT do browser só agrupa a partir de cinco algarismos),
+  «115 dias e 21 horas» por baixo, e à direita as barras por ano (8px, ano
+  corrente em `label`, o resto a 35%) com a legenda **«por ano · estimado»**.
+  Com um só ano não há barras.
+- **`Contador` / `Destaque`** (`components/mira/Widget.tsx`): raio 22. Séries e
+  Filmes levam à Biblioteca; «Mais vista» leva à série.
+- **Por mês** (`MapaDeCalor`): a leitura fixa à direita do título; quartis, «Ver
+  em tabela» e o alvo de 24px como antes. **Um mês que ainda não chegou é só
+  contorno e não é botão.** A célula escolhida leva o anel `bg` + `label/.9`.
+- **Definições** (`/profile/definicoes`): Editar perfil (só com nuvem),
+  Aparência, Conta, Dados (importar, rever, verificar, apagar). O `Panel` passou
+  a grupo da Mira (raio 26, fio de 0,5px).
+- **Estatísticas** (`/estatisticas`) ficam com o que o Perfil não mostra: Horas
+  por ano e os Recordes (maratona, sequências, mês mais ativo, mais variado),
+  numa lista agrupada.
+- **Desvios do desenho, por decisão:** o «O teu espetro» (géneros) mantém-se, por
+  baixo; a capa da série mais vista saiu (o widget «Mais vista» é texto).
+
 ## Movimento
 - **Curvas:** `--ease-out` = `cubic-bezier(0.23, 1, 0.32, 1)` para o que entra e
   responde; `--ease-drawer` = `cubic-bezier(0.32, 0.72, 0, 1)`, a do iOS, para o

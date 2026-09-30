@@ -171,22 +171,6 @@ test("no Rever, a capa da série pede 56px, não a página inteira", async ({ pa
   await expect(img).toHaveAttribute("sizes", "56px");
 });
 
-test("no Perfil, a série-farol pede 44px, não a página inteira", async ({ page }) => {
-  const hoje = new Date().toISOString();
-  await semear(page, {
-    series: [{ uuid: "s-1", name: "Serie Farol", posterPath: "/cartaz.jpg" }],
-    vistos: Array.from({ length: 5 }, (_, i) => ({
-      showUuid: "s-1",
-      season: 1,
-      episode: i + 1,
-      watchedAt: hoje,
-    })),
-  });
-  await page.goto("/profile");
-  const img = page.locator('img[alt=""]').first();
-  await expect(img).toHaveAttribute("sizes", "44px");
-});
-
 test("na fila secundária, a capa pede o tamanho que mostra (36px na Mira)", async ({ page, tmdb }) => {
   const hoje = new Date().toISOString();
   const ha60Dias = new Date(Date.now() - 60 * 864e5).toISOString();
@@ -258,6 +242,7 @@ test("o <title> muda de ecrã para ecrã, em vez de ficar sempre 'Episodic'", as
     ["/explorar", /^Explorar/],
     ["/library", /^Biblioteca/],
     ["/profile", /^Perfil/],
+    ["/profile/definicoes", /^Definições/],
     ["/rever", /^Rever a biblioteca/],
     ["/em-dia", /^Pôr em dia/],
     ["/estrear", /^A estrear/],

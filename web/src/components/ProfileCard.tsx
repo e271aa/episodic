@@ -1,7 +1,6 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
 import { getShows, updateShow, type StoredShow } from "@/lib/db";
 import { findShowByTvdbId, getSeriesCast, type CastMember } from "@/lib/tmdb";
 import { hasTmdb } from "@/lib/metadata";
@@ -18,21 +17,20 @@ import { CheckIcon, UserIcon } from "@/components/icons";
 import { Bone } from "@/components/Skeleton";
 
 /**
- * O cartão de identidade do perfil: capa da série favorita, avatar, nome e
- * personagem favorita. É a primeira coisa que se vê no Perfil — as
- * estatísticas vêm depois.
+ * A identidade do perfil (nome, foto, série e personagem favoritas), lida da
+ * nuvem. Sem nuvem não há perfil: `perfil` fica `null` e o Perfil mostra uma
+ * linha sem nome. O editor abre-se nas Definições.
  */
-export default function ProfileCard() {
+export function useIdentidade() {
   const [perfil, setPerfil] = useState<UserProfile | null>(null);
   const [shows, setShows] = useState<StoredShow[]>([]);
-  const [aEditar, setAEditar] = useState(false);
 
   // Promise.all devolve antes de qualquer setState — assim o estado só muda
   // dentro do callback assíncrono, nunca no corpo do efeito.
   const recarregar = useCallback(
     () =>
       Promise.all([getProfile(), getShows()]).then(([p, s]) => {
-        setPerfil(p ?? EMPTY_PROFILE);
+        setPerfil(p ?? (isCloudConfigured() ? EMPTY_PROFILE : null));
         setShows(s);
       }),
     [],
@@ -42,95 +40,10 @@ export default function ProfileCard() {
     void recarregar();
   }, [recarregar]);
 
-  if (!isCloudConfigured() || !perfil) return null;
-
-  const favorita = shows.find((s) => s.uuid === perfil.favoriteShowUuid) ?? null;
-  const nome = perfil.displayName?.trim() || "Sem nome";
-
-  return (
-    <section className="relative overflow-hidden rounded-3xl border border-line bg-panel">
-      {/* Capa = subcapa da série favorita. Sem favorita, fica o gradiente
-          neutro — nunca um retângulo vazio que pareça imagem em falta. */}
-      <div className="relative h-32 sm:h-40">
-        {favorita?.backdropPath ? (
-          <>
-            <Poster
-              path={favorita.backdropPath}
-              alt=""
-              size="w780"
-              fill
-              sizes="100vw"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-panel via-panel/50 to-transparent" />
-          </>
-        ) : (
-          <div className="h-full w-full bg-gradient-to-br from-raised to-panel" />
-        )}
-        <div className="bars absolute inset-x-0 top-0 h-[3px]" />
-      </div>
-
-      <div className="px-5 pb-5">
-        <div className="-mt-10 flex items-end gap-4">
-          <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-2xl border-2 border-panel bg-raised shadow-lg">
-            {perfil.avatarUrl ? (
-              <Image
-                src={perfil.avatarUrl}
-                alt=""
-                fill
-                sizes="80px"
-                className="object-cover"
-              />
-            ) : (
-              <span className="flex h-full w-full items-center justify-center text-faint">
-                <UserIcon className="h-8 w-8" />
-              </span>
-            )}
-          </div>
-          <div className="min-w-0 flex-1 pb-1">
-            <p className="truncate font-display text-xl font-bold leading-tight">{nome}</p>
-            {perfil.favoriteCharacter && (
-              <p className="ep-code mt-0.5 truncate text-xs text-dim">
-                {perfil.favoriteCharacter}
-                {perfil.favoriteActor ? ` · ${perfil.favoriteActor}` : ""}
-              </p>
-            )}
-          </div>
-          {perfil.favoritePersonImg && (
-            <div className="relative h-14 w-14 shrink-0 overflow-hidden rounded-xl shadow-md">
-              <Poster
-                path={perfil.favoritePersonImg}
-                alt={perfil.favoriteCharacter ?? ""}
-                size="w185"
-                fill
-                sizes="56px"
-                className="object-cover"
-              />
-            </div>
-          )}
-        </div>
-
-        <button
-          onClick={() => setAEditar(true)}
-          className="mt-4 min-h-11 w-full cursor-pointer rounded-full border border-line text-[0.9375rem] font-semibold text-dim transition hover:border-ink hover:text-ink"
-        >
-          Editar perfil
-        </button>
-      </div>
-
-      {aEditar && (
-        <EditorPerfil
-          perfil={perfil}
-          shows={shows}
-          onFechar={() => setAEditar(false)}
-          onGuardado={() => void recarregar()}
-        />
-      )}
-    </section>
-  );
+  return { perfil, shows, recarregar };
 }
 
-function EditorPerfil({
+export function EditorPerfil({
   perfil,
   shows,
   onFechar,

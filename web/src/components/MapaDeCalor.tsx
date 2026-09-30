@@ -19,7 +19,7 @@ const leitura = (ano: number, mes: number, n: number) =>
  * uma tinta, mais escura = mais); nada de cores de estado. Cada célula é um
  * botão — tocar diz o mês e o número, e a tabela por baixo tem tudo.
  */
-export default function MapaDeCalor({ mapa }: { mapa: MapaAnoMes }) {
+export default function MapaDeCalor({ mapa, titulo }: { mapa: MapaAnoMes; titulo?: string }) {
   // por omissão, o mês mais forte: o gráfico abre já a dizer alguma coisa
   let melhor = { ano: 0, mes: 0, n: -1 };
   for (const a of mapa.anos)
@@ -29,12 +29,21 @@ export default function MapaDeCalor({ mapa }: { mapa: MapaAnoMes }) {
   const [escolhido, setEscolhido] = useState<{ ano: number; mes: number } | null>(null);
   const foco = escolhido ?? { ano: melhor.ano, mes: melhor.mes };
   const focoN = mapa.anos.find((a) => a.ano === foco.ano)?.meses[foco.mes] ?? 0;
+  const hoje = new Date();
 
   return (
     <div>
-      <p className="ep-code min-h-4 text-xs text-dim" aria-live="polite" data-testid="leitura">
-        {leitura(foco.ano, foco.mes, focoN)}
-      </p>
+      {/* o título à esquerda, a leitura fixa à direita (B·5) */}
+      <div className="flex items-baseline justify-between gap-3">
+        {titulo && <h2 className="shrink-0 text-base font-semibold text-label">{titulo}</h2>}
+        <p
+          className="ep-code min-h-4 min-w-0 text-right text-xs text-label-2"
+          aria-live="polite"
+          data-testid="leitura"
+        >
+          {leitura(foco.ano, foco.mes, focoN)}
+        </p>
+      </div>
       <div className="mt-3 flex flex-col" role="group" aria-label="Episódios por mês e por ano">
         <div className="flex items-center" aria-hidden>
           <span className="w-7 shrink-0" />
@@ -49,6 +58,13 @@ export default function MapaDeCalor({ mapa }: { mapa: MapaAnoMes }) {
             <span className="ep-code w-7 shrink-0 text-[0.6875rem] text-faint">{a.ano}</span>
             {a.meses.map((n, mes) => {
               const ativo = foco.ano === a.ano && foco.mes === mes;
+              // um mês que ainda não chegou: só o contorno, e não se escolhe
+              if (a.ano === hoje.getFullYear() && mes > hoje.getMonth())
+                return (
+                  <span key={mes} aria-hidden className="flex aspect-square min-w-0 flex-1 p-[1.5px]">
+                    <span className="block h-full w-full rounded-[4px] ring-1 ring-inset ring-label/15" />
+                  </span>
+                );
               return (
                 <button
                   key={mes}
@@ -67,7 +83,9 @@ export default function MapaDeCalor({ mapa }: { mapa: MapaAnoMes }) {
                 >
                   <span
                     className={`block h-full w-full rounded-[4px] ${TINTAS[degrau(n, mapa)]} ${
-                      ativo ? "outline-2 outline-offset-1 outline-ink" : ""
+                      ativo
+                        ? "shadow-[0_0_0_2px_var(--color-bg),0_0_0_3px_color-mix(in_srgb,var(--color-label)_90%,transparent)]"
+                        : ""
                     }`}
                   />
                 </button>

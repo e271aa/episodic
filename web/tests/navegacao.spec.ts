@@ -19,6 +19,7 @@ for (const [rota, rotulo] of [
   ["/estrear", "Voltar a A seguir"],
   ["/rever", "Voltar ao perfil"],
   ["/estatisticas", "Voltar ao perfil"],
+  ["/profile/definicoes", "Voltar ao perfil"],
   ["/listas/l-1", "Voltar às listas"],
 ] as const) {
   test(`${rota}: recuar é o círculo de 44px, em cima à esquerda`, async ({ page }) => {

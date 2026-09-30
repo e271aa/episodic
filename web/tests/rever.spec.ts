@@ -69,7 +69,7 @@ test("pergunta só pelo que está atrás do que estreou, pela ordem mais fácil"
   tmdb,
 }) => {
   await semearBiblioteca(page, tmdb);
-  await page.goto("/profile");
+  await page.goto("/profile/definicoes");
   await page.getByRole("link", { name: /Rever a biblioteca/ }).click();
   await expect(page).toHaveURL(/\/rever$/);
 

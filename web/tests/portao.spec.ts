@@ -152,7 +152,7 @@ test("com a numeração em dúvida, a verificação nunca oferece apagar marcaç
       [1, 2, 3].map((episode) => ({ showUuid: "s-3", season: t, episode })),
     ),
   });
-  await page.goto("/profile");
+  await page.goto("/profile/definicoes");
   await page.getByRole("button", { name: /Verificar biblioteca/ }).click();
 
   // Âncora: o relatório acabou
