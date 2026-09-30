@@ -55,14 +55,14 @@ export default function CabecalhoSerie({
             className="object-cover"
           />
         )}
-        {/* Escuro em cima nos dois modos (a barra de estado lê-se por cima
-            da arte), e no fim o próprio fundo — noite ou claro. */}
+        {/* Escuro em cima à noite, claro de dia (a barra de estado lê-se por
+            cima da arte nos dois modos), e no fim o próprio fundo — noite ou claro. */}
         <div
           aria-hidden
           className="pointer-events-none absolute inset-0"
           style={{
             background:
-              "linear-gradient(to bottom, rgba(0,0,0,.45) 0, rgba(0,0,0,0) 25%, rgba(0,0,0,0) 55%, var(--color-bg) 100%)",
+              "linear-gradient(to bottom, var(--m-heroi-topo) 0, transparent 25%, transparent 55%, var(--color-bg) 100%)",
           }}
         />
       </div>

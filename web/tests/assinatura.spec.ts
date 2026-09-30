@@ -159,10 +159,10 @@ test("os nomes da barra não descem dos 10px com o texto pequeno do Ruben (15px)
 
 test.describe("modo claro", () => {
   test.use({ colorScheme: "light" });
-  test("o texto secundário passa AA: 76% e não os 60% do iOS", async ({ page, tmdb }) => {
+  test("o texto secundário passa AA: 80% e não os 60% do iOS", async ({ page, tmdb }) => {
     await casa(page, tmdb, [9, 10], [[1, 1], [1, 2], [1, 3]]);
     const cor = await page.getByTestId("contexto-casa").evaluate((el) => getComputedStyle(el).color);
-    expect(cor.replace(/\s/g, "")).toMatch(/0\.76\)$/);
+    expect(cor.replace(/\s/g, "")).toMatch(/0\.8\)$/);
   });
 });
 

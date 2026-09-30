@@ -346,8 +346,8 @@ test("o manifest usa o preto da Mira, não a cor de uma versão antiga", async (
 // ── #17 (Fase 5b.1) · o vermelho de perigo só ao confirmar ──
 
 function ehCorDoTexto(cor: string) {
-  // o vermelho de perigo do iOS, modo noite: #ff453a (Mira, Ronda 14)
-  return cor === "rgb(255, 69, 58)";
+  // o vermelho de perigo em noite: #ff6961, o que passa AA sobre `elevated` (Fase 9)
+  return cor === "rgb(255, 105, 97)";
 }
 
 test("'Apagar lista' só fica vermelho depois do primeiro toque", async ({ page }) => {

@@ -32,8 +32,8 @@
   --m-label-2: rgba(235, 235, 245, 0.6);
   /* texto terciário: sólido e AA (6.0:1 no bg, 5.0:1 no group). O
      `label-3` do iOS (30–40%) é só para contornos e chevrons, nunca texto */
-  --m-label-faint: #8e8e93;
-  --m-label-3: rgba(235, 235, 245, 0.34);
+  --m-label-faint: #a1a1a6;
+  --m-label-3: rgba(235, 235, 245, 0.42);
   --m-glass: rgba(44, 44, 48, 0.7);
   --m-glass-edge: rgba(255, 255, 255, 0.2);
   --m-glass-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.7);
@@ -44,13 +44,14 @@
   --m-acao: #e5e5ea;
   --m-seg-sombra: none;
   --m-track: rgba(255, 255, 255, 0.18); /* segmentos/trilho por ver */
+  --m-heroi-topo: rgba(0, 0, 0, 0.45); /* a arte por baixo da barra de estado */
   --m-tab-on: rgba(255, 255, 255, 0.14);
   /* estado */
   --m-por-marcar: #64d2ff;
   --m-por-marcar-texto: #64d2ff;
   --m-em-dia: #30d158;
   --m-terminada: #da5ce8;
-  --m-danger: #ff453a;
+  --m-danger: #ff6961;
 }
 
 :root[data-theme="claro"] {
@@ -69,9 +70,9 @@
   /* 76% e não os 60% do iOS: a 60% o texto secundário dava 3,1–3,4:1
      (21 textos na crítica da Fase 3); a 76% dá 5,3 · 5,0 · 4,6:1 no grupo,
      no fundo e no elevado */
-  --m-label-2: rgba(60, 60, 67, 0.76);
-  --m-label-faint: #6c6c70;
-  --m-label-3: rgba(60, 60, 67, 0.3);
+  --m-label-2: rgba(60, 60, 67, 0.8);
+  --m-label-faint: #5c5c60;
+  --m-label-3: rgba(60, 60, 67, 0.58);
   --m-glass: rgba(255, 255, 255, 0.76);
   --m-glass-edge: rgba(0, 0, 0, 0.08);
   --m-glass-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.25);
@@ -79,12 +80,13 @@
   --m-acao: #000000;
   --m-seg-sombra: 0 1px 4px rgba(0, 0, 0, 0.14);
   --m-track: rgba(0, 0, 0, 0.12);
+  --m-heroi-topo: rgba(242, 242, 247, 0.72); /* barra de estado escura: aclara a arte, não a escurece */
   --m-tab-on: rgba(0, 0, 0, 0.07);
-  --m-por-marcar: #32ade6;
-  --m-por-marcar-texto: #0077a8;
-  --m-em-dia: #34c759;
-  --m-terminada: #af52de;
-  --m-danger: #ff3b30;
+  --m-por-marcar: #005f86;
+  --m-por-marcar-texto: #005f86;
+  --m-em-dia: #248a3d;
+  --m-terminada: #9a3fc9;
+  --m-danger: #c4001a;
 }
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="noite"]) {
@@ -100,9 +102,9 @@
     --m-fill-strong: rgba(118, 118, 128, 0.16);
     --m-separator: rgba(60, 60, 67, 0.18);
     --m-label: #000000;
-    --m-label-2: rgba(60, 60, 67, 0.76);
-    --m-label-faint: #6c6c70;
-    --m-label-3: rgba(60, 60, 67, 0.3);
+    --m-label-2: rgba(60, 60, 67, 0.8);
+    --m-label-faint: #5c5c60;
+    --m-label-3: rgba(60, 60, 67, 0.58);
     --m-glass: rgba(255, 255, 255, 0.76);
     --m-glass-edge: rgba(0, 0, 0, 0.08);
     --m-glass-shadow: 0 10px 30px -12px rgba(0, 0, 0, 0.25);
@@ -110,12 +112,13 @@
     --m-acao: #000000;
     --m-seg-sombra: 0 1px 4px rgba(0, 0, 0, 0.14);
     --m-track: rgba(0, 0, 0, 0.12);
+    --m-heroi-topo: rgba(242, 242, 247, 0.72); /* barra de estado escura: aclara a arte, não a escurece */
     --m-tab-on: rgba(0, 0, 0, 0.07);
-    --m-por-marcar: #32ade6;
-    --m-por-marcar-texto: #0077a8;
-    --m-em-dia: #34c759;
-    --m-terminada: #af52de;
-    --m-danger: #ff3b30;
+    --m-por-marcar: #005f86;
+    --m-por-marcar-texto: #005f86;
+    --m-em-dia: #248a3d;
+    --m-terminada: #9a3fc9;
+    --m-danger: #c4001a;
   }
 }
 

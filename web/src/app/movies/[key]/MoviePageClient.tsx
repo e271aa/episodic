@@ -172,7 +172,7 @@ export default function MoviePage() {
             className="pointer-events-none absolute inset-0"
             style={{
               background:
-                "linear-gradient(to bottom, rgba(0,0,0,.45) 0, rgba(0,0,0,0) 25%, rgba(0,0,0,0) 55%, var(--color-bg) 100%)",
+                "linear-gradient(to bottom, var(--m-heroi-topo) 0, transparent 25%, transparent 55%, var(--color-bg) 100%)",
             }}
           />
         </div>

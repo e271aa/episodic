@@ -15,9 +15,9 @@ colors:
     separator: "rgba(84, 84, 88, 0.55)"
     label: "#ffffff"
     label-2: "rgba(235, 235, 245, 0.60)"
-    label-faint: "#8e8e93"
-    label-3: "rgba(235, 235, 245, 0.34)"
-    danger: "#ff453a"
+    label-faint: "#a1a1a6"
+    label-3: "rgba(235, 235, 245, 0.42)"
+    danger: "#ff6961"
     acao: "#e5e5ea" # a cápsula de ação à noite: o cinza da mira
   claro:
     bg: "#f2f2f7"
@@ -29,17 +29,17 @@ colors:
     fill-strong: "rgba(118, 118, 128, 0.16)"
     separator: "rgba(60, 60, 67, 0.18)"
     label: "#000000"
-    label-2: "rgba(60, 60, 67, 0.76)" # não os 60% do iOS: 3,1:1 (Fase 3)
-    label-faint: "#6c6c70"
-    label-3: "rgba(60, 60, 67, 0.30)"
-    danger: "#ff3b30"
+    label-2: "rgba(60, 60, 67, 0.8)" # não os 60% do iOS: 3,1:1 (Fase 3)
+    label-faint: "#5c5c60"
+    label-3: "rgba(60, 60, 67, 0.58)"
+    danger: "#c4001a"
     acao: "#000000"
   mira: ["#e5e5ea", "#ffd60a", "#64d2ff", "#30d158", "#da5ce8", "#ff453a", "#0a84ff"]
   estado:
     em-curso: { noite: "#ffffff", claro: "#000000" }
-    por-marcar: { noite: "#64d2ff", claro: "#32ade6", claro-texto: "#0077a8" }
-    em-dia: { noite: "#30d158", claro: "#34c759" }
-    terminada: { noite: "#da5ce8", claro: "#af52de" }
+    por-marcar: { noite: "#64d2ff", claro: "#005f86" }
+    em-dia: { noite: "#30d158", claro: "#248a3d" }
+    terminada: { noite: "#da5ce8", claro: "#9a3fc9" }
 typography:
   familia: '-apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif'
   mono: 'ui-monospace, "SF Mono", Menlo, monospace (tabular-nums)'
@@ -326,6 +326,20 @@ secundário a 14/`label-2`, blocos em `group` raio 26 (22 dentro de um grupo,
 herói da série. **Folhas**: só a agrupada. **Entrar**: campos `group` raio 22, sem
 a mira. **Baralho** (Pôr em dia, Triagem): botões `vidro`; o ✓ é a cápsula da ação;
 o progresso é `label`, não a mira.
+
+## Contraste (Fase 9)
+
+Medido nos valores que o browser resolve, nos dois modos (`tests/contraste.spec.ts`):
+**texto 4,5:1** (`label`, `label-2`, `label-faint`, `por-marcar-texto`, `danger`
+sobre `bg`, `group`, `elevated` e sobre `fill`) e **3:1** para o que se vê sem se
+ler (pontos e barras de estado, anéis e chevrons em `label-3`). Em claro, o
+verde, o azul e o roxo de estado e o vermelho do erro são as versões escuras
+(o `#34c759` do iOS dava 2:1 sobre o fundo); o `label-3` sobe a 42% (noite) e
+58% (claro): é UI, nunca texto. O degradê de cima do herói (`--m-heroi-topo`)
+escurece a arte à noite e **aclara-a de dia**, para a barra de estado (escura)
+se ler. **Fica por medir (Fase 11):** `statusBarStyle: "black"` na PWA
+instalada e o ecrã de arranque — o manifesto só tem uma cor (`#000000`) e o iOS
+não a troca por modo.
 
 ## Movimento
 - **Curvas:** `--ease-out` = `cubic-bezier(0.23, 1, 0.32, 1)` para o que entra e
