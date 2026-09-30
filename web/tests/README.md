@@ -45,3 +45,40 @@ testar uma app que ninguém usa.
   sempre zero e passaria por acidente.
 - **O importador do TV Time**: os testes semeiam a base direto. Um teste ao
   importador é outra coisa, e não é destas.
+
+## A rede de mutações (`tests/mutacoes.mjs`)
+
+«Um teste por correção, visto a falhar» só vale se alguém o viu falhar. O guião
+repõe **um bug de cada vez** no código (uma troca de texto, `de` → `para`) e
+corre os testes: se ficarem verdes, a correção não está protegida.
+
+**Corre-se sempre numa cópia à parte** — a build de cada mutação escreve em
+`.next/` e o `next dev` que serve a pré-visualização recarregaria o código
+partido. O guião recusa-se fora de um `git worktree`:
+
+```bash
+git worktree add --detach ../episodic-mutacoes HEAD
+cp -cR node_modules ../episodic-mutacoes/web/node_modules   # clone APFS, ~4 s
+cd ../episodic-mutacoes/web
+node tests/mutacoes.mjs --verificar     # os trechos ainda existem?
+node tests/mutacoes.mjs r14-f3          # só as que batem com o nome
+node tests/mutacoes.mjs                 # a rede toda
+```
+
+- **Âncoras de comportamento.** Uma mutação boa parte o que o utilizador vê ou
+  faz (a data em ISO, o ✕ que só aparece com hover, o episódio que não muda
+  de cor), não uma classe. Quando um ecrã é redesenhado a mutação fica sem
+  trecho e o guião **recusa-se a correr** — reaponta-se, ou passa a `RETIRADAS`
+  com o motivo e onde o mesmo risco ficou guardado.
+- **O mapa** (`mutacoes-mapa.json`) diz que ficheiros de teste cada mutação
+  ameaça. Só esses correm, e à primeira falha o guião pára: ~25 s por
+  mutação, contra ~75 s com a suite inteira (medido a 30-09: a build custa
+  10 s, a suite 65 s). Uma mutação que **sobrevive** ao seu conjunto corre a
+  suite inteira antes de ser dada como sobrevivente — assim um mapa
+  desatualizado não a esconde. O mapa escreve-se sozinho (a primeira vez que
+  uma mutação é apanhada, ou quando o conjunto deixa de a apanhar).
+- **`--retries=1`**: uma falha isolada (carga da máquina) não conta como
+  alarme; uma mutação a sério falha à segunda também.
+- O registo de cada corrida fica em `.mutacoes-registo.jsonl` (fora do git; não
+  pode ficar em `test-results/`, que o Playwright apaga ao arrancar).
+- Uma mutação que **não compila** é `INVÁLIDA`, não «apanhada»: só partiu o build.

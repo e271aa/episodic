@@ -47,20 +47,23 @@ test("o ritual começa no toque: a mira já corre antes de o episódio mudar", a
   await casa(page, tmdb, [9, 10], [[1, 1], [1, 2], [1, 3]]);
   const cartao = page.getByTestId("cartao-casa");
   await expect(cartao).toContainText("S01·E04");
-  // A gravação fica presa 2s: uma transação nossa ocupa o store dos vistos, e a
-  // da app espera por ela. Sem isto o teste dependia do relógio — a escrita
-  // local acaba em milissegundos, e com o episódio já mudado um ritual que
-  // esperasse pela gravação passava por um ritual no toque (a primeira versão
-  // deste teste deixou sobreviver as duas mutações do ritual).
+  // A gravação fica presa **até o teste a soltar**: uma transação nossa ocupa o
+  // store dos vistos (a encadear leituras) e a da app espera por ela. Sem isto o
+  // teste dependia do relógio — a escrita local acaba em milissegundos, e com o
+  // episódio já mudado um ritual que esperasse pela gravação passava por um
+  // ritual no toque (a primeira versão deste teste deixou sobreviver as duas
+  // mutações do ritual). E uma prisão de 2s, em vez de «até soltar», acabava
+  // antes do fim do teste quando a suite corria toda em paralelo: as mesmas
+  // duas mutações voltaram a sobreviver na corrida completa da Fase 3.
   await page.evaluate(
     () =>
       new Promise<void>((pronto) => {
+        const w = window as unknown as { __soltarGravacao?: boolean };
         const pedido = indexedDB.open("tvlog");
         pedido.onsuccess = () => {
           const store = pedido.result.transaction("watched", "readwrite").objectStore("watched");
-          const fim = Date.now() + 2000;
           const ocupar = () => {
-            if (Date.now() < fim) store.get("nada").onsuccess = ocupar;
+            if (!w.__soltarGravacao) store.get("nada").onsuccess = ocupar;
           };
           store.get("nada").onsuccess = () => {
             pronto();
@@ -70,13 +73,33 @@ test("o ritual começa no toque: a mira já corre antes de o episódio mudar", a
       }),
   );
   await page.getByRole("button", { name: "Marcar visto" }).click();
-  // ainda com o S01·E04 à vista (a gravação não acabou), a mira já pinta:
-  // os vistos e o marcado — os por ver nunca acendem — e a contagem já rolou
+  // com a gravação presa, o episódio não pode ter mudado: a mira já pinta os
+  // vistos e o marcado — os por ver nunca acendem — e a contagem já rolou
   const fatias = page.locator('[data-ritual="fatia"]');
-  await expect(fatias).toHaveCount(4, { timeout: 1000 });
+  await expect(fatias).toHaveCount(4, { timeout: 3000 });
   await expect(cartao).toContainText("4/9");
+  // cada fatia mostra **o seu pedaço** da mira, não a mira inteira: as quatro
+  // juntas leem-se como uma barra só. Se cada segmento mostrasse as sete cores
+  // (a mutação `r14-f3/fatia-com-a-mira-inteira` sobreviveu), o fundo teria a
+  // largura da própria fatia e o mesmo deslocamento em todas.
+  const geometria = await fatias.evaluateAll((els) =>
+    els.map((el) => ({
+      largura: el.getBoundingClientRect().width,
+      fundo: parseFloat(getComputedStyle(el).backgroundSize),
+      desloca: parseFloat(getComputedStyle(el).backgroundPositionX),
+    })),
+  );
+  expect(geometria.every((g) => g.fundo > g.largura * 3)).toBe(true);
+  expect(new Set(geometria.map((g) => Math.round(g.desloca))).size).toBe(4);
+  // (com a gravação presa não há episódio a sair — o que desvanece por cima
+  // do seguinte é `aria-hidden` mas leva o texto — por isso o cartão só diz
+  // o E04, e o E05 ainda não entrou)
   await expect(cartao).toContainText("S01·E04");
-  // e quando a gravação acaba, o episódio segue
+  await expect(cartao).not.toContainText("S01·E05");
+  // e quando a gravação é solta, o episódio segue
+  await page.evaluate(() => {
+    (window as unknown as { __soltarGravacao?: boolean }).__soltarGravacao = true;
+  });
   await expect(cartao).toContainText("S01·E05", { timeout: 5000 });
 });
 

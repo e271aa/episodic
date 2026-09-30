@@ -35,7 +35,9 @@
  */
 
 import { execFileSync, execSync } from "node:child_process";
-import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { appendFileSync, existsSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 
 const BIBLIOTECA = "src/app/library/LibraryPageClient.tsx";
 const RUNS = "src/lib/episodeRuns.ts";
@@ -1482,10 +1484,17 @@ const MUTACOES = [
   },
   {
     nome: "r14-f3/claro-a-60",
-    descricao: "o texto secundário do modo claro volta aos 60% do iOS (3,1:1, abaixo de AA)",
+    descricao: "o texto secundário do claro escolhido (`data-theme`) volta aos 60% do iOS (3,1:1, abaixo de AA)",
     ficheiro: "src/app/globals.css",
     de: "\n  --m-label-2: rgba(60, 60, 67, 0.8);",
     para: "\n  --m-label-2: rgba(60, 60, 67, 0.6);",
+  },
+  {
+    nome: "r14-f3/claro-a-60-automatico",
+    descricao: "o texto secundário do claro que vem do sistema (`prefers-color-scheme`, «Automático») volta aos 60% do iOS",
+    ficheiro: "src/app/globals.css",
+    de: "\n    --m-label-2: rgba(60, 60, 67, 0.8);",
+    para: "\n    --m-label-2: rgba(60, 60, 67, 0.6);",
   },
   {
     nome: "r14-f3/barra-abaixo-de-10px",
@@ -1561,7 +1570,7 @@ const SEGUNDOS_SUITE = 65;
 const SEGUNDOS_CONJUNTO = 15;
 
 const MAPA = "tests/mutacoes-mapa.json";
-const REGISTO = "test-results/mutacoes.jsonl";
+const REGISTO = ".mutacoes-registo.jsonl"; // fora de `test-results/`: o Playwright apaga-o ao arrancar
 
 const args = process.argv.slice(2);
 const bandeiras = new Set(args.filter((a) => a.startsWith("--")));
@@ -1633,7 +1642,38 @@ console.log(
     ` mais ~${Math.round((SEGUNDOS_BUILD + SEGUNDOS_SUITE) / 60 * 10) / 10} min por cada uma que sobreviva.\n`,
 );
 
+const RELATORIO = join(tmpdir(), `mutacoes-${process.pid}.json`);
+
+/**
+ * Os testes que falharam **a sério**, lidos do relatório JSON. Com
+ * `--max-failures=1` o Playwright interrompe os que estavam a meio noutros
+ * trabalhadores, e a linha «N) …» do relatório de texto lista-os ao lado do
+ * que falhou: a primeira corrida da Fase 10 «apanhou» mutações do ritual com
+ * testes do baralho. Só conta `unexpected` cujo último resultado falhou ou
+ * ultrapassou o tempo — nunca `interrupted`.
+ */
+function falhasDoRelatorio() {
+  const falhas = [];
+  const percorrer = (suite) => {
+    for (const spec of suite.specs ?? []) {
+      for (const t of spec.tests ?? []) {
+        const ultimo = t.results?.[t.results.length - 1]?.status;
+        if (t.status === "unexpected" && (ultimo === "failed" || ultimo === "timedOut")) {
+          falhas.push(`${spec.file.replace("tests/", "")} › ${spec.title}`);
+        }
+      }
+    }
+    for (const filha of suite.suites ?? []) percorrer(filha);
+  };
+  const relatorio = JSON.parse(readFileSync(RELATORIO, "utf8"));
+  for (const suite of relatorio.suites ?? []) percorrer(suite);
+  return { falhas: [...new Set(falhas)], correu: (relatorio.stats?.expected ?? 0) + (relatorio.stats?.unexpected ?? 0) };
+}
+
 function correrSuite(ficheiros) {
+  rmSync(RELATORIO, { force: true });
+  let saida = "";
+  let saiuBem = true;
   try {
     execFileSync(
       "npx",
@@ -1641,33 +1681,34 @@ function correrSuite(ficheiros) {
         "playwright",
         "test",
         ...ficheiros.map((f) => `tests/${f}`),
-        "--reporter=line",
+        "--reporter=json",
         // uma falha isolada (relógio, carga da máquina) não conta: uma mutação
         // a sério falha à segunda também
         "--retries=1",
         // basta um alarme para a mutação estar apanhada
         "--max-failures=1",
       ],
-      { encoding: "utf8", stdio: "pipe", timeout: 15 * 60_000 },
+      {
+        encoding: "utf8",
+        stdio: "pipe",
+        timeout: 15 * 60_000,
+        env: { ...process.env, PLAYWRIGHT_JSON_OUTPUT_NAME: RELATORIO },
+        maxBuffer: 64 * 1024 * 1024,
+      },
     );
-    return { verde: true, falhas: [], invalida: false };
   } catch (erro) {
-    const saida = `${erro.stdout ?? ""}${erro.stderr ?? ""}`;
-    // Uma mutação que não compila não repôs bug nenhum — só partiu o build.
-    // Contá-la como "apanhada" foi exatamente o erro da primeira corrida da
-    // Ronda 12: dois ✓ sem um único teste a falhar.
-    if (/Failed to type check|webServer was not able to start|Failed to compile|Build error/.test(saida)) {
-      return { verde: false, falhas: [], invalida: true };
-    }
-    const falhas = [
-      ...new Set(
-        [...saida.matchAll(/^\s*\d+\) \[iphone\] › (\S+?):\d+:\d+ › (.+?)$/gm)].map(
-          (m) => `${m[1].replace("tests/", "")} › ${m[2].trim()}`,
-        ),
-      ),
-    ];
-    return { verde: false, falhas, invalida: falhas.length === 0 };
+    saiuBem = false;
+    saida = `${erro.stdout ?? ""}${erro.stderr ?? ""}`.slice(-4000);
   }
+  // Uma mutação que não compila não repôs bug nenhum — só partiu o build.
+  // Contá-la como "apanhada" foi exatamente o erro da primeira corrida da
+  // Ronda 12: dois ✓ sem um único teste a falhar.
+  if (!existsSync(RELATORIO) || /Failed to type check|webServer was not able to start|Failed to compile|Build error/.test(saida)) {
+    return { verde: false, falhas: [], invalida: true };
+  }
+  const { falhas, correu } = falhasDoRelatorio();
+  if (saiuBem && falhas.length === 0) return { verde: correu > 0, falhas: [], invalida: correu === 0 };
+  return { verde: false, falhas, invalida: falhas.length === 0 };
 }
 
 const ficheirosDe = (falhas) => [...new Set(falhas.map((f) => f.split(" › ")[0]))];
@@ -1694,7 +1735,6 @@ for (const sinal of ["SIGINT", "SIGTERM"]) {
   });
 }
 
-mkdirSync("test-results", { recursive: true });
 const resultados = [];
 const inicio = Date.now();
 for (const [n, m] of alvo.entries()) {

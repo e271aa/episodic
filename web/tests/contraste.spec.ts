@@ -15,12 +15,25 @@ const TEXTO = ["--m-label", "--m-label-2", "--m-label-faint", "--m-por-marcar-te
 const GRAFICO = ["--m-em-dia", "--m-por-marcar", "--m-terminada", "--m-label-3"];
 const SUPERFICIES = ["--m-bg", "--m-group", "--m-elevated"];
 
-for (const modo of ["dark", "light"] as const) {
-  test(`contraste em ${modo === "dark" ? "noite" : "claro"}: texto AA e gráficos 3:1 sobre as superfícies`, async ({
-    page,
-  }) => {
-    await page.emulateMedia({ colorScheme: modo });
+/**
+ * Os tokens do claro vivem em **dois** sítios do CSS: no `@media
+ * (prefers-color-scheme: light)` («Automático») e em `[data-theme="claro"]`
+ * (escolhido em Aparência). Medir só o primeiro deixou passar uma mutação que
+ * mexia no segundo (`r14-f3/claro-a-60`, Fase 10) — por isso o claro escolhido,
+ * com o sistema em noite, tem o seu caso.
+ */
+const MODOS = [
+  { nome: "noite", sistema: "dark", escolha: null },
+  { nome: "claro (o do sistema)", sistema: "light", escolha: null },
+  { nome: "claro (escolhido, com o sistema em noite)", sistema: "dark", escolha: "claro" },
+] as const;
+
+for (const { nome, sistema, escolha } of MODOS) {
+  test(`contraste em ${nome}: texto AA e gráficos 3:1 sobre as superfícies`, async ({ page }) => {
+    await page.emulateMedia({ colorScheme: sistema });
+    if (escolha) await page.addInitScript((v) => localStorage.setItem("aparencia", v), escolha);
     await page.goto("/mira");
+    if (escolha) await expect(page.locator("html")).toHaveAttribute("data-theme", escolha);
     const medidas = await page.evaluate(
       ({ texto, grafico, superficies }) => {
         const ler = (v: string): Rgba => {
