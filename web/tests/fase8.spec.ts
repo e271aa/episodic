@@ -59,3 +59,20 @@ test("criar uma lista funciona sem contexto seguro (iPhone em http://192.168…,
   await page.getByRole("button", { name: "Criar" }).click();
   await expect(page.getByRole("link", { name: /Maratona/ })).toBeVisible();
 });
+
+test("o menu «+ Lista» é largo o bastante para o nome, o campo e o «Criar» — sem se sobreporem", async ({
+  page,
+}) => {
+  await semear(page, {
+    filmes: [{ key: "f-1", name: "Past Lives", watchedAt: null }],
+    listas: [{ id: "l-1", name: "Uma lista com nome comprido", items: [] }],
+  });
+  await page.goto("/movies/f-1");
+  await page.getByRole("button", { name: "+ Lista" }).click();
+  const campo = (await page.getByLabel("Nome da nova lista").boundingBox())!;
+  const criar = (await page.getByRole("button", { name: "Criar" }).boundingBox())!;
+  expect(campo.width).toBeGreaterThan(100);
+  expect(campo.x + campo.width).toBeLessThanOrEqual(criar.x + 1);
+  const linha = page.getByRole("menuitemcheckbox", { name: /Uma lista com nome/ });
+  expect((await linha.boundingBox())!.width).toBeGreaterThan(200);
+});

@@ -89,7 +89,7 @@ export default function AddToListButton({
         {label}
       </button>
       {open && (
-        <div className="page-enter vidro absolute left-0 top-full z-20 mt-2 w-72 max-w-full rounded-[22px] p-2">
+        <div className="page-enter vidro absolute left-0 top-full z-20 mt-2 w-72 max-w-[calc(100vw-2rem)] rounded-[22px] p-2">
           {lists === null ? (
             <Bone tone="raised" className="m-1 h-8 rounded-lg" />
           ) : lists.length === 0 ? (
