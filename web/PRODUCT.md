@@ -99,15 +99,12 @@ sentidos e "em dia" usado ao contrário):
 - **Marcar visto**; códigos de episódio `S04·E01`; temporadas `T4`
 
 **Por decidir:**
-- **O nome.** "Episodic" é provisório; a procura de um nome novo está em
-  curso (preferência: palavra inventada, curta, em inglês — ver PLANO.md,
-  Ronda 12, Fase 2b, com a lista do que já foi rejeitado)
 - Como funcionam os convites, e o que (se alguma coisa) se partilha entre
   amigos
 
 ## Brand Commitments
 
-- Nome atual: **Episodic** (provisório, ver acima)
+- Nome: **Flicki** (escolhido a 30-09-2026; antes «Episodic»). A marca está em `marca/` (símbolo, palavra, conjunto)
 - **Voz:** diário pessoal, direta, em pt-PT; admite o que não sabe ("não deu
   para verificar — sem ligação") em vez de afirmar o que não é verdade
 - A identidade visual em uso é a **Mira** (escolhida pelo Ruben a 29-09-2026,

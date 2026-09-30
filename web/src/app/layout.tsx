@@ -16,16 +16,16 @@ import "./globals.css";
 // fontes da v2.
 
 export const metadata: Metadata = {
-  // O <title> era sempre "Episodic", nos 18 ecrãs (Ronda 12, 5b.4, achado
+  // O <title> era sempre o nome da app, nos 18 ecrãs (Ronda 12, 5b.4, achado
   // #14) — no separador do browser, no histórico, no seletor de abas do
   // iOS. Cada rota passa a dar o seu próprio `metadata.title`; o molde
-  // aqui é o que os põe todos como "X · Episodic".
-  title: { default: "Episodic", template: "%s · Episodic" },
+  // aqui é o que os põe todos como "X · Flicki".
+  title: { default: "Flicki", template: "%s · Flicki" },
   description: "O teu registo de séries — o que viste, o que falta, o que vem a seguir.",
-  applicationName: "Episodic",
+  applicationName: "Flicki",
   appleWebApp: {
     capable: true,
-    title: "Episodic",
+    title: "Flicki",
     statusBarStyle: "black",
   },
 };

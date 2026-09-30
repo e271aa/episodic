@@ -1,5 +1,5 @@
 ---
-name: Episodic
+name: Flicki
 description: Um diário pessoal de séries e filmes que parece ter vindo com o iPhone — e só a mira de cor diz que é nosso.
 direcao: Mira (Ronda 14, 29-09-2026). Fonte do desenho: design_handoff_mira/.
 modes: [noite, claro]
@@ -120,6 +120,26 @@ e liga a ação à mira sem lhe dar cor), preta de dia. Token `acao`, texto
 `on-label` (16,7:1). As escolhas (segmento, filtro, «Na lista») usam `fill` ou
 contorno, nunca a cor da ação. O separador ativo da barra é uma cápsula de
 vidro, não a branca.
+
+## A marca — Flicki
+
+O nome é **Flicki** (30-09-2026): o gesto de passar ao cartão seguinte, o
+tremelique de um ecrã, o filme na gíria. Desenhada à parte (`marca/`, com o
+LEIA-ME de espaços e tamanhos); na app vive em três sítios:
+
+- **O ícone** (`app/icon.svg`, `apple-icon.png` 180, `icon-192/512.png`): a carta
+  de teste de ponta a ponta, sem cantos (o iOS recorta), com a **barra premida**:
+  a 4.ª (verde) desce 10% da altura, com o espaço por cima em `#0b0b0d`, e cobre
+  10% da fila de acerto. É o desenho **único** que só esta app tem.
+- **A carta «Sem sinal»** da casa vazia: o mesmo desenho, barra premida incluída.
+- **A palavra «flicki»** (`components/mira/Palavra.tsx`): traço em `currentColor`,
+  por isso clara à noite e escura de dia sem cor fixa. No ecrã de entrada a 40px
+  de altura; no rodapé das Definições a 18px em `label-2`. Mínimos: 14px de
+  altura a palavra, 16px o símbolo, 20px o conjunto; margem livre de ½ altura-x.
+
+**O que NÃO muda com o nome:** os identificadores gravados no aparelho — a base
+`tvlog`, as preferências `episodic:pref:…`, `episodic-ios-install-dismissed`, as
+caches do service worker. Mudá-los apagava o que o Ruben tem no iPhone.
 
 ## Tipografia — a letra do sistema, com Dynamic Type
 

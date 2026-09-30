@@ -194,7 +194,7 @@ function escrever(dados: Registos): Promise<void> {
 export async function semear(page: Page, semente: Semente): Promise<void> {
   await page.goto("/login");
   await page.evaluate(escrever, registos(semente));
-  // A dica "instala o Episodic no teu iPhone" só aparece no iOS — e os testes
+  // A dica "instala o Flicki no teu iPhone" só aparece no iOS — e os testes
   // correm precisamente num iPhone. Flutua sobre o fundo do ecrã e apanha os
   // toques das ações que vivem lá (as do "Pôr em dia", as do Explorar).
   await page.evaluate(() => localStorage.setItem("episodic-ios-install-dismissed", "1"));

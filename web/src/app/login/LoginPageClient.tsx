@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { isCloudConfigured } from "@/lib/supabase";
 import { signInWithEmail, signInWithPassword, verifyEmailCode } from "@/lib/cloud";
 import { TvIcon } from "@/components/icons";
+import Palavra from "@/components/mira/Palavra";
 import { RECUAR, IconeRecuar } from "@/components/CabecalhoEcra";
 import Acao from "@/components/mira/Acao";
 import BotaoVoltar from "@/components/BotaoVoltar";
@@ -105,8 +106,8 @@ function LoginForm() {
     <main className="tela-cheia relative flex flex-col justify-center px-5">
       <BotaoDeSair />
       <div className="mx-auto w-full max-w-sm">
-        <h1 className="text-center text-[2rem] leading-[1.15] font-bold text-label">
-          Episodic
+        <h1 className="flex justify-center text-label">
+          <Palavra className="h-10" />
         </h1>
         <p className="mt-1.5 text-center text-[0.88rem] text-label-2">
           Entra para teres a tua biblioteca em todos os dispositivos.

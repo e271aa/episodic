@@ -1,4 +1,4 @@
-// Calcula o próximo episódio por ver de cada série — o coração do Episodic.
+// Calcula o próximo episódio por ver de cada série — o coração do Flicki.
 import { episodeKey, type StoredShow, type WatchedEpisode } from "./db";
 import { getEpisodesOfSeason, getSeasons, type MetaEpisode } from "./metadata";
 
@@ -72,7 +72,7 @@ export async function findNextUnwatched(
   return null;
 }
 
-/** Formata o código de episódio à Episodic: S04·E01 */
+/** Formata o código de episódio à Flicki: S04·E01 */
 export function formatEpCode(season: number, episode: number): string {
   const pad = (n: number) => String(n).padStart(2, "0");
   return `S${pad(season)}·E${pad(episode)}`;

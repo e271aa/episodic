@@ -330,18 +330,20 @@ export default function SeriesPage() {
         {/* A carta de teste: um dos dois sítios da mira (Regra da mira) — aqui
             quer dizer «ainda não há nada a passar». Composta a sério, como a
             SMPTE: as sete barras em cima, e por baixo a fila de acerto
-            (azul, preto, magenta, preto, ciano, preto, cinza). Cores fixas:
-            uma carta de teste não muda com o modo. 132px; num ecrã baixo
+            (azul, preto, magenta, preto, ciano, preto, cinza), com a «barra
+            premida» do ícone: a 4.ª (verde) desce 10%, e por cima fica o
+            preto (Flicki, Fase 13). Cores fixas: uma carta de teste não
+            muda com o modo. 132px; num ecrã baixo
             (Safari com as barras, 664px), 96, para as portas ficarem acima
             do degradê ao chegar. */}
         <div
           aria-hidden
-          className="mt-5 grid h-[132px] grid-rows-[3fr_1fr] overflow-hidden rounded-[24px] shadow-[inset_0_0_0_0.5px_var(--m-separator)] [@media(max-height:700px)]:h-24"
+          className="relative mt-5 grid h-[132px] grid-rows-[3fr_1fr] overflow-hidden rounded-[24px] shadow-[inset_0_0_0_0.5px_var(--m-separator)] [@media(max-height:700px)]:h-24"
           data-testid="mira-sem-sinal"
         >
           <div className="grid grid-cols-7">
             {[1, 2, 3, 4, 5, 6, 7].map((n) => (
-              <span key={n} style={{ background: `var(--mira-${n})` }} />
+              <span key={n} style={{ background: n === 4 ? "var(--mira-preto)" : `var(--mira-${n})` }} />
             ))}
           </div>
           <div className="grid grid-cols-7">
@@ -349,6 +351,11 @@ export default function SeriesPage() {
               <span key={i} style={{ background: `var(${c})` }} />
             ))}
           </div>
+          {/* a barra premida: 10% abaixo do topo, até 10% por cima da fila de acerto */}
+          <i
+            className="absolute"
+            style={{ left: "calc(300% / 7)", width: "calc(100% / 7)", top: "10%", height: "75.1%", background: "var(--mira-4)" }}
+          />
         </div>
         <h2 className="mt-6 text-[1.65rem] font-bold leading-[1.1] text-label">Ainda sem sinal.</h2>
         <p className="mt-2 text-base leading-snug text-label-2">

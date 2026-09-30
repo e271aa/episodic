@@ -11,6 +11,7 @@ import IntegrityCheck from "@/components/IntegrityCheck";
 import { EditorPerfil, useIdentidade } from "@/components/ProfileCard";
 import EscolhaAparencia from "@/components/mira/EscolhaAparencia";
 import { Grupo, Linha } from "@/components/mira/Grupo";
+import Palavra from "@/components/mira/Palavra";
 import { Panel, PanelRow } from "@/components/Panel";
 
 /**
@@ -125,7 +126,8 @@ export default function DefinicoesPage() {
       </section>
 
       <p className="mt-10 text-center text-xs leading-relaxed text-faint">
-        Episodic — os teus dados vivem neste dispositivo
+        <Palavra className="mx-auto mb-3 block h-[18px] text-label-2" />
+        Os teus dados vivem neste dispositivo
         <br />e na cloud, se iniciares sessão.
         <br />
         Metadados por TVmaze e TMDB.

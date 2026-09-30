@@ -227,7 +227,7 @@ test("na fila secundária, a capa pede o tamanho que mostra (36px na Mira)", asy
 
 // ── o <title> de cada ecrã ───────────────────────────────────
 
-test("o <title> muda de ecrã para ecrã, em vez de ficar sempre 'Episodic'", async ({
+test("o <title> muda de ecrã para ecrã, em vez de ficar sempre 'Flicki'", async ({
   page,
   tmdb,
 }) => {
@@ -256,7 +256,7 @@ test("o <title> muda de ecrã para ecrã, em vez de ficar sempre 'Episodic'", as
   for (const [rota, esperado] of casos) {
     await page.goto(rota);
     await expect.poll(() => page.title(), { message: rota }).toMatch(esperado);
-    expect(await page.title()).not.toBe("Episodic");
+    expect(await page.title()).not.toBe("Flicki");
   }
 });
 

@@ -1,4 +1,4 @@
-// Service worker do Episodic — funciona offline e acelera as visitas seguintes.
+// Service worker do Flicki — funciona offline e acelera as visitas seguintes.
 // Estratégias:
 //  - Navegações e recursos da app: "network-first" com fallback à cache (a app
 //    abre offline com a última versão vista).

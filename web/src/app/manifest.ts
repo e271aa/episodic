@@ -1,10 +1,10 @@
 import type { MetadataRoute } from "next";
 
-// Web App Manifest — permite instalar o Episodic no ecrã inicial (PWA).
+// Web App Manifest — permite instalar o Flicki no ecrã inicial (PWA).
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "Episodic",
-    short_name: "Episodic",
+    name: "Flicki",
+    short_name: "Flicki",
     description:
       "O teu registo de séries — o que viste, o que falta, o que vem a seguir.",
     start_url: "/series",

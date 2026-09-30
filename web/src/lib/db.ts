@@ -268,7 +268,7 @@ function db(): Promise<IDBPDatabase<TvlogDB>> {
     /** Somos nós a esperar que uma aba antiga liberte a base de dados. */
     blocked() {
       console.warn(
-        "Episodic: atualização da base de dados em espera — fecha outras abas da app.",
+        "Flicki: atualização da base de dados em espera — fecha outras abas da app.",
       );
     },
     terminated() {

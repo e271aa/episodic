@@ -1003,10 +1003,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5e/titulo-sempre-episodic",
-    descricao: "o <title> volta a ser 'Episodic' em todos os ecrãs",
+    descricao: "o <title> volta a ser o nome da app, igual em todos os ecrãs",
     ficheiro: LAYOUT,
-    de: 'title: { default: "Episodic", template: "%s · Episodic" },',
-    para: 'title: "Episodic",',
+    de: 'title: { default: "Flicki", template: "%s · Flicki" },',
+    para: 'title: "Flicki",',
   },
   {
     nome: "r12-fase5e/titulo-da-casa",
