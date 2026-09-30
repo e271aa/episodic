@@ -21,7 +21,7 @@ import {
 } from "@/lib/explore";
 import { isCloudConfigured } from "@/lib/supabase";
 import { searchMulti, type DiscoverItem } from "@/lib/tmdb";
-import DiscoverCard from "@/components/DiscoverCard";
+import DiscoverCard, { rotuloGuardar } from "@/components/DiscoverCard";
 import Poster from "@/components/Poster";
 import TituloGrande from "@/components/mira/TituloGrande";
 import Segmentado from "@/components/mira/Segmentado";
@@ -157,7 +157,7 @@ function Baralho({
           className="pointer-events-auto h-14 px-7"
           icone={<PlusIcon className="h-5 w-5" />}
         >
-          Para ver
+          {rotuloGuardar(topo.item.kind)}
         </Acao>
       </div>
 
@@ -186,7 +186,7 @@ function Baralho({
           titulo: "Não quero",
           detalhe: "Passa à frente e nunca mais aparece",
         }}
-        direita={{ seta: "→", titulo: "Para ver", detalhe: "Guarda na tua lista para ver" }}
+        direita={{ seta: "→", titulo: "Guardar", detalhe: "Séries em «Por começar», filmes em «Para ver»" }}
       />
     </div>
   );
@@ -209,13 +209,11 @@ function TituloSecao({ children, direita }: { children: React.ReactNode; direita
 function Secao({
   section,
   onGuardar,
-  onSeguir,
   mostrarTipo = false,
   mosaico = false,
 }: {
   section: ExploreSection;
   onGuardar: (item: DiscoverItem) => Promise<void>;
-  onSeguir?: (item: DiscoverItem) => Promise<void>;
   mostrarTipo?: boolean;
   /** força o mosaico (pesquisa), sem «Ver tudo» */
   mosaico?: boolean;
@@ -254,7 +252,6 @@ function Secao({
               item={item}
               index={i}
               onSave={onGuardar}
-              onFollow={item.kind === "tv" ? onSeguir : undefined}
               mostrarTipo={mostrarTipo}
               fluida={emMosaico}
             />
@@ -350,7 +347,7 @@ function ListasDoExplorar() {
 
 function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) {
   const router = useRouter();
-  const { guardar, seguir, naoInteressa } = useExploreAcoes();
+  const { guardar, naoInteressa } = useExploreAcoes();
   const online = useOnline();
 
   const [data, setData] = useState<ExploreData | null>(null);
@@ -544,7 +541,6 @@ function ExplorarContent({ kind, procurar }: { kind: Kind; procurar: boolean }) 
               key={section.id}
               section={section}
               onGuardar={guardar}
-              onSeguir={searching ? seguir : undefined}
               mostrarTipo={searching}
               mosaico={searching}
             />

@@ -72,7 +72,7 @@ test("os alvos de toque ficam em 44px mesmo com o texto do sistema pequeno", asy
   await page.goto("/explorar");
   await texto15();
   // o cartaz entra a 0,98 de escala (`poster-in`): mede-se em repouso
-  const pequena = page.getByRole("button", { name: "Para ver" }).first();
+  const pequena = page.getByRole("button", { name: "Por começar" }).first();
   await expect.poll(async () => (await pequena.boundingBox())!.height).toBeGreaterThanOrEqual(44);
 
   await page.goto("/profile/definicoes");

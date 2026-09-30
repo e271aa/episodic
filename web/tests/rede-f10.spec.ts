@@ -28,13 +28,13 @@ function sugestoes(n: number) {
   }));
 }
 
-test("Explorar: o «Para ver» de cada cartaz não é a cápsula da ação (Regra da ação)", async ({ page, tmdb }) => {
+test("Explorar: o «Por começar» de cada cartaz não é a cápsula da ação (Regra da ação)", async ({ page, tmdb }) => {
   // `r12-fase5b3/para-ver-volta-a-branco`: quatro pílulas brancas iguais a pedir o
   // toque com o mesmo peso — a única cápsula preenchida do ecrã é uma, e aqui não há.
   tmdb.tendencias = sugestoes(4);
   await semear(page, {});
   await page.goto("/explorar");
-  const botoes = page.getByRole("button", { name: "Para ver" });
+  const botoes = page.getByRole("button", { name: "Por começar" });
   await expect(botoes).toHaveCount(4);
   for (const botao of await botoes.all()) expect(await preenchido(botao)).toBe(false);
 });

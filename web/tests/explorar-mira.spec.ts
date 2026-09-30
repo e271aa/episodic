@@ -30,11 +30,11 @@ test("cada cartaz tem uma só ação; depois de tocada diz «Na lista» e a sér
   await expect(page.getByRole("heading", { level: 2, name: "Em tendência" })).toBeVisible();
   // dispensar já não vive no cartaz (é na Triagem)
   await expect(page.getByRole("button", { name: /Não me interessa/ })).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Para ver" })).toHaveCount(4);
+  await expect(page.getByRole("button", { name: "Por começar" })).toHaveCount(4);
 
-  await page.getByRole("button", { name: "Para ver" }).first().click();
+  await page.getByRole("button", { name: "Por começar" }).first().click();
   await expect(page.getByText("Na lista", { exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Para ver" })).toHaveCount(3);
+  await expect(page.getByRole("button", { name: "Por começar" })).toHaveCount(3);
 
   await page.goto("/library");
   await page.getByText("Sugestao 1").first().waitFor();
@@ -130,7 +130,7 @@ test("sem ligação: diz-o, desliga a pesquisa, e as listas continuam; com rede 
   await expect(page.getByText("Sugestao 1").first()).toBeVisible();
 });
 
-test("marcar um episódio tira a série de «Para ver» e põe-na em curso", async ({ page, tmdb }) => {
+test("marcar um episódio tira a série de «Por começar» e põe-na em curso", async ({ page, tmdb }) => {
   tmdb.tvmaze[495] = [3];
   await semear(page, {
     series: [
@@ -145,14 +145,14 @@ test("marcar um episódio tira a série de «Para ver» e põe-na em curso", asy
       },
     ],
   });
-  await page.goto("/library?filtro=para-ver");
+  await page.goto("/library?filtro=por-comecar");
   await expect(page.getByText("Guardada").first()).toBeVisible();
 
   await page.goto("/series/s-1");
   await page.getByTestId("ep-1-1").click();
   await expect(page.getByTestId("ep-1-1")).toHaveAttribute("aria-pressed", "true");
 
-  await page.goto("/library?filtro=para-ver");
+  await page.goto("/library?filtro=por-comecar");
   await page.getByRole("heading", { level: 1, name: "Biblioteca" }).waitFor();
   await expect(page.getByText("Guardada")).toHaveCount(0);
   await page.goto("/library?filtro=a-ver");
@@ -178,7 +178,7 @@ test("tocar na capa abre a ficha da sugestão, sem a guardar; dá para guardar l
   await expect(page.getByText("Na lista", { exact: true })).toHaveCount(0);
 
   await page.getByRole("button", { name: "Abrir Sugestao 1" }).click();
-  await page.getByRole("dialog").getByRole("button", { name: "Para ver" }).click();
+  await page.getByRole("dialog").getByRole("button", { name: "Por começar" }).click();
   await expect(page.getByRole("dialog").getByText("Na lista", { exact: true })).toBeVisible();
 });
 

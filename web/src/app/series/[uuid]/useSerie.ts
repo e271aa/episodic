@@ -378,21 +378,6 @@ export function useSerie(uuid: string) {
     });
   }, [nextUp, show, uuid, syncWatched, loadSeasonEpisodes, seasons]);
 
-  const toggleWatchlist = useCallback(async () => {
-    if (!show) return;
-    const inWatchlist = !show.inWatchlist;
-    const updated = await updateShow(uuid, { inWatchlist });
-    if (updated) setShow(updated);
-    pushUndo({
-      label: inWatchlist ? "Adicionado a para ver" : "Removido de para ver",
-      detail: show.name,
-      undo: async () => {
-        const reverted = await updateShow(uuid, { inWatchlist: !inWatchlist });
-        if (reverted) setShow(reverted);
-      },
-    });
-  }, [show, uuid]);
-
   /**
    * Deixar de seguir e arquivar, do «···». Os dois tiram a série da fila do
    * «A seguir» sem apagar nada, e desfazem-se como qualquer outro gesto.
@@ -485,7 +470,6 @@ export function useSerie(uuid: string) {
     marcarBuracos,
     markSeasonAll,
     markNext,
-    toggleWatchlist,
     alternar,
     watchedCount,
     backdropPath,

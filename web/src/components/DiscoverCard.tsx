@@ -8,7 +8,10 @@ import StreamingBadges from "@/components/StreamingBadges";
 import { CheckIcon, PlusIcon } from "@/components/icons";
 import { getImdbId, getMovieDetails, getShowDetails, type DiscoverItem } from "@/lib/tmdb";
 
-type Estado = "idle" | "a-guardar" | "guardado" | "seguida";
+type Estado = "idle" | "a-guardar" | "guardado";
+
+/** o que o cartaz diz: uma série guarda-se seguindo («Por começar»), um filme fica «Para ver» */
+export const rotuloGuardar = (kind: DiscoverItem["kind"]) => (kind === "movie" ? "Para ver" : "Por começar");
 
 interface Numeros {
   /** [valor, rótulo] — o que ajuda a decidir se vale a pena começar */
@@ -119,27 +122,21 @@ function NotaEImdb({ item }: { item: DiscoverItem }) {
 }
 
 /**
- * Um cartaz do Explorar (B·4): **uma só ação** — «+ Para ver» numa cápsula
- * `fill`; depois de tocada, «✓ Na lista», só contorno e sem preenchimento
- * (uma escolha feita, não uma ação). Dispensar já não vive aqui: é na Triagem,
- * onde cada sugestão se decide de propósito.
- *
- * Com `onFollow` (as séries de uma pesquisa) há uma segunda ação: quem procura
- * um título pelo nome normalmente já o está a ver — «Seguir» põe-no na fila,
- * «Para ver» guarda-o para um dia.
+ * Um cartaz do Explorar (B·4): **uma só ação** numa cápsula `fill` — «+ Por
+ * começar» numa série, «+ Para ver» num filme; depois de tocada, «✓ Na lista»,
+ * só contorno e sem preenchimento (uma escolha feita, não uma ação). Dispensar
+ * já não vive aqui: é na Triagem, onde cada sugestão se decide de propósito.
  */
 export default function DiscoverCard({
   item,
   index,
   onSave,
-  onFollow,
   mostrarTipo = false,
   fluida = false,
 }: {
   item: DiscoverItem;
   index: number;
   onSave: (item: DiscoverItem) => Promise<void>;
-  onFollow?: (item: DiscoverItem) => Promise<void>;
   /** a pesquisa mistura séries e filmes — sem isto não se sabe qual é qual */
   mostrarTipo?: boolean;
   /** numa faixa que rola, o cartaz tem largura fixa; num mosaico, acompanha
@@ -155,13 +152,6 @@ export default function DiscoverCard({
     setEstado("guardado");
   };
 
-  const seguir = async () => {
-    if (!onFollow) return;
-    setEstado("a-guardar");
-    await onFollow(item);
-    setEstado("seguida");
-  };
-
   const legenda = [mostrarTipo ? (item.kind === "movie" ? "Filme" : "Série") : null, item.year]
     .filter(Boolean)
     .join(" · ");
@@ -171,20 +161,10 @@ export default function DiscoverCard({
 
   const acoes = (
     <div className="flex flex-col">
-      {estado === "idle" && onFollow && (
-        <>
-          <button onClick={() => void seguir()} className={`${botao} bg-fill text-label`}>
-            Seguir
-          </button>
-          <button onClick={() => void guardar()} className={`${botao} text-label-2`}>
-            Para ver
-          </button>
-        </>
-      )}
-      {estado === "idle" && !onFollow && (
+      {estado === "idle" && (
         <button onClick={() => void guardar()} className={`${botao} bg-fill text-label`}>
           <PlusIcon className="h-4 w-4" />
-          Para ver
+          {rotuloGuardar(item.kind)}
         </button>
       )}
       {estado === "a-guardar" && (
@@ -192,13 +172,13 @@ export default function DiscoverCard({
           A guardar…
         </span>
       )}
-      {(estado === "guardado" || estado === "seguida") && (
+      {estado === "guardado" && (
         <span
           role="status"
           className={`${botao} cursor-default shadow-[inset_0_0_0_1px_var(--color-label-3)] text-label-2 active:scale-100`}
         >
           <CheckIcon className="check-pop h-4 w-4" />
-          {estado === "seguida" ? "Seguida" : "Na lista"}
+          Na lista
         </span>
       )}
     </div>

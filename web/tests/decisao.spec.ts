@@ -156,8 +156,8 @@ test("'A seguir' é só a fila: seguir uma série diz 'Seguida', e a Biblioteca 
 
   await page.locator('input[type="search"]').fill("serie nova");
   await page.getByTestId("remote-search-button").click();
-  await page.getByRole("button", { name: "Seguir" }).click();
-  await expect(page.getByRole("button", { name: "Seguida" })).toBeVisible();
+  await page.getByRole("button", { name: "Por começar" }).click();
+  await expect(page.getByRole("button", { name: "Em «Por começar»" })).toBeVisible();
   // "A seguir" fica só para a fila — nunca dentro do conteúdo da pesquisa
   await expect(page.locator("main").getByText("A seguir", { exact: true })).toHaveCount(0);
 
@@ -185,9 +185,10 @@ test("sem nada na app, a primeira ação é procurar uma série, e a dock não a
   await expect(page.locator('main a[href="/library"]')).toHaveCount(0);
 });
 
-test("seguir uma série na pesquisa do Explorar põe-na na fila", async ({ page, tmdb }) => {
+test("guardar uma série na pesquisa do Explorar põe-na na fila", async ({ page, tmdb }) => {
   // Os cartões do Explorar só tinham "Para ver" — e uma série "para ver" não
-  // entra na fila, por isso a casa ficava em "Estás em dia" para sempre.
+  // entrava na fila, por isso a casa ficava em "Estás em dia" para sempre. Desde
+  // a Fase 13 guardar uma série é segui-la («Por começar»).
   tmdb.multi = [
     {
       id: 700,
@@ -205,18 +206,18 @@ test("seguir uma série na pesquisa do Explorar põe-na na fila", async ({ page,
 
   await page.goto("/explorar?procurar=1");
   await page.locator('input[type="search"]').fill("serie nova");
-  await page.getByRole("button", { name: "Seguir" }).click();
-  await expect(page.getByText("Seguida", { exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Por começar" }).click();
+  await expect(page.getByText("Na lista", { exact: true })).toBeVisible();
 
   await page.goto("/series");
   await expect(page.getByText("S01·E01").first()).toBeVisible();
   await expect(page.getByText("Estás em dia")).toHaveCount(0);
 });
 
-test("só com séries para ver, a casa não diz 'Estás em dia'", async ({ page }) => {
+test("só com séries que deixaste de seguir, a casa não diz 'Estás em dia'", async ({ page }) => {
   await semear(page, {
     series: [
-      { uuid: "s-guardada", name: "Guardada", tmdbId: 901, followed: false, inWatchlist: true },
+      { uuid: "s-guardada", name: "Guardada", tmdbId: 901, followed: false, inWatchlist: false },
     ],
   });
   await page.goto("/series");

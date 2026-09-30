@@ -171,7 +171,7 @@ export default function ImportPage() {
             <dd className="ep-code" data-testid="summary-shows">{preview.shows.length}</dd>
             <dt className="text-label-2">— seguidas</dt>
             <dd className="ep-code">{followed}</dd>
-            <dt className="text-label-2">— para ver</dt>
+            <dt className="text-label-2">— por começar</dt>
             <dd className="ep-code">{watchlist}</dd>
             <dt className="text-label-2">Episódios vistos</dt>
             <dd className="ep-code" data-testid="summary-episodes">{preview.episodes.length}</dd>

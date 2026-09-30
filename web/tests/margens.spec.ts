@@ -43,9 +43,9 @@ test("as faixas do Explorar abrem com a margem de 16px à esquerda, também depo
 });
 
 test("«A seguir» sem nenhuma série seguida explica-se por inteiro, sem reticências", async ({ page }) => {
-  // só «Para ver»: a fila está vazia porque nada foi seguido
+  // só uma que deixaste de seguir: a fila está vazia porque nada é seguido
   await semear(page, {
-    series: [{ uuid: "s-1", name: "Lanterns", followed: false, inWatchlist: true }],
+    series: [{ uuid: "s-1", name: "Lanterns", followed: false, inWatchlist: false }],
   });
   await page.goto("/series");
   const linha = page.getByRole("link", { name: /Ainda não segues nenhuma série/ });
@@ -56,7 +56,7 @@ test("«A seguir» sem nenhuma série seguida explica-se por inteiro, sem retic�
     ),
   );
   expect(cortado).toBe(false);
-  await expect(linha).toContainText("fica fora da fila");
+  await expect(linha).toContainText("Segue uma e ela entra aqui");
 });
 
 test("o título de cada separador começa à mesma altura (a área segura da PWA vale 0)", async ({ page }) => {

@@ -78,12 +78,14 @@ sentidos e "em dia" usado ao contrário):
 
 - **A seguir** — só a fila: o separador da casa e o próximo episódio de cada
   série. Nunca o estado de uma série
-- **Seguir · seguida(s)** — acompanhar uma série: entra na fila ("✓ Seguida";
-  "15 seguidas" no Perfil)
-- **Para ver** — a lista do que queres ver um dia, séries e filmes. Não entra
-  na fila
+- **Seguir · seguida(s)** — acompanhar uma série: entra na fila ("15 seguidas"
+  no Perfil)
+- **Para ver** — só **filmes**: os que queres ver um dia. Nas séries não
+  existe (saiu na Fase 13, a pedido do Ruben): guardar uma série é segui-la
 - **Em curso** — seguida e começada, com episódios estreados por ver
-- **Por começar** — seguida, sem nenhum episódio visto
+- **Por começar** — seguida, sem nenhum episódio visto. É o que o «Para ver» das
+  séries era, mas na fila. Uma série que ficou gravada como «para ver» (sem
+  seguir) lê-se como «por começar», sem ninguém reescrever a base
 - **Completas** — tudo o que já estreou está visto
 - **Retomar** — seguida, mas parada há mais de 30 dias
 - **Já não sigo · Arquivadas** — fora da fila; as arquivadas ficam só na

@@ -167,8 +167,8 @@ const MUTACOES = [
     nome: "fase3/ordem-das-seccoes",
     descricao: "as completas voltam para o segundo lugar",
     ficheiro: "src/app/library/LibraryPageClient.tsx",
-    de: "const ESTADOS = [\n  \"Em curso\",\n  \"Retomar\",\n  \"Por começar\",\n  \"Para ver\",\n  \"Completas\",",
-    para: "const ESTADOS = [\n  \"Em curso\",\n  \"Completas\",\n  \"Retomar\",\n  \"Por começar\",\n  \"Para ver\",",
+    de: "const ESTADOS = [\n  \"Em curso\",\n  \"Retomar\",\n  \"Por começar\",\n  \"Completas\",",
+    para: "const ESTADOS = [\n  \"Em curso\",\n  \"Completas\",\n  \"Retomar\",\n  \"Por começar\",",
   },
   {
     nome: "fase3/dobrar-completas",
@@ -404,8 +404,8 @@ const MUTACOES = [
     nome: "r12-fase5/seguir-diz-a-seguir",
     descricao: "seguir uma série volta a dizer \"A seguir\", a palavra da fila",
     ficheiro: RESULTADO_SERIE,
-    de: '            {inWatchlist ? "Na lista para ver" : "Seguida"}',
-    para: '            {inWatchlist ? "Na lista para ver" : "A seguir"}',
+    de: "            Em «Por começar»",
+    para: "            A seguir",
   },
   {
     nome: "r12-fase5/biblioteca-a-ver",
@@ -423,10 +423,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5/explorar-sem-seguir",
-    descricao: "a pesquisa do Explorar volta a só saber guardar \"para ver\"",
-    ficheiro: EXPLORAR,
-    de: "          onSeguir={searching ? seguir : undefined}",
-    para: "          onSeguir={undefined}",
+    descricao: "guardar uma série no Explorar deixa de a pôr na fila (não faz nada)",
+    ficheiro: "src/lib/useExploreAcoes.ts",
+    de: "(item.kind === \"movie\" ? guardarFilme(item) : seguir(item))",
+    para: "(item.kind === \"movie\" ? guardarFilme(item) : Promise.resolve())",
   },
   {
     nome: "r12-fase5/sem-seguidas-em-dia",

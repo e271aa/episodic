@@ -550,8 +550,7 @@ export default function SeriesPage() {
       ) : queue.length === 0 ? (
         <Grupo className="mt-5">
           {/* Sem nenhuma série seguida, "estás em dia" era falso: não há nada
-              na fila porque nada entrou nela. Quem só guardou séries em
-              "Para ver" ficava aqui sem saber porquê. */}
+              na fila porque nada entrou nela. */}
           {watching.length === 0 ? (
             <Linha
               alta
@@ -559,7 +558,7 @@ export default function SeriesPage() {
               href="/explorar?procurar=1"
               antes={<Search aria-hidden className="h-6 w-6 text-label-2" strokeWidth={1.8} />}
               titulo="Ainda não segues nenhuma série"
-              subtitulo="Segue uma e ela entra aqui. O que está em «Para ver» fica fora da fila."
+              subtitulo="Segue uma e ela entra aqui."
             />
           ) : (
             <Linha

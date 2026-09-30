@@ -13,7 +13,6 @@ type FollowState = "idle" | "following" | "done";
 function estadoDa(serie: StoredShow): string {
   if (serie.archived) return "Arquivada na tua biblioteca";
   if (serie.followed) return "Já a segues";
-  if (serie.inWatchlist) return "Já está na tua lista para ver";
   return "Já está na tua biblioteca";
 }
 
@@ -28,7 +27,6 @@ function estadoDa(serie: StoredShow): string {
  */
 export default function ShowResultCard({ result }: { result: MetaSearchResult }) {
   const [state, setState] = useState<FollowState>("idle");
-  const [inWatchlist, setInWatchlist] = useState(false);
   /** undefined = ainda a ver; null = não está na biblioteca */
   const [existente, setExistente] = useState<StoredShow | null | undefined>(undefined);
   const procura = {
@@ -49,13 +47,13 @@ export default function ShowResultCard({ result }: { result: MetaSearchResult })
   }, [result.provider, result.providerId]);
 
   const add = useCallback(
-    async (followed: boolean) => {
+    async () => {
       setState("following");
       const ja = await serieExistente(procura);
       if (ja) {
         await updateShow(ja.uuid, {
-          followed,
-          inWatchlist: !followed,
+          followed: true,
+          inWatchlist: false,
           archived: false,
           tmdbAliases: juntarNomes(ja.tmdbAliases, result.name, result.originalName),
         });
@@ -71,13 +69,12 @@ export default function ShowResultCard({ result }: { result: MetaSearchResult })
           backdropPath: result.backdropUrl,
           overview: result.overview,
           totalEpisodes: null,
-          followed,
-          inWatchlist: !followed,
+          followed: true,
+          inWatchlist: false,
           archived: false,
           addedAt: new Date().toISOString(),
         });
       }
-      setInWatchlist(!followed);
       setState("done");
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -122,28 +119,19 @@ export default function ShowResultCard({ result }: { result: MetaSearchResult })
           >
             <CheckIcon className="check-pop h-3.5 w-3.5" />
             {/* "A seguir" é só a fila (a dock) — Ronda 12, Fase 5 */}
-            {inWatchlist ? "Na lista para ver" : "Seguida"}
+            Em «Por começar»
           </button>
         ) : (
-          <div className="mt-2 flex gap-2">
-            <button
-              onClick={() => void add(true)}
-              disabled={state !== "idle" || existente === undefined}
-              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
-            >
-              {state === "following" && (
-                <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-tube/30 border-t-tube" />
-              )}
-              Seguir
-            </button>
-            <button
-              onClick={() => void add(false)}
-              disabled={state !== "idle" || existente === undefined}
-              className="flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
-            >
-              Para ver
-            </button>
-          </div>
+          <button
+            onClick={() => void add()}
+            disabled={state !== "idle" || existente === undefined}
+            className="mt-2 flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95 disabled:opacity-50"
+          >
+            {state === "following" && (
+              <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-tube/30 border-t-tube" />
+            )}
+            Por começar
+          </button>
         )}
       </div>
     </div>

@@ -408,7 +408,17 @@ export async function migrateLegacyImport(): Promise<boolean> {
 
 export async function getShows(): Promise<StoredShow[]> {
   const database = await db();
-  return database.getAll("shows");
+  return (await database.getAll("shows")).map(lerSerie);
+}
+
+/**
+ * Nas séries só existe «Por começar»: «Para ver» saiu (Fase 13). Uma série que
+ * já estava lá (`inWatchlist` sem `followed`) **lê-se** como seguida — entra na
+ * fila e em «Por começar» — sem ninguém reescrever a base: o que está gravado
+ * fica como está, e só muda quando o Ruben lhe tocar (`updateShow`).
+ */
+export function lerSerie(show: StoredShow): StoredShow {
+  return show.inWatchlist && !show.followed ? { ...show, followed: true, inWatchlist: false } : show;
 }
 
 /**
@@ -435,7 +445,8 @@ export async function mergeFromCloud(
 
 export async function getShow(uuid: string): Promise<StoredShow | null> {
   const database = await db();
-  return (await database.get("shows", uuid)) ?? null;
+  const show = await database.get("shows", uuid);
+  return show ? lerSerie(show) : null;
 }
 
 export async function putShow(show: StoredShow): Promise<void> {
@@ -460,10 +471,13 @@ export async function updateShow(
   const database = await db();
   const current = await database.get("shows", uuid);
   if (!current) return null;
-  const next = { ...current, ...patch, uuid };
+  // seguir ou deixar de seguir decide tudo: um `inWatchlist` antigo que ficasse
+  // para trás voltaria a ler-se como «seguida» (ver `lerSerie`)
+  const limpa = patch.followed !== undefined && patch.inWatchlist === undefined ? { inWatchlist: false } : null;
+  const next = { ...current, ...patch, ...limpa, uuid };
   await database.put("shows", next);
   await enfileirarSerie(uuid);
-  return next;
+  return lerSerie(next);
 }
 
 /** Apaga a série e tudo o que lhe pertence, aqui e na cloud. Usado só pela
@@ -505,13 +519,15 @@ export async function countWatched(): Promise<number> {
 }
 
 /**
- * Ver um episódio é começar a ver a série: se estava só em «Para ver»
- * (`inWatchlist` sem `followed`), passa a seguida e sai dessa lista. Não mexe
- * numa série que deixaste de seguir — essa só volta com um «Seguir» à mão.
+ * Ver um episódio é começar a ver a série: uma que estava lida como «por
+ * começar» por ser do tempo do «Para ver» (`inWatchlist` sem `followed`) fica
+ * seguida de vez, e o `inWatchlist` antigo apaga-se. Não mexe numa série que
+ * deixaste de seguir — essa só volta com um «Seguir» à mão.
  */
 async function comecarASeguir(showUuid: string): Promise<void> {
-  const show = await getShow(showUuid);
-  if (show && show.inWatchlist && !show.followed) {
+  const database = await db();
+  const cru = await database.get("shows", showUuid);
+  if (cru && cru.inWatchlist && !cru.followed) {
     await updateShow(showUuid, { followed: true, inWatchlist: false });
   }
 }

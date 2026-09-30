@@ -46,7 +46,7 @@ function proposta(buracos: Serie["buracos"]) {
  * O que se faz nesta série, pela ordem do desenho: com buracos, o cartão que
  * pergunta por eles (a ação principal) e o próximo numa linha secundária;
  * sem buracos, «Marcar S02·E07» é a única cápsula preenchida do ecrã. Depois,
- * onde ver e — para quem não segue a série — «Para ver».
+ * onde ver.
  */
 export default function AcoesSerie({
   uuid,
@@ -58,7 +58,7 @@ export default function AcoesSerie({
   serie: Serie;
 }) {
   const router = useRouter();
-  const { buracos, marcarBuracos, nextUp, markNext, pulseNext, toggleWatchlist } = serie;
+  const { buracos, marcarBuracos, nextUp, markNext, pulseNext } = serie;
   const check = (
     <CheckIcon aria-hidden className={`h-5 w-5 shrink-0 ${pulseNext ? "check-pop" : ""}`} />
   );
@@ -151,21 +151,6 @@ export default function AcoesSerie({
       ) : null}
 
       <StreamingBadges kind="tv" tmdbId={show.tmdbId} variant="linha" />
-
-      {/* Só para quem não está a seguir: a uma série em acompanhamento,
-          «para ver» só redundava. É uma escolha, não uma ação — contorno
-          quando já está, cinza quando não (Regra da ação). */}
-      {!show.followed && (
-        <Acao
-          tipo={show.inWatchlist ? "contorno" : "secundaria"}
-          grande={false}
-          onClick={() => void toggleWatchlist()}
-          icone={show.inWatchlist ? <CheckIcon aria-hidden className="h-4 w-4" /> : undefined}
-          className="w-full"
-        >
-          {show.inWatchlist ? "Na lista para ver" : "Para ver"}
-        </Acao>
-      )}
     </div>
   );
 }

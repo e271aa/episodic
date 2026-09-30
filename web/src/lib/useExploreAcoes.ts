@@ -22,86 +22,41 @@ import type { DiscoverItem } from "@/lib/tmdb";
  * dois meses depois (Ronda 12).
  */
 export function useExploreAcoes() {
-  const guardar = useCallback(async (item: DiscoverItem) => {
+  const guardarFilme = useCallback(async (item: DiscoverItem) => {
     const nomes = [item.name, item.originalName];
 
-    if (item.kind === "movie") {
       const existente = await filmeExistente({
-        tmdbId: item.tmdbId,
-        nomes,
-        ano: item.year ? Number(item.year) : null,
-      });
-      if (existente) return; // já lá está — nada a fazer, nada a anular
-      await putMovie({
-        key: `tmdb-${item.tmdbId}`,
-        name: item.name,
-        watchedAt: null,
-        dateIsExact: true,
-        releaseDate: item.year ? `${item.year}-01-01` : null,
-        addedAt: new Date().toISOString(),
-        tmdbId: item.tmdbId,
-        posterPath: item.posterPath,
-        aliases: juntarNomes(nomes),
-      });
-      pushUndo({
-        label: "Guardado para ver",
-        detail: item.name,
-        undo: async () => {
-          const { deleteMovie } = await import("@/lib/db");
-          await deleteMovie(`tmdb-${item.tmdbId}`);
-        },
-      });
-      return;
-    }
-
-    const existente = await serieExistente({ tmdbId: item.tmdbId, nomes });
-
-    if (existente) {
-      // Já a segues ou já está arquivada? Então não é "para ver" — deixa-a
-      // como está, em vez de a puxar para uma lista onde não pertence.
-      if (existente.followed || existente.archived || existente.inWatchlist) return;
-      await updateShow(existente.uuid, { inWatchlist: true });
-      pushUndo({
-        label: "Guardado para ver",
-        detail: item.name,
-        undo: async () => {
-          await updateShow(existente.uuid, { inWatchlist: false });
-        },
-      });
-      return;
-    }
-
-    const uuid = `tmdb-${item.tmdbId}`;
-    await putShow({
-      uuid,
-      name: item.name,
-      tvdbId: null,
       tmdbId: item.tmdbId,
-      tvmazeId: null,
-      tmdbAliases: juntarNomes(nomes),
-      posterPath: item.posterPath,
-      backdropPath: item.backdropPath,
-      overview: item.overview,
-      totalEpisodes: null,
-      followed: false,
-      inWatchlist: true,
-      archived: false,
+      nomes,
+      ano: item.year ? Number(item.year) : null,
+    });
+    if (existente) return; // já lá está — nada a fazer, nada a anular
+    await putMovie({
+      key: `tmdb-${item.tmdbId}`,
+      name: item.name,
+      watchedAt: null,
+      dateIsExact: true,
+      releaseDate: item.year ? `${item.year}-01-01` : null,
       addedAt: new Date().toISOString(),
+      tmdbId: item.tmdbId,
+      posterPath: item.posterPath,
+      aliases: juntarNomes(nomes),
     });
     pushUndo({
       label: "Guardado para ver",
       detail: item.name,
       undo: async () => {
-        await updateShow(uuid, { inWatchlist: false });
+        const { deleteMovie } = await import("@/lib/db");
+        await deleteMovie(`tmdb-${item.tmdbId}`);
       },
     });
   }, []);
 
   /**
-   * Seguir a partir da pesquisa: a série entra na fila. Os cartões do
-   * Explorar só sabiam guardar "para ver" — e uma série "para ver" não entra
-   * na fila, por isso quem começava do zero (os amigos) ficava com a casa a
-   * dizer "Estás em dia" sem ter visto nada (Ronda 12, Fase 4).
+   * Numa série guardar é seguir: entra na fila, em «Por começar». O «Para ver»
+   * das séries saiu (Fase 13) — uma série «para ver» não entrava na fila, e
+   * quem começava do zero ficava com a casa a dizer «Estás em dia» sem ter
+   * visto nada (Ronda 12, Fase 4). Os filmes mantêm o «Para ver».
    */
   const seguir = useCallback(async (item: DiscoverItem) => {
     const nomes = [item.name, item.originalName];
@@ -116,7 +71,7 @@ export function useExploreAcoes() {
       };
       await updateShow(existente.uuid, { followed: true, inWatchlist: false, archived: false });
       pushUndo({
-        label: "Série seguida",
+        label: "Em «Por começar»",
         detail: item.name,
         undo: async () => {
           await updateShow(existente.uuid, antes);
@@ -143,7 +98,7 @@ export function useExploreAcoes() {
       addedAt: new Date().toISOString(),
     });
     pushUndo({
-      label: "Série seguida",
+      label: "Em «Por começar»",
       detail: item.name,
       // acabada de criar e sem nada marcado: anular é como se nunca tivesse entrado
       undo: async () => {
@@ -162,6 +117,11 @@ export function useExploreAcoes() {
       },
     });
   }, []);
+
+  const guardar = useCallback(
+    (item: DiscoverItem) => (item.kind === "movie" ? guardarFilme(item) : seguir(item)),
+    [guardarFilme, seguir],
+  );
 
   return { guardar, seguir, naoInteressa };
 }

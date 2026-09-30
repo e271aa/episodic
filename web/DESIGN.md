@@ -225,16 +225,18 @@ vista, 17px, «Séries e filmes»), Séries · Filmes, a linha da **Triagem**, a
 faixas, **Listas**.
 
 - **Uma só ação por cartaz** (`DiscoverCard` sobre o `Cartaz` `grande`: capa
-  150px, raio 14, nome 15/600): «+ Para ver» em `fill`; depois «✓ Na lista»,
-  só contorno `label-3`, sem preenchimento. Dispensar saiu do cartaz — é na
-  Triagem. **Exceção:** os resultados de uma pesquisa de séries têm «Seguir» +
-  «Para ver» (quem procura pelo nome já costuma estar a ver).
+  150px, raio 14, nome 15/600): «+ Por começar» numa série (segue-a, entra na
+  fila) e «+ Para ver» num filme, em `fill`; depois «✓ Na lista», só contorno
+  `label-3`, sem preenchimento. Dispensar saiu do cartaz — é na Triagem. Uma
+  só ação também nos resultados de uma pesquisa de séries.
 - **Tocar na capa** abre a ficha (folha agrupada): números (séries: temporadas, episódios, minutos; filmes: duração), estado e
   géneros, sinopse, «Onde ver» e a mesma ação. Espreitar não guarda nada — a série só entra na biblioteca com
-  «Para ver» / «Seguir».
-- **Ver o primeiro episódio** de uma série que estava só em «Para ver» passa-a
-  a seguida (`comecarASeguir`, em `db.ts`): sai de «Para ver» e vai para «Em
-  curso». Não mexe em «Já não sigo» nem na reposição de marcações antigas.
+  «Por começar» (filmes: «Para ver»).
+- **Séries não têm «Para ver»** (Fase 13). `lerSerie`, em `db.ts`, lê uma série
+  com `inWatchlist` sem `followed` como seguida (nenhuma escrita: a base fica
+  como está); seguir ou deixar de seguir apaga o `inWatchlist` antigo. Ver o
+  primeiro episódio (`comecarASeguir`) arruma-o de vez. Não mexe em «Já não
+  sigo» nem na reposição de marcações antigas.
 - **Ver tudo** dobra a faixa num mosaico de 3 colunas; a pesquisa é sempre
   mosaico (numa faixa, «matrix» eram 2400px).
 - **Triagem** = o baralho, a ecrã cheio com «‹ Explorar» para fechar. A

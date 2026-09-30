@@ -51,7 +51,6 @@ type SeriesFilter =
   | "retomar"
   | "por-comecar"
   | "completas"
-  | "para-ver"
   | "arquivadas"
   | "parei";
 type MovieFilter = "vistos" | "para-ver" | "todos";
@@ -96,7 +95,6 @@ const ESTADOS = [
   "Em curso",
   "Retomar",
   "Por começar",
-  "Para ver",
   "Completas",
   "Já não sigo",
   "Arquivadas",
@@ -138,9 +136,7 @@ function LibraryContent() {
   const rawFiltro = params.get("filtro") as SeriesFilter | null;
   const filter: SeriesFilter =
     rawFiltro &&
-    ["a-ver", "retomar", "por-comecar", "completas", "para-ver", "arquivadas", "parei"].includes(
-      rawFiltro,
-    )
+    ["a-ver", "retomar", "por-comecar", "completas", "arquivadas", "parei"].includes(rawFiltro)
       ? rawFiltro
       : "tudo";
   const movieFilter: MovieFilter =
@@ -288,12 +284,10 @@ function LibraryContent() {
       );
     } else if (filter === "completas") {
       list = list.filter((s) => complete(s));
-    } else if (filter === "para-ver") {
-      list = list.filter((s) => s.inWatchlist && !s.followed);
     } else if (filter === "arquivadas") {
       list = list.filter((s) => s.archived);
     } else if (filter === "parei") {
-      list = list.filter((s) => !s.followed && !s.inWatchlist);
+      list = list.filter((s) => !s.followed);
     }
     // o nome do TV Time e os da TMDB — procurar "Ruptura Total" tem de
     // encontrar o "Breaking Bad" que já lá está
@@ -370,9 +364,8 @@ function LibraryContent() {
         shows?.filter((s) => s.followed && !s.archived && !complete(s) && s.watchedCount === 0)
           .length ?? 0,
       completas: shows?.filter(complete).length ?? 0,
-      "para-ver": shows?.filter((s) => s.inWatchlist && !s.followed).length ?? 0,
       arquivadas: shows?.filter((s) => s.archived).length ?? 0,
-      parei: shows?.filter((s) => !s.followed && !s.inWatchlist).length ?? 0,
+      parei: shows?.filter((s) => !s.followed).length ?? 0,
     } as Record<SeriesFilter, number>;
   }, [shows, parada]);
 
@@ -448,9 +441,9 @@ function LibraryContent() {
    *  5 delas sem nada visto). */
   const estadoLabel = (s: ShowWithProgress): string => {
     if (s.archived) return "Arquivadas";
-    if (!s.followed) return s.inWatchlist ? "Para ver" : "Já não sigo";
+    if (!s.followed) return "Já não sigo";
     if (s.totalEpisodes && s.watchedCount >= s.totalEpisodes) return "Completas";
-    // "Em curso" e não "A ver": ao lado de "Para ver" liam-se quase iguais
+    // "Em curso" e não "A ver": liam-se quase iguais aos filmes «Para ver»
     // (Ronda 12, Fase 5 — palavra escolhida pelo Ruben).
     if (s.watchedCount === 0) return "Por começar";
     return parada(s) ? "Retomar" : "Em curso";
@@ -493,7 +486,6 @@ function LibraryContent() {
       ["retomar", "Retomar"],
       ["por-comecar", "Por começar"],
       ["completas", "Completas"],
-      ["para-ver", "Para ver"],
       ["arquivadas", "Arquivadas"],
       ["parei", "Já não sigo"],
     ] as const
