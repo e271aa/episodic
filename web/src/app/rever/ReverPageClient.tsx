@@ -188,7 +188,7 @@ export default function ReverPage() {
               <div className="min-w-0 flex-1">
                 <Link
                   href={`/series/${atual.show.uuid}`}
-                  className="text-[1.18rem] leading-tight font-semibold text-label"
+                  className="tap-44 relative text-[1.18rem] leading-tight font-semibold text-label"
                 >
                   {atual.show.name}
                 </Link>

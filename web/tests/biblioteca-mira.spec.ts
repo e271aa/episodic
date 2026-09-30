@@ -100,6 +100,9 @@ test("o sítio onde se ia na lista sobrevive a recuar", async ({ page }) => {
   await semear(page, biblioteca());
   await page.goto("/library");
   await page.getByRole("heading", { level: 1, name: "Biblioteca" }).waitFor();
+  // a grelha vem da base local aos poucos: rolar a 3000px antes de a última capa
+  // existir parava a meio (a página ainda não era tão alta) — intermitente (~3%)
+  await page.locator('a[href="/series/s-137"]').waitFor();
 
   await page.evaluate(() => window.scrollTo(0, 3000));
   await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(2900);
@@ -117,7 +120,10 @@ test("o sítio onde se ia na lista sobrevive a recuar", async ({ page }) => {
   });
   expect(escolhido).not.toBeNull();
   await page.locator(`a[href="${escolhido}"]`).click();
-  await expect(page).toHaveURL(new RegExp(`${escolhido}$`));
+  // o clique chega e o Next faz o pedido, mas com a máquina saturada (8 navegadores
+  // a pedir à mesma `next start`, e 130 cartaz a pré-carregar) a navegação
+  // demorou mais de 7 s em ~10% das corridas: é tempo, não lógica
+  await expect(page).toHaveURL(new RegExp(`${escolhido}$`), { timeout: 20_000 });
 
   await page.goBack();
   await expect(page).toHaveURL(/\/library$/);

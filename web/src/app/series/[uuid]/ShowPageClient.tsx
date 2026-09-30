@@ -54,10 +54,11 @@ export default function ShowPage() {
    * próximo?») responde-se sem tocar em nada.
    */
   return (
-    // Sem padding em baixo: a moldura (layout.tsx) já reserva o espaço da
-    // dock, e reservá-lo aqui outra vez deixava 188px de nada por baixo das
-    // temporadas fechadas (medido — Ronda 12, Fase 5b.3)
-    <main className="mx-auto w-full max-w-2xl">
+    // Sem o espaço da dock em baixo: a moldura (layout.tsx) já o reserva, e
+    // reservá-lo aqui outra vez deixava 188px de nada por baixo das temporadas
+    // fechadas (medido — Ronda 12, Fase 5b.3). Só um respiro (pb-6): sem ele o
+    // último episódio ficava colado à barra de separadores (0–5px, Fase 11).
+    <main className="mx-auto w-full max-w-2xl pb-6">
       <CabecalhoSerie
         show={show}
         serie={serie}

@@ -806,3 +806,20 @@ summary:focus-visible,
       outline-color !important;
   }
 }
+
+/* /diagnostico: a mesma lista a rolar com mais ou menos camadas de vidro. O palco
+   é irmão das camadas; `data-fase` diz quais estão à vista (só as 4 grandes têm
+   a app de hoje; as pequenas são o selo e o botão de cada cartaz). */
+.diag-palco[data-fase="sem"] ~ .diag-vidro,
+.diag-palco[data-fase="sem"] ~ .diag-extras .diag-vidro {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.diag-palco:not([data-fase]) ~ .diag-extras,
+.diag-palco[data-fase="quatro"] ~ .diag-extras,
+.diag-palco[data-fase="sem"] ~ .diag-extras {
+  display: none;
+}
+.diag-palco[data-fase="dezasseis"] ~ .diag-extras > :nth-child(n + 13) {
+  display: none;
+}

@@ -116,9 +116,13 @@ export default function Cartaz({
               aria-label={acao.aria}
               // vidro sobre a arte, não a cápsula da ação: um ✓ em cada cartaz
               // era a ação principal repetida por toda a grelha (Ronda 12, 5d)
-              className="vidro tap-44 absolute bottom-1.5 right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-label transition-transform active:scale-90"
+              // o botão é o alvo de 44px (o `::before` de `tap-44` ficava cortado pelo
+              // `overflow-hidden` da capa: 42px); o círculo de vidro de 32px é o de dentro
+              className="group/marcar absolute bottom-0 right-0 flex h-11 w-11 cursor-pointer items-center justify-center active:scale-100"
             >
-              {acao.icon}
+              <span className="vidro flex h-8 w-8 items-center justify-center rounded-full text-label transition-transform group-active/marcar:scale-90">
+                {acao.icon}
+              </span>
             </button>
           </>
         )}
@@ -132,7 +136,7 @@ export default function Cartaz({
         </div>
       )}
       <p
-        className={`line-clamp-2 font-semibold leading-snug text-label ${
+        className={`line-clamp-2 wrap-anywhere font-semibold leading-snug text-label ${
           grande ? "text-[0.9375rem]" : "text-[0.76rem]"
         } ${barra ? "mt-1.5" : "mt-2"}`}
       >

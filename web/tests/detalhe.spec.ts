@@ -200,5 +200,8 @@ test("o fim da página não tem vazio a mais", async ({ page, tmdb }) => {
     );
     return document.documentElement.scrollHeight - fundo;
   });
-  expect(vazio).toBeLessThan(110);
+  // a moldura reserva a dock (~95px aqui) e a página dá um respiro de 24px (Fase 11:
+  // sem ele o último episódio ficava colado à barra). Reservá-la duas vezes
+  // seria ~190px.
+  expect(vazio).toBeLessThan(130);
 });

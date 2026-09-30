@@ -84,7 +84,7 @@ export default function CabecalhoSerie({
       </div>
 
       <div className="relative -mt-14 flex flex-col gap-1 px-5">
-        <h1 className="line-clamp-3 text-[2rem] leading-[1.1] font-bold text-label">{show.name}</h1>
+        <h1 className="line-clamp-3 wrap-anywhere text-[2rem] leading-[1.1] font-bold text-label">{show.name}</h1>
         {/* Texto corrido, para partir como texto: com buracos, o estado
             toma o lugar da contagem (B·2b) — o ponto e o texto no «por
             marcar», a única cor de estado que também é texto (Regra da

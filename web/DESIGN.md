@@ -100,7 +100,10 @@ Aparência: **Automático** · **Noite** · **Claro**, guardado neste aparelho
 - **Vidro** — só para o que flutua: a barra, os botões sobre a arte, o aviso,
   o menu. `.vidro` = `glass` + `blur(20px) saturate(1.6)` + um fio interior de
   0,5px + a sombra de flutuar. Medido no iPhone do Ruben: 60 fps a rolar com 4
-  camadas — não é um custo.
+  camadas — não é um custo. **Camadas grandes à vista: no máximo 4** (guarda em
+  `tests/medidas.spec.ts`). Os pequenos — o selo e o botão de cada cartaz «Para
+  ver» da Biblioteca › Filmes — somam duas por cartaz (9 à vista com 3 filmes
+  por ver) e não têm medida no iPhone: `/diagnostico` mede 4, 16 e 28 camadas.
 
 ### Regra da mira
 A mira (sete cores, pela ordem da mira — `--mira-1` a `--mira-7`, **fixas**: uma
@@ -156,7 +159,10 @@ e se herda (Fases 4–8). Vitrine em `/mira` (só dados de exemplo; sai na Fase 
 - **`Acao`** — `principal` (a cápsula; 52px, cresce com o texto), `secundaria`
   (`fill-strong`), `contorno` («✓ Na lista»).
 - **`Segmentado`** — escolha entre poucas opções; `role="radio"`; o escolhido é
-  `segment`, nunca a cápsula da ação; 44px de alvo.
+  `segment`, nunca a cápsula da ação. O segmento mede 38px (o fundo tem 3px de
+  margem) e **a área de toque é de 44px**: cada segmento estica 3px para cima e
+  para baixo com um `::before`. Sem isso o anel de 3px não era de nenhum botão
+  e a área era 38px (medido na Fase 11; o comentário antigo dizia 44).
 - **`MenuFiltro`** — o filtro como menu do iOS: cápsula «Em curso · 12 ▾», lista
   de vidro com contagens e ✓; foco na escolha, Esc fecha. `simples` para a
   ordenação.
@@ -337,9 +343,35 @@ verde, o azul e o roxo de estado e o vermelho do erro são as versões escuras
 (o `#34c759` do iOS dava 2:1 sobre o fundo); o `label-3` sobe a 42% (noite) e
 58% (claro): é UI, nunca texto. O degradê de cima do herói (`--m-heroi-topo`)
 escurece a arte à noite e **aclara-a de dia**, para a barra de estado (escura)
-se ler. **Fica por medir (Fase 11):** `statusBarStyle: "black"` na PWA
-instalada e o ecrã de arranque — o manifesto só tem uma cor (`#000000`) e o iOS
-não a troca por modo.
+se ler. **Fica por medir com a PWA instalada (Fase 11):** `statusBarStyle: "black"` e o
+ecrã de arranque — o manifesto só tem uma cor (`#000000`) e o iOS não a troca por
+modo. `/diagnostico` lê no aparelho a área segura, a barra de estado e o texto.
+
+## Medidas no telemóvel (Fase 11)
+
+`tests/medidas.spec.ts`: cada ecrã a 430×15px (o iPhone do Ruben), 390, 320 e
+320 com o texto a 150%, com a área segura de um iPhone com ilha (o `env()` é
+trocado no CSS servido: 59 em cima, 34 em baixo). Afirma, por ecrã: nada mais
+largo do que a janela, nenhuma palavra cortada na largura, **alvos de 44px na
+área que responde ao dedo** (não no retângulo desenhado), o fim da página a
+≥12px da barra de separadores. Exceção assumida: o mapa de calor e as colunas do
+Perfil (24px de alvo, sempre com «Ver em tabela»; 12 meses não cabem a 44px em
+320px).
+
+Regras que saíram daqui:
+- **Palavras compridas quebram** (`wrap-anywhere`) no nome do cartaz, no título da
+  casa e no da série: a 150% em 320px, «Extremamente» ficava cortada.
+- **O botão é o alvo; o círculo é o desenho.** O `::before` de `tap-44` não passa
+  de um `overflow-hidden` (o ✓ do cartaz tinha 42px): o botão do cartaz tem 44px
+  e o círculo de vidro de 32px vai dentro.
+- Uma linha com um botão de texto longo **deixa o botão quebrar** (`min-w-0
+  shrink`), não empurra a página: a 320px/150%, «Marcar temporada como vista»
+  saía 16px do ecrã.
+- A página da série acaba com um respiro de 24px (`pb-6`): o último episódio
+  ficava a 0–5px da barra.
+- **Tamanho do texto:** não há simulador iOS (o runtime foi apagado). No WebKit
+  simula-se pela raiz (17px × escala; 15px é o do Ruben). O iOS vai até 53px
+  (AX5); testou-se até 25,5px (150%).
 
 ## Movimento
 - **Curvas:** `--ease-out` = `cubic-bezier(0.23, 1, 0.32, 1)` para o que entra e

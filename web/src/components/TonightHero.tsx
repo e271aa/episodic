@@ -231,7 +231,7 @@ export default function TonightHero({
           {/* `min-h-11`: o nome é o caminho para a série, e o alvo são 44px
               mesmo quando cabe numa linha */}
           <Link href={`/series/${show.uuid}`} className="flex min-h-11 items-center">
-            <h2 className="line-clamp-3 text-[1.65rem] font-bold leading-[1.1] text-label">{show.name}</h2>
+            <h2 className="line-clamp-3 wrap-anywhere text-[1.65rem] font-bold leading-[1.1] text-label">{show.name}</h2>
           </Link>
           <p className="truncate text-[0.88rem] leading-snug text-label-2" data-testid="contexto-casa">
             {contexto}

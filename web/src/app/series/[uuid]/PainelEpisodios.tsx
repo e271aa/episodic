@@ -79,7 +79,7 @@ export default function PainelEpisodios({
           key={season.number}
           type="button"
           {...comum}
-          className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[19px] px-1.5 text-[0.88rem] transition-[background-color,box-shadow] duration-200 ${
+          className={`relative flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[19px] px-1.5 before:absolute before:inset-x-0 before:-inset-y-[3px] text-[0.88rem] transition-[background-color,box-shadow] duration-200 ${
             selected
               ? "bg-segment font-semibold text-label shadow-[var(--m-seg-sombra)]"
               : "font-medium text-label-2"
@@ -184,7 +184,7 @@ export default function PainelEpisodios({
                   <button
                     type="button"
                     onClick={() => void markSeasonAll(season)}
-                    className="min-h-11 shrink-0 cursor-pointer text-[0.88rem] font-semibold text-label transition-opacity active:opacity-60"
+                    className="min-h-11 min-w-0 cursor-pointer text-right text-[0.88rem] font-semibold text-label transition-opacity active:opacity-60"
                   >
                     Marcar temporada como vista
                   </button>

@@ -284,7 +284,11 @@ test("o ✓ de cada cartaz 'para ver' é um círculo escuro sobre a arte, não u
   await page.goto("/library?tipo=filmes");
   const marcar = page.getByRole("button", { name: "Marcar Past Lives como visto" });
   await expect(marcar).toBeVisible();
-  const fundo = await marcar.evaluate((el) => getComputedStyle(el).backgroundColor);
+  // o botão é o alvo de 44px (transparente); o círculo de vidro é o de dentro
+  const fundo = await marcar
+    .locator("span")
+    .first()
+    .evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(fundo).not.toBe(TINTA);
   // o vidro escuro do recuar sobre a arte: meio transparente (o Tailwind 4
   // dá-o em `lab(… / 0.6)`, o WebKit às vezes em `rgba(…, 0.6)`)

@@ -8,8 +8,9 @@ import type { ReactNode } from "react";
  *
  * É uma escolha, não uma ação: o escolhido é `segment` (cinza claro à noite,
  * branco com sombra de dia) — nunca a cápsula da ação (Regra da ação).
- * O desenho dá 34px ao segmento; o alvo de toque é 44px, porque o fundo tem
- * 3px de margem e cada segmento estica a área até lá.
+ * O desenho dá 38px ao segmento (o fundo tem 3px de margem); a área de toque
+ * é 44px porque cada segmento estica 3px para cima e para baixo (`::before`).
+ * O anel de 3px não é de nenhum botão: sem isto, o toque ali não acertava em nada.
  */
 export default function Segmentado<T extends string>({
   opcoes,
@@ -40,7 +41,7 @@ export default function Segmentado<T extends string>({
             role="radio"
             aria-checked={escolhido}
             onClick={() => onChange(o.valor)}
-            className={`flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[19px] px-2 text-[0.88rem] font-semibold transition-[background-color,box-shadow] duration-200 ${
+            className={`relative flex min-w-0 flex-1 cursor-pointer items-center before:absolute before:inset-x-0 before:-inset-y-[3px] justify-center gap-1.5 rounded-[19px] px-2 text-[0.88rem] font-semibold transition-[background-color,box-shadow] duration-200 ${
               escolhido
                 ? "bg-segment text-label shadow-[var(--m-seg-sombra)]"
                 : "text-label-2"
