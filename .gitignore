@@ -1,6 +1,6 @@
 # Exports GDPR do TV Time — contêm dados pessoais (email, hash de password).
 # Nunca versionar.
-gdpr-data*/
+private-data/
 *.zip
 
 # macOS

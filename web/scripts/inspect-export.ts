@@ -5,7 +5,7 @@ import path from "node:path";
 import Papa from "papaparse";
 import { parseEmotions, parseTrackingV2 } from "../src/lib/tvtime/parser";
 
-const dir = path.resolve(process.argv[2] ?? path.join(process.cwd(), "..", "gdpr-data"));
+const dir = path.resolve(process.argv[2] ?? path.join(process.cwd(), "..", "private-data"));
 
 function readIfExists(name: string): string | null {
   const p = path.join(dir, name);
