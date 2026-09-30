@@ -1,4 +1,5 @@
 import { test, expect } from "./apoio/base";
+import { SEM_LETRA_DO_IPHONE, RAZAO_SEM_LETRA } from "./apoio/letra";
 import { semear } from "./apoio/semear";
 
 /**
@@ -43,6 +44,7 @@ test("as faixas do Explorar abrem com a margem de 16px à esquerda, também depo
 });
 
 test("«A seguir» sem nenhuma série seguida explica-se por inteiro, sem reticências", async ({ page }) => {
+  test.skip(SEM_LETRA_DO_IPHONE, RAZAO_SEM_LETRA);
   // só uma que deixaste de seguir: a fila está vazia porque nada é seguido
   await semear(page, {
     series: [{ uuid: "s-1", name: "Lanterns", followed: false, inWatchlist: false }],

@@ -1,5 +1,6 @@
 import type { Page } from "@playwright/test";
 import { test, expect } from "./apoio/base";
+import { SEM_LETRA_DO_IPHONE, RAZAO_SEM_LETRA } from "./apoio/letra";
 import { semear } from "./apoio/semear";
 import { catalogoMedidas, comAreaSegura, comTexto, medirEcra, sementeMedidas } from "./apoio/medidas";
 
@@ -81,6 +82,7 @@ for (const [largura, escala] of [
     page,
     tmdb,
   }) => {
+    test.skip(SEM_LETRA_DO_IPHONE && largura === 320 && escala === 1.5, RAZAO_SEM_LETRA);
     test.setTimeout(120_000);
     await page.setViewportSize({ width: largura, height: largura === 320 ? 568 : 844 });
     await comAreaSegura(page);

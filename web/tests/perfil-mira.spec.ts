@@ -1,4 +1,5 @@
 import { test, expect } from "./apoio/base";
+import { SEM_LETRA_DO_IPHONE, RAZAO_SEM_LETRA } from "./apoio/letra";
 import { semear, type EpisodioVisto } from "./apoio/semear";
 
 /**
@@ -177,6 +178,7 @@ test("sem nada marcado, o Perfil diz quando começa a contar e não desenha grá
 
 for (const rota of ["/profile", "/profile/definicoes", "/estatisticas"]) {
   test(`${rota}: a 320px com o texto a 150% nada transborda`, async ({ page }) => {
+    test.skip(SEM_LETRA_DO_IPHONE && rota === "/estatisticas", RAZAO_SEM_LETRA);
     await page.setViewportSize({ width: 320, height: 664 });
     await semear(page, {
       series: [
