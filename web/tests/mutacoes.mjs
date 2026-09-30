@@ -1725,6 +1725,10 @@ function testar(m) {
   return { ...r, via, conjunto: ficheirosDe(r.falhas) };
 }
 
+function escreverMapa() {
+  writeFileSync(MAPA, JSON.stringify(Object.fromEntries(Object.entries(mapaTodo).sort()), null, 2) + "\n");
+}
+
 function repor() {
   execSync("git checkout -- src", { stdio: "pipe" });
 }
@@ -1750,7 +1754,12 @@ for (const [n, m] of alvo.entries()) {
   }
   const segundos = Math.round((Date.now() - t0) / 1000);
   const { verde, falhas, invalida, via, conjunto } = r;
-  if (!verde && !invalida && conjunto.length) mapaTodo[m.nome] = conjunto;
+  if (!verde && !invalida && conjunto.length) {
+    mapaTodo[m.nome] = conjunto;
+    // a cada mutação, não só no fim: uma corrida de horas que morra a meio
+    // não perde o que já aprendeu
+    if (!bandeiras.has("--tudo")) escreverMapa();
+  }
   resultados.push({ ...m, sobreviveu: verde, falhas, invalida, via });
   appendFileSync(
     REGISTO,
@@ -1765,9 +1774,6 @@ for (const [n, m] of alvo.entries()) {
           ? `apanhada — mas fora do conjunto do mapa: ${conjunto.join(", ")}`
           : `apanhada por ${falhas.length}`} · ${segundos}s`,
   );
-}
-if (!bandeiras.has("--tudo")) {
-  writeFileSync(MAPA, JSON.stringify(Object.fromEntries(Object.entries(mapaTodo).sort()), null, 2) + "\n");
 }
 
 console.log("\n─── Rede de segurança ───\n");

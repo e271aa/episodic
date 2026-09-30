@@ -48,8 +48,14 @@ test("ao rolar, a barra compacta fica presa ao topo e os cabeçalhos das secçõ
   await semear(page, biblioteca());
   await page.goto("/library");
   await page.getByRole("heading", { level: 1, name: "Biblioteca" }).waitFor();
+  // Esperar pela grelha, não só pelo título: rolar enquanto ainda há esqueletos
+  // (a página curta) fixa o scroll num sítio que a grelha depois não confirma, e
+  // o cabeçalho da secção lia-se ainda no seu lugar de origem (a 668px) — em
+  // 2 de 30 corridas, sem que nada estivesse partido.
+  await page.getByTestId("library-grid").waitFor();
 
   await page.evaluate(() => window.scrollTo(0, 1500));
+  await expect.poll(() => page.evaluate(() => window.scrollY)).toBeGreaterThan(1400);
   // o resumo diz o filtro e quantas séries mostra
   const resumo = page.getByText("Todas · 138", { exact: true });
   await expect.poll(async () => (await resumo.boundingBox())?.y ?? -9999).toBeGreaterThanOrEqual(0);

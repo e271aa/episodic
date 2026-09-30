@@ -212,6 +212,10 @@ test("a vitrine carrega a biblioteca de exemplo: The Bear a um episódio de fech
   await expect(page.getByTestId("contexto-casa")).toHaveText("Viste o anterior ontem");
   // vistos de ontem: o diário parte do zero
   await expect(page.getByTestId("diario")).toHaveCount(0);
+  // Os segmentos são a leitura da temporada: só com ela carregada o toque sabe
+  // que fecha a T1. Clicar antes (o «7/8» já se lê, vindo do que estava
+  // guardado) marcava sem o momento de fim — 2 em 60 corridas com 6 trabalhadores.
+  await expect(page.getByTestId("progresso-casa").locator("i")).toHaveCount(8);
   await page.getByRole("button", { name: "Marcar visto" }).click();
   await expect(page.getByTestId("progresso-casa")).toContainText("T1 ✓");
 });
