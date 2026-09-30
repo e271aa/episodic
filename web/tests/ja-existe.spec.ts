@@ -145,8 +145,13 @@ test("um remake com o mesmo título não é confundido com o original", async ({
   await expect(page.getByTestId("filme-ja-visto")).toHaveCount(0);
   await paraVer.click();
 
+  // Esperar pela gravação: o clique escreve de forma assíncrona, e ler a base
+  // logo a seguir apanhava só o filme de 1994 (2 em 30 corridas com 6
+  // trabalhadores, sem nada partido).
+  await expect
+    .poll(() => ler<{ key: string; watchedAt: string | null }>(page, "movies").then((f) => f.length))
+    .toBe(2);
   const filmes = await ler<{ key: string; watchedAt: string | null }>(page, "movies");
-  expect(filmes).toHaveLength(2);
   expect(filmes.find((f) => f.key === "uuid-rei-leao-1994")?.watchedAt).toBe(
     "2015-01-01T00:00:00.000Z",
   );

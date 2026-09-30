@@ -1,0 +1,567 @@
+{
+  "fase1/inferencia-de-buracos": [
+    "buracos.spec.ts"
+  ],
+  "fase2/cabecalho-fixo": [
+    "episodios.spec.ts"
+  ],
+  "fase2/corridas-colapsam": [
+    "detalhe-mira.spec.ts"
+  ],
+  "fase2/visto-vs-por-ver": [
+    "episodios.spec.ts"
+  ],
+  "fase3/balde-por-comecar": [
+    "biblioteca-arrumada.spec.ts"
+  ],
+  "fase3/dobrar-completas": [
+    "biblioteca-arrumada.spec.ts"
+  ],
+  "fase3/ordem-das-seccoes": [
+    "biblioteca-arrumada.spec.ts"
+  ],
+  "fase4/pastilha-para-o-ecra": [
+    "detalhe.spec.ts"
+  ],
+  "fase4/progresso-no-heroi": [
+    "biblioteca.spec.ts"
+  ],
+  "fase4/uma-acao-preenchida": [
+    "detalhe.spec.ts"
+  ],
+  "r12-f2/capa-lcp-em-lazy": [
+    "decisao.spec.ts"
+  ],
+  "r12-f2/data-iso-na-estreia": [
+    "fecho.spec.ts"
+  ],
+  "r12-f2/data-iso-no-episodio": [
+    "fecho.spec.ts"
+  ],
+  "r12-f2/dock-sai-do-ecra-a-150": [
+    "fecho.spec.ts"
+  ],
+  "r12-f2/eyebrow-apagada": [
+    "fecho.spec.ts"
+  ],
+  "r12-f2/foco-sem-summary": [
+    "fecho.spec.ts"
+  ],
+  "r12-f2/importar-arrasta": [
+    "fecho.spec.ts"
+  ],
+  "r12-f2/importar-sem-recuar": [
+    "fecho.spec.ts"
+  ],
+  "r12-f2/lista-sem-prioridade": [
+    "fecho.spec.ts"
+  ],
+  "r12-f3/biblioteca-vazia-sem-acao": [
+    "fecho.spec.ts"
+  ],
+  "r12-f3/filtro-vazio-sem-apagar": [
+    "fecho.spec.ts"
+  ],
+  "r12-f3/login-sem-h1": [
+    "fecho.spec.ts"
+  ],
+  "r12-f3/preto-solto-na-lista": [
+    "tokens.spec.ts"
+  ],
+  "r12-f3/texto-11px": [
+    "tokens.spec.ts"
+  ],
+  "r12-f4/disco-volta-ao-pora-em-dia": [
+    "fecho.spec.ts"
+  ],
+  "r12-f4/original-nao-latino": [
+    "fecho.spec.ts"
+  ],
+  "r12-f4/titulo-pt-no-explorar": [
+    "fecho.spec.ts"
+  ],
+  "r12-fase5/aviso-mudo": [
+    "acessibilidade.spec.ts"
+  ],
+  "r12-fase5/biblioteca-a-ver": [
+    "biblioteca-arrumada.spec.ts"
+  ],
+  "r12-fase5/campo-sem-nome": [
+    "acessibilidade.spec.ts"
+  ],
+  "r12-fase5/casa-vazia-pede-zip": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5/continuar-fora-do-url": [
+    "estado.spec.ts"
+  ],
+  "r12-fase5/em-dia-abre-vazio": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5/explorar-sem-seguir": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5/filtro-vazio-sem-saida": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5/pilula-em-dia": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5/remover-invisivel": [
+    "acessibilidade.spec.ts"
+  ],
+  "r12-fase5/rever-pergunta-com-resposta": [
+    "rever.spec.ts"
+  ],
+  "r12-fase5/rever-vi-tudo-recomendado": [
+    "p2.spec.ts"
+  ],
+  "r12-fase5/seguir-diz-a-seguir": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5/sem-seguidas-em-dia": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/add-to-list-campo-sem-rotulo": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/anular-desaparece-com-movimento-reduzido": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/apagar-dados-vermelho-sempre": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/apagar-lista-vermelho-sempre": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/biblioteca-lcp-lazy": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/biblioteca-pesquisa-sem-rotulo": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/brilho-volta": [
+    "cores.spec.ts"
+  ],
+  "r12-fase5b/data-importacao-crua": [
+    "datas.spec.ts"
+  ],
+  "r12-fase5b/explorar-pesquisa-sem-rotulo": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/folha-sem-gestao-de-foco": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/genero-por-traduzir": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/import-vocabulario-de-computador": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/listas-campo-sem-rotulo": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/listas-transborda-320": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/manifest-cor-v1": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5b/scroll-fantasma-margem-cancelada": [
+    "scroll-fantasma.spec.ts"
+  ],
+  "r12-fase5b2/heroi-volta-a-40px": [
+    "tipografia.spec.ts"
+  ],
+  "r12-fase5b2/texto-volta-a-px": [
+    "tipografia.spec.ts"
+  ],
+  "r12-fase5b3/apagar-lista-leva-o-aviso": [
+    "auditoria.spec.ts"
+  ],
+  "r12-fase5b3/biblioteca-volta-a-2-colunas": [
+    "biblioteca-5b3.spec.ts"
+  ],
+  "r12-fase5b3/casa-sem-ou-entao": [
+    "auditoria.spec.ts"
+  ],
+  "r12-fase5b3/detalhe-vazio-no-fim": [
+    "detalhe.spec.ts"
+  ],
+  "r12-fase5b3/dock-acende-pelo-tipo": [
+    "navegacao.spec.ts"
+  ],
+  "r12-fase5b3/filmes-para-ver-escondidos": [
+    "biblioteca-5b3.spec.ts"
+  ],
+  "r12-fase5b3/listas-rota-sem-desvio": [
+    "biblioteca-5b3.spec.ts"
+  ],
+  "r12-fase5b3/listas-sem-separador": [
+    "auditoria.spec.ts"
+  ],
+  "r12-fase5b3/ou-entao-filme-mais-antigo": [
+    "casa.spec.ts"
+  ],
+  "r12-fase5b3/recuar-volta-a-texto": [
+    "navegacao.spec.ts"
+  ],
+  "r12-fase5b3/separador-volta-a-branco": [
+    "mira.spec.ts"
+  ],
+  "r12-fase5c/antena-congelada": [
+    "antena.spec.ts"
+  ],
+  "r12-fase5c/baralho-nome-duas-vezes": [
+    "baralho.spec.ts"
+  ],
+  "r12-fase5c/baralho-serie-pequena": [
+    "baralho.spec.ts"
+  ],
+  "r12-fase5c/dock-sem-nome": [
+    "mira.spec.ts"
+  ],
+  "r12-fase5c/duracao-nao-se-guarda": [
+    "antena.spec.ts"
+  ],
+  "r12-fase5c/duracao-nunca-se-pergunta": [
+    "antena.spec.ts"
+  ],
+  "r12-fase5c/onboarding-portas-no-fundo": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5c/proximo-e-o-primeiro-buraco": [
+    "detalhe.spec.ts"
+  ],
+  "r12-fase5c/rever-por-marcar-junta-tudo": [
+    "rever.spec.ts"
+  ],
+  "r12-fase5d/aviso-entra-na-dock": [
+    "p2.spec.ts"
+  ],
+  "r12-fase5d/aviso-tapa-marcar": [
+    "baralho.spec.ts"
+  ],
+  "r12-fase5d/espetro-com-estados": [
+    "p2.spec.ts"
+  ],
+  "r12-fase5d/esta-semana-ciano": [
+    "p2.spec.ts"
+  ],
+  "r12-fase5d/estrear-corta-o-nome": [
+    "p2.spec.ts"
+  ],
+  "r12-fase5d/filme-nao-se-desmarca": [
+    "p2.spec.ts"
+  ],
+  "r12-fase5d/rever-saida-debaixo-da-dock": [
+    "p2.spec.ts"
+  ],
+  "r12-fase5d/semana-sem-janela": [
+    "p2.spec.ts"
+  ],
+  "r12-fase5d/semana-vazia-sem-frase": [
+    "p2.spec.ts"
+  ],
+  "r12-fase5d/separadores-alargam-a-pagina": [
+    "detalhe.spec.ts"
+  ],
+  "r12-fase5d/traco-sem-ciano": [
+    "p2.spec.ts"
+  ],
+  "r12-fase5d/visto-em-branco": [
+    "p2.spec.ts"
+  ],
+  "r12-fase5e/adicionar-uma-serie": [
+    "p3.spec.ts"
+  ],
+  "r12-fase5e/capa-partida-brilha-para-sempre": [
+    "p3.spec.ts"
+  ],
+  "r12-fase5e/data-iso-no-detalhe": [
+    "p3.spec.ts"
+  ],
+  "r12-fase5e/entrar-sem-saida": [
+    "p3.spec.ts"
+  ],
+  "r12-fase5e/filme-reserva-a-dock": [
+    "p3.spec.ts"
+  ],
+  "r12-fase5e/maratona-de-um-episodio": [
+    "decisao.spec.ts"
+  ],
+  "r12-fase5e/o-que-gostas": [
+    "p3.spec.ts"
+  ],
+  "r12-fase5e/privacidade-falsa": [
+    "p3.spec.ts"
+  ],
+  "r12-fase5e/renomear-32px": [
+    "p3.spec.ts"
+  ],
+  "r12-fase5e/rever-reserva-a-dock": [
+    "p3.spec.ts"
+  ],
+  "r12-fase5e/sizes-estrear": [
+    "p3.spec.ts"
+  ],
+  "r12-fase5e/sizes-rever": [
+    "p3.spec.ts"
+  ],
+  "r12-fase5e/titulo-da-casa": [
+    "p3.spec.ts"
+  ],
+  "r12-fase5e/titulo-sempre-episodic": [
+    "p3.spec.ts"
+  ],
+  "r12-fase6/aviso-com-mola": [
+    "movimento.spec.ts"
+  ],
+  "r12-fase6/aviso-desaparece-de-golpe": [
+    "movimento.spec.ts"
+  ],
+  "r12-fase6/baralho-sem-piparote": [
+    "movimento.spec.ts"
+  ],
+  "r12-fase6/curva-fraca": [
+    "movimento.spec.ts"
+  ],
+  "r12-fase6/folha-desaparece-de-golpe": [
+    "movimento.spec.ts"
+  ],
+  "r12-fase6/folha-sem-piparote": [
+    "movimento.spec.ts"
+  ],
+  "r12-fase6/folha-sem-subida": [
+    "movimento.spec.ts"
+  ],
+  "r12-fase6/reduzido-apaga-o-que-se-desloca": [
+    "movimento.spec.ts"
+  ],
+  "r12-fase6/reduzido-transicoes-a-zero": [
+    "movimento.spec.ts"
+  ],
+  "r12-fase6/ritual-sem-barra": [
+    "movimento.spec.ts"
+  ],
+  "r12-fase7/degrau-do-mes-fraco-some": [
+    "graficos.spec.ts"
+  ],
+  "r12-fase7/horas-ignoram-a-duracao": [
+    "antena.spec.ts"
+  ],
+  "r12-fase7/horas-por-ano-com-um-ano": [
+    "graficos-ui.spec.ts"
+  ],
+  "r12-fase7/mais-vistas-sem-ordem": [
+    "graficos.spec.ts"
+  ],
+  "r12-fase7/plural-de-um": [
+    "graficos.spec.ts"
+  ],
+  "r12-fase8/aviso-tapa-os-botoes-do-baralho": [
+    "baralho.spec.ts"
+  ],
+  "r12-fase8/icone-em-cima-do-titulo": [
+    "baralho.spec.ts"
+  ],
+  "r12-fase8/titulo-do-heroi-43px": [
+    "p3.spec.ts"
+  ],
+  "r12-fecho/celulas-com-intervalo": [
+    "fecho.spec.ts"
+  ],
+  "r12-fecho/degrau-volta-a-linear": [
+    "fecho.spec.ts"
+  ],
+  "r12-fecho/horas-destaque-no-ultimo": [
+    "fecho.spec.ts"
+  ],
+  "r12-portao/cura-desligada": [
+    "portao.spec.ts"
+  ],
+  "r12-portao/enriquecimento-congela-a-errada": [
+    "portao.spec.ts"
+  ],
+  "r12-portao/filme-meio-na-cloud": [
+    "nuvem.spec.ts"
+  ],
+  "r12-portao/listas-fora-da-fila": [
+    "portao.spec.ts"
+  ],
+  "r12-portao/numeracao-nao-sobe": [
+    "nuvem.spec.ts"
+  ],
+  "r12-portao/reparacao-apaga-ambiguas": [
+    "portao.spec.ts"
+  ],
+  "r12-portao/serie-fora-da-fila": [
+    "portao.spec.ts"
+  ],
+  "r12-portao/sync-substitui": [
+    "nuvem.spec.ts"
+  ],
+  "r12/datas-inexatas": [
+    "rever.spec.ts"
+  ],
+  "r12/estatisticas-sem-inexatas": [
+    "estatisticas-datas.spec.ts"
+  ],
+  "r12/filme-reconhecido": [
+    "ja-existe.spec.ts"
+  ],
+  "r12/filmes-repetidos": [
+    "datas.spec.ts"
+  ],
+  "r12/nome-portugues-na-pesquisa-local": [
+    "ja-existe.spec.ts"
+  ],
+  "r12/remake-nunca-junta": [
+    "repetidos.spec.ts"
+  ],
+  "r12/repetidos-por-id": [
+    "repetidos.spec.ts"
+  ],
+  "r12/rever-ainda-a-ver-nao-volta": [
+    "rever.spec.ts"
+  ],
+  "r12/rever-sem-arquivadas": [
+    "rever.spec.ts"
+  ],
+  "r12/rever-so-os-de-tras": [
+    "rever.spec.ts"
+  ],
+  "r12/serie-reconhecida": [
+    "ja-existe.spec.ts"
+  ],
+  "r12/so-o-estreado-conta": [
+    "estreados.spec.ts"
+  ],
+  "r12/total-atualiza": [
+    "estreados.spec.ts"
+  ],
+  "r14-f1/aparencia-nao-sobrevive": [
+    "contraste.spec.ts"
+  ],
+  "r14-f1/barra-nomes-sempre": [
+    "mira.spec.ts"
+  ],
+  "r14-f1/barra-sem-nomes": [
+    "acessibilidade.spec.ts"
+  ],
+  "r14-f1/claro-nao-segue-o-sistema": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f1/dynamic-type-sem-guarda": [
+    "assinatura.spec.ts",
+    "baralho.spec.ts"
+  ],
+  "r14-f1/espaco-em-rem": [
+    "baralho.spec.ts"
+  ],
+  "r14-f1/menu-nao-fecha": [
+    "mira.spec.ts"
+  ],
+  "r14-f1/meta-do-next": [
+    "mira.spec.ts"
+  ],
+  "r14-f1/segmento-branco": [
+    "mira.spec.ts"
+  ],
+  "r14-f10/seccao-nao-cola": [
+    "biblioteca-arrumada.spec.ts"
+  ],
+  "r14-f10/segmentado-alarga": [
+    "fecho.spec.ts"
+  ],
+  "r14-f10/titulo-grande-sem-h1": [
+    "biblioteca-5b3.spec.ts"
+  ],
+  "r14-f10/titulo-grande-so-para-leitores": [
+    "biblioteca-5b3.spec.ts"
+  ],
+  "r14-f2/anular-branco": [
+    "casa-mira.spec.ts"
+  ],
+  "r14-f2/arte-fica-com-texto-grande": [
+    "casa-mira.spec.ts"
+  ],
+  "r14-f2/degrade-desbota-portas": [
+    "onboarding.spec.ts"
+  ],
+  "r14-f2/dicas-perdidas": [
+    "onboarding.spec.ts"
+  ],
+  "r14-f2/mira-alta-em-ecra-baixo": [
+    "onboarding.spec.ts"
+  ],
+  "r14-f2/progresso-da-serie": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f2/segmentos-sem-limite": [
+    "casa-mira.spec.ts"
+  ],
+  "r14-f2/temporada-pelo-numero": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f2/titulo-espremido": [
+    "casa-mira.spec.ts"
+  ],
+  "r14-f3/acao-branca": [
+    "casa-mira.spec.ts"
+  ],
+  "r14-f3/anular-reacende": [
+    "movimento.spec.ts"
+  ],
+  "r14-f3/barra-abaixo-de-10px": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f3/carta-sem-fila-de-acerto": [
+    "casa-mira.spec.ts"
+  ],
+  "r14-f3/claro-a-60": [
+    "contraste.spec.ts"
+  ],
+  "r14-f3/claro-a-60-automatico": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f3/contexto-so-no-retomar": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f3/diario-nao-soma": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f3/diario-nao-tira": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f3/dica-volta-a-flutuar": [
+    "telemovel-fixes.spec.ts"
+  ],
+  "r14-f3/erro-calado": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f3/erro-fica-aceso": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f3/fatia-com-a-mira-inteira": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f3/fim-nao-da-lugar": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f3/fim-sem-momento": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f3/nome-em-mono": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f3/por-ver-acendem": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f3/ritual-espera-pela-gravacao": [
+    "assinatura.spec.ts"
+  ],
+  "r14-f3/ritual-sem-o-marcado": [
+    "assinatura.spec.ts"
+  ]
+}

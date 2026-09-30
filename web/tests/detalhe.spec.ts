@@ -168,6 +168,19 @@ test("com buracos, a ação secundária também está toda tocável ao chegar", 
   expect(await cobertura(page, '[data-testid="mark-next"]')).toBe(100);
 });
 
+test("num ecrã baixo (o iPhone na horizontal) a arte não empurra a ação para debaixo da dock", async ({
+  page,
+  tmdb,
+}) => {
+  // A arte tem 290px num iPhone, mas nunca mais de 40% do ecrã: com 290px fixos,
+  // a 375px de altura o «Marcar» ficava atrás da dock (a mutação
+  // `fase4/altura-do-heroi` sobreviveu a todos os testes de ecrã alto).
+  await page.setViewportSize({ width: 667, height: 375 });
+  await abrirSerie(page, tmdb, false);
+  await expect(page.getByTestId("mark-next")).toBeVisible();
+  await expect.poll(() => cobertura(page, '[data-testid="mark-next"]')).toBe(100);
+});
+
 test("o fim da página não tem vazio a mais", async ({ page, tmdb }) => {
   // Medido: 188px de nada por baixo das temporadas fechadas — a moldura já
   // reserva o espaço da dock (82px), e a página reservava-o outra vez.

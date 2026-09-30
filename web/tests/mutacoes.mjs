@@ -115,7 +115,13 @@ const RETIRADAS = {
   "r12-f4/barra-volta-a-baixo": "a barra da Biblioteca já não cola: cola-se a barra compacta e os cabeçalhos das secções — `r14-f10/seccao-nao-cola`",
   "r12-fase5b3/secundaria-debaixo-da-dock": "o cartão da ação secundária do detalhe (`mt-20`) já não existe; a reserva da dock é medida por `r12-fase5e/filme-reserva-a-dock` e pelos testes da Fase 4",
   "r12-fecho/estrear-data-come-a-linha": "a data do A estrear passou para a linha de baixo (Fase 8); já não compete com o nome — o nome a quebrar é `r12-fase5d/estrear-corta-o-nome`",
-  "r12-f5/perfil-sem-min-w": "as três colunas de números do Perfil saíram (Fase 7): o `Contador` é uma grelha, sem `flex-1`"
+  "r12-f5/perfil-sem-min-w": "as três colunas de números do Perfil saíram (Fase 7): o `Contador` é uma grelha, sem `flex-1`",
+  "r12-fase5b/cabecalhos-6-cores": "a `SectionHeader` já não está em nenhum ecrã; só o `sectionColor` vive na barrinha do cartão da Triagem, um resto da v2 que a Regra da mira não prevê (para a Fase 12 decidir); os cabeçalhos das secções da Biblioteca são `r14-f10/seccao-com-cor`",
+  "r12-fase5b/hover-ambar-volta": "o único uso do `.ep-card-hover` é o `WatchNextCard`, que já nenhum ecrã importa (código morto — apagar na Fase 12); num ecrã tátil não há hover",
+  "r12-fase5e/sizes-fila": "o `WatchNextCard` já não é importado por ecrã nenhum (código morto); a fila da casa é `LinhaFila`, coberta por `p3.spec`",
+  "r12-fase5b/maratona-1-episodios": "equivalente: «Melhor maratona» com um só episódio já não aparece (`decisao.spec`, «superada pela 5e»), por isso o singular é inalcançável",
+  "r12-fase6/ritual-festeja-o-anular": "equivalente com a Fase 3: o ritual só corre enquanto o otimista está aceso (`ritual={otimista || fim ? marcacoes : 0}`), por isso contar uma marcação a mais ao anular não se vê; o risco a sério é `r14-f3/anular-reacende`",
+  "r12-fase6/ritual-reduzido-varre": "a classe `.barra-acende` já não é usada por nenhum componente (o ritual é `data-ritual` em `Segmentos`); com movimento reduzido, o que se guarda é `r12-fase6/ritual-sem-barra`"
 };
 
 /**
@@ -453,20 +459,6 @@ const MUTACOES = [
     para: "",
   },
   {
-    nome: "r12-fase5b/cabecalhos-6-cores",
-    descricao: "os cabeçalhos de secção voltam a sortear entre as 6 cores, incluindo estados",
-    ficheiro: SECTION_HEADER,
-    de: 'const BAR_COLORS = ["var(--color-smpte-gray)", "var(--color-smpte-yellow)", "var(--color-smpte-red)", "var(--color-smpte-blue)"];',
-    para: 'const BAR_COLORS = ["var(--color-smpte-gray)", "var(--color-smpte-yellow)", "var(--color-smpte-magenta)", "var(--color-smpte-green)", "var(--color-smpte-blue)", "var(--color-smpte-red)"];',
-  },
-  {
-    nome: "r12-fase5b/hover-ambar-volta",
-    descricao: "o hover de um cartão volta a acender o âmbar da v1",
-    ficheiro: CSS,
-    de: ".ep-card-hover:active {",
-    para: ".ep-card-hover:hover {\n  border: 1px solid rgba(255, 170, 51, 0.35);\n}\n.ep-card-hover:active {",
-  },
-  {
     nome: "r12-fase5b/brilho-volta",
     descricao: "a barra de progresso da grelha volta a ter o brilho decorativo",
     ficheiro: "src/components/mira/Cartaz.tsx",
@@ -486,13 +478,6 @@ const MUTACOES = [
     ficheiro: "src/app/series/[uuid]/CabecalhoSerie.tsx",
     de: "translateGenre(show.genres[0])",
     para: "show.genres[0]",
-  },
-  {
-    nome: "r12-fase5b/maratona-1-episodios",
-    descricao: "'Melhor maratona' com 1 volta a dizer 'episódios'",
-    ficheiro: "src/app/estatisticas/EstatisticasPageClient.tsx",
-    de: "plural(stats.bestBinge.count, \"episódio\", \"episódios\")",
-    para: "\"episódios\"",
   },
   {
     nome: "r12-fase5b/import-vocabulario-de-computador",
@@ -844,20 +829,6 @@ const MUTACOES = [
     de: "className={`absolute inset-0 ${n === ate ? \"mira-fica\" : \"mira-fatia\"}`}",
     para: "className=\"absolute inset-0 opacity-0\"",
   },
-  {
-    nome: "r12-fase6/ritual-festeja-o-anular",
-    descricao: 'a barra passa a acender a cada mudança de episódio — anular incluído',
-    ficheiro: HEROI,
-    de: '    setASair(mostrado);\n    setMostrado(episode);\n',
-    para: '    setASair(mostrado);\n    setMostrado(episode);\n    setMarcacoes((n) => n + 1);\n',
-  },
-  {
-    nome: "r12-fase6/ritual-reduzido-varre",
-    descricao: 'com movimento reduzido, a barra volta a varrer da esquerda para a direita',
-    ficheiro: CSS,
-    de: '  .barra-acende {\n    animation-name: barra-luz;\n    animation-duration: 500ms;\n  }',
-    para: '  .barra-acende {\n    animation-duration: 500ms;\n  }',
-  },
   // ── Ronda 12, Fase 5d: os P2 da crítica 5b.4 ───────────────
   {
     nome: "r12-fase5d/esta-semana-ciano",
@@ -1031,13 +1002,6 @@ const MUTACOES = [
     ficheiro: "src/app/profile/ProfilePageClient.tsx",
     de: "fill sizes=\"40px\"",
     para: "fill",
-  },
-  {
-    nome: "r12-fase5e/sizes-fila",
-    descricao: 'o WatchNextCard volta a pedir a imagem do ecrã inteiro',
-    ficheiro: WATCHNEXT_CARD,
-    de: 'fill sizes="56px"',
-    para: 'fill',
   },
   {
     nome: "r12-fase5e/titulo-sempre-episodic",
