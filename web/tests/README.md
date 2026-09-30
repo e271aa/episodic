@@ -57,9 +57,9 @@ corre os testes: se ficarem verdes, a correção não está protegida.
 partido. O guião recusa-se fora de um `git worktree`:
 
 ```bash
-git worktree add --detach ../episodic-mutacoes HEAD
-cp -cR node_modules ../episodic-mutacoes/web/node_modules   # clone APFS, ~4 s
-cd ../episodic-mutacoes/web
+git worktree add --detach ../flicki-mutacoes HEAD
+cp -cR node_modules ../flicki-mutacoes/web/node_modules   # clone APFS, ~4 s
+cd ../flicki-mutacoes/web
 node tests/mutacoes.mjs --verificar     # os trechos ainda existem?
 node tests/mutacoes.mjs r14-f3          # só as que batem com o nome
 node tests/mutacoes.mjs                 # a rede toda

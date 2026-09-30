@@ -3,7 +3,7 @@ import type { Page } from "@playwright/test";
 /**
  * Põe dados na base local antes de a app abrir.
  *
- * A app guarda tudo em IndexedDB ("tvlog", v4 — ver `src/lib/db.ts`). Um teste
+ * A app guarda tudo em IndexedDB ("flicki", v4 — ver `src/lib/db.ts`). Um teste
  * que comece por importar um ficheiro do TV Time demoraria segundos e testaria
  * o importador em vez do ecrã em causa; escrever direto na base é instantâneo
  * e deixa cada teste dizer exatamente de que estado parte.
@@ -147,7 +147,7 @@ function registos(semente: Semente): Registos {
 /** Corre dentro do browser — não pode fechar sobre nada de fora. */
 function escrever(dados: Registos): Promise<void> {
   return new Promise((resolve, reject) => {
-    const pedido = indexedDB.open("tvlog", 4);
+    const pedido = indexedDB.open("flicki", 4);
     pedido.onupgradeneeded = () => {
       const base = pedido.result;
       if (!base.objectStoreNames.contains("kv")) base.createObjectStore("kv");
@@ -197,7 +197,7 @@ export async function semear(page: Page, semente: Semente): Promise<void> {
   // A dica "instala o Flicki no teu iPhone" só aparece no iOS — e os testes
   // correm precisamente num iPhone. Flutua sobre o fundo do ecrã e apanha os
   // toques das ações que vivem lá (as do "Pôr em dia", as do Explorar).
-  await page.evaluate(() => localStorage.setItem("episodic-ios-install-dismissed", "1"));
+  await page.evaluate(() => localStorage.setItem("flicki-ios-install-dismissed", "1"));
 }
 
 /**
@@ -206,6 +206,6 @@ export async function semear(page: Page, semente: Semente): Promise<void> {
  */
 export async function preferir(page: Page, prefs: Record<string, string>): Promise<void> {
   await page.evaluate((entradas) => {
-    for (const [chave, valor] of entradas) localStorage.setItem(`episodic:pref:${chave}`, valor);
+    for (const [chave, valor] of entradas) localStorage.setItem(`flicki:pref:${chave}`, valor);
   }, Object.entries(prefs));
 }

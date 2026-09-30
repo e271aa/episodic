@@ -1,10 +1,12 @@
 import { test, expect } from "./apoio/base";
 import { semear } from "./apoio/semear";
+import { readFileSync, readdirSync, statSync } from "node:fs";
+import { join } from "node:path";
 
 /**
- * O nome é «Flicki» (30-09). Só muda o que se lê: o que está gravado no
- * aparelho (a base `tvlog`, as preferências `episodic:pref:…`) não se toca,
- * senão o que o Ruben tem no iPhone desaparecia.
+ * O nome é «Flicki» (30-09), também no que fica gravado no aparelho: a base
+ * `flicki` (era `tvlog`) e as preferências `flicki:pref:` (eram `episodic:pref:`).
+ * A base antiga não se apaga — fica sem uso — e a biblioteca volta da nuvem.
  */
 
 test("o aparelho vê «Flicki»: manifesto, título, nome na PWA instalada", async ({ page }) => {
@@ -86,4 +88,40 @@ test("a carta da casa vazia é o mesmo desenho do ícone, com a barra premida", 
   expect(cores.cimaDaQuarta).toBe("rgb(11, 11, 13)");
   expect(cores.sobreAFila).toBe("rgb(48, 209, 88)");
   expect(cores.cimaDaTerceira).toBe("rgb(100, 210, 255)");
+});
+
+test("nada gravado no aparelho fala do nome antigo: base «flicki», preferências «flicki:pref:»", async ({ page }) => {
+  await page.goto("/series");
+  await page.getByRole("link", { name: "Procurar uma série" }).waitFor();
+  const bases = await page.evaluate(async () => (await indexedDB.databases()).map((b) => b.name));
+  expect(bases).toContain("flicki");
+  expect(bases).not.toContain("tvlog");
+
+  await page.goto("/profile/definicoes");
+  await page.getByRole("radio", { name: "Claro" }).click();
+  await page.goBack();
+  const chaves = await page.evaluate(() => Object.keys(localStorage));
+  expect(chaves.filter((k) => /episodic|tvlog/i.test(k))).toEqual([]);
+});
+
+test("o service worker usa caches «flicki-…»", async ({ page }) => {
+  const sw = await (await page.request.get("/sw.js")).text();
+  expect(sw).toContain("flicki-app-");
+  expect(sw).not.toMatch(/episodic|tvlog/i);
+});
+
+test("o código já não tem o nome antigo em lado nenhum (nem nas chaves gravadas)", () => {
+  const ficheiros = (d: string): string[] =>
+    readdirSync(d).flatMap((n) => {
+      const p = join(d, n);
+      return statSync(p).isDirectory() ? ficheiros(p) : /\.(tsx?|css|js)$/.test(n) ? [p] : [];
+    });
+  const maus: string[] = [];
+  for (const f of [...ficheiros("src"), "public/sw.js"])
+    readFileSync(f, "utf8")
+      .split("\n")
+      .forEach((l, i) => {
+        if (/tvlog|episodic/i.test(l)) maus.push(`${f}:${i + 1}: ${l.trim().slice(0, 80)}`);
+      });
+  expect(maus).toEqual([]);
 });

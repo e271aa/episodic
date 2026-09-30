@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Share, X } from "lucide-react";
 
-const DISMISS_KEY = "episodic-ios-install-dismissed";
+const DISMISS_KEY = "flicki-ios-install-dismissed";
 
 /**
  * «Instala no iPhone» — no fluxo da página, nunca a flutuar.

@@ -15,7 +15,7 @@ function lerStore<T>(page: Pagina, store: "shows" | "outbox" | "kv", chave?: str
   return page.evaluate(
     ({ nome, k }) =>
       new Promise<T>((resolve) => {
-        const pedido = indexedDB.open("tvlog", 4);
+        const pedido = indexedDB.open("flicki", 4);
         pedido.onsuccess = () => {
           const os = pedido.result.transaction(nome).objectStore(nome);
           const q = k ? os.get(k) : os.getAll();

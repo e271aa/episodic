@@ -15,7 +15,7 @@ test("a dica de instalar a PWA não tapa nada: vive no fluxo da casa, por baixo 
   await semear(page, {});
   // Ao contrário dos outros testes, este quer a dica VISÍVEL — é o cenário
   // que a reproduz. `semear` dispensa-a por omissão; aqui repõe-se de propósito.
-  await page.evaluate(() => localStorage.removeItem("episodic-ios-install-dismissed"));
+  await page.evaluate(() => localStorage.removeItem("flicki-ios-install-dismissed"));
   await page.goto("/series");
   const dica = page.getByTestId("dica-instalar");
   await expect(dica).toBeVisible();

@@ -211,7 +211,7 @@ export function isKvOp(op: OutboxOp): op is KvOp {
   return op.kind === "kv-upserted";
 }
 
-interface TvlogDB extends DBSchema {
+interface FlickiDB extends DBSchema {
   kv: { key: string; value: unknown };
   shows: { key: string; value: StoredShow };
   watched: {
@@ -224,13 +224,13 @@ interface TvlogDB extends DBSchema {
   outbox: { key: string; value: OutboxOp };
 }
 
-let dbPromise: Promise<IDBPDatabase<TvlogDB>> | null = null;
+let dbPromise: Promise<IDBPDatabase<FlickiDB>> | null = null;
 // referência à ligação aberta — precisamos dela para a poder fechar quando
 // outra aba estiver a tentar subir de versão
-let openConnection: IDBPDatabase<TvlogDB> | null = null;
+let openConnection: IDBPDatabase<FlickiDB> | null = null;
 
-function db(): Promise<IDBPDatabase<TvlogDB>> {
-  dbPromise ??= openDB<TvlogDB>("tvlog", 4, {
+function db(): Promise<IDBPDatabase<FlickiDB>> {
+  dbPromise ??= openDB<FlickiDB>("flicki", 4, {
     // Criação defensiva: garante cada store/índice esteja em falta o motivo
     // que for (upgrade de versão parcial, base criada por outra via, etc.).
     upgrade(database) {

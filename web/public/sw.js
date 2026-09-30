@@ -7,8 +7,8 @@
 //    diretas de image.tmdb.org/static.tvmaze.com — vêm de /_next/image, que é
 //    same-origin. É esse caminho que tem de ser tratado como cache-first
 //    agora; os hosts externos ficam só por segurança (páginas antigas em cache).
-const APP_CACHE = "episodic-app-v1";
-const IMG_CACHE = "episodic-img-v2";
+const APP_CACHE = "flicki-app-v1";
+const IMG_CACHE = "flicki-img-v1";
 const IMG_HOSTS = ["image.tmdb.org", "static.tvmaze.com"];
 
 self.addEventListener("install", (event) => {

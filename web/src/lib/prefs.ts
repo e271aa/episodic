@@ -2,7 +2,7 @@
 
 import { useCallback, useSyncExternalStore } from "react";
 
-const PREFIXO = "episodic:pref:";
+const PREFIXO = "flicki:pref:";
 
 /**
  * Preferências de apresentação — o modo de vista do Explorar, a densidade da

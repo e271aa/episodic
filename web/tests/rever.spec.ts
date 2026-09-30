@@ -23,7 +23,7 @@ async function lerVistos(page: Pagina, uuid: string) {
   return page.evaluate(
     (id) =>
       new Promise<{ season: number; episode: number; dateIsExact: boolean }[]>((resolve) => {
-        const pedido = indexedDB.open("tvlog", 4);
+        const pedido = indexedDB.open("flicki", 4);
         pedido.onsuccess = () => {
           const q = pedido.result
             .transaction("watched")

@@ -51,7 +51,7 @@ test("importar deixa as séries com o estado certo e sem duplicados", async ({ p
     () =>
       new Promise<{ shows: Record<string, unknown>[]; watched: Record<string, unknown>[] }>(
         (res) => {
-          const p = indexedDB.open("tvlog", 4);
+          const p = indexedDB.open("flicki", 4);
           p.onsuccess = () => {
             const d = p.result;
             const tx = d.transaction(["shows", "watched"]);
@@ -88,7 +88,7 @@ test("a data exata do check-in vence a data do registo em massa", async ({ page 
   const eps = await page.evaluate(
     () =>
       new Promise<Record<string, unknown>[]>((res) => {
-        const p = indexedDB.open("tvlog", 4);
+        const p = indexedDB.open("flicki", 4);
         p.onsuccess = () => {
           const d = p.result;
           const r = d.transaction("watched").objectStore("watched").getAll();
@@ -123,7 +123,7 @@ test("os filmes vêm do ficheiro v1, com a data e a estreia", async ({ page }) =
   const filmes = await page.evaluate(
     () =>
       new Promise<Record<string, unknown>[]>((res) => {
-        const p = indexedDB.open("tvlog", 4);
+        const p = indexedDB.open("flicki", 4);
         p.onsuccess = () => {
           const d = p.result;
           const r = d.transaction("movies").objectStore("movies").getAll();

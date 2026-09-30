@@ -95,7 +95,7 @@ test("uma série em dia não diz 'por ver' por causa de uma temporada anunciada"
   const total = await page.evaluate(
     () =>
       new Promise<number | null>((resolve) => {
-        const pedido = indexedDB.open("tvlog", 4);
+        const pedido = indexedDB.open("flicki", 4);
         pedido.onsuccess = () => {
           const g = pedido.result.transaction("shows").objectStore("shows").get("s-1");
           g.onsuccess = () => resolve(g.result.totalEpisodes);

@@ -137,9 +137,11 @@ LEIA-ME de espaços e tamanhos); na app vive em três sítios:
   de altura; no rodapé das Definições a 18px em `label-2`. Mínimos: 14px de
   altura a palavra, 16px o símbolo, 20px o conjunto; margem livre de ½ altura-x.
 
-**O que NÃO muda com o nome:** os identificadores gravados no aparelho — a base
-`tvlog`, as preferências `episodic:pref:…`, `episodic-ios-install-dismissed`, as
-caches do service worker. Mudá-los apagava o que o Ruben tem no iPhone.
+**O que está gravado no aparelho também se chama Flicki:** a base `flicki`, as
+preferências `flicki:pref:…`, `flicki-ios-install-dismissed` e as caches do
+service worker. A base antiga (`tvlog`) fica no iPhone sem uso, não se apaga; a
+biblioteca volta da nuvem no 1.º arranque (`FirstSync`). Uma guarda em
+`flicki.spec` impede que o nome antigo volte ao código.
 
 ## Tipografia — a letra do sistema, com Dynamic Type
 

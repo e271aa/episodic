@@ -1,4 +1,4 @@
--- Episodic — esquema Supabase (Postgres)
+-- Flicki — esquema Supabase (Postgres)
 -- Cola tudo isto no SQL Editor do teu projeto Supabase e corre uma vez.
 -- Espelha o modelo local (IndexedDB): cada linha pertence a um utilizador,
 -- e a Row Level Security garante que cada um só vê/edita o que é seu.

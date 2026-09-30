@@ -16,7 +16,7 @@ function ler<T>(page: Pagina, store: "movies" | "shows" | "lists") {
   return page.evaluate(
     (nome) =>
       new Promise<T[]>((resolve) => {
-        const pedido = indexedDB.open("tvlog", 4);
+        const pedido = indexedDB.open("flicki", 4);
         pedido.onsuccess = () => {
           const todos = pedido.result.transaction(nome).objectStore(nome).getAll();
           todos.onsuccess = () => resolve(todos.result as T[]);

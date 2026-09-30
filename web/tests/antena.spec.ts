@@ -95,7 +95,7 @@ test("a duração de um episódio chega do fornecedor, em segundo plano", async 
         page.evaluate(
           () =>
             new Promise<unknown>((resolve) => {
-              const pedido = indexedDB.open("tvlog");
+              const pedido = indexedDB.open("flicki");
               pedido.onsuccess = () => {
                 const leitura = pedido.result
                   .transaction("shows")

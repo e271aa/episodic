@@ -59,7 +59,7 @@ test("o ritual começa no toque: a mira já corre antes de o episódio mudar", a
     () =>
       new Promise<void>((pronto) => {
         const w = window as unknown as { __soltarGravacao?: boolean };
-        const pedido = indexedDB.open("tvlog");
+        const pedido = indexedDB.open("flicki");
         pedido.onsuccess = () => {
           const store = pedido.result.transaction("watched", "readwrite").objectStore("watched");
           const ocupar = () => {

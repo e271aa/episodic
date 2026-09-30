@@ -17,9 +17,9 @@
  * escreve em `.next/` e o servidor de pré-visualização recarrega os ficheiros
  * mutados; por isso o guião recusa-se fora de um `git worktree`):
  *
- *   git worktree add --detach ../episodic-mutacoes HEAD
- *   cp -cR node_modules ../episodic-mutacoes/web/node_modules   # clone APFS, 4 s
- *   cd ../episodic-mutacoes/web
+ *   git worktree add --detach ../flicki-mutacoes HEAD
+ *   cp -cR node_modules ../flicki-mutacoes/web/node_modules   # clone APFS, 4 s
+ *   cd ../flicki-mutacoes/web
  *   node tests/mutacoes.mjs                  todas
  *   node tests/mutacoes.mjs buracos r14-f3   só as que batem com algum destes nomes
  *   node tests/mutacoes.mjs --verificar      só confirma que os trechos existem
@@ -1002,7 +1002,7 @@ const MUTACOES = [
     para: "fill",
   },
   {
-    nome: "r12-fase5e/titulo-sempre-episodic",
+    nome: "r12-fase5e/titulo-sempre-flicki",
     descricao: "o <title> volta a ser o nome da app, igual em todos os ecrãs",
     ficheiro: LAYOUT,
     de: 'title: { default: "Flicki", template: "%s · Flicki" },',
