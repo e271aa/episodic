@@ -89,12 +89,19 @@ test("só há uma ação preenchida de cada vez", async ({ page, tmdb }) => {
   await abrirSerie(page, tmdb, true);
   // Eram dois blocos brancos iguais empilhados, os dois a pedir o toque com
   // o mesmo peso. Com buracos, o "próximo episódio" passa a contornado.
-  await expect(page.getByTestId("marcar-buracos")).toHaveClass(/bg-acao/);
-  await expect(page.getByTestId("mark-next")).not.toHaveClass(/bg-acao/);
+  // Mede-se o que se vê (o fundo que o browser resolve), não o nome da classe:
+  // «preenchida» é um fundo opaco; o contorno não tem fundo nenhum.
+  const opaco = (id: string) =>
+    page.getByTestId(id).evaluate((el) => {
+      const [, , , a = "1"] = getComputedStyle(el).backgroundColor.match(/[\d.]+/g) ?? [];
+      return Number(a) === 1;
+    });
+  expect(await opaco("marcar-buracos")).toBe(true);
+  expect(await opaco("mark-next")).toBe(false);
 
   // …e sem buracos volta a ser ele o preenchido.
   await abrirSerie(page, tmdb, false);
-  await expect(page.getByTestId("mark-next")).toHaveClass(/bg-acao/);
+  expect(await opaco("mark-next")).toBe(true);
 });
 
 test("o título diz quanto se viu, em números", async ({ page, tmdb }) => {

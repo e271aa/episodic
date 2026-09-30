@@ -1596,8 +1596,8 @@ if (bandeiras.has("--verificar")) {
 
 // Só numa cópia à parte: na pasta que serve a pré-visualização, a build de
 // cada mutação apagava-lhe o `.next` e o `next dev` recarregava o código partido.
-const comum = execSync("git rev-parse --git-common-dir", { encoding: "utf8" }).trim();
-const propria = execSync("git rev-parse --git-dir", { encoding: "utf8" }).trim();
+const comum = execSync("git rev-parse --path-format=absolute --git-common-dir", { encoding: "utf8" }).trim();
+const propria = execSync("git rev-parse --path-format=absolute --git-dir", { encoding: "utf8" }).trim();
 if (comum === propria && !bandeiras.has("--aqui")) {
   console.error("Isto é a pasta principal, não uma cópia (`git worktree`).");
   console.error("Cria uma (instruções no topo deste ficheiro) ou repete com --aqui, se tiveres a certeza");
