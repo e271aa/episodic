@@ -90,7 +90,7 @@ export default function UmAUm({ uuid }: { uuid: string }) {
     return (
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-8">
         <TitleBone />
-        <Bone className="mt-6 aspect-3/4 w-full rounded-3xl" />
+        <Bone className="mt-6 aspect-3/4 w-full rounded-[28px]" />
       </main>
     );
   }

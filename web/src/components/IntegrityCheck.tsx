@@ -1,5 +1,6 @@
 "use client";
 
+import Acao from "@/components/mira/Acao";
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
@@ -122,7 +123,7 @@ export default function IntegrityCheck() {
         fim={
           progress !== null ? (
             <span className="ep-code flex items-center gap-2 text-xs">
-              <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-dim/30 border-t-dim" />
+              <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-label-3 border-t-label-2" />
               {progress.done}/{progress.total}
             </span>
           ) : (
@@ -135,79 +136,69 @@ export default function IntegrityCheck() {
 
   return (
     <div className="px-4 py-3.5">
-      <p className="font-display text-[0.9375rem] font-semibold">Verificar biblioteca</p>
-      <p className="mt-1 text-[0.9375rem] text-dim">
+      <p className="text-base font-semibold text-label">Verificar biblioteca</p>
+      <p className="mt-1 text-[0.88rem] text-label-2">
         Procura séries repetidas e séries com mais episódios marcados do que o
         fornecedor tem — as duas coisas acontecem quando o import do TV Time e
         a app usam numerações e identificadores diferentes.
       </p>
 
       <div className="mt-3 flex flex-wrap gap-2">
-        <button
-          onClick={verificar}
-          disabled={progress !== null}
-          className="flex min-h-11 cursor-pointer items-center gap-2 rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95 disabled:opacity-50"
-        >
+        <Acao tipo="secundaria" grande={false} onClick={verificar} disabled={progress !== null}>
           {progress !== null && (
-            <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-dim/30 border-t-dim" />
+            <span className="spinner h-3.5 w-3.5 rounded-full border-2 border-label-3 border-t-label-2" />
           )}
           {progress !== null ? `A verificar ${progress.done}/${progress.total}…` : "Verificar"}
-        </button>
+        </Acao>
 
         {podeReverter > 0 && (
-          <button
-            onClick={reverter}
-            className="flex min-h-11 cursor-pointer items-center rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-dim transition hover:border-ink hover:text-ink active:scale-95"
-          >
+          <Acao tipo="secundaria" grande={false} onClick={reverter}>
             Repor {podeReverter} marcações
-          </button>
+          </Acao>
         )}
       </div>
 
-      {estado && <p className="mt-3 text-[0.9375rem] text-ink">{estado}</p>}
+      {estado && <p className="mt-3 text-base text-label">{estado}</p>}
 
       {duplicados && duplicados.length > 0 && (
-        <div className="mt-4 rounded-xl border border-line bg-raised p-3">
-          <p className="ep-code text-sm text-ink">
+        <div className="mt-4 rounded-[22px] bg-fill p-4">
+          <p className="ep-code text-[0.88rem] text-label">
             {duplicados.length}{" "}
             {duplicados.length === 1 ? "série repetida" : "séries repetidas"}
           </p>
-          <p className="mt-1 text-xs text-dim">
+          <p className="mt-1 text-[0.76rem] text-label-2">
             A mesma série ficou duas vezes na biblioteca — uma com o teu
             histórico, outra vazia, criada pelo Explorar ou pela pesquisa. Sai
             a vazia; os nomes e as listas dela passam para a que fica.
           </p>
           <ul className="mt-2 flex flex-col gap-1">
             {duplicados.map((d) => (
-              <li key={d.dropUuid} className="ep-code text-xs text-faint">
+              <li key={d.dropUuid} className="ep-code text-[0.76rem] text-label-2">
                 {d.dropName !== d.keepName ? `${d.dropName} = ` : ""}
                 {d.keepName} · fica a que tem {d.keepWatched} episódios
               </li>
             ))}
           </ul>
-          <button
-            onClick={limparDuplicados}
-            className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95"
-          >
+          <Acao onClick={limparDuplicados} className="mt-3 w-full">
             Remover {duplicados.length === 1 ? "a repetida" : "as repetidas"}
-          </button>
+          </Acao>
         </div>
       )}
 
       {filmesRepetidos && filmesRepetidos.length > 0 && (
-        <div className="mt-4 rounded-xl border border-line bg-raised p-3" data-testid="filmes-repetidos">
-          <p className="ep-code text-sm text-ink">
+        <div className="mt-4 rounded-[22px] bg-fill p-4" data-testid="filmes-repetidos">
+          <p className="ep-code text-[0.88rem] text-label">
             {filmesRepetidos.length}{" "}
             {filmesRepetidos.length === 1 ? "filme repetido" : "filmes repetidos"}
           </p>
-          <p className="mt-1 text-xs text-dim">
+          <p className="mt-1 text-[0.76rem] text-label-2">
             O mesmo filme ficou duas vezes — normalmente um em “para ver” e
             outro marcado como visto pela pesquisa. Juntam-se num só, com a
             data de visto, e sai de “para ver”.
           </p>
           <ul className="mt-2 flex flex-col gap-1">
             {filmesRepetidos.map((g) => (
-              <li key={g.keepKey} className="ep-code text-xs text-faint">
+              <li key={g.keepKey} className="ep-code text-[0.76rem] text-label-2">
                 {g.keepName}
                 {g.dropNames.some((n) => n !== g.keepName)
                   ? ` = ${g.dropNames.filter((n) => n !== g.keepName).join(", ")}`
@@ -216,12 +207,9 @@ export default function IntegrityCheck() {
               </li>
             ))}
           </ul>
-          <button
-            onClick={juntarFilmes}
-            className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95"
-          >
+          <Acao onClick={juntarFilmes} className="mt-3 w-full">
             Juntar {filmesRepetidos.length === 1 ? "o filme" : `os ${filmesRepetidos.length} filmes`}
-          </button>
+          </Acao>
         </div>
       )}
 
@@ -229,7 +217,7 @@ export default function IntegrityCheck() {
         plan.repairs.length === 0 &&
         duplicados?.length === 0 &&
         filmesRepetidos?.length === 0 && (
-        <p className="mt-3 text-[0.9375rem] text-dim">
+        <p className="mt-3 text-[0.88rem] text-label-2">
           Nada a corrigir em {plan.checked} séries.
         </p>
       )}
@@ -238,52 +226,49 @@ export default function IntegrityCheck() {
         <div className="mt-4">
           {seguras.length > 0 && (
             <>
-              <p className="ep-code text-sm text-ink">
+              <p className="ep-code text-[0.88rem] text-label">
                 {totalSeguro} marcações a mais em {seguras.length}{" "}
                 {seguras.length === 1 ? "série" : "séries"}
               </p>
               <ul className="mt-2 flex flex-col gap-2">
                 {seguras.map((r) => (
-                  <li key={r.uuid} className="rounded-xl bg-raised p-3">
+                  <li key={r.uuid} className="rounded-[22px] bg-fill p-4">
                     <Link
                       href={`/series/${r.uuid}`}
-                      className="font-display text-[0.9375rem] font-semibold hover:underline"
+                      className="text-base font-semibold text-label"
                     >
                       {r.name}
                     </Link>
-                    <p className="ep-code mt-0.5 text-xs text-faint">
+                    <p className="ep-code mt-0.5 text-[0.76rem] text-label-2">
                       {r.storedTotal} marcados · o fornecedor tem {r.providerTotal} ·
                       saem {r.extras.length}
                     </p>
-                    <p className="mt-1 text-xs text-dim">
+                    <p className="mt-1 text-[0.76rem] text-label-2">
                       Fica completa depois de sair o que está a mais — são os
                       mesmos episódios contados duas vezes, não perdes nada.
                     </p>
                   </li>
                 ))}
               </ul>
-              <button
-                onClick={reparar}
-                className="mt-3 flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95"
-              >
+              <Acao onClick={reparar} className="mt-3 w-full">
                 Remover as {totalSeguro} marcações a mais
-              </button>
-              <p className="mt-1.5 text-center text-xs text-faint">
+              </Acao>
+              <p className="mt-1.5 text-center text-[0.76rem] text-label-2">
                 Dá para repor a seguir, com as datas originais.
               </p>
             </>
           )}
 
           {duvidosas.length > 0 && (
-            <div className="mt-4 border-t border-line pt-3">
-              <p className="text-[0.9375rem] text-dim">
+            <div className="mt-4 border-t-[0.5px] border-separator pt-3">
+              <p className="text-[0.88rem] text-label-2">
                 Estas ficam como estão — removê-las deixaria buracos, por isso
                 podem ser episódios a sério que o fornecedor numera de outra
                 maneira:
               </p>
               <ul className="mt-2 flex flex-col gap-1">
                 {duvidosas.map((r) => (
-                  <li key={r.uuid} className="ep-code text-xs text-faint">
+                  <li key={r.uuid} className="ep-code text-[0.76rem] text-label-2">
                     {r.name} · {r.storedTotal} marcados, fornecedor{" "}
                     {r.providerTotal} · {r.extras.length} fora do sítio
                   </li>

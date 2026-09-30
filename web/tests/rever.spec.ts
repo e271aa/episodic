@@ -143,9 +143,13 @@ test("as três respostas fazem o que dizem, e tudo se anula", async ({ page, tmd
   await expect(page.getByTestId("rever-cartao")).toContainText("Buracos E Frente");
 });
 
-/** Preenchido = a pílula branca, a ação que o ecrã recomenda. */
+/** Preenchido = a cápsula da ação, opaca; a secundária é `fill`, translúcida. */
 async function preenchido(botao: import("@playwright/test").Locator) {
-  return botao.evaluate((b) => getComputedStyle(b).backgroundColor !== "rgba(0, 0, 0, 0)");
+  return botao.evaluate((b) => {
+    const cor = getComputedStyle(b).backgroundColor;
+    const alfa = cor.startsWith("rgba") ? parseFloat(cor.split(",")[3]) : cor === "transparent" ? 0 : 1;
+    return alfa > 0.9;
+  });
 }
 
 test("a ação recomendada só marca o que a prova cobre", async ({ page, tmdb }) => {

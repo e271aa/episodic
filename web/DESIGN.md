@@ -317,6 +317,16 @@ um mapa vazio lê-se como avaria. Entre blocos, 12px (`mt-3`); entre secções, 
 - **Desvio do desenho, por decisão:** o «O teu espetro» (géneros) mantém-se, por
   baixo.
 
+## Os restantes ecrãs (Fase 8)
+
+Herdam as primitivas, sem inventar. **Sub-ecrãs** (Lista, A estrear, Rever,
+Importar, Verificar): `CabecalhoEcra` (círculo de recuar + título 28px), texto
+secundário a 14/`label-2`, blocos em `group` raio 26 (22 dentro de um grupo,
+`fill`), ações em `Acao` (44px em cartões, 52 a ação do ecrã). **Filme**: o
+herói da série. **Folhas**: só a agrupada. **Entrar**: campos `group` raio 22, sem
+a mira. **Baralho** (Pôr em dia, Triagem): botões `vidro`; o ✓ é a cápsula da ação;
+o progresso é `label`, não a mira.
+
 ## Movimento
 - **Curvas:** `--ease-out` = `cubic-bezier(0.23, 1, 0.32, 1)` para o que entra e
   responde; `--ease-drawer` = `cubic-bezier(0.32, 0.72, 0, 1)`, a do iOS, para o

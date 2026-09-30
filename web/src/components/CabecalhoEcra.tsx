@@ -30,12 +30,12 @@ export default function CabecalhoEcra({
       <BotaoVoltar
         label={voltar}
         fallback={fallback}
-        className="-ml-2.5 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-90"
+        className="-ml-2.5 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-label transition active:scale-90"
       >
         <ArrowLeftIcon className="h-5 w-5" />
       </BotaoVoltar>
       {typeof titulo === "string" ? (
-        <h1 className="min-w-0 font-display text-2xl font-bold [font-stretch:110%]">{titulo}</h1>
+        <h1 className="min-w-0 text-[1.65rem] leading-[1.1] font-bold text-label">{titulo}</h1>
       ) : (
         titulo
       )}

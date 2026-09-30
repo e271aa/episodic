@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import Acao from "@/components/mira/Acao";
 import CabecalhoEcra from "@/components/CabecalhoEcra";
 import Poster from "@/components/Poster";
 import { CheckIcon, TvIcon } from "@/components/icons";
@@ -116,14 +117,14 @@ export default function ReverPage() {
       {/* Duas linhas, não três: "uma de cada vez, e tudo se anula" já o
           dizem o contador e o aviso de anular, e a linha a mais empurrava a
           saída do cartão para debaixo da dock (Ronda 12, 5d). */}
-      <p className="mt-1 text-[0.9375rem] text-dim">
+      <p className="mt-1 text-[0.88rem] text-label-2">
         Séries com menos marcado do que o que já estreou. Só tu sabes se as viste.
       </p>
 
       {series === null ? (
         <div className="mt-10 flex flex-col items-center text-center" data-testid="rever-a-carregar">
-          <span className="spinner h-6 w-6 rounded-full border-2 border-line border-t-ink" />
-          <p className="mt-4 text-[0.9375rem] text-dim">
+          <span className="spinner h-6 w-6 rounded-full border-2 border-label-3 border-t-label" />
+          <p className="mt-4 text-[0.88rem] text-label-2">
             A comparar com o que já estreou
             {progresso && progresso.total > 0
               ? ` · ${progresso.feitas}/${progresso.total}`
@@ -132,17 +133,17 @@ export default function ReverPage() {
         </div>
       ) : series.length === 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <CheckIcon className="h-12 w-12 text-faint" />
-          <p className="mt-4 max-w-sm font-display font-semibold">Nada para rever</p>
-          <p className="mt-2 max-w-sm text-[0.9375rem] text-dim">
+          <CheckIcon className="h-12 w-12 text-label-3" />
+          <p className="mt-4 max-w-sm text-[1.18rem] font-semibold text-label">Nada para rever</p>
+          <p className="mt-2 max-w-sm text-[0.88rem] text-label-2">
             Tudo o que tens marcado bate certo com o que já estreou.
           </p>
         </div>
       ) : !atual ? (
         <div className="flex flex-1 flex-col items-center justify-center text-center" data-testid="rever-fim">
-          <CheckIcon className="check-pop h-12 w-12 text-ink" />
-          <p className="mt-4 max-w-sm font-display font-semibold">Biblioteca revista</p>
-          <p className="mt-2 max-w-sm text-[0.9375rem] text-dim">
+          <CheckIcon className="check-pop h-12 w-12 text-label" />
+          <p className="mt-4 max-w-sm text-[1.18rem] font-semibold text-label">Biblioteca revista</p>
+          <p className="mt-2 max-w-sm text-[0.88rem] text-label-2">
             {arrumadas === 1 ? "1 série arrumada" : `${arrumadas} séries arrumadas`}
             {arrumadas < series.length
               ? ` · ${series.length - arrumadas} ficaram para depois`
@@ -151,7 +152,7 @@ export default function ReverPage() {
           </p>
           <Link
             href="/library"
-            className="mt-6 flex min-h-11 items-center rounded-full border border-line px-5 text-[0.9375rem] font-semibold text-ink transition hover:border-ink active:scale-95"
+            className="mt-6 flex min-h-[52px] items-center rounded-full bg-acao px-5 font-semibold text-on-label transition active:scale-[0.97]"
           >
             Ir para a Biblioteca
           </Link>
@@ -163,35 +164,35 @@ export default function ReverPage() {
               chegar (0% livre, 5b.4). A margem negativa guarda os 44px de
               toque sem alargar a linha. */}
           <div className="flex items-center justify-between">
-            <p className="ep-code text-xs text-faint">
+            <p className="ep-code text-[0.76rem] text-label-2">
               {indice + 1} de {series.length}
             </p>
             <button
               onClick={() => setIndice(indice + 1)}
-              className="-mr-3 -my-3.5 flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim hover:text-ink"
+              className="-mr-3 -my-3.5 flex min-h-11 cursor-pointer items-center px-3 text-[0.88rem] text-label-2"
             >
               Decidir depois
             </button>
           </div>
-          <div key={atual.show.uuid} className="page-enter mt-2 rounded-2xl border border-line bg-panel p-4">
+          <div key={atual.show.uuid} className="page-enter mt-2 rounded-[26px] bg-group p-4">
             <div className="flex gap-3">
               {atual.show.posterPath ? (
                 <div className="relative h-20 w-14 shrink-0 overflow-hidden rounded-lg">
                   <Poster path={atual.show.posterPath} alt="" size="w185" fill sizes="56px" className="object-cover" />
                 </div>
               ) : (
-                <div className="flex h-20 w-14 shrink-0 items-center justify-center rounded-lg bg-raised text-faint">
+                <div className="flex h-20 w-14 shrink-0 items-center justify-center rounded-lg bg-fill text-label-3">
                   <TvIcon className="h-6 w-6" />
                 </div>
               )}
               <div className="min-w-0 flex-1">
                 <Link
                   href={`/series/${atual.show.uuid}`}
-                  className="font-display text-lg font-semibold leading-tight hover:underline"
+                  className="text-[1.18rem] leading-tight font-semibold text-label"
                 >
                   {atual.show.name}
                 </Link>
-                <p className="ep-code mt-1 text-sm text-dim">
+                <p className="ep-code mt-1 text-[0.88rem] text-label-2">
                   {atual.vistos} de {atual.estreados} estreados
                 </p>
                 {/* O glossário (PRODUCT.md): "por marcar" é só o que está
@@ -200,19 +201,19 @@ export default function ReverPage() {
                     à frente (Ronda 12, 5b.4, P1 #4). `paraTras` é o início
                     de `porMarcar` — os dois estão pela mesma ordem. */}
                 {atual.paraTras.length > 0 && (
-                  <p className="ep-code text-sm text-dim">
+                  <p className="ep-code text-[0.88rem] text-label-2">
                     {atual.paraTras.length} por marcar · {temporadasDe(atual.paraTras)}
                   </p>
                 )}
                 {atual.porMarcar.length > atual.paraTras.length && (
-                  <p className="ep-code text-sm text-dim">
+                  <p className="ep-code text-[0.88rem] text-label-2">
                     {atual.porMarcar.length - atual.paraTras.length} por ver ·{" "}
                     {temporadasDe(atual.porMarcar.slice(atual.paraTras.length))}
                   </p>
                 )}
               </div>
             </div>
-            <p className="mt-4 text-[0.9375rem] text-ink" data-testid="rever-porque">
+            <p className="mt-4 text-base text-label" data-testid="rever-porque">
               {porque(atual)}
             </p>
 
@@ -221,32 +222,37 @@ export default function ReverPage() {
                 no fim de uma temporada, ou a meio), é uma pergunta e nenhuma
                 resposta vem recomendada. O "vi tudo" diz sempre o que junta
                 para além da prova. */}
-            <div className="mt-4 flex flex-col gap-2">
+            <div className="mt-3 flex flex-col gap-2">
               {prova && (
-                <button
+                <Acao
+                  grande={false}
                   onClick={() => void marcar(prova, `${contarEpisodios(prova.length)} marcados`)}
                   disabled={aCorrer}
-                  className="flex min-h-11 w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
+                  className="w-full"
                 >
                   <CheckIcon className="h-4 w-4" />
                   Marcar {prova.length === 1 ? "o episódio" : `os ${prova.length}`}
                   {alemDaProva.length > 0 && " de trás"}
-                </button>
+                </Acao>
               )}
               {(!prova || alemDaProva.length > 0) && (
-                <button
+                <Acao
+                  tipo="secundaria"
+                  grande={false}
                   onClick={() =>
                     void marcar(atual.porMarcar, `${contarEpisodios(atual.porMarcar.length)} marcados`)
                   }
                   disabled={aCorrer}
-                  className="flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-ink transition hover:border-ink/40 hover:bg-raised active:scale-[0.99] disabled:opacity-50"
+                  className="w-full"
                 >
                   {prova
                     ? `Vi tudo · também ${alemDaProva.length === 1 ? "o" : `os ${alemDaProva.length}`} da ${temporadasDe(alemDaProva)}`
                     : `Vi tudo · marca ${atual.porMarcar.length === 1 ? "o episódio" : `os ${atual.porMarcar.length}`}`}
-                </button>
+                </Acao>
               )}
-              <button
+              <Acao
+                tipo="secundaria"
+                grande={false}
                 onClick={() =>
                   void responder(
                     () => marcarAindaAVer(atual.show.uuid),
@@ -255,10 +261,10 @@ export default function ReverPage() {
                   )
                 }
                 disabled={aCorrer}
-                className="flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-line px-4 text-[0.9375rem] font-semibold text-ink transition hover:border-ink/40 hover:bg-raised active:scale-[0.99] disabled:opacity-50"
+                className="w-full"
               >
                 Ainda estou a ver
-              </button>
+              </Acao>
             </div>
           </div>
           {/* Arquivar não é uma resposta à pergunta do cartão — é uma saída
@@ -273,7 +279,7 @@ export default function ReverPage() {
                 )
               }
               disabled={aCorrer}
-              className="flex min-h-11 cursor-pointer items-center px-3 text-[0.9375rem] text-dim transition hover:text-ink disabled:opacity-50"
+              className="flex min-h-11 cursor-pointer items-center px-3 text-[0.88rem] text-label-2 transition disabled:opacity-50"
             >
               Deixei de ver — arquivar
             </button>

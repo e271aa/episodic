@@ -155,7 +155,7 @@ export default function SwipeCard({
           // o nome já é o título do cartão, por baixo — aqui só o sinal de
           // que falta a arte, no terço de cima: centrado no cartão inteiro
           // caía em cima do título (visto no Safari do iOS, Fase 8)
-          <div className="absolute inset-0 bg-raised text-faint">
+          <div className="absolute inset-0 bg-group text-label-3">
             <div className="absolute inset-x-0 top-0 flex h-1/3 items-center justify-center">
               <TvIcon className="h-12 w-12" />
             </div>
@@ -178,7 +178,7 @@ export default function SwipeCard({
             por isso o selo "Visto" tem de estar à esquerda para continuar à
             vista (é o que as dating apps fazem). */}
         <div
-          className="pointer-events-none absolute left-4 top-6 rounded-xl border-[5px] px-4 py-1.5 font-display text-3xl font-bold uppercase leading-none tracking-wide [font-stretch:75%]"
+          className="pointer-events-none absolute left-4 top-6 rounded-xl border-[5px] px-4 py-1.5 text-[1.65rem] font-bold leading-none"
           style={{
             borderColor: YES,
             color: YES,
@@ -191,7 +191,7 @@ export default function SwipeCard({
           Visto
         </div>
         <div
-          className="pointer-events-none absolute right-4 top-6 rounded-xl border-[5px] px-4 py-1.5 text-center font-display text-3xl font-bold uppercase leading-none tracking-wide [font-stretch:75%]"
+          className="pointer-events-none absolute right-4 top-6 rounded-xl border-[5px] px-4 py-1.5 text-center text-[1.65rem] font-bold leading-none"
           style={{
             borderColor: NO,
             color: NO,
@@ -213,25 +213,25 @@ export default function SwipeCard({
             marcado, no chip. O `pb` sobe o texto acima das ações flutuantes
             e da dock — sem isto o título ficava tapado por baixo delas. */}
         <div className="relative flex h-full flex-col justify-end px-5 pt-5 pb-[calc(var(--dock-h)+10.25rem)]">
-          <h2 className="line-clamp-2 font-display text-2xl font-bold leading-tight text-ink [font-stretch:105%]">
+          <h2 className="line-clamp-2 text-[1.65rem] font-bold leading-[1.1] text-label">
             {showName}
           </h2>
           <div className="mt-2 flex items-center gap-2.5">
-            <span className="ep-code rounded-lg bg-ink px-2.5 py-1 text-sm font-bold text-tube">
+            <span className="ep-code rounded-full bg-acao px-3 py-1 text-[0.88rem] font-semibold text-on-label">
               {formatEpCode(episode.season, episode.episode)}
             </span>
             {episode.airDate && (
-              <span className="ep-code text-xs text-faint">
+              <span className="ep-code text-[0.76rem] text-label-2">
                 {episode.airDate.slice(0, 4)}
               </span>
             )}
           </div>
-          <p className="mt-2 line-clamp-2 text-[0.9375rem] font-medium leading-snug text-ink">
+          <p className="mt-2 line-clamp-2 text-base leading-snug text-label">
             {episode.name}
           </p>
           {/* onde é que este episódio cai na série — sem isto, "visto" decide-se
               às cegas: é o próximo por ver, mas não se sabe de quantos */}
-          <p className="ep-code mt-2 text-xs text-dim">
+          <p className="ep-code mt-2 text-[0.76rem] text-label-2">
             {watchedCount}
             {totalEpisodes ? `/${totalEpisodes}` : ""} vistos até agora
           </p>

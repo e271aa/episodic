@@ -118,7 +118,7 @@ export default function DiscoverSwipeCard({
       <div
         className={
           bordo
-            ? "relative h-full overflow-hidden bg-panel"
+            ? "relative h-full overflow-hidden bg-group"
             : "ep-card relative h-full overflow-hidden"
         }
         style={{
@@ -140,7 +140,7 @@ export default function DiscoverSwipeCard({
             draggable={false}
           />
         ) : (
-          <div className="absolute inset-0 flex items-center justify-center bg-raised p-4 text-center font-display text-lg font-bold text-dim">
+          <div className="absolute inset-0 flex items-center justify-center bg-group p-4 text-center text-[1.18rem] font-semibold text-label-2">
             {item.name}
           </div>
         )}
@@ -167,13 +167,13 @@ export default function DiscoverSwipeCard({
             há progresso, como manda o sistema. */}
         {!bordo && (
           <>
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-ink/5">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-[3px] bg-label/[0.14]">
               <div
                 className="bars h-full"
                 style={{ width: `${(posicao / Math.max(total, 1)) * 100}%` }}
               />
             </div>
-            <div className="ep-code pointer-events-none absolute right-4 top-4 rounded-full border border-line bg-tube/70 px-2.5 py-1 text-[0.6875rem] text-dim">
+            <div className="ep-code pointer-events-none absolute right-4 top-4 vidro rounded-full px-2.5 py-1 text-[0.7rem] text-label">
               {posicao} / {total}
             </div>
           </>
@@ -181,7 +181,7 @@ export default function DiscoverSwipeCard({
 
         {/* Selos do lado contrário ao movimento */}
         <div
-          className="pointer-events-none absolute left-4 top-6 rounded-xl border-[5px] px-4 py-1.5 text-center font-display text-2xl font-bold uppercase leading-none tracking-wide [font-stretch:75%]"
+          className="pointer-events-none absolute left-4 top-6 rounded-xl border-[5px] px-4 py-1.5 text-center text-[1.65rem] font-bold leading-none"
           style={{
             borderColor: YES,
             color: YES,
@@ -195,7 +195,7 @@ export default function DiscoverSwipeCard({
           ver
         </div>
         <div
-          className="pointer-events-none absolute right-4 top-6 rounded-xl border-[5px] px-4 py-1.5 text-center font-display text-2xl font-bold uppercase leading-none tracking-wide [font-stretch:75%]"
+          className="pointer-events-none absolute right-4 top-6 rounded-xl border-[5px] px-4 py-1.5 text-center text-[1.65rem] font-bold leading-none"
           style={{
             borderColor: NO,
             color: NO,
@@ -216,7 +216,7 @@ export default function DiscoverSwipeCard({
         >
           {/* De onde veio isto — sem as filas lado a lado é a única pista do
               porquê. A barrinha de cor liga o cartão à secção de origem. */}
-          <p className="flex max-w-full items-center gap-2 self-start truncate rounded-full border border-line bg-raised/80 py-1 pl-2 pr-3 font-display text-xs font-semibold uppercase tracking-[0.16em] text-ink [font-stretch:80%]">
+          <p className="flex max-w-full items-center gap-2 self-start truncate vidro rounded-full py-1 pl-2 pr-3 text-[0.76rem] font-semibold text-label">
             <span
               aria-hidden
               className="h-[3px] w-5 shrink-0 rounded-full"
@@ -229,14 +229,14 @@ export default function DiscoverSwipeCard({
           </p>
 
           <h2
-            className={`mt-2 font-display font-bold leading-tight text-ink [font-stretch:105%] ${
+            className={`mt-2 font-bold leading-[1.1] text-label ${
               bordo ? "text-4xl leading-[1.02]" : "text-2xl"
             }`}
           >
             {item.name}
           </h2>
 
-          <p className="ep-code mt-1 text-xs uppercase text-faint">
+          <p className="ep-code mt-1 text-[0.76rem] text-label-2">
             {[
               mostrarTipo ? (item.kind === "movie" ? "Filme" : "Série") : null,
               item.year,
@@ -248,7 +248,7 @@ export default function DiscoverSwipeCard({
 
           {item.overview && (
             <p
-              className={`mt-2 text-sm text-dim ${bordo ? "line-clamp-3 text-[0.9375rem]" : "line-clamp-2"}`}
+              className={`mt-2 text-[0.88rem] text-label-2 ${bordo ? "line-clamp-3 text-base" : "line-clamp-2"}`}
             >
               {item.overview}
             </p>

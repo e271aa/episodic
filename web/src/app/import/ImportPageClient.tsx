@@ -1,5 +1,6 @@
 "use client";
 
+import Acao from "@/components/mira/Acao";
 import { useCallback, useState } from "react";
 import { useRouter } from "next/navigation";
 import JSZip from "jszip";
@@ -119,24 +120,24 @@ export default function ImportPage() {
        acompanham a área segura do aparelho. */
     <main className="mx-auto max-w-xl px-4 pt-10 pb-[calc(var(--dock-h)+7rem)]">
       <CabecalhoEcra titulo="Importar do TV Time" voltar="Voltar ao perfil" fallback="/profile" />
-      <p className="mt-2 text-[0.9375rem] text-dim">
+      <p className="mt-2 text-[0.88rem] text-label-2">
         Escolhe o ZIP do export GDPR que o TV Time te deu — ou os CSVs extraídos.{" "}
         {avisoDePrivacidade(isCloudConfigured())}
       </p>
 
       <label
-        className="mt-6 flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-line p-10 text-center transition hover:border-ink hover:bg-raised"
+        className="mt-6 flex cursor-pointer flex-col items-center justify-center rounded-[26px] border-2 border-dashed border-label-3 p-10 text-center transition-colors active:bg-fill"
         onDragOver={(e) => e.preventDefault()}
         onDrop={(e) => {
           e.preventDefault();
           void handleFiles(Array.from(e.dataTransfer.files));
         }}
       >
-        <TvIcon className="h-10 w-10 text-faint" />
-        <span className="mt-3 font-medium">
+        <TvIcon className="h-10 w-10 text-label-3" />
+        <span className="mt-3 text-base font-semibold text-label">
           Toca para escolher o ZIP
         </span>
-        <span className="ep-code mt-1 text-xs text-faint">.zip ou .csv</span>
+        <span className="ep-code mt-1 text-[0.76rem] text-label-2">.zip ou .csv</span>
         <input
           type="file"
           accept=".zip,.csv"
@@ -150,59 +151,61 @@ export default function ImportPage() {
       </label>
 
       {busy && !preview && (
-        <div className="mt-4 flex items-center gap-2 text-[0.9375rem] text-dim">
-          <span className="spinner h-4 w-4 shrink-0 rounded-full border-2 border-line border-t-ink" />
+        <div className="mt-4 flex items-center gap-2 text-[0.88rem] text-label-2">
+          <span className="spinner h-4 w-4 shrink-0 rounded-full border-2 border-label-3 border-t-label" />
           A processar…
         </div>
       )}
 
       {error && (
-        <div className="page-enter mt-4 rounded-lg border border-danger/30 bg-danger/10 p-4 text-[0.9375rem] text-danger">
+        <div className="page-enter mt-4 rounded-[22px] bg-danger/10 p-4 text-[0.88rem] text-danger">
           {error}
         </div>
       )}
 
       {preview && (
-        <div className="page-enter mt-6 rounded-2xl border border-line bg-panel p-5">
-          <h2 className="font-display font-semibold">Resumo do export</h2>
-          <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-[0.9375rem]">
-            <dt className="text-dim">Séries</dt>
+        <div className="page-enter mt-6 rounded-[26px] bg-group p-[18px]">
+          <h2 className="text-[1.18rem] font-semibold text-label">Resumo do export</h2>
+          <dl className="mt-3 grid grid-cols-2 gap-x-4 gap-y-2 text-base">
+            <dt className="text-label-2">Séries</dt>
             <dd className="ep-code" data-testid="summary-shows">{preview.shows.length}</dd>
-            <dt className="text-dim">— seguidas</dt>
+            <dt className="text-label-2">— seguidas</dt>
             <dd className="ep-code">{followed}</dd>
-            <dt className="text-dim">— para ver</dt>
+            <dt className="text-label-2">— para ver</dt>
             <dd className="ep-code">{watchlist}</dd>
-            <dt className="text-dim">Episódios vistos</dt>
+            <dt className="text-label-2">Episódios vistos</dt>
             <dd className="ep-code" data-testid="summary-episodes">{preview.episodes.length}</dd>
-            <dt className="text-dim">— com data exata</dt>
+            <dt className="text-label-2">— com data exata</dt>
             <dd className="ep-code">{exactDates}</dd>
-            <dt className="text-dim">Filmes vistos</dt>
+            <dt className="text-label-2">Filmes vistos</dt>
             <dd className="ep-code" data-testid="summary-movies">{filmesVistos}</dd>
-            <dt className="text-dim">— para ver</dt>
+            <dt className="text-label-2">— para ver</dt>
             <dd className="ep-code" data-testid="summary-movies-towatch">{filmesParaVer}</dd>
-            <dt className="text-dim">Reações</dt>
+            <dt className="text-label-2">Reações</dt>
             <dd className="ep-code">{preview.emotions.length}</dd>
           </dl>
 
           {unknownEntries.length > 0 && (
-            <p className="mt-3 rounded-lg border border-line bg-raised p-3 text-xs text-dim">
+            <p className="mt-3 rounded-[16px] bg-fill p-3 text-[0.76rem] text-label-2">
               Atenção: {unknownEntries.map(([k, n]) => `${n}× ${k}`).join(", ")} —
               tipos de registo que ainda não interpretamos. Nada se perde: podes
               reimportar o mesmo ficheiro quando a app for atualizada.
             </p>
           )}
 
-          <button
+          <Acao
             onClick={() => void confirm()}
             disabled={busy}
             data-testid="confirm-import"
-            className="mt-5 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full bg-ink px-6 py-3 font-semibold text-tube transition hover:brightness-110 active:scale-[0.99] disabled:opacity-50"
+            className="mt-5 w-full"
+            icone={
+              busy ? (
+                <span className="spinner h-4 w-4 rounded-full border-2 border-on-label/30 border-t-on-label" />
+              ) : undefined
+            }
           >
-            {busy && (
-              <span className="spinner h-4 w-4 rounded-full border-2 border-tube/30 border-t-tube" />
-            )}
             {busy ? "A guardar…" : "Confirmar importação"}
-          </button>
+          </Acao>
         </div>
       )}
     </main>

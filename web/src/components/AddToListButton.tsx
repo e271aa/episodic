@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Bone } from "@/components/Skeleton";
+import Acao from "@/components/mira/Acao";
 import {
   addToList,
   createList,
@@ -24,7 +25,7 @@ export interface AddToListButtonProps {
 }
 
 const TRIGGER_DEFAULT =
-  "flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full border border-line px-4 text-[0.9375rem] font-medium text-dim transition hover:bg-raised hover:text-ink";
+  "flex min-h-11 cursor-pointer items-center gap-1.5 rounded-full bg-fill-strong px-5 text-[0.88rem] font-semibold text-label transition active:scale-[0.97]";
 
 // Botão + painel para juntar esta série/filme a uma ou mais listas
 // personalizadas — usado nas páginas de detalhe.
@@ -88,26 +89,30 @@ export default function AddToListButton({
         {label}
       </button>
       {open && (
-        <div className="page-enter absolute left-0 top-full z-20 mt-2 w-64 rounded-2xl border border-line bg-panel p-3 shadow-lg">
+        <div className="page-enter vidro absolute left-0 top-full z-20 mt-2 w-72 max-w-full rounded-[22px] p-2">
           {lists === null ? (
-            <Bone tone="raised" className="h-8 rounded-lg" />
+            <Bone tone="raised" className="m-1 h-8 rounded-lg" />
           ) : lists.length === 0 ? (
-            <p className="px-1 py-1 text-xs text-dim">Ainda não tens listas.</p>
+            <p className="px-3 py-2 text-[0.88rem] text-label-2">Ainda não tens listas.</p>
           ) : (
-            <ul className="flex max-h-48 flex-col gap-1 overflow-y-auto">
+            <ul className="flex max-h-56 flex-col overflow-y-auto">
               {lists.map((list) => (
                 <li key={list.id}>
                   <button
+                    role="menuitemcheckbox"
+                    aria-checked={inList(list)}
                     onClick={() => void toggle(list)}
-                    className="flex min-h-11 w-full cursor-pointer items-center gap-2 rounded-lg px-2 text-left text-[0.9375rem] hover:bg-raised"
+                    className="flex min-h-11 w-full cursor-pointer items-center gap-3 rounded-2xl px-3 text-left text-base text-label transition-colors active:bg-fill"
                   >
                     <span
-                      className={`flex h-4 w-4 shrink-0 items-center justify-center rounded border ${
-                        inList(list) ? "border-ink bg-ink" : "border-line"
+                      className={`flex h-[22px] w-[22px] shrink-0 items-center justify-center rounded-full ${
+                        inList(list)
+                          ? "bg-label text-on-label"
+                          : "shadow-[inset_0_0_0_1.5px_var(--m-label-3)]"
                       }`}
                     >
                       {inList(list) && (
-                        <svg viewBox="0 0 24 24" className="h-3 w-3 text-tube" fill="none">
+                        <svg viewBox="0 0 24 24" className="h-3 w-3" fill="none" aria-hidden>
                           <path
                             d="M20 6 9 17l-5-5"
                             stroke="currentColor"
@@ -125,7 +130,7 @@ export default function AddToListButton({
             </ul>
           )}
           <form
-            className="mt-2 flex gap-1.5 border-t border-line pt-2"
+            className="mt-1 flex gap-2 border-t-[0.5px] border-separator p-1 pt-2"
             onSubmit={(e) => {
               e.preventDefault();
               void handleCreate();
@@ -136,15 +141,11 @@ export default function AddToListButton({
               value={newName}
               onChange={(e) => setNewName(e.target.value)}
               placeholder="Nova lista…"
-              className="min-h-11 w-0 flex-1 rounded-full border border-line bg-tube px-3 text-base outline-none focus:border-ink"
+              className="min-h-11 w-0 flex-1 rounded-full bg-fill px-4 text-base text-label outline-none placeholder:text-label-2"
             />
-            <button
-              type="submit"
-              disabled={!newName.trim()}
-              className="min-h-11 shrink-0 cursor-pointer rounded-full bg-ink px-3 text-xs font-semibold text-tube disabled:opacity-50"
-            >
+            <Acao type="submit" tipo="secundaria" grande={false} disabled={!newName.trim()}>
               Criar
-            </button>
+            </Acao>
           </form>
         </div>
       )}

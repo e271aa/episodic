@@ -148,7 +148,7 @@ test("o A estrear pede o tamanho da capa que mostra, não o ecrã inteiro", asyn
   });
   await page.goto("/estrear");
   const img = page.locator('img[alt=""]').first();
-  await expect(img).toHaveAttribute("sizes", "44px");
+  await expect(img).toHaveAttribute("sizes", "36px");
 });
 
 test("no Rever, a capa da série pede 56px, não a página inteira", async ({ page, tmdb }) => {

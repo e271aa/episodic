@@ -41,14 +41,14 @@ export default function SheetPanel({
   aberto,
   onFechar,
   children,
-  agrupada = false,
+  agrupada = true,
 }: {
   titulo: string;
   aberto: boolean;
   onFechar: () => void;
   children: ReactNode;
   /**
-   * Uma folha de listas agrupadas, à iOS (Mira): o fundo e os grupos trocam
+   * Uma folha de listas agrupadas, à iOS (Mira) — é a única, desde a Fase 8: o fundo e os grupos trocam
    * de degrau — sem isto, um `Grupo` dentro da folha tinha a cor dela e
    * desaparecia. Os grupos de dentro leem `--m-group` (o tema é `inline`) e apanham-no daqui.
    */
@@ -203,7 +203,7 @@ export default function SheetPanel({
         ref={painelRef}
         tabIndex={-1}
         data-folha
-        className={`folha absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto overscroll-contain rounded-t-3xl pb-[calc(env(safe-area-inset-bottom)+1.5rem)] outline-none ${
+        className={`folha absolute inset-x-0 bottom-0 max-h-[80dvh] overflow-y-auto overscroll-contain rounded-t-[28px] pb-[calc(env(safe-area-inset-bottom)+1.5rem)] outline-none ${
           agrupada ? "folha-agrupada" : "border-t border-line bg-panel"
         }`}
       >
@@ -221,13 +221,13 @@ export default function SheetPanel({
         >
           <span
             aria-hidden
-            className="absolute top-2 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full bg-ink/20"
+            className="absolute top-2 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full bg-label-3"
           />
-          <p className="font-display text-[0.9375rem] font-bold [font-stretch:105%]">{titulo}</p>
+          <p className="min-w-0 truncate text-base font-semibold text-label">{titulo}</p>
           <button
             onClick={onFechar}
             aria-label="Fechar"
-            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-95"
+            className="flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-label-2 transition active:scale-95"
           >
             <CloseIcon className="h-4 w-4" />
           </button>

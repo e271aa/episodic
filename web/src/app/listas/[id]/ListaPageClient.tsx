@@ -2,7 +2,6 @@
 
 import { useCallback, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import Link from "next/link";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import CabecalhoEcra from "@/components/CabecalhoEcra";
 import {
@@ -15,7 +14,9 @@ import {
 } from "@/lib/db";
 import { pushUndo } from "@/lib/undo";
 import { recursoListas, useFilmes, useListas, useSeries } from "@/lib/cache";
-import Poster from "@/components/Poster";
+import Cartaz from "@/components/mira/Cartaz";
+import Acao from "@/components/mira/Acao";
+import { X } from "lucide-react";
 import { PosterGridBone, TitleBone } from "@/components/Skeleton";
 
 interface ResolvedItem {
@@ -150,11 +151,11 @@ export default function ListaPage() {
   if (list === null) {
     return (
       <main className="mx-auto max-w-xl px-4 py-16 text-center">
-        <p className="text-dim">Lista não encontrada.</p>
+        <p className="text-label-2">Lista não encontrada.</p>
         <BotaoVoltar
           label="Voltar às listas"
           fallback="/listas"
-          className="mt-4 inline-block cursor-pointer text-ink underline"
+          className="mt-4 inline-block cursor-pointer text-label underline"
         >
           Voltar às listas
         </BotaoVoltar>
@@ -181,20 +182,17 @@ export default function ListaPage() {
               aria-label="Nome da lista"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              className="min-h-11 min-w-0 flex-1 rounded-full border border-line bg-panel px-4 text-lg font-bold outline-none focus:border-ink"
+              className="min-h-11 min-w-0 flex-1 rounded-full bg-fill px-4 text-lg font-semibold text-label outline-none"
             />
-            <button
-              type="submit"
-              className="min-h-11 cursor-pointer rounded-full bg-ink px-4 text-[0.9375rem] font-semibold text-tube"
-            >
+            <Acao type="submit" grande={false}>
               Guardar
-            </button>
+            </Acao>
           </form>
         ) : (
           // O título renomeia-se ao toque — por isso é um botão dentro do
           // <h1>, não um <h1> com onClick, que o teclado e o VoiceOver não
           // alcançavam (Ronda 12, Fase 4).
-          <h1 className="min-w-0 font-display text-2xl font-bold [font-stretch:110%]">
+          <h1 className="min-w-0 text-[1.65rem] leading-[1.1] font-bold text-label">
             <button
               onClick={comecarAEditar}
               aria-label={`Renomear a lista ${list.name}`}
@@ -209,76 +207,51 @@ export default function ListaPage() {
           )
         }
       />
-      <p className="ep-code mt-1 text-xs text-dim">
+      <p className="ep-code mt-1 text-[0.76rem] text-label-2">
         {items.length} {items.length === 1 ? "item" : "itens"}
       </p>
 
       {items.length === 0 ? (
-        <p className="mt-10 text-center text-[0.9375rem] text-dim">
+        <p className="mt-10 text-center text-[0.88rem] text-label-2">
           Sem itens ainda — adiciona séries e filmes a partir da página de cada um.
         </p>
       ) : (
-        <div className="mt-6 grid grid-cols-3 gap-3 sm:grid-cols-4 md:grid-cols-5">
-          {items.map((item, i) => {
-            return (
-              <div key={`${item.kind}-${item.refId}`} className="group relative">
-                <Link href={item.href} className="block cursor-pointer active:scale-[0.97]">
-                  <div className="relative aspect-2/3 overflow-hidden rounded-2xl bg-panel shadow-md shadow-black/30">
-                    {item.posterPath ? (
-                      <Poster
-                        path={item.posterPath}
-                        alt={item.name}
-                        fill
-                        sizes="(max-width: 640px) 33vw, (max-width: 768px) 25vw, 20vw"
-                        // as três da primeira fila estão na dobra: uma delas é o LCP
-                        priority={i < 3}
-                        className="object-cover"
-                      />
-                    ) : (
-                      <div className="flex h-full w-full items-center justify-center bg-raised p-2 text-center font-display text-[0.9375rem] font-bold text-dim">
-                        {item.name}
-                      </div>
-                    )}
-                  </div>
-                  <p className="mt-1.5 truncate text-[0.9375rem] font-medium">{item.name}</p>
-                </Link>
-                {/* Visível num ecrã tátil; só com rato é que espera pelo
-                    hover. Estava sempre a `opacity-0` — no telemóvel nunca se
-                    via, e um toque no canto da capa apagava o item (Ronda 12,
-                    Fase 4). */}
-                <button
-                  onClick={() => void handleRemoveItem(item)}
-                  aria-label={`Remover ${item.name} da lista`}
-                  className="tap-44 absolute right-1.5 top-1.5 flex h-7 w-7 cursor-pointer items-center justify-center rounded-full bg-tube/60 text-ink backdrop-blur transition-opacity active:scale-90 focus-visible:opacity-100 group-hover:opacity-100 [@media(hover:hover)]:opacity-0"
-                >
-                  <svg viewBox="0 0 24 24" className="h-3.5 w-3.5" fill="none" aria-hidden>
-                    <path
-                      d="M6 6l12 12M18 6L6 18"
-                      stroke="currentColor"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                    />
-                  </svg>
-                </button>
-              </div>
-            );
-          })}
+        <div className="mt-6 grid grid-cols-3 gap-x-3 gap-y-5 sm:grid-cols-4 md:grid-cols-5">
+          {items.map((item, i) => (
+            <Cartaz
+              key={`${item.kind}-${item.refId}`}
+              href={item.href}
+              nome={item.name}
+              capa={item.posterPath}
+              indice={i}
+              // O ✗ é vidro no canto da capa, sempre à vista: num ecrã tátil
+              // não há hover (Ronda 12, Fase 4). `preventDefault`: o botão
+              // vive dentro da ligação do cartaz.
+              acao={{
+                aria: `Remover ${item.name} da lista`,
+                icon: <X aria-hidden className="h-3.5 w-3.5" strokeWidth={2.6} />,
+                onClick: (e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  void handleRemoveItem(item);
+                },
+              }}
+            />
+          ))}
         </div>
       )}
 
       {/* O vermelho só acende quando a destruição está mesmo a um toque —
           a mesma regra do "Apagar dados locais" no Perfil (Ronda 12, Fase 4,
           achado #17). Em repouso é uma linha como as outras. */}
-      <button
+      <Acao
+        tipo="secundaria"
+        grande={false}
         onClick={() => void handleDelete()}
-        className={`mt-10 cursor-pointer rounded-2xl border px-4 py-3 text-[0.9375rem] font-medium transition-colors ${
-          confirmDelete
-            ? "border-danger/40 text-danger hover:bg-danger/10"
-            : "border-line text-dim hover:border-ink hover:text-ink"
-        }`}
+        className={`mt-10 ${confirmDelete ? "text-danger!" : "text-label-2!"}`}
       >
         {confirmDelete ? "Tens a certeza? Toca outra vez para apagar" : "Apagar lista"}
-      </button>
+      </Acao>
     </main>
   );
 }

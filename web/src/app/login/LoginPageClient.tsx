@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { isCloudConfigured } from "@/lib/supabase";
 import { signInWithEmail, signInWithPassword, verifyEmailCode } from "@/lib/cloud";
 import { TvIcon, ArrowLeftIcon } from "@/components/icons";
+import Acao from "@/components/mira/Acao";
 import BotaoVoltar from "@/components/BotaoVoltar";
 
 type Modo = "password" | "codigo";
@@ -23,7 +24,7 @@ function BotaoDeSair() {
     <BotaoVoltar
       label="Voltar"
       fallback="/series"
-      className="absolute left-4 top-[max(1rem,env(safe-area-inset-top))] flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-90"
+      className="absolute left-4 top-[max(1rem,env(safe-area-inset-top))] flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-fill text-label transition active:scale-90"
     >
       <ArrowLeftIcon className="h-5 w-5" />
     </BotaoVoltar>
@@ -91,8 +92,8 @@ function LoginForm() {
     return (
       <main className="tela-cheia relative flex flex-col items-center justify-center px-6 text-center">
         <BotaoDeSair />
-        <h1 className="font-display text-lg font-bold">Cloud não configurada</h1>
-        <p className="mt-2 max-w-xs text-[0.9375rem] text-dim">
+        <h1 className="text-[1.18rem] font-semibold text-label">Cloud não configurada</h1>
+        <p className="mt-2 max-w-xs text-[0.88rem] text-label-2">
           A app está a correr só em modo local. Não há conta para iniciar sessão.
         </p>
       </main>
@@ -103,18 +104,17 @@ function LoginForm() {
     <main className="tela-cheia relative flex flex-col justify-center px-5">
       <BotaoDeSair />
       <div className="mx-auto w-full max-w-sm">
-        <div className="bars mx-auto h-14 w-14 rounded-2xl" aria-hidden />
-        <h1 className="mt-5 text-center font-display text-3xl font-bold [font-stretch:110%]">
+        <h1 className="text-center text-[2rem] leading-[1.15] font-bold text-label">
           Episodic
         </h1>
-        <p className="mt-1.5 text-center text-[0.9375rem] text-dim">
+        <p className="mt-1.5 text-center text-[0.88rem] text-label-2">
           Entra para teres a tua biblioteca em todos os dispositivos.
         </p>
 
         {modo === "password" ? (
           <form onSubmit={entrar} className="mt-8 flex flex-col gap-3">
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-dim">Email</span>
+              <span className="px-1 text-[0.76rem] font-semibold text-label-2">Email</span>
               <input
                 type="email"
                 inputMode="email"
@@ -123,18 +123,18 @@ function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="o-teu@email.com"
-                className="min-h-12 rounded-2xl border border-line bg-panel px-4 outline-none transition-colors focus:border-ink"
+                className="min-h-12 rounded-[22px] bg-group px-4 text-base text-label outline-none placeholder:text-label-2 focus:shadow-[inset_0_0_0_1.5px_var(--m-label-3)]"
               />
             </label>
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-dim">Palavra-passe</span>
+              <span className="px-1 text-[0.76rem] font-semibold text-label-2">Palavra-passe</span>
               <input
                 type="password"
                 autoComplete="current-password"
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="min-h-12 rounded-2xl border border-line bg-panel px-4 outline-none transition-colors focus:border-ink"
+                className="min-h-12 rounded-[22px] bg-group px-4 text-base text-label outline-none placeholder:text-label-2 focus:shadow-[inset_0_0_0_1.5px_var(--m-label-3)]"
               />
             </label>
 
@@ -144,16 +144,14 @@ function LoginForm() {
               </p>
             )}
 
-            <button
+            <Acao
               type="submit"
               disabled={busy}
-              className="mt-2 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-ink font-semibold text-tube transition hover:brightness-110 disabled:opacity-50"
+              className="mt-2 w-full"
+              icone={busy ? <span className="spinner h-4 w-4 rounded-full border-2 border-on-label/30 border-t-on-label" /> : undefined}
             >
-              {busy && (
-                <span className="spinner h-4 w-4 rounded-full border-2 border-tube/30 border-t-tube" />
-              )}
               {busy ? "A entrar…" : "Entrar"}
-            </button>
+            </Acao>
 
             <button
               type="button"
@@ -161,7 +159,7 @@ function LoginForm() {
                 setModo("codigo");
                 setErro(null);
               }}
-              className="mt-1 min-h-11 cursor-pointer text-[0.9375rem] text-dim transition hover:text-ink"
+              className="mt-1 min-h-11 cursor-pointer text-[0.88rem] text-label-2 transition active:opacity-60"
             >
               Não tenho palavra-passe — enviem-me um código
             </button>
@@ -169,7 +167,7 @@ function LoginForm() {
         ) : (
           <form onSubmit={confirmarCodigo} className="mt-8 flex flex-col gap-3">
             <label className="flex flex-col gap-1.5">
-              <span className="text-xs font-medium text-dim">Email</span>
+              <span className="px-1 text-[0.76rem] font-semibold text-label-2">Email</span>
               <input
                 type="email"
                 inputMode="email"
@@ -178,13 +176,13 @@ function LoginForm() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="o-teu@email.com"
-                className="min-h-12 rounded-2xl border border-line bg-panel px-4 outline-none transition-colors focus:border-ink"
+                className="min-h-12 rounded-[22px] bg-group px-4 text-base text-label outline-none placeholder:text-label-2 focus:shadow-[inset_0_0_0_1.5px_var(--m-label-3)]"
               />
             </label>
 
             {codigoEnviado && (
               <label className="page-enter flex flex-col gap-1.5">
-                <span className="text-xs font-medium text-dim">Código recebido por email</span>
+                <span className="px-1 text-[0.76rem] font-semibold text-label-2">Código recebido por email</span>
                 <input
                   inputMode="numeric"
                   autoComplete="one-time-code"
@@ -192,7 +190,7 @@ function LoginForm() {
                   value={codigo}
                   onChange={(e) => setCodigo(e.target.value)}
                   placeholder="000000"
-                  className="ep-code min-h-12 rounded-2xl border border-line bg-panel px-4 text-lg tracking-[0.3em] outline-none transition-colors focus:border-ink"
+                  className="ep-code min-h-12 rounded-[22px] bg-group px-4 text-[1.18rem] tracking-[0.3em] text-label outline-none placeholder:text-label-2 focus:shadow-[inset_0_0_0_1.5px_var(--m-label-3)]"
                 />
               </label>
             )}
@@ -204,28 +202,24 @@ function LoginForm() {
             )}
 
             {codigoEnviado ? (
-              <button
+              <Acao
                 type="submit"
                 disabled={busy}
-                className="mt-2 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-ink font-semibold text-tube transition hover:brightness-110 disabled:opacity-50"
+                className="mt-2 w-full"
+                icone={busy ? <span className="spinner h-4 w-4 rounded-full border-2 border-on-label/30 border-t-on-label" /> : undefined}
               >
-                {busy && (
-                  <span className="spinner h-4 w-4 rounded-full border-2 border-tube/30 border-t-tube" />
-                )}
                 {busy ? "A confirmar…" : "Confirmar código"}
-              </button>
+              </Acao>
             ) : (
-              <button
+              <Acao
                 type="button"
                 onClick={() => void pedirCodigo()}
                 disabled={busy}
-                className="mt-2 flex min-h-12 cursor-pointer items-center justify-center gap-2 rounded-full bg-ink font-semibold text-tube transition hover:brightness-110 disabled:opacity-50"
+                className="mt-2 w-full"
+                icone={busy ? <span className="spinner h-4 w-4 rounded-full border-2 border-on-label/30 border-t-on-label" /> : undefined}
               >
-                {busy && (
-                  <span className="spinner h-4 w-4 rounded-full border-2 border-tube/30 border-t-tube" />
-                )}
                 {busy ? "A enviar…" : "Enviar código"}
-              </button>
+              </Acao>
             )}
 
             <button
@@ -235,14 +229,14 @@ function LoginForm() {
                 setCodigoEnviado(false);
                 setErro(null);
               }}
-              className="mt-1 min-h-11 cursor-pointer text-[0.9375rem] text-dim transition hover:text-ink"
+              className="mt-1 min-h-11 cursor-pointer text-[0.88rem] text-label-2 transition active:opacity-60"
             >
               Voltar à palavra-passe
             </button>
           </form>
         )}
 
-        <p className="mt-10 flex items-center justify-center gap-2 text-center text-xs text-faint">
+        <p className="mt-10 flex items-center justify-center gap-2 text-center text-[0.76rem] text-label-2">
           <TvIcon className="h-3.5 w-3.5" aria-hidden />O teu registo de séries
         </p>
       </div>
@@ -255,7 +249,7 @@ export default function LoginPage() {
     <Suspense
       fallback={
         <main className="tela-cheia flex items-center justify-center">
-          <div className="bars h-14 w-14 animate-pulse rounded-2xl" aria-hidden />
+          <span className="spinner h-6 w-6 rounded-full border-2 border-label-3 border-t-label" aria-hidden />
         </main>
       }
     >

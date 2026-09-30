@@ -10,6 +10,7 @@
  * dizemo-lo às claras e as Listas, que são locais, continuam.
  */
 
+import Acao from "@/components/mira/Acao";
 import { Suspense, useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
@@ -113,20 +114,17 @@ function Baralho({
   if (cursor >= total && total > 0) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center px-8 text-center">
-        <CompassIcon className="h-10 w-10 text-faint" />
-        <p className="mt-4 font-display text-lg font-semibold [font-stretch:105%]">
+        <CompassIcon className="h-10 w-10 text-label-3" />
+        <p className="mt-4 text-[1.18rem] font-semibold text-label">
           Por agora é tudo
         </p>
-        <p className="mt-1 max-w-xs text-sm text-dim">
+        <p className="mt-1 max-w-xs text-[0.88rem] text-label-2">
           Passaste por {total} sugestões. Marca episódios e volta cá: o que aparece aqui muda
           com o que vais vendo.
         </p>
-        <button
-          onClick={() => setCursor(0)}
-          className="mt-6 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-sm font-semibold text-tube transition hover:brightness-110"
-        >
+        <Acao onClick={() => setCursor(0)} className="mt-6">
           Rever outra vez
-        </button>
+        </Acao>
       </div>
     );
   }
@@ -153,30 +151,30 @@ function Baralho({
         <button
           onClick={() => decidir(topo, false)}
           aria-label="Não me interessa — passa à frente e nunca mais aparece"
-          className="pointer-events-auto flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border border-ink/20 bg-tube/70 text-ink backdrop-blur-md transition active:scale-90"
+          className="pointer-events-auto flex h-14 w-14 cursor-pointer items-center justify-center rounded-full vidro text-label transition active:scale-90"
         >
           <CloseIcon className="h-6 w-6" />
         </button>
-        <button
+        <Acao
           onClick={() => decidir(topo, true)}
-          className="pointer-events-auto flex h-14 cursor-pointer items-center gap-2.5 rounded-full bg-ink px-7 text-base font-semibold text-tube transition hover:brightness-110 active:scale-95"
+          className="pointer-events-auto h-14 px-7"
+          icone={<PlusIcon className="h-5 w-5" />}
         >
-          <PlusIcon className="h-5 w-5" />
           Para ver
-        </button>
+        </Acao>
       </div>
 
       {/* Progresso do baralho: faixa SMPTE a encher, com o contador em mono */}
       <div className="pointer-events-none absolute inset-x-5 bottom-[calc(var(--dock-h)+0.5rem)] z-20">
         <div className="flex items-center justify-between pb-1.5">
-          <span className="ep-code text-[0.6875rem] text-faint">
+          <span className="ep-code text-[0.7rem] text-label-2">
             {cursor + 1} / {total}
           </span>
-          <span className="text-xs text-faint">arrasta ou decide aqui</span>
+          <span className="text-[0.76rem] text-label-2">arrasta ou decide aqui</span>
         </div>
-        <div className="h-[3px] overflow-hidden rounded-full bg-ink/8">
+        <div className="h-[3px] overflow-hidden rounded-full bg-label/[0.14]">
           <div
-            className="bars h-full transition-[width] duration-300"
+            className="h-full rounded-full bg-label transition-[width] duration-300"
             style={{ width: `${((cursor + 1) / Math.max(total, 1)) * 100}%` }}
           />
         </div>

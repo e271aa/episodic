@@ -55,30 +55,30 @@ export default function SwipeCoach({
   return (
     <div
       onClick={dismiss}
-      className="page-enter absolute inset-0 z-30 flex cursor-pointer flex-col items-center justify-center rounded-3xl bg-tube/80 p-5 text-center backdrop-blur-sm"
+      className="page-enter absolute inset-0 z-30 flex cursor-pointer flex-col items-center justify-center rounded-[28px] bg-bg/80 p-5 text-center backdrop-blur-sm"
       data-testid="swipe-coach"
     >
-      <p className="font-display text-lg font-bold [font-stretch:105%]">{titulo}</p>
-      <p className="mt-1 max-w-[15rem] text-[0.9375rem] text-dim">{detalhe}</p>
+      <p className="text-[1.18rem] font-semibold text-label">{titulo}</p>
+      <p className="mt-1 max-w-[15rem] text-[0.88rem] text-label-2">{detalhe}</p>
 
       <div className="mt-6 grid w-full max-w-xs grid-cols-2 gap-3">
         {[esquerda, direita].map((lado) => (
-          <div key={lado.seta} className="rounded-2xl border border-line bg-panel/80 p-3">
+          <div key={lado.seta} className="rounded-[22px] bg-group p-3">
             <span className="text-2xl" aria-hidden>
               {lado.seta}
             </span>
-            <p className="mt-1 font-display text-[0.9375rem] font-bold uppercase [font-stretch:80%]">
+            <p className="mt-1 text-base font-semibold text-label">
               {lado.titulo}
             </p>
-            <p className="mt-0.5 text-xs text-dim">{lado.detalhe}</p>
+            <p className="mt-0.5 text-[0.76rem] text-label-2">{lado.detalhe}</p>
           </div>
         ))}
       </div>
 
-      <p className="mt-5 text-xs text-faint">
+      <p className="mt-5 text-[0.76rem] text-label-2">
         Também dá pelos botões em baixo, ou pelas setas do teclado.
       </p>
-      <span className="mt-5 rounded-full bg-ink px-6 py-2.5 text-[0.9375rem] font-semibold text-tube">
+      <span className="mt-5 inline-flex min-h-[52px] items-center rounded-full bg-acao px-6 font-semibold text-on-label">
         Percebi
       </span>
     </div>

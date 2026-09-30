@@ -12,7 +12,9 @@ import Poster from "@/components/Poster";
 import StreamingBadges from "@/components/StreamingBadges";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import { Bone, DetailHeaderBone } from "@/components/Skeleton";
-import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
+import { CheckIcon } from "@/components/icons";
+import { ChevronLeft } from "lucide-react";
+import Acao from "@/components/mira/Acao";
 import { porExtenso } from "@/lib/datas";
 
 /**
@@ -106,11 +108,11 @@ export default function MoviePage() {
   if (movie === null) {
     return (
       <main className="mx-auto max-w-xl px-4 py-16 text-center">
-        <p className="text-dim">Filme não encontrado.</p>
+        <p className="text-label-2">Filme não encontrado.</p>
         <BotaoVoltar
           label="Voltar aos filmes"
           fallback="/library?tipo=filmes"
-          className="mt-4 inline-block cursor-pointer text-ink underline"
+          className="mt-4 inline-block cursor-pointer text-label underline"
         >
           Voltar aos filmes
         </BotaoVoltar>
@@ -119,7 +121,6 @@ export default function MoviePage() {
   }
 
   const backdropPath = details?.backdrop_path ?? null;
-  const posterPath = movie.posterPath ?? null;
   const year = (details?.release_date ?? movie.releaseDate)?.slice(0, 4);
   const runtime = formatRuntime(details?.runtime ?? null);
   const metaBits = [year, runtime, details?.genres.map((g) => g.name).join(" · ")].filter(
@@ -157,86 +158,64 @@ export default function MoviePage() {
   };
 
   return (
-    <main className="mx-auto w-full max-w-2xl pb-8">
-      <div className="relative h-44 sm:h-56">
-        {backdropPath ? (
-          <>
-            <Poster
-              path={backdropPath}
-              alt=""
-              size="w780"
-              fill
-              priority
-              sizes="100vw"
-              className="object-cover"
-            />
-            <div className="absolute inset-0 bg-gradient-to-t from-tube via-tube/40 to-transparent" />
-          </>
-        ) : (
-          <div className="h-full w-full bg-gradient-to-r from-raised to-panel" />
-        )}
-        <div className="bars absolute inset-x-0 top-0 h-[3px]" />
-        {/* botão redondo, igual ao do Detalhe de série — antes era uma
-            pílula de texto "← Filmes", a única sobrevivente desse desenho */}
+    <main className="mx-auto w-full max-w-2xl pb-6">
+      {/* O herói da Mira, como o da série: a arte de ponta a ponta com o
+          degradê para o fundo, o círculo de vidro de recuar, e o título onde
+          o degradê já é fundo — nada de texto sobre a arte. */}
+      <div className="relative">
+        <div className="relative h-[min(290px,40vh)] overflow-hidden bg-group">
+          {backdropPath && (
+            <Poster path={backdropPath} alt="" size="w780" fill priority sizes="100vw" className="object-cover" />
+          )}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                "linear-gradient(to bottom, rgba(0,0,0,.45) 0, rgba(0,0,0,0) 25%, rgba(0,0,0,0) 55%, var(--color-bg) 100%)",
+            }}
+          />
+        </div>
         <BotaoVoltar
           label="Voltar aos filmes"
           fallback="/library?tipo=filmes"
-          className="absolute left-4 top-4 flex h-11 w-11 cursor-pointer items-center justify-center rounded-full bg-tube/60 text-ink backdrop-blur transition active:scale-90"
+          className="vidro absolute left-4 top-[max(12px,env(safe-area-inset-top))] flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-label transition-transform duration-100 active:scale-[0.97]"
         >
-          <ArrowLeftIcon className="h-5 w-5" />
+          <ChevronLeft aria-hidden className="h-5 w-5" strokeWidth={2.4} />
         </BotaoVoltar>
-      </div>
 
-      {/* relative: sem isto, o gradiente absoluto da subcapa pinta por cima do poster */}
-      <div className="relative px-4">
-        <div className="-mt-10 flex items-end gap-4">
-          {posterPath ? (
-            <div className="relative aspect-2/3 w-24 shrink-0 overflow-hidden rounded-xl shadow-lg">
-              <Poster path={posterPath} alt={movie.name} fill sizes="96px" priority className="object-cover" />
-            </div>
-          ) : aProcurar ? (
-            // A tentar encontrar a capa agora — um retângulo cinzento parado
-            // aqui lia-se como "sem capa", quando na verdade está a chegar.
-            <Bone className="h-36 w-24 shrink-0 rounded-xl shadow-lg" />
-          ) : (
-            <div className="flex h-36 w-24 shrink-0 items-center justify-center rounded-xl bg-raised p-2 text-center font-display text-[0.9375rem] font-bold text-dim shadow-lg">
-              {movie.name}
-            </div>
-          )}
-          <div className="min-w-0 flex-1 pb-1">
-            {/* `break-words`: a 150% "Redemption" media 231px numa coluna de 174 e
-                empurrava o ecrã para os 423px (Ronda 12, F2) */}
-            <h1 className="font-display text-2xl font-bold leading-tight break-words [font-stretch:110%]">{movie.name}</h1>
-            {metaBits.length > 0 && (
-              <p className="ep-code mt-1 truncate text-xs text-dim">{metaBits.join("  ·  ")}</p>
-            )}
-            <p className="ep-code mt-1 text-sm text-dim">
+        <div className="relative -mt-14 flex flex-col gap-1 px-5">
+          {/* `break-words`: a 150% "Redemption" media 231px numa coluna de 174 e
+              empurrava o ecrã para os 423px (Ronda 12, F2) */}
+          <h1 className="line-clamp-3 text-[2rem] leading-[1.1] font-bold break-words text-label">{movie.name}</h1>
+          <p className="text-[0.88rem] text-label-2">
+            {metaBits.join(" · ")}
+            {metaBits.length > 0 && " · "}
+            <span>
               {movie.watchedAt
                 ? movie.dateIsExact
                   ? `Visto a ${formatWatchedDate(movie.watchedAt, true)}`
                   : `Visto em ${formatWatchedDate(movie.watchedAt, false)}`
                 : "Na lista para ver"}
-            </p>
-          </div>
+            </span>
+          </p>
         </div>
+      </div>
 
-        {movie.watchedAt && (
-          <button
-            onClick={() => void desmarcar()}
-            className="mt-4 flex min-h-11 w-full cursor-pointer items-center justify-center rounded-full border border-line text-[0.9375rem] font-semibold text-dim transition hover:border-ink/40 hover:text-ink active:scale-[0.99]"
-          >
+      <div className="px-4">
+        {/* Uma só cápsula preenchida: marcar. Já visto, desmarcar é secundário. */}
+        {movie.watchedAt ? (
+          <Acao tipo="secundaria" onClick={() => void desmarcar()} className="mt-4 w-full">
             Desmarcar como visto
-          </button>
-        )}
-
-        {!movie.watchedAt && (
-          <button
+          </Acao>
+        ) : (
+          <Acao
             onClick={() => void markWatched()}
-            className="mt-4 flex w-full cursor-pointer items-center gap-3 rounded-2xl bg-ink px-4 py-3 text-left text-tube transition hover:brightness-110 active:scale-[0.99]"
+            className="mt-4 w-full"
+            icone={<CheckIcon aria-hidden className="h-5 w-5 shrink-0" />}
           >
-            <CheckIcon className="h-6 w-6 shrink-0" />
-            <span className="text-[0.9375rem] font-semibold">Marcar como visto</span>
-          </button>
+            Marcar como visto
+          </Acao>
         )}
 
         <div className="mt-3">
@@ -246,24 +225,22 @@ export default function MoviePage() {
         <StreamingBadges kind="movie" tmdbId={movie.tmdbId} />
 
         {details?.tagline && (
-          <p className="mt-5 font-display italic text-dim">
-            &ldquo;{details.tagline}&rdquo;
-          </p>
+          <p className="mt-5 italic text-label-2">&ldquo;{details.tagline}&rdquo;</p>
         )}
 
         <section className="mt-4">
           {details?.overview ? (
-            <p className="text-base leading-relaxed text-dim">{details.overview}</p>
+            <p className="text-base leading-relaxed text-label-2">{details.overview}</p>
           ) : aProcurar ? (
-            <p className="text-[0.9375rem] text-dim">A procurar na TMDB…</p>
+            <p className="text-[0.88rem] text-label-2">A procurar na TMDB…</p>
           ) : detalheFalhou ? (
-            <p className="text-[0.9375rem] text-dim">
+            <p className="text-[0.88rem] text-label-2">
               Não deu para trazer a sinopse — sem ligação à internet.
             </p>
           ) : movie.tmdbId ? (
-            <p className="text-[0.9375rem] text-dim">A carregar sinopse…</p>
+            <p className="text-[0.88rem] text-label-2">A carregar sinopse…</p>
           ) : (
-            <p className="text-[0.9375rem] text-dim">
+            <p className="text-[0.88rem] text-label-2">
               Sem sinopse disponível — este filme não foi encontrado na TMDB.
             </p>
           )}

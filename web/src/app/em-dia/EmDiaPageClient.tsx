@@ -10,6 +10,7 @@ import { pushUndo } from "@/lib/undo";
 import type { MetaEpisode } from "@/lib/metadata";
 import SwipeCard from "@/components/SwipeCard";
 import SwipeCoach, { EM_DIA_COACH_KEY } from "@/components/SwipeCoach";
+import Acao from "@/components/mira/Acao";
 import BotaoVoltar from "@/components/BotaoVoltar";
 import { ArrowLeftIcon, CheckIcon } from "@/components/icons";
 import { Bone, TitleBone } from "@/components/Skeleton";
@@ -148,7 +149,7 @@ function EmDiaContent() {
       <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-8">
         <TitleBone />
         <Bone className="mt-4 h-9 w-full rounded-full" />
-        <Bone className="mt-6 aspect-3/4 w-full rounded-3xl" />
+        <Bone className="mt-6 aspect-3/4 w-full rounded-[28px]" />
       </main>
     );
   }
@@ -176,11 +177,11 @@ function EmDiaContent() {
         <BotaoVoltar
           label="Voltar às séries"
           fallback="/series"
-          className="-ml-2 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-dim transition hover:text-ink active:scale-90"
+          className="-ml-2 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center rounded-full text-label transition active:scale-90"
         >
           <ArrowLeftIcon className="h-5 w-5" />
         </BotaoVoltar>
-        <h1 className="font-display text-2xl font-bold [font-stretch:110%]">Pôr em dia</h1>
+        <h1 className="text-[1.65rem] leading-[1.1] font-bold text-label">Pôr em dia</h1>
       </div>
 
       <div className="mt-4 flex shrink-0 gap-2 overflow-x-auto pb-1">
@@ -194,16 +195,16 @@ function EmDiaContent() {
               aria-pressed={isActive}
               // um filtro vazio que não é o ativo fica apagado: "Continuar 0"
               // à cabeça, primeiro e vazio, lia-se como o sítio onde estar
-              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full border px-4 text-[0.9375rem] font-medium transition active:scale-95 ${
+              className={`flex min-h-11 shrink-0 cursor-pointer items-center gap-1.5 rounded-full px-4 text-[0.88rem] font-semibold transition active:scale-[0.97] ${
                 count === 0 && !isActive ? "opacity-60" : ""
               } ${
                 isActive
-                  ? "border-ink/60 bg-raised text-ink"
-                  : "border-line text-dim hover:border-ink hover:text-ink"
+                  ? "bg-fill-strong text-label"
+                  : "text-label-2 shadow-[inset_0_0_0_1.5px_var(--m-label-3)]"
               }`}
             >
               {f.label}
-              <span className={`ep-code text-xs ${isActive ? "text-dim" : "text-faint"}`}>
+              <span className="ep-code text-[0.76rem] text-label-2">
                 {count}
               </span>
             </button>
@@ -214,9 +215,9 @@ function EmDiaContent() {
       {total === 0 ? (
         todosVazios ? (
           <div className="flex flex-1 flex-col items-center justify-center text-center">
-            <CheckIcon className="h-10 w-10 text-faint" />
-            <p className="mt-4 font-display font-semibold">Estás em dia com tudo</p>
-            <p className="mt-1 max-w-xs text-[0.9375rem] text-dim">
+            <CheckIcon className="h-10 w-10 text-label-3" />
+            <p className="mt-4 text-[1.18rem] font-semibold text-label">Estás em dia com tudo</p>
+            <p className="mt-1 max-w-xs text-[0.88rem] text-label-2">
               Não há episódios à espera em nenhuma das séries que segues.
             </p>
           </div>
@@ -224,32 +225,26 @@ function EmDiaContent() {
           // Um filtro vazio não é "estar em dia": sem o visto, e com a saída
           // à mão — mandava "experimentar outro acima", fora do polegar.
           <div className="flex flex-1 flex-col items-center justify-center text-center">
-            <p className="font-display font-semibold">Nada para pôr em dia aqui</p>
-            <button
-              onClick={() => changeFilter(saida)}
-              className="mt-6 min-h-11 cursor-pointer rounded-full bg-ink px-6 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95"
-            >
+            <p className="text-[1.18rem] font-semibold text-label">Nada para pôr em dia aqui</p>
+            <Acao onClick={() => changeFilter(saida)} className="mt-6">
               Ver {FILTERS.find((f) => f.id === saida)!.label} · {contar(saida)}
-            </button>
+            </Acao>
           </div>
         )
       ) : finished ? (
         <div className="flex flex-1 flex-col items-center justify-center text-center">
-          <CheckIcon className="h-10 w-10 text-faint" />
-          <p className="mt-4 font-display font-semibold">Passaste tudo em revista</p>
-          <p className="mt-1 max-w-xs text-[0.9375rem] text-dim">
+          <CheckIcon className="h-10 w-10 text-label-3" />
+          <p className="mt-4 text-[1.18rem] font-semibold text-label">Passaste tudo em revista</p>
+          <p className="mt-1 max-w-xs text-[0.88rem] text-label-2">
             {decided} episódios revistos neste filtro.
           </p>
-          <button
-            onClick={() => changeFilter(filter)}
-            className="mt-6 cursor-pointer rounded-full bg-ink px-6 py-2.5 text-[0.9375rem] font-semibold text-tube transition hover:brightness-110 active:scale-95"
-          >
+          <Acao onClick={() => changeFilter(filter)} className="mt-6">
             Rever outra vez
-          </button>
+          </Acao>
         </div>
       ) : (
         <>
-          <p className="ep-code mt-3 shrink-0 text-center text-xs text-faint">
+          <p className="ep-code mt-3 shrink-0 text-center text-[0.76rem] text-label-2">
             {cursor + 1} de {total}
           </p>
           {/* min-h-0: sem isto, o cartão empurraria as ações para debaixo da
@@ -288,7 +283,7 @@ function EmDiaContent() {
               <button
                 onClick={() => handleDecide(remaining[0], false)}
                 aria-label="Saltar — ainda não vi"
-                className="pointer-events-auto flex h-14 w-14 cursor-pointer items-center justify-center rounded-full border border-ink/20 bg-tube/70 text-ink backdrop-blur-md transition active:scale-90"
+                className="pointer-events-auto flex h-14 w-14 cursor-pointer items-center justify-center rounded-full vidro text-label transition active:scale-90"
               >
                 <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" aria-hidden>
                   <path
@@ -302,7 +297,7 @@ function EmDiaContent() {
               <button
                 onClick={() => handleDecide(remaining[0], true)}
                 aria-label="Marcar como visto"
-                className="pointer-events-auto flex h-16 w-16 cursor-pointer items-center justify-center rounded-full bg-ink text-tube transition hover:brightness-110 active:scale-90"
+                className="pointer-events-auto flex h-16 w-16 cursor-pointer items-center justify-center rounded-full bg-acao text-on-label transition active:scale-90"
               >
                 <CheckIcon className="h-7 w-7" />
               </button>
@@ -329,7 +324,7 @@ export default function EmDiaPage() {
         <main className="mx-auto flex w-full max-w-md flex-1 flex-col px-4 py-8">
           <TitleBone />
           <Bone className="mt-4 h-9 w-full rounded-full" />
-          <Bone className="mt-6 aspect-3/4 w-full rounded-3xl" />
+          <Bone className="mt-6 aspect-3/4 w-full rounded-[28px]" />
         </main>
       }
     >
