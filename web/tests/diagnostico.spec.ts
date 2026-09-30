@@ -53,3 +53,20 @@ test("medir o vidro a rolar dá quatro leituras, de sem vidro a 28 camadas, e o 
   await expect(page.getByRole("button", { name: "Medir o vidro a rolar" })).toBeEnabled();
   expect(await grandes()).toBe(4);
 });
+
+test("sem área de transferência (HTTP no iPhone), «Copiar tudo» mostra o relatório para copiar à mão", async ({
+  page,
+}) => {
+  // `navigator.clipboard` só existe em HTTPS ou localhost; o Ruben testa em http://192.168…
+  await page.addInitScript(() => {
+    Object.defineProperty(navigator, "clipboard", { value: undefined, configurable: true });
+    document.execCommand = () => false;
+  });
+  await semear(page, {});
+  await page.goto("/diagnostico");
+  await page.getByRole("button", { name: "Copiar tudo" }).click();
+  const relatorio = page.getByRole("textbox", { name: "Relatório" });
+  await expect(relatorio).toBeVisible();
+  await expect(relatorio).toHaveValue(/Área segura: cima/);
+  await expect(page.getByText(/Seleciona o texto/)).toBeVisible();
+});

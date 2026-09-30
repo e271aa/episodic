@@ -83,6 +83,11 @@ function rolar(palco: HTMLElement, ms: number): Promise<Omit<Amostra, "fase">> {
       if (t - inicio < ms) requestAnimationFrame(passo);
       else {
         const d = deltas.slice(3).sort((a, b) => a - b);
+        if (d.length === 0) {
+          // o browser não deu fotogramas (separador em segundo plano): nada a medir
+          resolve({ fotogramas: 0, p50: 0, p95: 0, max: 0, lentos: 0 });
+          return;
+        }
         const q = (p: number) => d[Math.min(d.length - 1, Math.floor(d.length * p))];
         resolve({
           fotogramas: d.length,
@@ -107,6 +112,7 @@ export default function DiagnosticoClient() {
   const [amostras, setAmostras] = useState<Amostra[]>([]);
   const [aMedir, setAMedir] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [mostrarRelatorio, setMostrarRelatorio] = useState(false);
 
   useEffect(() => {
     const atualizar = () => sonda.current && corpo.current && setLeitura(ler(sonda.current, corpo.current));
@@ -114,6 +120,34 @@ export default function DiagnosticoClient() {
     window.addEventListener("resize", atualizar);
     return () => window.removeEventListener("resize", atualizar);
   }, []);
+
+  /** A API só existe em HTTPS/localhost; em HTTP tenta-se o método antigo e, se nem esse, mostra-se o texto. */
+  async function copiar() {
+    const texto = relatorio();
+    try {
+      if (navigator.clipboard) {
+        await navigator.clipboard.writeText(texto);
+        setCopiado(true);
+        return;
+      }
+    } catch {
+      // cai no método antigo
+    }
+    const area = document.createElement("textarea");
+    area.value = texto;
+    area.style.cssText = "position:fixed;opacity:0";
+    document.body.appendChild(area);
+    area.select();
+    let ok = false;
+    try {
+      ok = document.execCommand("copy");
+    } catch {
+      ok = false;
+    }
+    area.remove();
+    if (ok) setCopiado(true);
+    else setMostrarRelatorio(true);
+  }
 
   async function medir() {
     const el = palco.current;
@@ -253,7 +287,9 @@ export default function DiagnosticoClient() {
           <li key={a.fase} className="rounded-[22px] bg-group px-4 py-3 text-[0.88rem] text-label">
             <span className="font-semibold">{FASES.find((f) => f.fase === a.fase)?.nome}</span>
             <span className="ep-code ml-2 text-label-2">
-              p50 {a.p50} ms · p95 {a.p95} ms · máx {a.max} ms · {a.lentos}/{a.fotogramas} &gt; 20 ms
+              {a.fotogramas === 0
+                ? "sem fotogramas — a página estava em segundo plano; mede outra vez com ela à frente"
+                : `p50 ${a.p50} ms · p95 ${a.p95} ms · máx ${a.max} ms · ${a.lentos}/${a.fotogramas} > 20 ms`}
             </span>
           </li>
         ))}
@@ -261,13 +297,26 @@ export default function DiagnosticoClient() {
 
       <button
         type="button"
-        onClick={() => {
-          void navigator.clipboard?.writeText(relatorio()).then(() => setCopiado(true));
-        }}
+        onClick={() => void copiar()}
         className="mt-6 inline-flex min-h-11 cursor-pointer items-center rounded-full bg-fill-strong px-5 font-semibold text-label"
       >
         {copiado ? "Copiado" : "Copiar tudo"}
       </button>
+      {mostrarRelatorio && (
+        <>
+          <p className="mt-3 text-[0.88rem] text-label-2">
+            Seleciona o texto e copia (este endereço é HTTP, e o iOS não deixa copiar por botão).
+          </p>
+          <textarea
+            readOnly
+            aria-label="Relatório"
+            value={relatorio()}
+            rows={14}
+            onFocus={(e) => e.currentTarget.select()}
+            className="mt-2 w-full rounded-[22px] bg-group p-4 text-[0.76rem] text-label"
+          />
+        </>
+      )}
     </main>
   );
 }
