@@ -301,7 +301,7 @@ export default function SeriesPage() {
     // só se a base local demorar mais de 300ms — abaixo disso um esqueleto
     // é só um piscar. Com a forma exata do cartão, para nada saltar.
     return (
-      <main className="mx-auto w-full max-w-2xl px-4 pt-[max(12px,env(safe-area-inset-top))]">
+      <main className="mx-auto w-full max-w-2xl px-4 pt-[var(--topo-pagina)]">
         <TituloGrande titulo="A seguir" rotulo={rotulo} />
         {esqueleto && (
           <div className="mt-5 overflow-hidden rounded-[28px] bg-group" data-testid="esqueleto-casa">
@@ -325,7 +325,7 @@ export default function SeriesPage() {
     // primeira é a que toda a gente pode fazer; importar é para quem vem do
     // TV Time (os amigos nunca o tiveram — Ronda 12, Fase 4).
     return (
-      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-[max(12px,env(safe-area-inset-top))]">
+      <main className="mx-auto flex w-full max-w-xl flex-1 flex-col px-4 pt-[var(--topo-pagina)]">
         <TituloGrande titulo="A seguir" rotulo={rotulo} />
         {/* A carta de teste: um dos dois sítios da mira (Regra da mira) — aqui
             quer dizer «ainda não há nada a passar». Composta a sério, como a
@@ -361,7 +361,7 @@ export default function SeriesPage() {
           O Seguir está na pesquisa. Já vais a meio de uma série? Marca o último episódio que
           viste: a app oferece-se para marcar os de trás.
         </p>
-        <div className="mt-auto flex flex-col gap-2.5 pb-4 pt-8">
+        <div className="mt-auto flex flex-col gap-2.5 pb-4 pt-5">
           <Link
             href="/explorar?procurar=1"
             className="flex min-h-[52px] cursor-pointer items-center justify-center rounded-full bg-label text-base font-semibold text-on-label transition-transform active:scale-[0.97]"
@@ -539,7 +539,7 @@ export default function SeriesPage() {
     ) : undefined;
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 pt-[max(12px,env(safe-area-inset-top))] pb-8">
+    <main className="mx-auto w-full max-w-2xl px-4 pt-[var(--topo-pagina)] pb-8">
       <TituloGrande titulo="A seguir" rotulo={rotulo} direita={porEmDia} />
       {nextUp === null ? (
         <div className="mt-5 space-y-3">

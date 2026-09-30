@@ -227,6 +227,12 @@ body {
 }
 
 :root {
+  /* Onde começa o conteúdo dos quatro separadores (A seguir, Explorar,
+     Biblioteca, Perfil): a mesma altura em todos. No iPhone a PWA tem a área
+     segura de cima a 0 (a página começa abaixo da barra de estado), e com 12px
+     as letras do título ficavam «no limite» do topo; com os 32px que o Perfil
+     tinha, demasiado abaixo. 22 + os 8px do cabeçalho = 30px. */
+  --topo-pagina: max(22px, env(safe-area-inset-top));
   /* Onde acaba a barra compacta do `TituloGrande` (área segura + o nome e o
      resumo): é aí que os cabeçalhos de secção se colam ao rolar. */
   --topo-barra: calc(max(12px, env(safe-area-inset-top)) + 3.4rem);

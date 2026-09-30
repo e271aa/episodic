@@ -32,7 +32,7 @@ export default function ProfilePage() {
 
   if (dados === null) {
     return (
-      <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-6">
+      <main className="mx-auto w-full max-w-2xl px-4 pt-[var(--topo-pagina)] pb-6">
         <TituloGrande titulo="Perfil" />
         {/* a sombra do que vem: identidade, tempo de antena, os três
             contadores e o mapa */}
@@ -74,7 +74,7 @@ export default function ProfilePage() {
   const maisNaLista = avancadas.maisVistas[0]?.count ?? 1;
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-6">
+    <main className="mx-auto w-full max-w-2xl px-4 pt-[var(--topo-pagina)] pb-6">
       <TituloGrande titulo="Perfil" />
 
       <div className="mt-4">

@@ -58,3 +58,44 @@ test("«A seguir» sem nenhuma série seguida explica-se por inteiro, sem retic�
   expect(cortado).toBe(false);
   await expect(linha).toContainText("fica fora da fila");
 });
+
+test("o título de cada separador começa à mesma altura (a área segura da PWA vale 0)", async ({ page }) => {
+  // Medido no iPhone: A seguir, Explorar e Biblioteca a 20px do topo da janela, o
+  // Perfil a 40. Perto do topo as letras ficavam «no limite»; o Perfil, demasiado
+  // abaixo. Uma altura só, a meio.
+  await semear(page, { series: [{ uuid: "s-1", name: "Severance", followed: true }] });
+  const topos: Record<string, number> = {};
+  for (const [nome, url] of [
+    ["a-seguir", "/series"],
+    ["explorar", "/explorar"],
+    ["biblioteca", "/library"],
+    ["perfil", "/profile"],
+  ] as const) {
+    await page.goto(url);
+    await page.locator("h1").waitFor();
+    topos[nome] = await page.evaluate(() => {
+      const cabecalho = document.querySelector("header")!;
+      return Math.round((cabecalho.firstElementChild as HTMLElement).getBoundingClientRect().top);
+    });
+  }
+  const valores = Object.values(topos);
+  expect(Math.max(...valores) - Math.min(...valores), JSON.stringify(topos)).toBeLessThanOrEqual(1);
+  expect(Math.min(...valores)).toBeGreaterThanOrEqual(28);
+});
+
+test("a barra compacta do título não existe (nem desfoca) enquanto não aparece", async ({ page }) => {
+  await semear(page, {
+    series: Array.from({ length: 30 }, (_, i) => ({ uuid: `s-${i}`, name: `Serie ${i}` })),
+  });
+  await page.goto("/library");
+  await page.locator('a[href="/series/s-29"]').waitFor();
+  const visibilidade = await page.evaluate(
+    () => getComputedStyle(document.querySelector(".vidro.fixed.top-0")!).visibility,
+  );
+  expect(visibilidade).toBe("hidden");
+  // e aparece ao rolar
+  await page.evaluate(() => window.scrollTo(0, 600));
+  await expect
+    .poll(() => page.evaluate(() => getComputedStyle(document.querySelector(".vidro.fixed.top-0")!).visibility))
+    .toBe("visible");
+});

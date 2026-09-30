@@ -369,6 +369,12 @@ Regras que saíram daqui:
   saía 16px do ecrã.
 - A página da série acaba com um respiro de 24px (`pb-6`): o último episódio
   ficava a 0–5px da barra.
+- **O topo dos quatro separadores é um só** (`--topo-pagina`: `max(22px, área
+  segura)`, mais os 8px do cabeçalho = 30px). Medido no iPhone: A seguir, Explorar
+  e Biblioteca a 20px, o Perfil a 40. Com a PWA a área segura de cima vale 0 (a
+  página começa abaixo da barra de estado), e a 20px as letras ficavam «no
+  limite»; a 40, demasiado abaixo. A barra compacta do `TituloGrande` está
+  `invisible` (não só opacity 0) enquanto não aparece.
 - **Tamanho do texto:** não há simulador iOS (o runtime foi apagado). No WebKit
   simula-se pela raiz (17px × escala; 15px é o do Ruben). O iOS vai até 53px
   (AX5); testou-se até 25,5px (150%).

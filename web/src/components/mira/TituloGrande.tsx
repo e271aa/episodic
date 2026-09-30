@@ -40,8 +40,9 @@ export default function TituloGrande({
     <>
       <div
         aria-hidden
-        className={`vidro fixed inset-x-0 top-0 z-30 flex flex-col items-center justify-end pb-2 pt-[max(12px,env(safe-area-inset-top))] transition-opacity duration-200 ${
-          recolhido ? "opacity-100" : "pointer-events-none opacity-0"
+        className={`vidro fixed inset-x-0 top-0 z-30 flex flex-col items-center justify-end pb-2 pt-[max(12px,env(safe-area-inset-top))] transition-[opacity,visibility] duration-200 ${
+          // `invisible` e não só opacity 0: uma camada de vidro invisível continua a existir
+          recolhido ? "visible opacity-100" : "pointer-events-none invisible opacity-0"
         }`}
         style={{ borderRadius: 0 }}
       >

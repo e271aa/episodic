@@ -519,7 +519,7 @@ function LibraryContent() {
         } · ${showing}`;
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 pt-[max(12px,env(safe-area-inset-top))] pb-8">
+    <main className="mx-auto w-full max-w-2xl px-4 pt-[var(--topo-pagina)] pb-8">
       <TituloGrande titulo="Biblioteca" resumo={resumo} />
 
       {segment !== "listas" && (
