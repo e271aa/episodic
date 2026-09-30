@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, Plus } from "lucide-react";
 import Acao from "@/components/mira/Acao";
 import EscolhaAparencia from "@/components/mira/EscolhaAparencia";
@@ -8,7 +8,23 @@ import { Grupo, Linha } from "@/components/mira/Grupo";
 import MenuFiltro from "@/components/mira/MenuFiltro";
 import Segmentado from "@/components/mira/Segmentado";
 import TituloGrande from "@/components/mira/TituloGrande";
+import EscolhaPersonagem, { type PersonagemEscolhida } from "@/components/EscolhaPersonagem";
+import { getShows, type StoredShow } from "@/lib/db";
 import BibliotecaExemplo from "./BibliotecaExemplo";
+
+/** O seletor de personagem do editor de perfil, com a biblioteca local. */
+function PersonagemExemplo() {
+  const [shows, setShows] = useState<StoredShow[]>([]);
+  const [escolhida, setEscolhida] = useState<PersonagemEscolhida | null>(null);
+  useEffect(() => {
+    void getShows().then(setShows);
+  }, []);
+  return (
+    <section className="mt-6 px-1">
+      <EscolhaPersonagem shows={shows} favoritaUuid="" atual={escolhida} onEscolher={setEscolhida} />
+    </section>
+  );
+}
 
 type Seg = "series" | "filmes" | "listas";
 type Filtro = "todas" | "em-curso" | "por-comecar" | "retomar" | "completas" | "arquivadas";
@@ -120,6 +136,8 @@ export default function VitrineClient() {
           </Acao>
         </div>
       </section>
+
+      <PersonagemExemplo />
 
       <Grupo titulo="Listas" className="mt-6">
         <Linha href="#" titulo="Clássicos para rever" depois={<span className="ep-code">6</span>} />

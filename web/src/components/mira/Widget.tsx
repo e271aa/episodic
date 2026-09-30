@@ -34,7 +34,7 @@ export function Contador({
 }) {
   return (
     <Caixa href={href}>
-      <span className="font-rounded text-[1.4rem] font-bold leading-tight tabular-nums text-label">{valor}</span>
+      <span className="font-rounded text-[1.4rem] font-bold leading-tight tabular-nums text-label">{valor}</span>{" "}
       <span className="block">
         <span className="block text-[0.76rem] leading-snug text-label-2">{rotulo}</span>
         {sub && <span className="block text-[0.76rem] leading-snug text-label-2">{sub}</span>}
@@ -70,12 +70,17 @@ export function Recorde({
 }) {
   return (
     <div className={`${CAIXA} justify-start gap-0.5`}>
-      <span className="block text-[0.76rem] leading-snug text-label-2">{rotulo}</span>
+      <span className="block text-[0.76rem] leading-snug text-label-2">{rotulo}</span>{" "}
       <span className="mt-1 flex flex-wrap items-baseline gap-x-1.5">
         <span className="font-rounded text-[1.65rem] font-bold leading-tight tabular-nums text-label">{valor}</span>{" "}
         <span className="text-[0.88rem] text-label-2">{unidade}</span>
       </span>
-      {detalhe && <span className="mt-1 block text-[0.76rem] leading-snug text-label-2">{detalhe}</span>}
+      {detalhe && (
+        <>
+          {" "}
+          <span className="mt-1 block text-[0.76rem] leading-snug text-label-2">{detalhe}</span>
+        </>
+      )}
     </div>
   );
 }

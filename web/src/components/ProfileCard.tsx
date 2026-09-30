@@ -1,9 +1,8 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { getShows, updateShow, type StoredShow } from "@/lib/db";
-import { findShowByTvdbId, getSeriesCast, type CastMember } from "@/lib/tmdb";
-import { hasTmdb } from "@/lib/metadata";
+import { getShows, type StoredShow } from "@/lib/db";
+import EscolhaPersonagem, { type PersonagemEscolhida } from "@/components/EscolhaPersonagem";
 import {
   EMPTY_PROFILE,
   getProfile,
@@ -12,9 +11,6 @@ import {
   type UserProfile,
 } from "@/lib/profile";
 import { isCloudConfigured } from "@/lib/supabase";
-import Poster from "@/components/Poster";
-import { CheckIcon, UserIcon } from "@/components/icons";
-import { Bone } from "@/components/Skeleton";
 
 /**
  * A identidade do perfil (nome, foto, série e personagem favoritas), lida da
@@ -56,73 +52,35 @@ export function EditorPerfil({
 }) {
   const [nome, setNome] = useState(perfil.displayName ?? "");
   const [showUuid, setShowUuid] = useState(perfil.favoriteShowUuid ?? "");
-  // guarda a que série pertence o elenco: trocar de série mostra o esqueleto
-  // sem precisar de repor o estado dentro do efeito
-  const [elencoDe, setElencoDe] = useState<{ showUuid: string; cast: CastMember[] } | null>(
-    null,
+  const [personagem, setPersonagem] = useState<PersonagemEscolhida | null>(
+    perfil.favoriteCharacter
+      ? {
+          character: perfil.favoriteCharacter,
+          actorName: perfil.favoriteActor,
+          profilePath: perfil.favoritePersonImg,
+        }
+      : null,
   );
-  const [personagem, setPersonagem] = useState(perfil.favoriteCharacter ?? "");
   const [aGuardar, setAGuardar] = useState(false);
   const [erro, setErro] = useState<string | null>(null);
   const ficheiro = useRef<HTMLInputElement>(null);
 
   // Todas as séries arquivadas de fora, sem exigir tmdbId — exigir tmdbId
-  // deixava de fora quase a biblioteca toda (é a TVmaze quem enriquece a
-  // maioria das séries, e só a TMDB tem elenco), e o menu ficava com uma
-  // meia dúzia de opções em vez das dezenas que a pessoa realmente segue.
+  // deixava de fora quase a biblioteca toda, e o menu ficava com uma meia
+  // dúzia de opções em vez das dezenas que a pessoa realmente segue.
   const seriesOrdenadas = [...shows]
     .filter((s) => !s.archived)
     .sort((a, b) => a.name.localeCompare(b.name, "pt"));
 
-  const escolhida = shows.find((s) => s.uuid === showUuid);
-
-  useEffect(() => {
-    if (!showUuid || !escolhida) return;
-    let vivo = true;
-    void (async () => {
-      // A maioria das séries só tem tvmazeId (a TVmaze não tem elenco) — antes
-      // de desistir, tenta encontrar o id TMDB pelo tvdbId, como o resto da
-      // app já faz para posters e sinopses. Guarda-o na série para a próxima
-      // vez não repetir a pesquisa.
-      let tmdbId = escolhida.tmdbId;
-      if (!tmdbId && escolhida.tvdbId && (await hasTmdb())) {
-        const hit = await findShowByTvdbId(escolhida.tvdbId).catch(() => null);
-        if (!vivo) return;
-        if (hit) {
-          tmdbId = hit.id;
-          await updateShow(showUuid, { tmdbId: hit.id });
-        }
-      }
-      if (!vivo) return;
-      if (!tmdbId) {
-        setElencoDe({ showUuid, cast: [] });
-        return;
-      }
-      try {
-        const cast = await getSeriesCast(tmdbId);
-        if (vivo) setElencoDe({ showUuid, cast: cast.slice(0, 24) });
-      } catch {
-        if (vivo) setElencoDe({ showUuid, cast: [] });
-      }
-    })();
-    return () => {
-      vivo = false;
-    };
-  }, [showUuid, escolhida]);
-
-  /** null enquanto o elenco desta série não chegou */
-  const elenco = elencoDe && elencoDe.showUuid === showUuid ? elencoDe.cast : null;
-
   const guardar = async () => {
     setAGuardar(true);
     setErro(null);
-    const escolhido = elenco?.find((c) => c.character === personagem);
     const { error } = await saveProfile({
       displayName: nome.trim() || null,
       favoriteShowUuid: showUuid || null,
-      favoriteCharacter: personagem || null,
-      favoriteActor: escolhido?.actorName ?? null,
-      favoritePersonImg: escolhido?.profilePath ?? null,
+      favoriteCharacter: personagem?.character ?? null,
+      favoriteActor: personagem?.actorName ?? null,
+      favoritePersonImg: personagem?.profilePath ?? null,
     });
     setAGuardar(false);
     if (error) {
@@ -190,10 +148,7 @@ export function EditorPerfil({
           <span className="text-xs font-medium text-dim">Série favorita</span>
           <select
             value={showUuid}
-            onChange={(e) => {
-              setShowUuid(e.target.value);
-              setPersonagem("");
-            }}
+            onChange={(e) => setShowUuid(e.target.value)}
             className="min-h-12 cursor-pointer rounded-2xl border border-line bg-panel px-4 outline-none transition-colors focus:border-ink"
           >
             <option value="">Nenhuma</option>
@@ -205,65 +160,14 @@ export function EditorPerfil({
           </select>
         </label>
 
-        {escolhida && (
-          <div className="mt-4">
-            <p className="text-xs font-medium text-dim">Personagem favorita</p>
-            {elenco === null ? (
-              <div className="mt-2 flex gap-2 overflow-hidden">
-                {[0, 1, 2, 3].map((i) => (
-                  <Bone key={i} className="h-24 w-16 shrink-0 rounded-xl" />
-                ))}
-              </div>
-            ) : elenco.length === 0 ? (
-              <p className="mt-1.5 text-[0.9375rem] text-dim">
-                Não foi possível carregar o elenco desta série.
-              </p>
-            ) : (
-              <div className="-mx-5 mt-2 flex gap-2 overflow-x-auto px-5 pb-2">
-                {elenco.map((c) => {
-                  const ativo = personagem === c.character;
-                  return (
-                    <button
-                      key={`${c.personId}-${c.character}`}
-                      onClick={() => setPersonagem(ativo ? "" : c.character)}
-                      className={`w-16 shrink-0 cursor-pointer text-left transition active:scale-95 ${
-                        ativo ? "" : "opacity-70 hover:opacity-100"
-                      }`}
-                    >
-                      <div
-                        className={`relative h-24 w-16 overflow-hidden rounded-xl bg-raised ${
-                          ativo ? "ring-2 ring-ink" : ""
-                        }`}
-                      >
-                        {c.profilePath ? (
-                          <Poster
-                            path={c.profilePath}
-                            alt={c.character}
-                            size="w185"
-                            fill
-                            sizes="64px"
-                            className="object-cover"
-                          />
-                        ) : (
-                          <span className="flex h-full w-full items-center justify-center text-faint">
-                            <UserIcon className="h-5 w-5" />
-                          </span>
-                        )}
-                        {ativo && (
-                          <span className="absolute bottom-1 right-1 flex h-5 w-5 items-center justify-center rounded-full bg-ink text-tube">
-                            <CheckIcon className="h-3 w-3" />
-                          </span>
-                        )}
-                      </div>
-                      <p className="mt-1 truncate text-xs font-medium">{c.character}</p>
-                      <p className="ep-code truncate text-[0.6875rem] text-faint">{c.actorName}</p>
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        )}
+        <div className="mt-6">
+          <EscolhaPersonagem
+            shows={shows}
+            favoritaUuid={showUuid}
+            atual={personagem}
+            onEscolher={setPersonagem}
+          />
+        </div>
 
         {erro && (
           <p className="page-enter mt-4 text-[0.9375rem] text-danger" role="alert">

@@ -295,6 +295,12 @@ um mapa vazio lê-se como avaria. Entre blocos, 12px (`mt-3`); entre secções, 
   células ficam abaixo dos 24). **Um mês que ainda não chegou é só contorno e não
   é botão.** A célula escolhida leva o anel `bg` + `label/.9`. A leitura dos
   gráficos (`Colunas`, mapa) já não é mono: leva nomes («Sexta-feira»).
+- **Personagem favorita** (`EscolhaPersonagem`, no editor de perfil): independente da
+  série favorita. Escolhe-se uma série de entre as que **já se viu ou se está a ver**
+  (≥1 episódio marcado; `seriesParaPersonagem`) e, do elenco, a personagem; trocar de
+  série não apaga a escolha, e a escolha atual (foto, personagem, ator, «Remover») fica
+  em cima. O perfil guarda a personagem, o ator e a foto — **não a série dela**, por
+  isso ao reabrir o elenco parte da série favorita. Nomes de atores nunca em mono.
 - **Mais vistas**: linhas com a capa (40×60, raio 8), o nome, a barra neutra e a
   contagem.
 - **Definições** (`/profile/definicoes`): Editar perfil (só com nuvem),

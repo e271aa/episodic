@@ -71,6 +71,8 @@ export interface Catalogo {
    * Ausente = a TMDB não tem nada para Portugal.
    */
   ondeVer: Record<string, string[]>;
+  /** `tv/{id}/aggregate_credits`: o elenco de uma série, por id */
+  elenco: Record<number, { ator: string; personagem: string; episodios?: number }[]>;
   /** `tv|movie/{id}/external_ids` → id do IMDb, por `"tv:{id}"` / `"movie:{id}"` */
   imdb: Record<string, string>;
   /** `find/{tvdbId}?external_source=tvdb_id` → id do TMDB */
@@ -96,6 +98,7 @@ export function catalogoVazio(): Catalogo {
     episodios: {},
     filmes: {},
     ondeVer: {},
+    elenco: {},
     imdb: {},
     porTvdb: {},
     tvmaze: {},
@@ -215,6 +218,18 @@ export async function interceptarTmdb(page: Page, catalogo: Catalogo): Promise<v
       const detalhe = catalogo.filmes[Number(filme[1])];
       return detalhe ? json(detalhe) : json({ status_code: 34 });
     }
+
+    const elenco = /^tv\/(\d+)\/aggregate_credits$/.exec(caminho);
+    if (elenco)
+      return json({
+        cast: (catalogo.elenco[Number(elenco[1])] ?? []).map((c, i) => ({
+          id: 9000 + i,
+          name: c.ator,
+          roles: [{ character: c.personagem }],
+          total_episode_count: c.episodios ?? 10 - i,
+          profile_path: "/ator.jpg",
+        })),
+      });
 
     if (/^trending\/(tv|movie)\/week$/.test(caminho))
       return json({ results: url.searchParams.get("page") === "2" ? [] : catalogo.tendencias });
