@@ -124,6 +124,21 @@ export default function DefinicoesPage() {
         </Panel>
       </section>
 
+      {/* Temporário (Ronda 14, Fase 11): a PWA instalada não tem barra de
+          endereço, e é lá que se lê a área segura e a barra de estado. Sai com a
+          vitrine `/mira` na Fase 12. */}
+      <section className="mt-8">
+        <h2 className="mb-2 px-1 text-base font-semibold text-label">Diagnóstico</h2>
+        <Panel>
+          <PanelRow
+            titulo="Diagnóstico do ecrã"
+            detalhe="Área segura, barra de estado, texto do sistema — para testar a PWA"
+            href="/diagnostico"
+            fim="→"
+          />
+        </Panel>
+      </section>
+
       <p className="mt-10 text-center text-xs leading-relaxed text-faint">
         Episodic — os teus dados vivem neste dispositivo
         <br />e na cloud, se iniciares sessão.

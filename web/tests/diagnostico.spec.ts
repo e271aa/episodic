@@ -70,3 +70,11 @@ test("sem área de transferência (HTTP no iPhone), «Copiar tudo» mostra o rel
   await expect(relatorio).toHaveValue(/Área segura: cima/);
   await expect(page.getByText(/Seleciona o texto/)).toBeVisible();
 });
+
+test("a PWA não tem barra de endereço: o diagnóstico abre-se pelas Definições", async ({ page }) => {
+  await semear(page, {});
+  await page.goto("/profile/definicoes");
+  await page.getByRole("link", { name: /Diagnóstico/ }).click();
+  await expect(page).toHaveURL(/\/diagnostico$/);
+  await expect(page.getByRole("heading", { level: 1, name: "Diagnóstico" })).toBeVisible();
+});
