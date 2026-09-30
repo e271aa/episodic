@@ -1,7 +1,11 @@
 import { defineConfig, devices } from "@playwright/test";
 
-/** Porta só dos testes — não colide com o `next dev` de todos os dias. */
-const PORTA = 3210;
+/**
+ * Porta só dos testes — não colide com o `next dev` de todos os dias. Pode ser
+ * trocada (`PORTA_TESTES`) para correr duas cópias ao mesmo tempo: sem isso a
+ * segunda reaproveitava o servidor da primeira e testava o código dela.
+ */
+const PORTA = Number(process.env.PORTA_TESTES ?? 3210);
 const BASE = `http://127.0.0.1:${PORTA}`;
 
 export default defineConfig({

@@ -13,12 +13,29 @@
  * Cada mutação repõe UM bug. Se a suite continuar verde, a correção não está
  * protegida por teste nenhum — e isso é um buraco na rede, não um detalhe.
  *
- * Correr:  node tests/mutacoes.mjs          (todas)
- *          node tests/mutacoes.mjs buracos  (só as que batem com o nome)
+ * Correr (NUNCA na pasta que serve o `next dev` — a build de cada mutação
+ * escreve em `.next/` e o servidor de pré-visualização recarrega os ficheiros
+ * mutados; por isso o guião recusa-se fora de um `git worktree`):
+ *
+ *   git worktree add --detach ../episodic-mutacoes HEAD
+ *   cp -cR node_modules ../episodic-mutacoes/web/node_modules   # clone APFS, 4 s
+ *   cd ../episodic-mutacoes/web
+ *   node tests/mutacoes.mjs                  todas
+ *   node tests/mutacoes.mjs buracos r14-f3   só as que batem com algum destes nomes
+ *   node tests/mutacoes.mjs --verificar      só confirma que os trechos existem
+ *   node tests/mutacoes.mjs --tudo           ignora o mapa: suite inteira em cada uma
+ *
+ * Quanto demora (medido a 30-09, M-series de 8 núcleos): a build custa ~10 s e
+ * a suite inteira ~65 s. Com o mapa (`mutacoes-mapa.json`: os ficheiros de
+ * teste que cada mutação ameaça) só correm esses, parando à primeira falha:
+ * ~25 s por mutação. Só quando uma mutação **sobrevive** ao seu conjunto é que
+ * se corre a suite inteira (para a distinguir de um mapa desatualizado) — por
+ * isso um sobrevivente custa ~75 s e um apanhado ~25 s. O guião diz a
+ * estimativa antes de começar.
  */
 
 import { execFileSync, execSync } from "node:child_process";
-import { readFileSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 
 const BIBLIOTECA = "src/app/library/LibraryPageClient.tsx";
 const RUNS = "src/lib/episodeRuns.ts";
@@ -77,6 +94,29 @@ const CONTROLOS_BIBLIOTECA = "src/components/LibraryControls.tsx";
 const LISTAS_ROTA = "src/app/listas/page.tsx";
 
 /**
+ * Mutações retiradas na Fase 10 (Ronda 14): o desenho que elas ameaçavam já não
+ * existe. Cada uma diz onde o mesmo risco passou a ser guardado.
+ */
+const RETIRADAS = {
+  "fase4/separadores-acessiveis": "os três separadores do detalhe saíram na Fase 4 (Mira) — já não há `aria-controls` nem tablist",
+  "fase4/separadores-com-setas": "idem: as setas entre separadores morreram com os separadores; o segmentado das temporadas tem `role=radio` e é coberto pelas mutações do Segmentado",
+  "r12-fase5b/biblioteca-sem-h1": "o `<h1>` é agora da `TituloGrande`, comum a todos os ecrãs — coberto por `r14-f10/titulo-grande-sem-h1`",
+  "r12-fase5b/perfil-sem-h1": "idem (`TituloGrande`)",
+  "r12-fase5b/explorar-sem-h1": "idem (`TituloGrande`)",
+  "r12-fase5b3/biblioteca-sem-titulo": "o título já não é `sr-only`, é o título grande — coberto por `r14-f10/titulo-grande-so-para-leitores`",
+  "r12-fase5b/em-curso-verde": "as secções da Biblioteca já não têm cor (regra da Mira) — coberto por `r14-f10/seccao-com-cor`",
+  "r12-fase5d/por-comecar-amarelo": "idem — coberto por `r14-f10/seccao-com-cor`",
+  "r12-fase5d/modo-ativo-branco": "o `ViewModeToggle` saiu na Fase 6; o mesmo risco (escolha a parecer ação) é `r12-fase5b3/separador-volta-a-branco`, no `Segmentado`",
+  "r12-fase5b3/contagens-a-320": "as folhas/barra `LibraryControls` saíram na Fase 5; o risco (a barra alargar a página a 320px) é `r14-f10/segmentado-alarga`",
+  "r12-f5/contagens-em-px": "idem",
+  "r12-f5/separador-sem-teto": "idem",
+  "r12-f4/barra-volta-a-baixo": "a barra da Biblioteca já não cola: cola-se a barra compacta e os cabeçalhos das secções — `r14-f10/seccao-nao-cola`",
+  "r12-fase5b3/secundaria-debaixo-da-dock": "o cartão da ação secundária do detalhe (`mt-20`) já não existe; a reserva da dock é medida por `r12-fase5e/filme-reserva-a-dock` e pelos testes da Fase 4",
+  "r12-fecho/estrear-data-come-a-linha": "a data do A estrear passou para a linha de baixo (Fase 8); já não compete com o nome — o nome a quebrar é `r12-fase5d/estrear-corta-o-nome`",
+  "r12-f5/perfil-sem-min-w": "as três colunas de números do Perfil saíram (Fase 7): o `Contador` é uma grelha, sem `flex-1`"
+};
+
+/**
  * `de` tem de existir tal e qual no ficheiro — se deixar de existir, a
  * mutação deixa de repor o bug que diz repor e passaria a dar um falso
  * "apanhado". O guião estoira nesse caso, de propósito.
@@ -100,29 +140,29 @@ const MUTACOES = [
     nome: "fase2/cabecalho-fixo",
     descricao: "o cabeçalho da temporada deixa de ser sticky",
     ficheiro: "src/app/series/[uuid]/PainelEpisodios.tsx",
-    de: '<div className="sticky top-0 z-10 -mx-4 bg-tube px-4 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">',
-    para: '<div className="-mx-4 bg-tube px-4 pb-2 pt-[max(0.5rem,env(safe-area-inset-top))]">',
+    de: "<div className=\"sticky top-0 z-10 -mx-4 flex min-h-11",
+    para: "<div className=\"-mx-4 flex min-h-11",
   },
   {
     nome: "fase2/visto-vs-por-ver",
     descricao: "visto e por ver voltam a desenhar-se iguais",
     ficheiro: "src/app/series/[uuid]/LinhaEpisodio.tsx",
-    de: '        isSeen ? "opacity-60" : ""',
-    para: '        isSeen ? "" : ""',
+    de: "isSeen ? \"opacity-55\" : \"\"",
+    para: "isSeen ? \"\" : \"\"",
   },
   {
     nome: "fase3/balde-por-comecar",
     descricao: "'Por começar' volta para dentro do 'A ver'",
-    ficheiro: BIBLIOTECA,
-    de: '    return s.watchedCount === 0 ? "Por começar" : "Em curso";',
-    para: '    return "Em curso";',
+    ficheiro: "src/app/library/LibraryPageClient.tsx",
+    de: "    if (s.watchedCount === 0) return \"Por começar\";\n    return parada",
+    para: "    return parada",
   },
   {
     nome: "fase3/ordem-das-seccoes",
     descricao: "as completas voltam para o segundo lugar",
-    ficheiro: BIBLIOTECA,
-    de: 'const ESTADOS = [\n  "Em curso",\n  "Por começar",\n  "Para ver",\n  "Completas",',
-    para: 'const ESTADOS = [\n  "Em curso",\n  "Completas",\n  "Por começar",\n  "Para ver",',
+    ficheiro: "src/app/library/LibraryPageClient.tsx",
+    de: "const ESTADOS = [\n  \"Em curso\",\n  \"Retomar\",\n  \"Por começar\",\n  \"Para ver\",\n  \"Completas\",",
+    para: "const ESTADOS = [\n  \"Em curso\",\n  \"Completas\",\n  \"Retomar\",\n  \"Por começar\",\n  \"Para ver\",",
   },
   {
     nome: "fase3/dobrar-completas",
@@ -133,45 +173,31 @@ const MUTACOES = [
   },
   {
     nome: "fase4/altura-do-heroi",
-    descricao: "o herói volta aos 420px fixos",
+    descricao: "o herói volta a 290px fixos e empurra o próximo episódio para fora de um ecrã baixo",
     ficheiro: "src/app/series/[uuid]/CabecalhoSerie.tsx",
-    de: 'h-[min(52vh,420px)]',
-    para: 'h-[420px]',
+    de: "h-[min(290px,40vh)]",
+    para: "h-[290px]",
   },
   {
     nome: "fase4/uma-acao-preenchida",
     descricao: "as duas ações voltam a ser blocos brancos iguais",
     ficheiro: "src/app/series/[uuid]/AcoesSerie.tsx",
-    de: '            buracos.total > 0\n              ? "border border-line text-ink hover:border-ink/40 hover:bg-raised"\n              : "bg-ink text-tube hover:brightness-110"',
-    para: '            false\n              ? "border border-line text-ink hover:border-ink/40 hover:bg-raised"\n              : "bg-ink text-tube hover:brightness-110"',
+    de: ") : nextUp && buracos.total > 0 ? (",
+    para: ") : nextUp && buracos.total < 0 ? (",
   },
   {
     nome: "fase4/progresso-no-heroi",
-    descricao: "a barra do herói deixa de seguir o progresso",
+    descricao: "a contagem do herói deixa de seguir o progresso",
     ficheiro: "src/app/series/[uuid]/CabecalhoSerie.tsx",
-    de: 'style={{ width: `${percent ?? 0}%`, background: accent }}',
-    para: 'style={{ width: "0%", background: accent }}',
+    de: "{watchedCount}/{show.totalEpisodes}",
+    para: "{0}/{show.totalEpisodes}",
   },
   {
     nome: "fase4/pastilha-para-o-ecra",
-    descricao: "abrir a última temporada deixa-a fora do ecrã",
+    descricao: "abrir a última temporada deixa a pastilha fora do ecrã (a faixa não se centra nela)",
     ficheiro: "src/app/series/[uuid]/useSerie.ts",
-    de: '    chipAberto.current?.scrollIntoView({',
-    para: '    if (openSeason !== null) return;\n    chipAberto.current?.scrollIntoView({',
-  },
-  {
-    nome: "fase4/separadores-acessiveis",
-    descricao: "os separadores perdem o aria-controls",
-    ficheiro: "src/app/series/[uuid]/ShowPageClient.tsx",
-    de: '              aria-controls={`painel-${id}`}',
-    para: "",
-  },
-  {
-    nome: "fase4/separadores-com-setas",
-    descricao: "as setas deixam de andar entre separadores",
-    ficheiro: "src/app/series/[uuid]/ShowPageClient.tsx",
-    de: "                if (!delta) return;",
-    para: "                if (!delta) return;\n                if (delta) return;",
+    de: "left: chip.offsetLeft - (faixa.clientWidth - chip.offsetWidth) / 2,",
+    para: "left: 0,",
   },
   // ── Ronda 12 ──────────────────────────────────────────────
   {
@@ -377,10 +403,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5/biblioteca-a-ver",
-    descricao: "a secção das séries começadas volta a chamar-se \"A ver\", ao lado de \"Para ver\"",
-    ficheiro: BIBLIOTECA,
-    de: '    return s.watchedCount === 0 ? "Por começar" : "Em curso";',
-    para: '    return s.watchedCount === 0 ? "Por começar" : "A ver";',
+    descricao: "a secção das séries começadas volta a chamar-se \\\"A ver\\\", ao lado de \\\"Para ver\\\"",
+    ficheiro: "src/app/library/LibraryPageClient.tsx",
+    de: "? \"Retomar\" : \"Em curso\";",
+    para: "? \"Retomar\" : \"A ver\";",
   },
   {
     nome: "r12-fase5/casa-vazia-pede-zip",
@@ -405,10 +431,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5/remover-invisivel",
-    descricao: "o botão de remover da lista volta a só aparecer com hover",
-    ficheiro: LISTA,
-    de: "group-hover:opacity-100 [@media(hover:hover)]:opacity-0\"",
-    para: "group-hover:opacity-100 opacity-0\"",
+    descricao: "o ✕ da capa volta a só aparecer com hover (num ecrã tátil nunca aparece)",
+    ficheiro: "src/components/mira/Cartaz.tsx",
+    de: "className=\"vidro tap-44 absolute bottom-1.5 right-1.5",
+    para: "className=\"vidro tap-44 opacity-0 absolute bottom-1.5 right-1.5",
   },
   {
     nome: "r12-fase5/aviso-mudo",
@@ -441,37 +467,30 @@ const MUTACOES = [
   {
     nome: "r12-fase5b/brilho-volta",
     descricao: "a barra de progresso da grelha volta a ter o brilho decorativo",
-    ficheiro: POSTER_CARD,
-    de: "            <div className=\"absolute inset-x-0 bottom-0 h-1 bg-black/50\">\n              {/* Sem brilho: a cor já tem significado (Bars Rule), o halo à\n                  volta dela é só decoração a mais (Ronda 12, Fase 5b). */}\n              <div\n                className=\"h-full transition-[width] duration-[240ms] ease-out\"\n                style={{ width: `${progress}%`, background: barColor ?? undefined }}",
-    para: "            <div className=\"absolute inset-x-0 bottom-0 h-1 bg-black/50\">\n              <div\n                className=\"h-full transition-[width] duration-[240ms] ease-out\"\n                style={{ width: `${progress}%`, background: barColor ?? undefined, boxShadow: barColor ? `0 0 6px color-mix(in srgb, ${barColor} 70%, transparent)` : undefined }}",
-  },
-  {
-    nome: "r12-fase5b/em-curso-verde",
-    descricao: "'Em curso' na Biblioteca volta a ser verde em vez do branco-projetor",
-    ficheiro: LIBRARY,
-    de: '"Em curso": "var(--color-ink)",',
-    para: '"Em curso": "#37c837",',
+    ficheiro: "src/components/mira/Cartaz.tsx",
+    de: "style={{ width: `${barra.largura}%`, background: barra.cor }}",
+    para: "style={{ width: `${barra.largura}%`, background: barra.cor, boxShadow: `0 0 6px ${barra.cor}` }}",
   },
   {
     nome: "r12-fase5b/data-importacao-crua",
     descricao: "a data da última importação volta a aparecer em ISO cru",
-    ficheiro: "src/app/profile/ProfilePageClient.tsx",
-    de: "`Última importação a ${porExtenso(stats.importedAt)}`",
-    para: "`Última importação a ${stats.importedAt.slice(0, 10)}`",
+    ficheiro: "src/app/profile/definicoes/DefinicoesPageClient.tsx",
+    de: "`Última importação a ${porExtenso(importadoEm)}`",
+    para: "`Última importação a ${importadoEm.slice(0, 10)}`",
   },
   {
     nome: "r12-fase5b/genero-por-traduzir",
     descricao: "os géneros do detalhe voltam a aparecer em inglês",
     ficheiro: "src/app/series/[uuid]/CabecalhoSerie.tsx",
-    de: ".map(translateGenre)\n    .join",
-    para: ".join",
+    de: "translateGenre(show.genres[0])",
+    para: "show.genres[0]",
   },
   {
     nome: "r12-fase5b/maratona-1-episodios",
     descricao: "'Melhor maratona' com 1 volta a dizer 'episódios'",
-    ficheiro: ESTATISTICAS,
-    de: '{stats.bestBinge.count === 1 ? "episódio" : "episódios"}',
-    para: '"episódios"',
+    ficheiro: "src/app/estatisticas/EstatisticasPageClient.tsx",
+    de: "plural(stats.bestBinge.count, \"episódio\", \"episódios\")",
+    para: "\"episódios\"",
   },
   {
     nome: "r12-fase5b/import-vocabulario-de-computador",
@@ -488,39 +507,18 @@ const MUTACOES = [
     para: "  height: 100dvh;\n}",
   },
   {
-    nome: "r12-fase5b/biblioteca-sem-h1",
-    descricao: "a Biblioteca volta a não ter <h1>",
-    ficheiro: LIBRARY_PAGINA,
-    de: '<h1 className="font-display text-2xl font-bold [font-stretch:110%]">Biblioteca</h1>',
-    para: '<p className="font-display text-2xl font-bold [font-stretch:110%]">Biblioteca</p>',
-  },
-  {
-    nome: "r12-fase5b/perfil-sem-h1",
-    descricao: "o Perfil volta a não ter <h1>",
-    ficheiro: PROFILE_PAGINA,
-    de: '<h1 className="sr-only">Perfil</h1>',
-    para: "",
-  },
-  {
-    nome: "r12-fase5b/explorar-sem-h1",
-    descricao: "o Explorar volta a não ter <h1>",
-    ficheiro: EXPLORAR_PAGINA,
-    de: '<h1 className="sr-only">{kind === "tv" ? "Explorar séries" : "Explorar filmes"}</h1>',
-    para: "",
-  },
-  {
     nome: "r12-fase5b/biblioteca-lcp-lazy",
     descricao: "as primeiras capas da Biblioteca voltam a carregar em lazy",
-    ficheiro: POSTER_CARD_2,
-    de: "priority={index !== undefined && index < 2}",
-    para: "priority={false}",
+    ficheiro: "src/components/ShowPoster.tsx",
+    de: "indice={index}",
+    para: "indice={undefined}",
   },
   {
     nome: "r12-fase5b/explorar-lcp-lazy",
     descricao: "as primeiras capas do Explorar voltam a carregar em lazy",
-    ficheiro: DISCOVER_CARD,
-    de: "priority={index < 2}",
-    para: "priority={false}",
+    ficheiro: "src/components/DiscoverCard.tsx",
+    de: "indice={index}",
+    para: "indice={undefined}",
   },
   {
     nome: "r12-fase5b/manifest-cor-v1",
@@ -532,16 +530,16 @@ const MUTACOES = [
   {
     nome: "r12-fase5b/apagar-lista-vermelho-sempre",
     descricao: "'Apagar lista' volta a ficar vermelho em repouso",
-    ficheiro: LISTA,
-    de: '            : "border-line text-dim hover:border-ink hover:text-ink"',
-    para: '            : "border-danger/40 text-danger hover:bg-danger/10"',
+    ficheiro: "src/app/listas/[id]/ListaPageClient.tsx",
+    de: "className={`mt-10 ${confirmDelete ? \"text-danger!\" : \"text-label-2!\"}`}",
+    para: "className=\"mt-10 text-danger!\"",
   },
   {
     nome: "r12-fase5b/apagar-dados-vermelho-sempre",
     descricao: "'Apagar dados locais' volta a ficar vermelho em repouso",
-    ficheiro: PROFILE_PAGINA,
-    de: '              detalhe="Limpa esta cópia — a da cloud, se tiveres sessão, fica"\n              onClick={() => setConfirmClear(true)}\n            />',
-    para: '              detalhe="Limpa esta cópia — a da cloud, se tiveres sessão, fica"\n              onClick={() => setConfirmClear(true)}\n              perigo\n            />',
+    ficheiro: "src/app/profile/definicoes/DefinicoesPageClient.tsx",
+    de: "onClick={() => setConfirmClear(true)}\n            />",
+    para: "onClick={() => setConfirmClear(true)}\n              perigo\n            />",
   },
   {
     nome: "r12-fase5b/anular-desaparece-com-movimento-reduzido",
@@ -583,8 +581,8 @@ const MUTACOES = [
   {
     nome: "r12-fase5b/explorar-pesquisa-sem-rotulo",
     descricao: "a pesquisa do Explorar volta a não ter aria-label",
-    ficheiro: EXPLORAR_PAGINA,
-    de: '                aria-label={kind === "tv" ? "Procurar uma série" : "Procurar um filme"}\n',
+    ficheiro: "src/app/explorar/ExplorarPageClient.tsx",
+    de: "aria-label=\"Procurar séries e filmes\"",
     para: "",
   },
   {
@@ -604,10 +602,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5b2/texto-volta-a-px",
-    descricao: "o nome da série na Biblioteca volta a um valor absoluto (não responde à raiz)",
-    ficheiro: POSTER_CARD,
-    de: '<p className="mt-1.5 truncate text-[0.9375rem] font-semibold">',
-    para: '<p className="mt-1.5 truncate text-[15px] font-semibold">',
+    descricao: "o nome do cartaz volta a um valor absoluto (não responde à raiz)",
+    ficheiro: "src/components/mira/Cartaz.tsx",
+    de: "grande ? \"text-[0.9375rem]\" : \"text-[0.76rem]\"",
+    para: "grande ? \"text-[15px]\" : \"text-[13px]\"",
   },
   // ── Ronda 12, Fase 5b.3: decisões de desenho ───────────────
   {
@@ -627,39 +625,30 @@ const MUTACOES = [
   {
     nome: "r12-fase5b3/para-ver-volta-a-branco",
     descricao: "o 'Para ver' do Explorar volta a ser uma pílula branca",
-    ficheiro: DISCOVER_CARD,
-    // com `flex-1`: sem ele, a âncora batia primeiro no "Seguir" da pesquisa,
-    // que tem a mesma classe — e a mutação mudava o botão errado
-    de: "flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full border border-line text-xs font-semibold text-ink transition hover:border-ink active:scale-95",
-    para: "flex min-h-11 flex-1 cursor-pointer items-center justify-center rounded-full bg-ink text-xs font-semibold text-tube transition hover:brightness-110 active:scale-95",
+    ficheiro: "src/components/DiscoverCard.tsx",
+    de: "void guardar()} className={`${botao} bg-fill text-label`}",
+    para: "void guardar()} className={`${botao} bg-label text-bg`}",
   },
   {
     nome: "r12-fase5b3/separador-volta-a-branco",
-    descricao: "o separador ativo da Biblioteca volta a ser branco, por cima da dock",
-    ficheiro: CONTROLOS_BIBLIOTECA,
-    de: 'segment === id ? "bg-ink/[0.14] text-ink" : "text-dim hover:text-ink"',
-    para: 'segment === id ? "bg-ink text-tube" : "text-dim hover:text-ink"',
+    descricao: "o segmento escolhido volta a ser a pílula branca",
+    ficheiro: "src/components/mira/Segmentado.tsx",
+    de: "? \"bg-segment text-label shadow-[var(--m-seg-sombra)]\"",
+    para: "? \"bg-label text-bg\"",
   },
   {
     nome: "r12-fase5b3/escolha-volta-a-branco",
     descricao: "uma escolha no Pôr em dia volta a ser uma pílula branca",
-    ficheiro: EM_DIA_PAGINA,
-    de: '? "border-ink/60 bg-raised text-ink"',
-    para: '? "border-ink bg-ink text-tube"',
+    ficheiro: "src/app/em-dia/EmDiaPageClient.tsx",
+    de: "? \"bg-fill-strong text-label\"",
+    para: "? \"bg-label text-bg\"",
   },
   {
     nome: "r12-fase5b3/biblioteca-volta-a-2-colunas",
-    descricao: "a Biblioteca volta a abrir em 2 colunas de cartazes grandes",
-    ficheiro: LIBRARY_PAGINA,
-    de: '    "biblioteca-densidade",\n    "compacta",',
-    para: '    "biblioteca-densidade",\n    "grande",',
-  },
-  {
-    nome: "r12-fase5b3/biblioteca-sem-titulo",
-    descricao: "o título da Biblioteca volta a ser só para leitores de ecrã",
-    ficheiro: LIBRARY_PAGINA,
-    de: '<h1 className="font-display text-2xl font-bold [font-stretch:110%]">Biblioteca</h1>',
-    para: '<h1 className="sr-only">Biblioteca</h1>',
+    descricao: "a Biblioteca volta a abrir em 2 colunas de cartazes",
+    ficheiro: "src/app/library/LibraryPageClient.tsx",
+    de: "grid grid-cols-3 gap-x-2.5",
+    para: "grid grid-cols-2 gap-x-2.5",
   },
   {
     nome: "r12-fase5b3/filmes-para-ver-escondidos",
@@ -692,13 +681,6 @@ const MUTACOES = [
     para: '    router.push("/listas");',
   },
   {
-    nome: "r12-fase5b3/contagens-a-320",
-    descricao: "as contagens voltam a aparecer a 320px e empurram a barra",
-    ficheiro: CONTROLOS_BIBLIOTECA,
-    de: "ep-code hidden text-xs @[22.5rem]:inline",
-    para: "ep-code text-xs",
-  },
-  {
     nome: "r12-fase5b3/casa-sem-ou-entao",
     descricao: "a casa volta a dar uma resposta só, sem alternativas por baixo do herói",
     ficheiro: "src/app/series/SeriesPageClient.tsx",
@@ -720,16 +702,6 @@ const MUTACOES = [
     // do ecrã de carregamento, que tem a mesma classe
     de: '    // temporadas fechadas (medido — Ronda 12, Fase 5b.3)\n    <main className="mx-auto w-full max-w-2xl">',
     para: '    // temporadas fechadas (medido — Ronda 12, Fase 5b.3)\n    <main className="mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]">',
-  },
-  {
-    // Não é a mudança de ordem ao contrário (o guião só troca texto): é o
-    // mesmo efeito — algo acima das ações de marcar empurra a secundária para
-    // debaixo da dock. Prova que o teste mede o que está livre, não a ordem.
-    nome: "r12-fase5b3/secundaria-debaixo-da-dock",
-    descricao: "a ação secundária do detalhe volta a ficar debaixo da dock ao chegar",
-    ficheiro: "src/app/series/[uuid]/AcoesSerie.tsx",
-    de: 'className="page-enter mt-4 rounded-2xl border border-line bg-raised/60 p-4"',
-    para: 'className="page-enter mt-20 rounded-2xl border border-line bg-raised/60 p-4"',
   },
   // ── Ronda 12, Fase 5c: os 6 P1 da crítica 5b.4 ─────────────
   {
@@ -778,10 +750,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5c/baralho-serie-pequena",
-    descricao: 'no Pôr em dia, a série volta a 12px, cinza, em maiúsculas',
-    ficheiro: SWIPE_CARD,
-    de: '<h2 className="line-clamp-2 font-display text-2xl font-bold leading-tight text-ink [font-stretch:105%]">',
-    para: '<h2 className="truncate font-display text-xs font-semibold uppercase tracking-[0.18em] text-dim [font-stretch:80%]">',
+    descricao: "no Pôr em dia, a série volta a 12px, cinza, em maiúsculas",
+    ficheiro: "src/components/SwipeCard.tsx",
+    de: "<h2 className=\"line-clamp-2 text-[1.65rem] font-bold leading-[1.1] text-label\">",
+    para: "<h2 className=\"truncate text-xs font-semibold uppercase tracking-[0.18em] text-label-2\">",
   },
   {
     nome: "r12-fase5c/baralho-nome-duas-vezes",
@@ -894,25 +866,11 @@ const MUTACOES = [
     para: '<span className="h-4 w-1 bg-[#3fd2c8]" /><h2 className="text-[1.3rem] font-bold leading-tight text-label">Esta semana</h2>',
   },
   {
-    nome: "r12-fase5d/por-comecar-amarelo",
-    descricao: "'Por começar' volta a amarelo na Biblioteca",
-    ficheiro: BIBLIOTECA,
-    de: '  "Por começar": CINZA,',
-    para: '  "Por começar": "#e6c832",',
-  },
-  {
     nome: "r12-fase5d/traco-sem-ciano",
-    descricao: 'com buracos, o traço do detalhe volta a não ser ciano',
+    descricao: "com buracos, o ponto do herói volta a não ter a cor «por marcar»",
     ficheiro: "src/app/series/[uuid]/CabecalhoSerie.tsx",
-    de: 'buracos.total > 0 ? "var(--color-smpte-cyan)" : accent',
-    para: 'accent',
-  },
-  {
-    nome: "r12-fase5d/modo-ativo-branco",
-    descricao: 'o modo ativo do Explorar volta a ser a pílula branca',
-    ficheiro: VIEW_TOGGLE,
-    de: 'ativo ? "bg-ink/[0.14] text-ink"',
-    para: 'ativo ? "bg-ink text-tube"',
+    de: "rounded-full bg-por-marcar align-[0.05em]",
+    para: "rounded-full bg-label align-[0.05em]",
   },
   {
     nome: "r12-fase5d/semana-sem-janela",
@@ -930,24 +888,24 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5d/estrear-corta-o-nome",
-    descricao: 'o A estrear volta a cortar o nome da série',
-    ficheiro: ESTREAR,
-    de: '<p className="font-semibold leading-snug break-words">{show.name}</p>',
-    para: '<p className="truncate font-semibold">{show.name}</p>',
+    descricao: "o A estrear volta a cortar o nome da série",
+    ficheiro: "src/app/estrear/EstrearPageClient.tsx",
+    de: "<span className=\"block whitespace-normal break-words leading-snug\">{show.name}</span>",
+    para: "<span className=\"block truncate\">{show.name}</span>",
   },
   {
     nome: "r12-fase5d/filme-nao-se-desmarca",
-    descricao: 'um filme visto volta a não se poder desmarcar',
-    ficheiro: FILME_PAGINA,
-    de: '        {movie.watchedAt && (\n          <button\n            onClick={() => void desmarcar()}',
-    para: '        {!movie && (\n          <button\n            onClick={() => void desmarcar()}',
+    descricao: "um filme visto volta a não se poder desmarcar",
+    ficheiro: "src/app/movies/[key]/MoviePageClient.tsx",
+    de: "{movie.watchedAt ? (\n          <Acao tipo=\"secundaria\"",
+    para: "{!movie ? (\n          <Acao tipo=\"secundaria\"",
   },
   {
     nome: "r12-fase5d/separadores-alargam-a-pagina",
-    descricao: 'a 150%, os separadores do detalhe voltam a alargar a página',
-    ficheiro: "src/app/series/[uuid]/ShowPageClient.tsx",
-    de: 'className="mt-6 flex gap-1 overflow-x-auto border-b border-line [scrollbar-width:none]"',
-    para: 'className="mt-6 flex gap-1 border-b border-line"',
+    descricao: "a 150%, a faixa das temporadas volta a alargar a página em vez de rolar",
+    ficheiro: "src/app/series/[uuid]/PainelEpisodios.tsx",
+    de: "<div className=\"-mx-4 flex snap-x gap-2 overflow-x-auto px-4 ",
+    para: "<div className=\"-mx-4 flex snap-x gap-2 px-4 ",
   },
   {
     nome: "r12-fase5d/rever-saida-debaixo-da-dock",
@@ -972,10 +930,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5d/visto-em-branco",
-    descricao: 'o ✓ de cada cartaz volta a ser a pílula branca',
-    ficheiro: POSTER_CARD,
-    de: 'border border-ink/25 bg-tube/60 text-ink backdrop-blur',
-    para: 'bg-ink text-tube shadow-md',
+    descricao: "o ✓ de cada cartaz volta a ser a pílula branca",
+    ficheiro: "src/components/mira/Cartaz.tsx",
+    de: "className=\"vidro tap-44 absolute bottom-1.5 right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full text-label transition-transform",
+    para: "className=\"tap-44 absolute bottom-1.5 right-1.5 flex h-8 w-8 cursor-pointer items-center justify-center rounded-full bg-label text-bg shadow-md transition-transform",
   },
   {
     nome: "r12-fase5d/espetro-com-estados",
@@ -1053,10 +1011,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5e/sizes-estrear",
-    descricao: 'o A estrear volta a pedir a imagem do ecrã inteiro',
-    ficheiro: ESTREAR,
-    de: 'fill sizes="44px"',
-    para: 'fill',
+    descricao: "o A estrear volta a pedir a imagem do ecrã inteiro",
+    ficheiro: "src/app/estrear/EstrearPageClient.tsx",
+    de: "fill sizes=\"36px\"",
+    para: "fill",
   },
   {
     nome: "r12-fase5e/sizes-rever",
@@ -1067,10 +1025,10 @@ const MUTACOES = [
   },
   {
     nome: "r12-fase5e/sizes-perfil",
-    descricao: 'o Perfil volta a pedir a imagem do ecrã inteiro',
-    ficheiro: PROFILE_PAGINA,
-    de: 'fill sizes="44px"',
-    para: 'fill',
+    descricao: "o Perfil volta a pedir a imagem do ecrã inteiro",
+    ficheiro: "src/app/profile/ProfilePageClient.tsx",
+    de: "fill sizes=\"40px\"",
+    para: "fill",
   },
   {
     nome: "r12-fase5e/sizes-fila",
@@ -1096,9 +1054,9 @@ const MUTACOES = [
   {
     nome: "r12-fase5e/filme-reserva-a-dock",
     descricao: "o detalhe de filme volta a reservar a dock outra vez",
-    ficheiro: FILME_PAGINA,
-    de: '<main className="mx-auto w-full max-w-2xl pb-8">',
-    para: '<main className="mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]">',
+    ficheiro: "src/app/movies/[key]/MoviePageClient.tsx",
+    de: "<main className=\"mx-auto w-full max-w-2xl pb-6\">",
+    para: "<main className=\"mx-auto w-full max-w-2xl pb-[calc(var(--dock-h)+2rem)]\">",
   },
   {
     nome: "r12-fase5e/rever-reserva-a-dock",
@@ -1173,16 +1131,9 @@ const MUTACOES = [
   {
     nome: "r12-fecho/horas-destaque-no-ultimo",
     descricao: "o destaque das horas por ano volta a ser o último ano, não o maior",
-    ficheiro: ESTATISTICAS,
-    de: 'titulo="Horas por ano"\n              destaque="maior"',
-    para: 'titulo="Horas por ano"\n              destaque="ultima"',
-  },
-  {
-    nome: "r12-fecho/estrear-data-come-a-linha",
-    descricao: "a data do A estrear volta a ir à direita, sem encolher, e come o nome da série",
-    ficheiro: "src/app/estrear/EstrearPageClient.tsx",
-    de: "                  <p className=\"ep-code mt-0.5 text-xs text-faint first-letter:uppercase\">\n                    {relativeDay(episode.airDate as string)}\n                  </p>\n                </div>",
-    para: "                </div>\n                <p className=\"ep-code shrink-0 text-right text-xs text-faint first-letter:uppercase\">\n                  {relativeDay(episode.airDate as string)}\n                </p>",
+    ficheiro: "src/app/estatisticas/EstatisticasPageClient.tsx",
+    de: "destaque=\"maior\"",
+    para: "destaque=\"ultima\"",
   },
   {
     nome: "r12-f2/dock-sai-do-ecra-a-150",
@@ -1195,15 +1146,15 @@ const MUTACOES = [
     nome: "r12-f2/titulo-do-filme-alarga",
     descricao: "o título do filme deixa de quebrar e alarga o ecrã a 150%",
     ficheiro: "src/app/movies/[key]/MoviePageClient.tsx",
-    de: "font-bold leading-tight break-words",
-    para: "font-bold leading-tight",
+    de: "font-bold break-words text-label\">{movie.name}",
+    para: "font-bold text-label\">{movie.name}",
   },
   {
     nome: "r12-f2/data-iso-no-episodio",
     descricao: "a data de cada episódio volta a sair em ISO",
     ficheiro: "src/app/series/[uuid]/LinhaEpisodio.tsx",
-    de: "{porExtenso(metaEp.airDate)}</span>",
-    para: "{metaEp.airDate}</span>",
+    de: "{porExtenso(metaEp.airDate)}</Codigo>",
+    para: "{metaEp.airDate}</Codigo>",
   },
   {
     nome: "r12-f2/data-iso-na-estreia",
@@ -1251,15 +1202,15 @@ const MUTACOES = [
     nome: "r12-f2/lista-sem-prioridade",
     descricao: "a primeira fila da lista deixa de pedir prioridade",
     ficheiro: "src/app/listas/[id]/ListaPageClient.tsx",
-    de: "priority={i < 3}",
-    para: "priority={false}",
+    de: "indice={i}\n",
+    para: "indice={undefined}\n",
   },
   {
     nome: "r12-f3/login-sem-h1",
     descricao: "o Entrar sem cloud volta a não ter <h1>",
     ficheiro: "src/app/login/LoginPageClient.tsx",
-    de: "<h1 className=\"font-display text-lg font-bold\">Cloud não configurada</h1>",
-    para: "<p className=\"font-display text-lg font-bold\">Cloud não configurada</p>",
+    de: "<h1 className=\"text-[1.18rem] font-semibold text-label\">Cloud não configurada</h1>",
+    para: "<p className=\"text-[1.18rem] font-semibold text-label\">Cloud não configurada</p>",
   },
   {
     nome: "r12-f3/biblioteca-vazia-sem-acao",
@@ -1279,22 +1230,15 @@ const MUTACOES = [
     nome: "r12-f3/texto-11px",
     descricao: "a dica do Explorar volta aos 11px fora do código",
     ficheiro: "src/app/explorar/ExplorarPageClient.tsx",
-    de: "<span className=\"text-xs text-faint\">arrasta",
-    para: "<span className=\"text-[0.6875rem] text-faint\">arrasta",
+    de: "<span className=\"text-[0.76rem] text-label-2\">arrasta",
+    para: "<span className=\"text-[0.6875rem] text-label-2\">arrasta",
   },
   {
     nome: "r12-f3/preto-solto-na-lista",
-    descricao: "o ✕ da lista volta a bg-black/60 text-white",
-    ficheiro: "src/app/listas/[id]/ListaPageClient.tsx",
-    de: "bg-tube/60 text-ink backdrop-blur",
-    para: "bg-black/60 text-white backdrop-blur",
-  },
-  {
-    nome: "r12-f4/barra-volta-a-baixo",
-    descricao: "a barra da Biblioteca deixa de estar colada ao topo e volta a não seguir o scroll",
-    ficheiro: CONTROLOS_BIBLIOTECA,
-    de: 'className="@container sticky top-[env(safe-area-inset-top)] z-30',
-    para: 'className="@container relative z-30',
+    descricao: "o ✕ da lista volta a ter texto branco solto (`text-white`) em vez do token",
+    ficheiro: "src/components/mira/Cartaz.tsx",
+    de: "rounded-full text-label transition-transform active:scale-90",
+    para: "rounded-full text-white transition-transform active:scale-90",
   },
   {
     nome: "r12-f4/disco-volta-ao-pora-em-dia",
@@ -1317,28 +1261,7 @@ const MUTACOES = [
     de: "if (original && LATINO.test(original)) {",
     para: "if (original) {",
   },
-  {
-    nome: "r12-f5/contagens-em-px",
-    descricao: "as contagens da Biblioteca voltam a depender da largura em px, e a 150% alargam a página",
-    ficheiro: "src/components/LibraryControls.tsx",
-    de: "ep-code hidden text-xs @[22.5rem]:inline",
-    para: "ep-code hidden text-xs min-[360px]:inline",
-  },
-  {
-    nome: "r12-f5/separador-sem-teto",
-    descricao: "o rótulo dos separadores da Biblioteca perde o teto em px",
-    ficheiro: "src/components/LibraryControls.tsx",
-    de: "text-[min(0.9375rem,17px)]",
-    para: "text-[0.9375rem]",
-  },
   // Retirada na Ronda 14 (Mira, Fase 1): «r12-f5/dock-sem-teto-de-espaco» — a barra da Mira não tem espaço lateral em rem (é uma grelha de 4 colunas em px); o bug que ela repunha já não tem onde existir — a variante útil é a `r12-f2/dock-sai-do-ecra-a-150`, reapontada
-  {
-    nome: "r12-f5/perfil-sem-min-w",
-    descricao: "as três colunas dos números do Perfil perdem o min-w-0 e alargam o ecrã a 150% (cada uma sozinha é redundante)",
-    ficheiro: "src/app/profile/ProfilePageClient.tsx",
-    de: "          <div className=\"min-w-0 flex-1\">\n            <p className=\"ep-code text-2xl font-bold text-ink\">{stats.shows}</p>\n            <p className=\"text-xs text-dim\">\n              séries · {stats.following} {stats.following === 1 ? \"seguida\" : \"seguidas\"}\n            </p>\n          </div>\n          <div className=\"w-px shrink-0 bg-line\" aria-hidden />\n          <div className=\"min-w-0 flex-1 pl-5\">\n            <p className=\"ep-code text-2xl font-bold text-ink\">{stats.movies}</p>\n            <p className=\"text-xs text-dim\">filmes</p>\n          </div>\n          <div className=\"w-px shrink-0 bg-line\" aria-hidden />\n          <Link href=\"/library\" className=\"flex min-w-0 flex-1 flex-col justify-center pl-5\">\n            ",
-    para: "          <div className=\"flex-1\">\n            <p className=\"ep-code text-2xl font-bold text-ink\">{stats.shows}</p>\n            <p className=\"text-xs text-dim\">\n              séries · {stats.following} {stats.following === 1 ? \"seguida\" : \"seguidas\"}\n            </p>\n          </div>\n          <div className=\"w-px shrink-0 bg-line\" aria-hidden />\n          <div className=\"flex-1 pl-5\">\n            <p className=\"ep-code text-2xl font-bold text-ink\">{stats.movies}</p>\n            <p className=\"text-xs text-dim\">filmes</p>\n          </div>\n          <div className=\"w-px shrink-0 bg-line\" aria-hidden />\n          <Link href=\"/library\" className=\"flex flex-1 flex-col justify-center pl-5\">\n            ",
-  },
   {
     nome: "r14-f1/dynamic-type-sem-guarda",
     descricao: "o -apple-system-body aplica-se fora do iOS e encolhe a app para os 13px do macOS",
@@ -1560,9 +1483,9 @@ const MUTACOES = [
   {
     nome: "r14-f3/claro-a-60",
     descricao: "o texto secundário do modo claro volta aos 60% do iOS (3,1:1, abaixo de AA)",
-    ficheiro: CSS,
-    de: "    --m-label-2: rgba(60, 60, 67, 0.76);",
-    para: "    --m-label-2: rgba(60, 60, 67, 0.6);",
+    ficheiro: "src/app/globals.css",
+    de: "\n  --m-label-2: rgba(60, 60, 67, 0.8);",
+    para: "\n  --m-label-2: rgba(60, 60, 67, 0.6);",
   },
   {
     nome: "r14-f3/barra-abaixo-de-10px",
@@ -1592,27 +1515,93 @@ const MUTACOES = [
     de: "<div className=\"mt-6 flex items-center gap-3 rounded-[26px]",
     para: "<div className=\"fixed inset-x-4 bottom-24 z-40 flex items-center gap-3 rounded-[26px]",
   },
+  // ── Ronda 14, Fase 10: âncoras novas, para o que a Mira redesenhou ──
+  {
+    nome: "r14-f10/titulo-grande-sem-h1",
+    descricao: "nenhum ecrã com título grande tem <h1> (o título passa a decorar-se, sem semântica)",
+    ficheiro: "src/components/mira/TituloGrande.tsx",
+    de: "<h1\n            ref={ancora}",
+    para: "<h1\n            aria-hidden\n            ref={ancora}",
+  },
+  {
+    nome: "r14-f10/titulo-grande-so-para-leitores",
+    descricao: "o título grande deixa de se ver (só os leitores de ecrã o encontram)",
+    ficheiro: "src/components/mira/TituloGrande.tsx",
+    de: "className=\"min-w-0 max-w-full text-[2rem]",
+    para: "className=\"sr-only min-w-0 max-w-full text-[2rem]",
+  },
+  {
+    nome: "r14-f10/seccao-com-cor",
+    descricao: "o cabeçalho de uma secção da Biblioteca volta a ter cor de estado",
+    ficheiro: "src/components/StickySectionHeader.tsx",
+    de: "truncate text-base font-semibold text-label\">{label}",
+    para: "truncate text-base font-semibold text-em-dia\">{label}",
+  },
+  {
+    nome: "r14-f10/seccao-nao-cola",
+    descricao: "o cabeçalho da secção deixa de colar por baixo da barra compacta",
+    ficheiro: "src/components/StickySectionHeader.tsx",
+    de: "<div className=\"sticky top-[var(--topo-barra)] z-10",
+    para: "<div className=\"relative top-[var(--topo-barra)] z-10",
+  },
+  {
+    nome: "r14-f10/segmentado-alarga",
+    descricao: "cada segmento passa a ter a largura do texto e, a 150% em 320px, alarga a página",
+    ficheiro: "src/components/mira/Segmentado.tsx",
+    de: "flex min-w-0 flex-1 cursor-pointer items-center justify-center gap-1.5 rounded-[19px]",
+    para: "flex shrink-0 cursor-pointer items-center justify-center gap-1.5 whitespace-nowrap rounded-[19px]",
+  },
 ];
 
-const filtro = process.argv[2];
-const alvo = filtro ? MUTACOES.filter((m) => m.nome.includes(filtro)) : MUTACOES;
+// ── O guião ───────────────────────────────────────────────────────────────
+
+/** o que o guião mede antes de correr: a estimativa parte destes números */
+const SEGUNDOS_BUILD = 10;
+const SEGUNDOS_SUITE = 65;
+const SEGUNDOS_CONJUNTO = 15;
+
+const MAPA = "tests/mutacoes-mapa.json";
+const REGISTO = "test-results/mutacoes.jsonl";
+
+const args = process.argv.slice(2);
+const bandeiras = new Set(args.filter((a) => a.startsWith("--")));
+const filtros = args.filter((a) => !a.startsWith("--"));
+const alvo = filtros.length
+  ? MUTACOES.filter((m) => filtros.some((f) => m.nome.includes(f)))
+  : MUTACOES;
 if (alvo.length === 0) {
-  console.error(`Nenhuma mutação com "${filtro}".`);
+  console.error(`Nenhuma mutação com ${filtros.map((f) => `"${f}"`).join(" ou ")}.`);
   process.exit(1);
 }
 
 // Todos os trechos, antes de correr seja o que for — incluindo os que o
 // filtro deixa de fora. Oito mutações ficaram sem trecho entre a Fase 5 e a
 // 5c da Ronda 12 (o código mudou por baixo delas) e ninguém deu por isso:
-// as corridas eram filtradas pela fase, e só a corrida completa as via.
+// as corridas eram filtradas pela fase, e só a corrida completa as via. Um
+// ficheiro que já não existe conta como trecho partido (na Fase 10 havia 57).
 const partidas = MUTACOES.filter((m) => {
-  const n = readFileSync(m.ficheiro, "utf8").split(m.de).length - 1;
-  return n !== 1;
+  if (!existsSync(m.ficheiro)) return true;
+  return readFileSync(m.ficheiro, "utf8").split(m.de).length - 1 !== 1;
 });
 if (partidas.length > 0) {
   console.error("Mutações cujo trecho já não existe (ou existe mais de uma vez):");
   for (const m of partidas) console.error(`  · ${m.nome} (${m.ficheiro})`);
   console.error("Uma mutação assim não repõe o bug que diz repor — corrige-a.");
+  process.exit(1);
+}
+if (bandeiras.has("--verificar")) {
+  console.log(`${MUTACOES.length} mutações, todos os trechos existem (${Object.keys(RETIRADAS).length} retiradas).`);
+  process.exit(0);
+}
+
+// Só numa cópia à parte: na pasta que serve a pré-visualização, a build de
+// cada mutação apagava-lhe o `.next` e o `next dev` recarregava o código partido.
+const comum = execSync("git rev-parse --git-common-dir", { encoding: "utf8" }).trim();
+const propria = execSync("git rev-parse --git-dir", { encoding: "utf8" }).trim();
+if (comum === propria && !bandeiras.has("--aqui")) {
+  console.error("Isto é a pasta principal, não uma cópia (`git worktree`).");
+  console.error("Cria uma (instruções no topo deste ficheiro) ou repete com --aqui, se tiveres a certeza");
+  console.error("de que nenhum `next dev` serve esta pasta.");
   process.exit(1);
 }
 
@@ -1621,19 +1610,53 @@ if (execSync("git status --porcelain", { encoding: "utf8" }).trim()) {
   process.exit(1);
 }
 
-function correrSuite() {
+// Porta própria: com `reuseExistingServer`, um servidor esquecido noutra cópia
+// seria reaproveitado e as mutações testadas contra o código dele.
+const PORTA = process.env.PORTA_TESTES ?? "3230";
+try {
+  execSync(`lsof -nP -iTCP:${PORTA} -sTCP:LISTEN`, { stdio: "pipe" });
+  console.error(`A porta ${PORTA} já está ocupada — outra corrida, ou um servidor esquecido. Muda PORTA_TESTES.`);
+  process.exit(1);
+} catch {
+  // sem saída = livre
+}
+process.env.PORTA_TESTES = PORTA;
+
+const mapa = existsSync(MAPA) && !bandeiras.has("--tudo") ? JSON.parse(readFileSync(MAPA, "utf8")) : {};
+const mapaTodo = existsSync(MAPA) ? JSON.parse(readFileSync(MAPA, "utf8")) : {};
+
+const comMapa = alvo.filter((m) => mapa[m.nome]?.length).length;
+const estimativa =
+  (comMapa * (SEGUNDOS_BUILD + SEGUNDOS_CONJUNTO) + (alvo.length - comMapa) * (SEGUNDOS_BUILD + SEGUNDOS_SUITE / 2)) / 60;
+console.log(
+  `${alvo.length} mutações (${comMapa} com mapa, ${alvo.length - comMapa} sem): estimativa ~${Math.round(estimativa)} min,` +
+    ` mais ~${Math.round((SEGUNDOS_BUILD + SEGUNDOS_SUITE) / 60 * 10) / 10} min por cada uma que sobreviva.\n`,
+);
+
+function correrSuite(ficheiros) {
   try {
-    execFileSync("npx", ["playwright", "test", "--reporter=line"], {
-      encoding: "utf8",
-      stdio: "pipe",
-    });
+    execFileSync(
+      "npx",
+      [
+        "playwright",
+        "test",
+        ...ficheiros.map((f) => `tests/${f}`),
+        "--reporter=line",
+        // uma falha isolada (relógio, carga da máquina) não conta: uma mutação
+        // a sério falha à segunda também
+        "--retries=1",
+        // basta um alarme para a mutação estar apanhada
+        "--max-failures=1",
+      ],
+      { encoding: "utf8", stdio: "pipe", timeout: 15 * 60_000 },
+    );
     return { verde: true, falhas: [], invalida: false };
   } catch (erro) {
     const saida = `${erro.stdout ?? ""}${erro.stderr ?? ""}`;
     // Uma mutação que não compila não repôs bug nenhum — só partiu o build.
     // Contá-la como "apanhada" foi exatamente o erro da primeira corrida da
     // Ronda 12: dois ✓ sem um único teste a falhar.
-    if (/Failed to type check|webServer was not able to start|Failed to compile/.test(saida)) {
+    if (/Failed to type check|webServer was not able to start|Failed to compile|Build error/.test(saida)) {
       return { verde: false, falhas: [], invalida: true };
     }
     const falhas = [
@@ -1647,26 +1670,64 @@ function correrSuite() {
   }
 }
 
-const resultados = [];
-for (const m of alvo) {
-  const original = readFileSync(m.ficheiro, "utf8");
-  if (!original.includes(m.de)) {
-    console.error(`\n✖ ${m.nome}: o trecho a mutar já não existe em ${m.ficheiro}.`);
-    console.error("  A mutação deixou de repor o bug que diz repor — corrige-a.");
-    process.exit(1);
+const ficheirosDe = (falhas) => [...new Set(falhas.map((f) => f.split(" › ")[0]))];
+
+/** o conjunto que a mutação ameaça; se sobreviver a ele, a suite inteira decide */
+function testar(m) {
+  const conjunto = mapa[m.nome];
+  if (conjunto?.length) {
+    const r = correrSuite(conjunto);
+    if (r.invalida || !r.verde) return { ...r, via: "mapa", conjunto: ficheirosDe(r.falhas) };
   }
+  const r = correrSuite([]);
+  const via = conjunto?.length ? (r.verde || r.invalida ? "suite" : "mapa-desatualizado") : "suite";
+  return { ...r, via, conjunto: ficheirosDe(r.falhas) };
+}
+
+function repor() {
+  execSync("git checkout -- src", { stdio: "pipe" });
+}
+for (const sinal of ["SIGINT", "SIGTERM"]) {
+  process.on(sinal, () => {
+    repor();
+    process.exit(130);
+  });
+}
+
+mkdirSync("test-results", { recursive: true });
+const resultados = [];
+const inicio = Date.now();
+for (const [n, m] of alvo.entries()) {
+  const original = readFileSync(m.ficheiro, "utf8");
   writeFileSync(m.ficheiro, original.replace(m.de, m.para));
-  process.stdout.write(`· ${m.nome} … `);
-  const { verde, falhas, invalida } = correrSuite();
-  writeFileSync(m.ficheiro, original);
-  resultados.push({ ...m, sobreviveu: verde, falhas, invalida });
+  process.stdout.write(`[${n + 1}/${alvo.length}] ${m.nome} … `);
+  const t0 = Date.now();
+  let r;
+  try {
+    r = testar(m);
+  } finally {
+    writeFileSync(m.ficheiro, original);
+  }
+  const segundos = Math.round((Date.now() - t0) / 1000);
+  const { verde, falhas, invalida, via, conjunto } = r;
+  if (!verde && !invalida && conjunto.length) mapaTodo[m.nome] = conjunto;
+  resultados.push({ ...m, sobreviveu: verde, falhas, invalida, via });
+  appendFileSync(
+    REGISTO,
+    JSON.stringify({ nome: m.nome, sobreviveu: verde, invalida, via, segundos, falhas: falhas.slice(0, 3) }) + "\n",
+  );
   console.log(
-    invalida
+    `${invalida
       ? "INVÁLIDA (não compilou, ou falhou sem teste nenhum — não prova nada)"
       : verde
         ? "SOBREVIVEU (ninguém deu o alarme)"
-        : `apanhada por ${falhas.length}`,
+        : via === "mapa-desatualizado"
+          ? `apanhada — mas fora do conjunto do mapa: ${conjunto.join(", ")}`
+          : `apanhada por ${falhas.length}`} · ${segundos}s`,
   );
+}
+if (!bandeiras.has("--tudo")) {
+  writeFileSync(MAPA, JSON.stringify(Object.fromEntries(Object.entries(mapaTodo).sort()), null, 2) + "\n");
 }
 
 console.log("\n─── Rede de segurança ───\n");
@@ -1679,7 +1740,7 @@ for (const r of resultados) {
 const sobreviventes = resultados.filter((r) => r.sobreviveu);
 const invalidas = resultados.filter((r) => r.invalida);
 const apanhadas = resultados.length - sobreviventes.length - invalidas.length;
-console.log(`\n${apanhadas}/${resultados.length} bugs apanhados.`);
+console.log(`\n${apanhadas}/${resultados.length} bugs apanhados em ${Math.round((Date.now() - inicio) / 60_000)} min.`);
 if (sobreviventes.length > 0) {
   console.log("Buracos na rede:");
   for (const s of sobreviventes) console.log(`  · ${s.nome} — ${s.descricao}`);
