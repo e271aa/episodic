@@ -20,6 +20,9 @@
   "fase3/ordem-das-seccoes": [
     "biblioteca-arrumada.spec.ts"
   ],
+  "fase4/altura-do-heroi": [
+    "detalhe.spec.ts"
+  ],
   "fase4/pastilha-para-o-ecra": [
     "detalhe.spec.ts"
   ],
@@ -55,6 +58,9 @@
   ],
   "r12-f2/lista-sem-prioridade": [
     "fecho.spec.ts"
+  ],
+  "r12-f2/titulo-do-filme-alarga": [
+    "rede-f10.spec.ts"
   ],
   "r12-f3/biblioteca-vazia-sem-acao": [
     "fecho.spec.ts"
@@ -146,6 +152,9 @@
   "r12-fase5b/data-importacao-crua": [
     "datas.spec.ts"
   ],
+  "r12-fase5b/explorar-lcp-lazy": [
+    "rede-f10.spec.ts"
+  ],
   "r12-fase5b/explorar-pesquisa-sem-rotulo": [
     "decisao.spec.ts"
   ],
@@ -191,6 +200,9 @@
   "r12-fase5b3/dock-acende-pelo-tipo": [
     "navegacao.spec.ts"
   ],
+  "r12-fase5b3/escolha-volta-a-branco": [
+    "rede-f10.spec.ts"
+  ],
   "r12-fase5b3/filmes-para-ver-escondidos": [
     "biblioteca-5b3.spec.ts"
   ],
@@ -202,6 +214,9 @@
   ],
   "r12-fase5b3/ou-entao-filme-mais-antigo": [
     "casa.spec.ts"
+  ],
+  "r12-fase5b3/para-ver-volta-a-branco": [
+    "rede-f10.spec.ts"
   ],
   "r12-fase5b3/recuar-volta-a-texto": [
     "navegacao.spec.ts"
@@ -304,6 +319,9 @@
   ],
   "r12-fase5e/sizes-estrear": [
     "p3.spec.ts"
+  ],
+  "r12-fase5e/sizes-perfil": [
+    "rede-f10.spec.ts"
   ],
   "r12-fase5e/sizes-rever": [
     "p3.spec.ts"
@@ -467,6 +485,9 @@
   ],
   "r14-f1/segmento-branco": [
     "mira.spec.ts"
+  ],
+  "r14-f10/seccao-com-cor": [
+    "rede-f10.spec.ts"
   ],
   "r14-f10/seccao-nao-cola": [
     "biblioteca-arrumada.spec.ts"
