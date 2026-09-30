@@ -248,7 +248,7 @@ function Secao({
         className={
           emMosaico
             ? "mt-3 grid grid-cols-3 gap-x-3 gap-y-5"
-            : "-mx-4 mt-3 flex snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-1"
+            : "-mx-4 mt-3 flex scroll-px-4 snap-x snap-mandatory gap-3.5 overflow-x-auto px-4 pb-1"
         }
       >
         {section.items.map((item, i) => (

@@ -6,6 +6,9 @@ const nextConfig: NextConfig = {
   // qualquer origem que não seja `localhost` e a página nunca hidrata — vê-se,
   // mas nenhum botão responde (medido a 29-09: `http://192.168.1.163:3300`).
   allowedDevOrigins: ["127.0.0.1", "192.168.*.*"],
+  // O «N» redondo do `next dev` ficava por cima do «A» do «A seguir» na barra de
+  // separadores da pré-visualização no iPhone (Fase 11). Só existe em dev.
+  devIndicators: false,
   // Capas otimizadas pela Vercel: AVIF/WebP, tamanho certo por pedido, cache
   // na edge — em vez de 227+ JPEGs pesados a virem sempre do TMDB/TVmaze.
   images: {

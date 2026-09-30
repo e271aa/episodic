@@ -555,6 +555,7 @@ export default function SeriesPage() {
           {watching.length === 0 ? (
             <Linha
               alta
+              quebra
               href="/explorar?procurar=1"
               antes={<Search aria-hidden className="h-6 w-6 text-label-2" strokeWidth={1.8} />}
               titulo="Ainda não segues nenhuma série"
