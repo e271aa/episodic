@@ -47,3 +47,15 @@ test("«Juntar a uma lista» diz a cada linha se o filme já está lá (aria-che
   await sem.click();
   await expect(sem).toHaveAttribute("aria-checked", "true");
 });
+
+test("criar uma lista funciona sem contexto seguro (iPhone em http://192.168…, sem crypto.randomUUID)", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    Object.defineProperty(crypto, "randomUUID", { value: undefined });
+  });
+  await page.goto("/library?tipo=listas");
+  await page.getByLabel("Nome da nova lista").fill("Maratona");
+  await page.getByRole("button", { name: "Criar" }).click();
+  await expect(page.getByRole("link", { name: /Maratona/ })).toBeVisible();
+});
