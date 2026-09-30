@@ -20,6 +20,7 @@ export interface SerieSemeada {
   tmdbId?: number | null;
   tvmazeId?: number | null;
   posterPath?: string | null;
+  backdropPath?: string | null;
   totalEpisodes?: number | null;
   status?: string | null;
   genres?: string[] | null;
@@ -90,7 +91,7 @@ function registos(semente: Semente): Registos {
       tmdbId: s.tmdbId ?? null,
       tvmazeId: s.tvmazeId ?? null,
       posterPath: s.posterPath ?? null,
-      backdropPath: null,
+      backdropPath: s.backdropPath ?? null,
       overview: null,
       totalEpisodes: s.totalEpisodes ?? null,
       status: s.status ?? "Ended",

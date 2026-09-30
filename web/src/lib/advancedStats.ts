@@ -43,6 +43,10 @@ export interface AdvancedStats {
   maisVistas: SerieVista[];
   /** horas por ano — estimadas, só data certa */
   horasAno: HorasDeUmAno[];
+  /** dias em que se marcou alguma coisa (só data certa) */
+  diasAtivos: number;
+  /** episódios com data certa — a base das médias */
+  episodiosComData: number;
 }
 
 const WEEKDAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
@@ -189,5 +193,7 @@ export function computeAdvancedStats(
     mapa: porMesAno(watched),
     maisVistas: seriesMaisVistas(todos, shows),
     horasAno: horasPorAno(watched, segundosPorEpisodio(meta, shows, todos)),
+    diasAtivos: byDay.size,
+    episodiosComData: watched.length,
   };
 }

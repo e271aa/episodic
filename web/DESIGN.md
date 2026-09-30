@@ -270,31 +270,46 @@ texto («Última vista ▾»).
 ## O Perfil (Fase 7)
 
 «Quanto já vi?» — widgets de **tamanhos diferentes**, não cartões iguais (B·5).
-De cima para baixo: `TituloGrande` («Perfil»), a linha de identidade (avatar de
-48px com a inicial em SF Rounded, nome, «Desde 2014 · importado do TV Time»,
-chevron → **Definições**), o **Tempo de antena**, os três `Contador`es, **Por
-mês**, dois `Destaque`s, «Mais vistas», «Dia da semana», «O teu espetro» e a linha
-«Mais estatísticas». Sem um episódio marcado só ficam a identidade, o Tempo de
-antena («Começa a contar…») e os contadores: um mapa vazio lê-se como avaria.
+De cima para baixo: `TituloGrande` («Perfil»), o **`CartaoPerfil`**, o **Tempo de
+antena**, os três `Contador`es, **Por mês**, dois `Destaque`s, «Mais vistas»,
+«Dia da semana», «O teu espetro» e a linha «Mais estatísticas». Sem um episódio
+marcado só ficam o cartão, o Tempo de antena («Começa a contar…») e os contadores:
+um mapa vazio lê-se como avaria. Entre blocos, 12px (`mt-3`); entre secções, 24.
 
+- **`CartaoPerfil`**: a arte (`backdrop`) da série favorita — sem favorita, da mais
+  vista — a 128px, com o avatar de 64px a sobrepor-se, o nome, «Desde 2014 ·
+  importado do TV Time», a personagem favorita («Personagem · Ator») e a foto do
+  ator à direita. **É a cor do ecrã: a da série de cada um.** O texto fica sempre
+  por baixo da arte. Sem arte, encolhe para a linha de 72px do desenho (avatar de
+  48px). Leva às Definições.
 - **Tempo de antena** (`TempoDeAntena`): as horas em SF Rounded 43px (`2 781 h`,
   `milhares()` — o pt-PT do browser só agrupa a partir de cinco algarismos),
   «115 dias e 21 horas» por baixo, e à direita as barras por ano (8px, ano
   corrente em `label`, o resto a 35%) com a legenda **«por ano · estimado»**.
   Com um só ano não há barras.
-- **`Contador` / `Destaque`** (`components/mira/Widget.tsx`): raio 22. Séries e
-  Filmes levam à Biblioteca; «Mais vista» leva à série.
+- **`Contador` / `Destaque` / `Recorde`** (`components/mira/Widget.tsx`): raio 22.
+  Séries e Filmes levam à Biblioteca; «Mais vista» leva à série. `Recorde` tem o
+  número em SF Rounded, a unidade ao lado e um detalhe que pode quebrar.
 - **Por mês** (`MapaDeCalor`): a leitura fixa à direita do título; quartis, «Ver
-  em tabela» e o alvo de 24px como antes. **Um mês que ainda não chegou é só
-  contorno e não é botão.** A célula escolhida leva o anel `bg` + `label/.9`.
+  em tabela» e o alvo de 24px como antes (a etiqueta do ano leva 32px: com mais, as
+  células ficam abaixo dos 24). **Um mês que ainda não chegou é só contorno e não
+  é botão.** A célula escolhida leva o anel `bg` + `label/.9`. A leitura dos
+  gráficos (`Colunas`, mapa) já não é mono: leva nomes («Sexta-feira»).
+- **Mais vistas**: linhas com a capa (40×60, raio 8), o nome, a barra neutra e a
+  contagem.
 - **Definições** (`/profile/definicoes`): Editar perfil (só com nuvem),
-  Aparência, Conta, Dados (importar, rever, verificar, apagar). O `Panel` passou
-  a grupo da Mira (raio 26, fio de 0,5px).
-- **Estatísticas** (`/estatisticas`) ficam com o que o Perfil não mostra: Horas
-  por ano e os Recordes (maratona, sequências, mês mais ativo, mais variado),
-  numa lista agrupada.
-- **Desvios do desenho, por decisão:** o «O teu espetro» (géneros) mantém-se, por
-  baixo; a capa da série mais vista saiu (o widget «Mais vista» é texto).
+  Aparência, Conta, Dados — **os quatro cabeçalhos iguais** (17/600 `label`; a
+  «Conta» tinha o antigo, mono maiúsculo com barra amarela). O `Panel`/`PanelRow`
+  são o grupo da Mira: raio 26, fio de 0,5px, título 17 regular, detalhe 14
+  `label-2`, chevron em vez de «→».
+- **Estatísticas** (`/estatisticas`) ficam com o que o Perfil não mostra: o ritmo
+  (dias ativos, episódios por dia ativo, anos a ver), Episódios por ano, Horas por
+  ano e os **Recordes** em widgets de duas colunas.
+- **Ecrãs sem `pb` próprio:** o layout raiz já reserva `--dock-h + 0.5rem` por
+  baixo de tudo; um `pb-[calc(var(--dock-h)+2rem)]` no `<main>` deixava ~100px de
+  vazio no fim do scroll. Usar `pb-6`.
+- **Desvio do desenho, por decisão:** o «O teu espetro» (géneros) mantém-se, por
+  baixo.
 
 ## Movimento
 - **Curvas:** `--ease-out` = `cubic-bezier(0.23, 1, 0.32, 1)` para o que entra e

@@ -51,3 +51,31 @@ export function Destaque({ rotulo, valor, href }: { rotulo: string; valor: strin
     </Caixa>
   );
 }
+
+/**
+ * Um recorde (Estatísticas): o nome por cima, o número em SF Rounded, a unidade
+ * e o detalhe (uma data, uma série) por baixo — o detalhe pode ocupar várias
+ * linhas, ao contrário dos outros widgets.
+ */
+export function Recorde({
+  rotulo,
+  valor,
+  unidade,
+  detalhe,
+}: {
+  rotulo: string;
+  valor: string;
+  unidade: string;
+  detalhe?: ReactNode;
+}) {
+  return (
+    <div className={`${CAIXA} justify-start gap-0.5`}>
+      <span className="block text-[0.76rem] leading-snug text-label-2">{rotulo}</span>
+      <span className="mt-1 flex flex-wrap items-baseline gap-x-1.5">
+        <span className="font-rounded text-[1.65rem] font-bold leading-tight tabular-nums text-label">{valor}</span>{" "}
+        <span className="text-[0.88rem] text-label-2">{unidade}</span>
+      </span>
+      {detalhe && <span className="mt-1 block text-[0.76rem] leading-snug text-label-2">{detalhe}</span>}
+    </div>
+  );
+}

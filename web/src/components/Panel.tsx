@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ChevronRight } from "lucide-react";
 
 /**
  * O painel de linhas — a forma que o Perfil já usava para as estatísticas
@@ -53,7 +54,7 @@ export function PanelRow({
   perigo?: boolean;
 }) {
   const interativa = href !== undefined || onClick !== undefined;
-  const classe = `flex min-h-[60px] w-full items-center gap-4 px-5 py-3.5 text-left transition-colors ${
+  const classe = `flex min-h-[60px] w-full items-center gap-4 px-4 py-3 text-left transition-colors ${
     interativa ? "cursor-pointer active:bg-fill" : ""
   }`;
 
@@ -61,17 +62,19 @@ export function PanelRow({
     <>
       <span className="min-w-0 flex-1">
         <span
-          className={`block font-display text-[0.9375rem] font-semibold ${
-            perigo ? "text-danger" : "text-ink"
-          }`}
+          className={`block text-base ${perigo ? "text-danger" : "text-label"}`}
         >
           {titulo}
         </span>
         {detalhe != null && (
-          <span className="mt-0.5 block text-xs text-dim">{detalhe}</span>
+          <span className="mt-0.5 block text-[0.88rem] text-label-2">{detalhe}</span>
         )}
       </span>
-      {fim != null && <span className="shrink-0 text-faint">{fim}</span>}
+      {fim != null && (
+        <span className="shrink-0 text-label-2">
+          {fim === "→" ? <ChevronRight aria-hidden className="h-4 w-4 text-label-3" strokeWidth={2.4} /> : fim}
+        </span>
+      )}
     </>
   );
 

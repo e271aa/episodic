@@ -37,7 +37,7 @@ export default function MapaDeCalor({ mapa, titulo }: { mapa: MapaAnoMes; titulo
       <div className="flex items-baseline justify-between gap-3">
         {titulo && <h2 className="shrink-0 text-base font-semibold text-label">{titulo}</h2>}
         <p
-          className="ep-code min-h-4 min-w-0 text-right text-xs text-label-2"
+          className="min-h-4 min-w-0 text-right text-xs tabular-nums text-label-2"
           aria-live="polite"
           data-testid="leitura"
         >
@@ -46,7 +46,7 @@ export default function MapaDeCalor({ mapa, titulo }: { mapa: MapaAnoMes; titulo
       </div>
       <div className="mt-3 flex flex-col" role="group" aria-label="Episódios por mês e por ano">
         <div className="flex items-center" aria-hidden>
-          <span className="w-7 shrink-0" />
+          <span className="w-8 shrink-0" />
           {MESES.map((m) => (
             <span key={m} className="ep-code flex-1 text-center text-[0.6875rem] text-faint">
               {m[0].toUpperCase()}
@@ -55,7 +55,7 @@ export default function MapaDeCalor({ mapa, titulo }: { mapa: MapaAnoMes; titulo
         </div>
         {mapa.anos.map((a) => (
           <div key={a.ano} className="flex items-center">
-            <span className="ep-code w-7 shrink-0 text-[0.6875rem] text-faint">{a.ano}</span>
+            <span className="ep-code w-8 shrink-0 text-[0.6875rem] text-faint">{a.ano}</span>
             {a.meses.map((n, mes) => {
               const ativo = foco.ano === a.ano && foco.mes === mes;
               // um mês que ainda não chegou: só o contorno, e não se escolhe

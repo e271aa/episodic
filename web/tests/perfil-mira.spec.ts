@@ -195,3 +195,107 @@ for (const rota of ["/profile", "/profile/definicoes", "/estatisticas"]) {
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
   });
 }
+
+// ── Feedback do Ruben (30-09) ────────────────────────────────────────────
+
+const rico = {
+  series: [
+    { uuid: "s-a", name: "Alfa", runtime: 60, posterPath: "/alfa.jpg", backdropPath: "/fundo-alfa.jpg" },
+    { uuid: "s-b", name: "Beta", runtime: 60 },
+  ],
+  vistos: [
+    ...eps("s-a", "2021-03-07", 4),
+    ...eps("s-a", "2022-03-08", 2, 10),
+    ...eps("s-b", "2022-04-09", 2, 20),
+  ],
+};
+
+test("o Perfil não cola os blocos: há folga entre a identidade, o Tempo de antena e os contadores", async ({ page }) => {
+  await semear(page, rico);
+  await page.goto("/profile");
+  const identidade = (await page.locator('a[href="/profile/definicoes"]').boundingBox())!;
+  const antena = (await page.locator("section", { hasText: "Tempo de antena" }).boundingBox())!;
+  const contadores = (await page.getByRole("link", { name: /séries/ }).boundingBox())!;
+  expect(antena.y - (identidade.y + identidade.height)).toBeGreaterThanOrEqual(8);
+  expect(contadores.y - (antena.y + antena.height)).toBeGreaterThanOrEqual(8);
+});
+
+test("o Perfil tem cor: a arte da série mais vista, e a capa de cada uma nas «Mais vistas»", async ({ page }) => {
+  await semear(page, rico);
+  await page.goto("/profile");
+  const arte = page.locator('a[href="/profile/definicoes"] img');
+  await expect(arte).toHaveCount(1);
+  await expect(arte).toHaveAttribute("src", /fundo-alfa/);
+  const ranking = page.locator("section", { hasText: "Mais vistas" });
+  // só a Alfa tem capa; a Beta fica com o espaço reservado, sem imagem partida
+  await expect(ranking.locator("img")).toHaveCount(1);
+  await expect(ranking.locator("img")).toHaveAttribute("src", /alfa/);
+});
+
+for (const rota of ["/profile", "/profile/definicoes", "/estatisticas"]) {
+  test(`${rota}: não reserva a barra outra vez — o layout raiz já o faz (o vazio no fim do scroll)`, async ({ page }) => {
+    await semear(page, rico);
+    await page.goto(rota);
+    await page.locator("main h1").waitFor();
+    const reserva = await page.locator("main").evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
+    expect(reserva).toBeLessThanOrEqual(40);
+    // e no fim do scroll o conteúdo acaba perto da barra, não 100px acima dela
+    await page.waitForTimeout(500);
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
+    const folga = await page.evaluate(() => {
+      const main = document.querySelector("main")!;
+      const fundo = main.getBoundingClientRect().bottom - parseFloat(getComputedStyle(main).paddingBottom);
+      return document.querySelector("nav")!.getBoundingClientRect().top - fundo;
+    });
+    if (await page.evaluate(() => document.documentElement.scrollHeight > innerHeight)) expect(folga).toBeLessThanOrEqual(56);
+  });
+}
+
+test("Definições: Aparência, Conta e Dados têm o mesmo cabeçalho e as linhas a mesma letra", async ({ page }) => {
+  await semear(page, {});
+  await page.goto("/profile/definicoes");
+  await page.getByText("Sincronização desligada").waitFor();
+  const estilo = (texto: string) =>
+    page
+      .getByRole("heading", { name: texto, exact: true })
+      .evaluate((el) => {
+        const c = getComputedStyle(el);
+        return `${c.fontSize}|${c.fontWeight}|${c.textTransform}|${c.letterSpacing}|${c.color}`;
+      });
+  const aparencia = await estilo("Aparência");
+  expect(await estilo("Conta")).toBe(aparencia);
+  expect(await estilo("Dados")).toBe(aparencia);
+  // sem a barrinha de cor antiga à esquerda da «Conta»
+  expect(await page.getByRole("heading", { name: "Conta", exact: true }).evaluate((el) => el.previousElementSibling === null)).toBe(true);
+  const letra = (texto: string) =>
+    page.getByText(texto, { exact: true }).evaluate((el) => {
+      const c = getComputedStyle(el);
+      return `${c.fontSize}|${c.fontWeight}|${c.fontFamily}`;
+    });
+  expect(await letra("Sincronização desligada")).toBe(await letra("Importar do TV Time"));
+});
+
+test("Por mês: os anos não se sobrepõem às células", async ({ page }) => {
+  await semear(page, rico);
+  await page.goto("/profile");
+  const mapa = page.locator("section", { hasText: "Por mês" });
+  const ano = (await mapa.getByText("2021", { exact: true }).first().boundingBox())!;
+  const primeira = (await mapa.locator("button[data-degrau]").first().boundingBox())!;
+  expect(ano.x + ano.width).toBeLessThanOrEqual(primeira.x + 0.5);
+});
+
+test("Estatísticas: o ritmo (dias ativos e média), os episódios por ano e os recordes", async ({ page }) => {
+  await semear(page, {
+    series: [{ uuid: "s-a", name: "Alfa", runtime: 60 }],
+    vistos: [...eps("s-a", "2021-03-07", 3), ...eps("s-a", "2021-03-08", 3, 10), ...eps("s-a", "2022-05-01", 3, 20)],
+  });
+  await page.goto("/estatisticas");
+  // 9 episódios em 3 dias: «3 dias ativos», «3,0 episódios por dia ativo»
+  await expect(page.getByText("dias ativos").locator("../..")).toContainText("3");
+  await expect(page.getByText("episódios por dia ativo").locator("../..")).toContainText("3,0");
+  const porAno = page.locator("section", { hasText: "Episódios por ano" });
+  await expect(porAno.getByTestId("leitura")).toContainText("2022 · 3 episódios");
+  const recordes = page.locator("section", { hasText: "Recordes" });
+  await expect(recordes).toContainText("Melhor maratona");
+  await expect(recordes).toContainText(/3\s*episódios/);
+});

@@ -14,15 +14,17 @@ export interface HorasDeUmAnoBarra {
 export default function TempoDeAntena({
   horas,
   porAno,
+  className = "",
 }: {
   horas: number | null;
   porAno: HorasDeUmAnoBarra[];
+  className?: string;
 }) {
   const maximo = Math.max(1, ...porAno.map((a) => a.horas));
   const corrente = new Date().getFullYear();
   const leitura = porAno.map((a) => `${a.ano}: ${milhares(a.horas)} h`).join("; ");
   return (
-    <section className="flex items-end justify-between gap-4 rounded-[26px] bg-group px-[18px] py-4">
+    <section className={`flex items-end justify-between gap-4 rounded-[26px] bg-group px-[18px] py-4 ${className}`}>
       <div className="min-w-0">
         <h2 className="text-[0.88rem] font-semibold text-label-2">Tempo de antena</h2>
         {horas !== null ? (

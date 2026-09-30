@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Image from "next/image";
 import Link from "next/link";
 import { loadProfileStats, type ProfileStats } from "@/lib/stats";
 import { loadAdvancedStats, type AdvancedStats } from "@/lib/advancedStats";
@@ -10,6 +9,8 @@ import { useIdentidade } from "@/components/ProfileCard";
 import TituloGrande from "@/components/mira/TituloGrande";
 import { Grupo, Linha } from "@/components/mira/Grupo";
 import { Contador, Destaque } from "@/components/mira/Widget";
+import CartaoPerfil from "@/components/mira/CartaoPerfil";
+import Poster from "@/components/Poster";
 import TempoDeAntena from "@/components/mira/TempoDeAntena";
 import { Bone } from "@/components/Skeleton";
 import Colunas from "@/components/Colunas";
@@ -21,7 +22,7 @@ const DIAS = ["Domingo", "Segunda-feira", "Terça-feira", "Quarta-feira", "Quint
 
 export default function ProfilePage() {
   const [dados, setDados] = useState<{ stats: ProfileStats; avancadas: AdvancedStats } | null>(null);
-  const { perfil } = useIdentidade();
+  const { perfil, shows } = useIdentidade();
 
   useEffect(() => {
     void Promise.all([loadProfileStats(), loadAdvancedStats()]).then(([stats, avancadas]) =>
@@ -31,7 +32,7 @@ export default function ProfilePage() {
 
   if (dados === null) {
     return (
-      <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
+      <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-6">
         <TituloGrande titulo="Perfil" />
         {/* a sombra do que vem: identidade, tempo de antena, os três
             contadores e o mapa */}
@@ -48,7 +49,16 @@ export default function ProfilePage() {
   }
 
   const { stats, avancadas } = dados;
+  const temNome = Boolean(perfil?.displayName?.trim());
   const nome = perfil?.displayName?.trim() || (isCloudConfigured() ? "Sem nome" : "Neste aparelho");
+  // a arte do topo: a série favorita; sem ela, a que mais se viu
+  const serieDaCapa =
+    shows.find((sh) => sh.uuid === perfil?.favoriteShowUuid) ?? shows.find((sh) => sh.uuid === stats.topShow?.uuid);
+  const capa = serieDaCapa?.backdropPath ?? null;
+  const personagemEAtor = perfil?.favoriteCharacter
+    ? [perfil.favoriteCharacter, perfil.favoriteActor].filter(Boolean).join(" · ")
+    : null;
+  const capas = new Map(shows.map((sh) => [sh.uuid, sh.posterPath]));
   const desde = [
     stats.firstYear ? `Desde ${stats.firstYear}` : null,
     stats.importedAt ? "importado do TV Time" : null,
@@ -64,20 +74,24 @@ export default function ProfilePage() {
   const maisNaLista = avancadas.maisVistas[0]?.count ?? 1;
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
+    <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-6">
       <TituloGrande titulo="Perfil" />
 
-      <Grupo className="mt-4">
-        <Linha
+      <div className="mt-4">
+        <CartaoPerfil
           href="/profile/definicoes"
-          alta
-          antes={<Avatar nome={nome} url={perfil?.avatarUrl ?? null} />}
-          titulo={<span className="text-base font-semibold">{nome}</span>}
+          nome={nome}
+          temNome={temNome}
+          avatarUrl={perfil?.avatarUrl ?? null}
           subtitulo={desde || "Os teus dados vivem neste aparelho"}
+          capa={capa}
+          personagem={personagemEAtor}
+          pessoaImg={perfil?.favoritePersonImg ?? null}
         />
-      </Grupo>
+      </div>
 
       <TempoDeAntena
+        className="mt-3"
         horas={stats.hours}
         porAno={avancadas.horasAno.map((h) => ({ ano: h.ano, horas: h.horas }))}
       />
@@ -115,12 +129,17 @@ export default function ProfilePage() {
               <ol className="px-4 py-1.5">
                 {avancadas.maisVistas.map((s, i) => (
                   <li key={s.uuid}>
-                    <Link href={`/series/${s.uuid}`} className="flex min-h-11 items-center gap-3 py-1">
+                    <Link href={`/series/${s.uuid}`} className="flex items-center gap-3 py-2">
                       <span className="ep-code w-4 shrink-0 text-xs text-faint">{i + 1}</span>
+                      <span className="relative h-[60px] w-10 shrink-0 overflow-hidden rounded-lg bg-elevated">
+                        {capas.get(s.uuid) && (
+                          <Poster path={capas.get(s.uuid)} alt="" size="w185" fill sizes="40px" className="object-cover" />
+                        )}
+                      </span>
                       <span className="min-w-0 flex-1">
                         <span className="block truncate text-base font-semibold text-label">{s.name}</span>
                         <span
-                          className={`mt-1 block h-2 rounded-r-[4px] ${i === 0 ? "bg-label" : "bg-label/35"}`}
+                          className={`mt-1.5 block h-2 rounded-r-[4px] ${i === 0 ? "bg-label" : "bg-label/35"}`}
                           style={{ width: `${Math.max(2, (s.count / maisNaLista) * 100)}%` }}
                           aria-hidden
                         />
@@ -184,20 +203,5 @@ export default function ProfilePage() {
         <Linha href="/estatisticas" titulo="Mais estatísticas" subtitulo="Horas por ano, maratonas e sequências" alta />
       </Grupo>
     </main>
-  );
-}
-
-/** O avatar de 48px: a foto, ou a inicial do nome em SF Rounded. */
-function Avatar({ nome, url }: { nome: string; url: string | null }) {
-  return (
-    <span className="relative mr-1 flex h-12 w-12 items-center justify-center overflow-hidden rounded-full bg-chip">
-      {url ? (
-        <Image src={url} alt="" fill sizes="48px" className="object-cover" />
-      ) : (
-        <span aria-hidden className="font-rounded text-xl font-semibold text-label">
-          {nome.trim()[0]?.toUpperCase() ?? "?"}
-        </span>
-      )}
-    </span>
   );
 }

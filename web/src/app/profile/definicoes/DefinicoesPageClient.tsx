@@ -41,7 +41,7 @@ export default function DefinicoesPage() {
   }, [lerImportacao]);
 
   return (
-    <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-[calc(var(--dock-h)+2rem)]">
+    <main className="mx-auto w-full max-w-2xl px-4 pt-8 pb-6">
       <CabecalhoEcra titulo="Definições" voltar="Voltar ao perfil" fallback="/profile" />
 
       {isCloudConfigured() && perfil && (
@@ -89,7 +89,7 @@ export default function DefinicoesPage() {
               acento de perigo e não pode estar sempre ligado, ou deixa de
               querer dizer alguma coisa. */}
           {confirmClear ? (
-            <div className="px-5 py-4">
+            <div className="px-4 py-3.5">
               <p className="text-base font-semibold text-danger">Apagar tudo o que está neste dispositivo?</p>
               <p className="mt-0.5 text-[0.88rem] text-label-2">
                 Séries, filmes, episódios marcados e listas. Não há como voltar atrás{" "}

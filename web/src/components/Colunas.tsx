@@ -53,7 +53,7 @@ export default function Colunas({
 
   return (
     <div>
-      <p className="ep-code min-h-4 text-xs text-dim" aria-live="polite" data-testid="leitura">
+      <p className="min-h-4 text-xs tabular-nums text-label-2" aria-live="polite" data-testid="leitura">
         {dados[foco]?.leitura}
       </p>
       <div role="group" aria-label={titulo} className="mt-2 flex items-end justify-between gap-1">

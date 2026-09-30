@@ -2,7 +2,6 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { isCloudConfigured } from "@/lib/supabase";
-import SectionHeader from "@/components/SectionHeader";
 import { Panel, PanelRow } from "@/components/Panel";
 import {
   contarNaNuvem,
@@ -164,8 +163,8 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
   if (!isCloudConfigured()) {
     return (
       <section className="mt-8">
-        <SectionHeader label="Conta" />
-        <Panel className="mt-3">
+        <h2 className="mb-2 px-1 text-base font-semibold text-label">Conta</h2>
+        <Panel>
           <PanelRow
             titulo="Sincronização desligada"
             detalhe="Quando estiver ligada, entras com o email e tens a biblioteca em todos os dispositivos."
@@ -177,10 +176,13 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
 
   return (
     <section className="mt-8">
-      <SectionHeader label="Conta" meta={user ? "ligada" : "sem sessão"} />
+      <div className="mb-2 flex items-baseline justify-between gap-3 px-1">
+        <h2 className="text-base font-semibold text-label">Conta</h2>
+        <span className="text-[0.76rem] text-label-2">{user ? "ligada" : "sem sessão"}</span>
+      </div>
 
       {user ? (
-        <Panel className="mt-3">
+        <Panel>
           <PanelRow titulo={user.email ?? "Sessão iniciada"} detalhe={autoSyncLabel} />
           <PanelRow
             titulo={status === "syncing" ? "A sincronizar…" : "Sincronizar agora"}
@@ -197,16 +199,16 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
           {/* Password opcional: entra noutros dispositivos sem depender de
               emails (o link/código continua disponível como alternativa). */}
           <form
-            className="px-5 py-4"
+            className="px-4 py-3.5"
             onSubmit={(e) => {
               e.preventDefault();
               void handleSetPassword();
             }}
           >
-            <label htmlFor="cloud-nova-password" className="font-display text-[0.9375rem] font-semibold">
+            <label htmlFor="cloud-nova-password" className="text-base text-label">
               Password
             </label>
-            <p className="mt-0.5 text-xs text-dim">
+            <p className="mt-0.5 text-[0.88rem] text-label-2">
               Para entrares noutros dispositivos sem esperar por emails.
             </p>
             <div className="mt-2.5 flex gap-2">
@@ -218,12 +220,12 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
                 placeholder="mínimo 8 caracteres"
                 autoComplete="new-password"
                 minLength={8}
-                className="min-h-11 w-0 flex-1 rounded-full border border-line bg-tube px-4 text-base outline-none transition-colors focus:border-ink"
+                className="min-h-11 w-0 flex-1 rounded-full bg-fill px-4 text-base text-label outline-none placeholder:text-faint"
               />
               <button
                 type="submit"
                 disabled={status === "verifying" || newPassword.length < 8}
-                className="min-h-11 shrink-0 cursor-pointer rounded-full border border-line px-5 text-[0.9375rem] font-medium text-dim transition hover:bg-raised disabled:opacity-50"
+                className="min-h-11 shrink-0 cursor-pointer rounded-full bg-fill-strong px-5 text-[0.9375rem] font-semibold text-label transition active:scale-95 disabled:opacity-50"
               >
                 Guardar
               </button>
@@ -243,7 +245,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
             }
           />
           {prova?.fase === "feita" && (
-            <div className="px-5 pb-4" data-testid="prova-nuvem">
+            <div className="px-4 pb-4" data-testid="prova-nuvem">
               <table className="w-full text-[0.9375rem]">
                 <thead>
                   <tr className="text-left text-xs text-faint">
@@ -281,7 +283,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
             </div>
           )}
           {prova?.fase === "erro" && (
-            <p className="px-5 pb-4 text-[0.9375rem] text-danger">
+            <p className="px-4 pb-4 text-[0.9375rem] text-danger">
               Não deu para verificar: {prova.mensagem}
             </p>
           )}
@@ -289,7 +291,7 @@ export default function CloudAccount({ onSynced }: { onSynced: () => void }) {
           <PanelRow titulo="Terminar sessão" onClick={() => void handleSignOut()} />
         </Panel>
       ) : (
-        <Panel className="mt-3">
+        <Panel>
           <PanelRow
             titulo="Entrar"
             detalhe="Sem sessão neste dispositivo — a biblioteca vive só aqui."

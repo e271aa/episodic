@@ -134,7 +134,7 @@ export default function IntegrityCheck() {
   }
 
   return (
-    <div className="px-5 py-4">
+    <div className="px-4 py-3.5">
       <p className="font-display text-[0.9375rem] font-semibold">Verificar biblioteca</p>
       <p className="mt-1 text-[0.9375rem] text-dim">
         Procura séries repetidas e séries com mais episódios marcados do que o
