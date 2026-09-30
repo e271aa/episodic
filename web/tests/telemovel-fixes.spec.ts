@@ -22,11 +22,11 @@ test("a dica de instalar a PWA não tapa nada: vive no fluxo da casa, por baixo 
   // Flutuava (`fixed`) por cima de qualquer ecrã: na Biblioteca tapava os
   // filtros (Ronda 8) e na casa vazia da Mira as duas portas (Fase 3). Agora
   // está no fluxo, depois das portas — e as portas apanham o toque.
-  let el = await dica.elementHandle();
+  let el: import("@playwright/test").ElementHandle<HTMLElement | SVGElement> | null = await dica.elementHandle();
   while (el) {
     const pos = await el.evaluate((n) => getComputedStyle(n).position);
     expect(pos).not.toBe("fixed");
-    el = (await el.evaluateHandle((n) => n.parentElement)).asElement();
+    el = (await el.evaluateHandle((n) => n.parentElement)).asElement() as typeof el;
   }
   const importar = page.getByRole("link", { name: /Importar/ });
   const caixaDica = (await dica.boundingBox())!;
